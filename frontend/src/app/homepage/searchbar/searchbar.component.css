@@ -1,0 +1,99 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 90vh;
+  
+}
+.title{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 50%;
+  width: 30%;
+  gap: 20px;
+}
+h1, h5 {
+  width: 100%; /* Remplacez par votre valeur */
+  display: flex;
+  justify-content: center; /* Centrage horizontal */
+  align-items: center; /* Centrage vertical */
+  text-align: center; /* S'assure que le texte est bien centré */
+}
+h1 {
+  font-size: 3.5em;
+}
+h5 {
+  font-size: 1.5em;
+}
+.search-container {
+  display: flex;
+  flex-direction: column; /* Empile l'input et la liste */
+  align-items: stretch;
+  gap: 0; /* Pas d'espace entre la barre et la liste */
+  border: 2px solid #f39c12;
+  border-radius: 20px;
+  width: 60%;
+  background: #ffffff;
+  position: relative; /* Positionnement relatif pour contenir la liste */
+  padding: 8px;
+  z-index: 10; /* S'assurer que la barre reste visible */
+}
+
+.search-container input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 16px;
+  padding: 8px;
+  border-radius: 20px; /* Bord arrondi en haut */
+}
+
+.search-container button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #f39c12;
+  position: absolute;
+  right: 15px;
+  top: 12px;
+}
+
+/* Liste des suggestions */
+.suggestions {
+  width: 100%;
+  background: white;
+  border-top: 1px solid #ddd;
+  max-height: 200px;
+  overflow-y: auto;
+  border-radius: 0 0 20px 20px; /* Arrondi en bas pour bien coller avec la barre */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  display: none; /* Cachée par défaut */
+  position: absolute;
+  top: 100%; /* Juste en dessous de la barre */
+  left: 0;
+  z-index: 9; /* En dessous de la barre */
+}
+
+.suggestions.show {
+  display: block; /* Affiche la liste des suggestions seulement si nécessaire */
+}
+
+.suggestions ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.suggestions ul li {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.suggestions ul li:hover {
+  background: #f4f4f4;
+}
