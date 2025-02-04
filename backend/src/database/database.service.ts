@@ -18,7 +18,7 @@ export class DatabaseService implements OnModuleInit {
         username: 'Mateo',
         password: 'mateoPass',
       });
-      this.bucket = this.cluster.bucket('my_first_bucket');
+      this.bucket = this.cluster.bucket('ProductsBDD');
       console.log('✅ Connexion réussie à Couchbase !');
     } catch (error) {
       console.error('❌ Erreur de connexion à Couchbase :', error);
