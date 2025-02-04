@@ -1,0 +1,99 @@
+/* Styles de base */
+
+
+.navbar {
+  
+    font-family: "Montserrat", serif;
+    font-optical-sizing: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: white;
+    color: #2c3e50;
+    border-bottom: 1px solid #f39c12;
+  }
+  
+  .logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    font-size: 1.5em;
+    font-weight: bold;
+    border-radius: 45px;
+  }
+  .easelogo {
+    width: 100%;
+    border-radius: 45px;
+  }
+  .user{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    border-radius: 50%;
+    margin-right: 20px;
+    border: 1px solid #f39c12;
+    padding: 7px;
+  }
+  .userprofile{
+    width: 100%;
+
+  }
+  
+  .navbar ul {
+    list-style: none;
+    display: flex;
+    gap: 45px;
+  }
+  
+  .navbar ul li a {
+    text-decoration: none;
+    color: #2c3e50;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .navbar ul li a:hover {
+    color: #f39c12;
+  }
+  
+  /* Menu burger pour mobiles */
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  
+  .menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: #f39c12;
+    margin: 4px 0;
+    transition: 0.3s;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .navbar ul {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: white;
+      width: 150px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  
+    .navbar ul.active {
+      display: flex;
+    }
+  
+    .menu-toggle {
+      display: flex;
+    }
+  }
+  
