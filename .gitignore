@@ -2,4 +2,4 @@
 .env
 
 # Fichier local
-delDeps.bat
+/delDeps.bat
