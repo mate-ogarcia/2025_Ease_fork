@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as couchbase from 'couchbase';
 
@@ -15,10 +16,10 @@ export class DatabaseService implements OnModuleInit {
   private async connectToDatabase() {
     try {
       this.cluster = await couchbase.connect('couchbase://192.168.56.1', {
-        username: 'Admin',
-        password: 'AdminPass',
+        username: 'user1',
+        password: 'password',
       });
-      this.bucket = this.cluster.bucket('BucketProjetTest ');
+      this.bucket = this.cluster.bucket('ProductsBDD  ');
       console.log('✅ Connexion réussie à Couchbase !');
     } catch (error) {
       console.error('❌ Erreur de connexion à Couchbase :', error);

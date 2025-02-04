@@ -1,11 +1,12 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service'; // Assurez-vous du chemin relatif
+import { DatabaseService } from '../database/database.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class DataService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
 
   async onApplicationBootstrap() {
     console.log('Démarrage de l’importation des produits...');
