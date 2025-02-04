@@ -15,10 +15,10 @@ export class DatabaseService implements OnModuleInit {
   private async connectToDatabase() {
     try {
       this.cluster = await couchbase.connect('couchbase://192.168.56.1', {
-        username: 'Mateo',
-        password: 'mateoPass',
+        username: 'Admin',
+        password: 'AdminPass',
       });
-      this.bucket = this.cluster.bucket('my_first_bucket');
+      this.bucket = this.cluster.bucket('BucketProjetTest ');
       console.log('✅ Connexion réussie à Couchbase !');
     } catch (error) {
       console.error('❌ Erreur de connexion à Couchbase :', error);
