@@ -1,25 +1,23 @@
-﻿# Dockerfile pour votre projet
-FROM node:22
+﻿# Image Node.js de base
+FROM node:18
 
-# Définir le répertoire de travail
+# Définir le dossier de travail
 WORKDIR /app
 
-# Copier les fichiers nécessaires
+# Copier les fichiers package.json et package-lock.json
 COPY package*.json ./
-COPY tsconfig.json ./
-COPY src ./src
 
 # Installer les dépendances
 RUN npm install
 
-# Compiler le projet (si TypeScript est utilisé)
+# Copier tout le reste
+COPY . .
+
+# Construire l'application (TypeScript -> JavaScript)
 RUN npm run build
 
-# Copier le fichier JSON dans le répertoire de distribution après la compilation
-COPY src/data/products.json dist/src/data/products.json
-
-# Exposer le port de l'application
+# Exposer le port
 EXPOSE 3000
 
-# Démarrer l'application
+# Commande de démarrage
 CMD ["npm", "run", "start:prod"]

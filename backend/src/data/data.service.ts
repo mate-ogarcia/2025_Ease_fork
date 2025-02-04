@@ -16,10 +16,12 @@ export class DataService {
     const collection = this.databaseService.getCollection();
 
     try {
-      const filePath = path.resolve(
-        __dirname,
-        '../../dist/src/data/products.json',
-      );
+      // Détection de l'environnement et construction du chemin
+      const basePath =
+        process.env.BASE_PATH || path.resolve(__dirname, '..', '..');
+      const filePath = path.join(basePath, 'src', 'products.json');
+
+      // Chargement du fichier JSON
       const fileData = fs.readFileSync(filePath, 'utf-8');
       const products = JSON.parse(fileData);
 
