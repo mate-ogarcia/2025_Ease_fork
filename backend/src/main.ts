@@ -11,9 +11,9 @@ async function bootstrap() {
     // Attendre la connexion complète avant d'utiliser le bucket
     await databaseService.onModuleInit();
     const bucket = databaseService.getBucket();
-    console.log(`✅ Connexion réussie au bucket : ${bucket.name}`);
+    console.log(`✅ Connexion réussie au bucket : ${bucket.name} (main.ts)`);
   } catch (error) {
-    console.error('❌ Erreur lors de l’utilisation du bucket :', error.message);
+    console.error('❌ Erreur lors de l’utilisation du bucket (main.ts) :', error.message);
   }
 
   await app.listen(3000, '0.0.0.0'); // Rend le serveur accessible depuis le réseau Docker

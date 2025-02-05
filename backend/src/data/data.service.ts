@@ -13,6 +13,9 @@ export class DataService {
     await this.insertProductsToDatabase();
   }
 
+  /**
+   * Insère les produits du fichier products.json dans la db couchBase
+   */
   async insertProductsToDatabase() {
     const collection = this.databaseService.getCollection();
 

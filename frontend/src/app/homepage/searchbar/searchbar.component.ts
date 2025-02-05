@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common'; // Pour *ngFor et *ngIf
 
 @Component({
   selector: 'app-searchbar',
-  imports: [FormsModule,CommonModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './searchbar.component.html',
   styleUrl: './searchbar.component.css',
   standalone: true, // Déclare le composant comme standalone
