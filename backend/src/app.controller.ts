@@ -1,30 +1,26 @@
 import { Controller, Get } from '@nestjs/common';
-import { DatabaseService } from './database/database.service';
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly dbService: DatabaseService) {}
+  constructor(private readonly appService: AppService) {}
 
   /**
-   * Fonction qui print Hello World sur le back (test des routes)
-   * @returns un print de Hello World
+   * Fonction qui renvoie "Hello World!" pour tester la route `/`
+   * @returns Un message "Hello World!"
    */
   @Get() // Route : http://localhost:3000/
   getHello(): string {
-    return 'Hello World!';
+    return this.appService.getHello();
   }
 
   /**
-   * @brief Récupère les données de la base Couchbase.
+   * Récupère et transforme les données de la base Couchbase via AppService.
    * 
-   * Cette méthode intercepte une requête HTTP GET sur l'endpoint `/data` 
-   * et retourne les données récupérées via le service `DatabaseService`.
-   * 
-   * @returns {Promise<any[]>} Une promesse contenant les données de la base.
+   * @returns {Promise<any[]>} Une promesse contenant les données transformées.
    */
   @Get('data') // Route : http://localhost:3000/data
   async getData(): Promise<any[]> {
-    return await this.dbService.getAllData();
+    return await this.appService.getData(); // ✅ Maintenant, `getData()` est dans `AppService`
   }
-
 }
