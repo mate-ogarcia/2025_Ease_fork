@@ -18,7 +18,7 @@ export class DatabaseService implements OnModuleInit {
   private async connectToDatabase() {
     try {
       console.log('🟡 Connexion à Couchbase en cours...');
-      this.cluster = await couchbase.connect('couchbase://172.19.16.1', {
+      this.cluster = await couchbase.connect('couchbase://172.21.128.1', {
         username: 'user1',
         password: 'password',
       });
