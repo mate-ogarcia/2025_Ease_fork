@@ -21,17 +21,20 @@ export class AppService {
    * @returns {Promise<any[]>} Une promesse contenant les données transformées.
    */
   async getData(): Promise<any[]> {
-    const rawData = await this.dbService.getAllData(); // 🔹 Récupération brute depuis la base
-    console.log("🔹 Données brutes récupérées :", rawData);
-
-    // TODO comme l'import dans la bdd import le json en brut les transformation ne se font pas
-    const transformedData = rawData.map(item => ({
-      id: item.id || null, 
-      name: item.name ? item.name.toUpperCase() : "UNKNOWN", // Convertir en majuscules
-      timestamp: new Date().toISOString() // Ajouter un timestamp
-    }));
-
-    console.log("✅ Données transformées :", transformedData);
+    const rawData = await this.dbService.getAllData();
+  
+    const transformedData = rawData.map(item => {
+      // Accéder aux données imbriquées
+      const product = item.ProductsBDD; // Change "ProductsBDD" selon ta structure réelle
+  
+      return {
+        id: product?.id || null,
+        name: product?.name ? product.name.toUpperCase() : "UNKNOWN",
+        timestamp: new Date().toISOString(),
+      };
+    });
+  
     return transformedData;
   }
+  
 }
