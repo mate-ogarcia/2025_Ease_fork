@@ -1,56 +1,95 @@
+/* Styles généraux */
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  height: 90vh;
-  
+  height: 100vh;
+  padding: 10px;
+  gap: 20px;
 }
-.title{
+.app-navbar{
+  width: 100%;
+}
+/* Gestion du titre */
+.title {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   height: 50%;
-  width: 30%;
-  gap: 20px;
-}
-h1, h5 {
-  width: 100%; /* Remplacez par votre valeur */
-  display: flex;
-  justify-content: center; /* Centrage horizontal */
-  align-items: center; /* Centrage vertical */
-  text-align: center; /* S'assure que le texte est bien centré */
-}
-h1 {
-  font-size: 3.5em;
-}
-h5 {
-  font-size: 1.5em;
-}
-.search-container {
-  display: flex;
-  flex-direction: column; /* Empile l'input et la liste */
-  align-items: stretch;
-  gap: 0; /* Pas d'espace entre la barre et la liste */
-  border: 2px solid #f39c12;
-  border-radius: 20px;
-  width: 60%;
-  background: #ffffff;
-  position: relative; /* Positionnement relatif pour contenir la liste */
-  padding: 8px;
-  z-index: 10; /* S'assurer que la barre reste visible */
+  width: 80%; /* Rend plus adaptable sur petits écrans */
+  max-width: 600px; /* Évite qu'il devienne trop large */
+  gap: 0;
+  text-align: center;
 }
 
+/* Gestion du texte */
+h1 {
+  font-size: 3rem; /* Taille fixe pour que le texte reste identique */
+  font-weight: bold;
+  text-align: center;
+  color: #ffffff;
+  line-height: 1.2; /* Ajuste l'espacement entre les lignes */
+  word-wrap: break-word; /* Permet de couper le texte si nécessaire */
+  max-width: 800px; /* Évite que le texte s'étale trop */
+  margin: 0 auto;
+}
+
+h5 {
+  font-size: 1.5rem; /* Taille plus petite pour le sous-titre */
+  text-align: center;
+  color: #ffffff;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+
+/* Réduction de la taille pour les écrans très petits */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5em; /* Taille plus adaptée aux mobiles */
+  }
+  
+  h5 {
+    font-size: 1.2em;
+  }
+}
+
+/* Pour les très petits écrans */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2em;
+  }
+  
+  h5 {
+    font-size: 1em;
+  }
+}
+
+.search-container {
+  position: relative;
+  width: 70%; /* Taille de la barre */
+  background: white; /* Fond blanc de la barre */
+  border-radius: 40px; /* Coins arrondis de la barre */
+  padding: 8px;
+  z-index: 10;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optionnel : légère ombre */
+}
+
+
+/* Input de recherche */
 .search-container input {
   border: none;
   outline: none;
   flex: 1;
+  width: 100%;
   font-size: 16px;
   padding: 8px;
-  border-radius: 20px; /* Bord arrondi en haut */
+  border-radius: 20px;
 }
 
+/* Bouton de recherche */
 .search-container button {
   background: none;
   border: none;
@@ -62,24 +101,25 @@ h5 {
   top: 12px;
 }
 
-/* Liste des suggestions */
+/* Suggestions */
 .suggestions {
   width: 100%;
   background: white;
   border-top: 1px solid #ddd;
   max-height: 200px;
   overflow-y: auto;
-  border-radius: 0 0 20px 20px; /* Arrondi en bas pour bien coller avec la barre */
+  border-radius: 0 0 20px 20px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none; /* Cachée par défaut */
+  display: none;
   position: absolute;
-  top: 100%; /* Juste en dessous de la barre */
+  top: 100%;
   left: 0;
-  z-index: 9; /* En dessous de la barre */
+  z-index: 9;
 }
 
+/* Affichage dynamique des suggestions */
 .suggestions.show {
-  display: block; /* Affiche la liste des suggestions seulement si nécessaire */
+  display: block;
 }
 
 .suggestions ul {

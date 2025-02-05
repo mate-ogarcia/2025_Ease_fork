@@ -14,11 +14,5 @@ export class NavbarComponent {
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
   }
-  navigateToAbout() {
-    window.location.href = '../../about/about.component.html'; // Rechargement complet de la page
-  }
 
-  navigateToHome() {
-    window.location.href = '/'; // Rechargement complet de la page
-  }
 }

@@ -1,130 +1,126 @@
-header {
-    background: linear-gradient(135deg, #0078d4, #00c6ff);
-    padding: 20px;
-    color: white;
-    text-align: center;
-    font-size: 24px;
-    font-weight: bold;
+:root {
+  --bg-color: #f9f9f9;
+  --primary-color: #ff9900;
+  --text-color: #333;
+  --card-bg: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
-.section {
-    padding: 40px;
-    max-width: 1200px;
-    margin: auto;
-}
-.carousel-part {
+.container {
+  width: 100%;
+  padding: 20px;
   display: flex;
-  flex-direction: row;
   justify-content: center;
   align-items: center;
-}
-.section-title {
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #333;
-    text-align: center;
+  overflow: hidden;
 }
 
-.card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+.app-container {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 10px var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
 }
 
-.card {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+  font-size: 24px;
 }
 
-.card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-.card img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-}
-
-.card-content {
-    padding: 15px;
-}
-
-.card-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin: 0 0 10px;
-    color: #0078d4;
-}
-
-.card-text {
-    font-size: 14px;
-    color: #555;
+.carousel-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: 30px;
 }
 
 .carousel {
-    position: relative;
-    max-width: 900px; /* Largeur du carrousel (ajustable) */
-    margin: auto;
-    overflow: hidden;
-    border-radius: 10px;
-  }
-  
-  .carousel-track {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-    will-change: transform;
-  }
-  
-  .carousel-item {
-    flex: 0 0 calc(100% / 3 - 20px); /* 3 articles visibles */
-    margin-right: 20px;
-    height: 350px;
-    text-align: center;
-    background-color: #fff;
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .carousel-item img {
-    width: 90%;
-    max-height: 200px;
-    object-fit: contain;
-    border-radius: 8px;
-  }
-  
-  .carousel-controls {
-    position: absolute;
-    top: 50%;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    transform: translateY(-50%);
-  }
-  
-  .carousel-button {
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  
-  .carousel-button:hover {
-    background: rgba(0, 0, 0, 0.8);
-  }
-  
+  display: flex;
+  overflow-x: auto; /* Permet le défilement horizontal */
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+/* Embellissement de la scrollbar */
+.carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.carousel::-webkit-scrollbar-track {
+  background: #ddd;
+  border-radius: 10px;
+}
+
+.carousel::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
+}
+
+.carousel::-webkit-scrollbar-thumb:hover {
+  background: #e68a00;
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 150px;
+  text-align: center;
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.carousel-item:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+.carousel-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.carousel-name {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.products-container {
+  background-color: var(--bg-color);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+.products-container h2 {
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.products-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.products-container li {
+  padding: 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.products-container li:last-child {
+  border-bottom: none;
+}
