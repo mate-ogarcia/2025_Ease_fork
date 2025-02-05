@@ -1,0 +1,23 @@
+﻿# Image Node.js de base
+FROM node:18
+
+# Définir le dossier de travail
+WORKDIR /app
+
+# Copier les fichiers package.json et package-lock.json
+COPY package*.json ./
+
+# Installer les dépendances
+RUN npm install
+
+# Copier tout le reste
+COPY . .
+
+# Construire l'application (TypeScript -> JavaScript)
+RUN npm run build
+
+# Exposer le port
+EXPOSE 3000
+
+# Commande de démarrage
+CMD ["npm", "run", "start"]

@@ -1,0 +1,29 @@
+<div #vantaBackground class="container">
+  <app-navbar class="app-navbar"></app-navbar>
+  <div class="title">
+    <div class="slogan">
+      <h1>Consommez local, trouvez l’alternative idéale !</h1>
+    </div>
+    <div class="explication">
+      <h5>Trouvez des alternatives européennes à vos produits importés en un clic ! </h5>
+    </div>
+  </div>
+  <div class="search-container">
+    <input
+      type="text"
+      placeholder="Rechercher..."
+      [(ngModel)]="searchQuery"
+      (input)="onSearch()"
+    />
+    <button (click)="clearSearch()">✖</button>
+
+    <!-- Liste des suggestions (DANS la même div que la barre de recherche) -->
+    <div class="suggestions" [class.show]="filteredResults.length > 0">
+      <ul>
+        <li *ngFor="let result of filteredResults" (click)="selectProduct(result)">
+          {{ result }}
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,126 @@
+:root {
+  --bg-color: #f9f9f9;
+  --primary-color: #ff9900;
+  --text-color: #333;
+  --card-bg: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+.container {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.app-container {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 10px var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+  font-size: 24px;
+}
+
+.carousel-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.carousel {
+  display: flex;
+  overflow-x: auto; /* Permet le défilement horizontal */
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+/* Embellissement de la scrollbar */
+.carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.carousel::-webkit-scrollbar-track {
+  background: #ddd;
+  border-radius: 10px;
+}
+
+.carousel::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
+}
+
+.carousel::-webkit-scrollbar-thumb:hover {
+  background: #e68a00;
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 150px;
+  text-align: center;
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.carousel-item:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+.carousel-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.carousel-name {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.products-container {
+  background-color: var(--bg-color);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+.products-container h2 {
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.products-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.products-container li {
+  padding: 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.products-container li:last-child {
+  border-bottom: none;
+}
