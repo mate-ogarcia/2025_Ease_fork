@@ -48,7 +48,7 @@ export class DatabaseService implements OnModuleInit {
   /**
    * @brief Récupère toutes les données de la base de données Couchbase.
    * 
-   * Cette méthode exécute une requête N1QL pour récupérer les 10 premières 
+   * Cette méthode exécute une requête N1QL pour récupérer les
    * entrées du bucket `my_bucket`. Elle gère également les erreurs éventuelles 
    * en renvoyant un tableau vide en cas d'échec.
    * 
@@ -56,7 +56,7 @@ export class DatabaseService implements OnModuleInit {
    */
   async getAllData(): Promise<any[]> {
     try {
-      const query = 'SELECT * FROM `ProductsBDD` LIMIT 10'; // Requête N1QL
+      const query = 'SELECT * FROM `ProductsBDD`'; // Requête N1QL
       const result = await this.cluster.query(query);
       return result.rows;
     } catch (error) {
