@@ -5,7 +5,15 @@ import { DatabaseService } from './database/database.service';
 export class AppController {
   constructor(private readonly dbService: DatabaseService) {}
 
-  
+  /**
+   * Fonction qui print Hello World sur le back (test des routes)
+   * @returns un print de Hello World
+   */
+  @Get() // Route : http://localhost:3000/
+  getHello(): string {
+    return 'Hello World!';
+  }
+
   /**
    * @brief Récupère les données de la base Couchbase.
    * 
@@ -14,13 +22,9 @@ export class AppController {
    * 
    * @returns {Promise<any[]>} Une promesse contenant les données de la base.
    */
-  @Get()  // /!\ dans le Get() si on mets qlq chose dans la () alors ce sera cobsidéré comme une 
-          // nouvelle route il faudra pour y accéder : localhost:3000/<ce qu'il y a das le GET(...)>
-  async getHello(): Promise<any> {
-    const data = await this.dbService.getAllData();
-    return {
-      message: "Hello World!",
-      data: data
-    };
+  @Get('data') // Route : http://localhost:3000/data
+  async getData(): Promise<any[]> {
+    return await this.dbService.getAllData();
   }
+
 }
