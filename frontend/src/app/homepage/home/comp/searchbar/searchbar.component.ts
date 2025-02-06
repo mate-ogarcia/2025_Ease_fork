@@ -28,7 +28,7 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
     this.vantaEffect = (VANTA as any).default({
       el: '.container',
       THREE: THREE, // Assurez-vous que Three.js est bien passé
-      backgroundColor: 0x14386a,
+      backgroundColor: 0x13172e,
       color1: 0xff0000,
       color2: 0xd1ff,
       birdSize: 1,

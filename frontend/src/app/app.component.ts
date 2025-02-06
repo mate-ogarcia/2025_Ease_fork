@@ -1,16 +1,11 @@
 import { Component } from '@angular/core';
-import { DataDisplayComponent } from './data-display/data-display.component';
-
-import { SearchbarComponent } from './homepage/searchbar/searchbar.component';
-import { ArticleComponent } from './homepage/article/article.component';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  standalone: true, // Composant autonome
+  standalone: true,
   imports: [
-    DataDisplayComponent,
-    SearchbarComponent,
-    ArticleComponent,
+    RouterModule,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
