@@ -8,12 +8,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
-  private apiUrl = 'http://localhost:3000/data';  // URL du backend
+  private _backendUrl = environment.backendUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -26,7 +27,7 @@ export class ApiService {
    * @returns {Observable<any[]>} Un `Observable` contenant les données du backend.
    */
   getData(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+    return this.http.get<any[]>(this._backendUrl);
   }
 
   /**
@@ -39,6 +40,6 @@ export class ApiService {
    * @returns {Observable<any>} Un `Observable` contenant la réponse du serveur.
    */
   sendData(payload: any): Observable<any> {
-    return this.http.post<any>(this.apiUrl, payload);
+    return this.http.post<any>(this._backendUrl, payload);
   }
 }

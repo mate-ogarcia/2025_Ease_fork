@@ -1,5 +1,8 @@
-# .env
+# Fichiers d'environements
 .env
+
+# Ne PAS ignorer les fichiers d'environnement standard
+!/frontend/environments/environment.ts
 
 # Fichier local
 /delDeps.bat
