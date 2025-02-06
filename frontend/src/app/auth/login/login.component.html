@@ -1,0 +1,52 @@
+<body>
+    <section class="wrapper">
+      <!-- Formulaire d'inscription -->
+      <div class="form signup">
+        <header id="signupHeader">Signup</header>
+        <form action="#">
+          <input type="text" placeholder="Full name" required />
+          <input type="text" placeholder="Email address" required />
+          <input type="password" placeholder="Password" required />
+          <div class="checkbox">
+            <input type="checkbox" id="signupCheck" />
+            <label for="signupCheck">I accept all terms & conditions</label>
+          </div>
+          <input type="submit" value="Signup" />
+        </form>
+      </div>
+
+      <!-- Formulaire de connexion -->
+      <div class="form login">
+        <header id="loginHeader">Login</header>
+        <form action="#">
+          <input type="text" placeholder="Email address" required />
+          <input type="password" placeholder="Password" required />
+          <a href="#">Forgot password?</a>
+          <input type="submit" value="Login" />
+        </form>
+      </div>
+    </section>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Sélection des éléments du DOM
+            const wrapper = document.querySelector(".wrapper");
+            const signupHeader = document.getElementById("signupHeader");
+            const loginHeader = document.getElementById("loginHeader");
+
+            // Vérifie si les éléments existent
+            if (wrapper && signupHeader && loginHeader) {
+                loginHeader.addEventListener("click", function () {
+                    wrapper.classList.add("active"); // Affiche le formulaire de login
+                });
+
+                signupHeader.addEventListener("click", function () {
+                    wrapper.classList.remove("active"); // Revient au formulaire Signup
+                });
+            } else {
+                console.error("Erreur : Un ou plusieurs éléments ne sont pas trouvés.");
+            }
+        });
+    </script>
+</body>
