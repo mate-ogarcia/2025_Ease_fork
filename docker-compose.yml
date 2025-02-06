@@ -11,7 +11,7 @@
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_BUCKET=${DB_BUCKET}
+      - DB_BUCKET=${BUCKET_NAME}
     volumes:
       - ./backend:/app
       - /app/node_modules

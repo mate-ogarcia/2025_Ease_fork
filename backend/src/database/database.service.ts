@@ -1,10 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as couchbase from 'couchbase';
+// Utilisation du .env
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit {
   private cluster!: couchbase.Cluster;
   private bucket!: couchbase.Bucket;
+  
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
     await this.connectToDatabase();
@@ -18,9 +22,12 @@ export class DatabaseService implements OnModuleInit {
   private async connectToDatabase() {
     try {
       console.log('🟡 Connexion à Couchbase en cours...');
-      this.cluster = await couchbase.connect('couchbase://172.29.128.1', {
-        username: 'user1',
-        password: 'password',
+      const ipCouchbase = this.configService.get<string>('IP_COUCHBASE');
+      const username = this.configService.get<string>('DB_USER', 'default_user');
+      const password = this.configService.get<string>('DB_PASSWORD', 'default_password');
+      this.cluster = await couchbase.connect(ipCouchbase, {
+        username,
+        password,
       });
 
       this.bucket = this.cluster.bucket('ProductsBDD');
@@ -55,8 +62,10 @@ export class DatabaseService implements OnModuleInit {
    * @returns {Promise<any[]>} Une promesse contenant un tableau avec les données récupérées.
    */
   async getAllData(): Promise<any[]> {
+    const bucketName = this.configService.get<string>('BUCKET_NAME');
+
     try {
-      const query = 'SELECT * FROM `ProductsBDD`'; // Requête N1QL
+      const query = `SELECT * FROM \`${bucketName}\``; // Requête N1QL
       const result = await this.cluster.query(query);
       return result.rows;
     } catch (error) {

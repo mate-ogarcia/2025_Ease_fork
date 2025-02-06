@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { NavbarComponent } from './homepage/navbar/navbar.component';
 import { DataDisplayComponent } from './data-display/data-display.component';
 
 import { SearchbarComponent } from './homepage/searchbar/searchbar.component';
