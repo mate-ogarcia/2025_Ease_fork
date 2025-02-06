@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule  } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { DatabaseModule } from './database/database.module';
 import { DataModule } from './data/data.module';
@@ -6,10 +6,15 @@ import { AppService } from './app.service';
 // Utilisation du .env
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+// Limiter nb de requetes
+import { ThrottlerModule } from '@nestjs/throttler';
+// Suivre requete HTTP 
+import { LoggingMiddleware } from './logging.middleware';
 
 
 @Module({
-  imports: [DatabaseModule,
+  imports: [
+    DatabaseModule,
     DataModule,
     // Charger les variables d'environnement et valider avec Joi
     ConfigModule.forRoot({
@@ -18,11 +23,21 @@ import * as Joi from 'joi';
       validationSchema: Joi.object({
         BUCKET_NAME: Joi.string().required(),
         URL_FRONTEND: Joi.string().uri().required(),
-        BACKEND_PORT: Joi.number().required(),
+        BACKEND_PORT: Joi.number().required().default(3000),
       }),
     }),
-  ],  // Import des modules distant uniquement
+    // Limiter le nombre de requete pour éviter attaque force brut
+    ThrottlerModule.forRoot([{
+      ttl: 60,    // Durée de la fenêtre en secondes
+      limit: 10,  // Nombre max de requêtes autorisées par IP
+    }]),
+  ],
+  // Import des modules distant uniquement
   controllers: [AppController],
-  providers: [AppService],                // Import des services de app 
+  providers: [AppService],      // Import des services de app 
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggingMiddleware).forRoutes('*'); // Appliquer le middleware à toutes les routes
+  }
+}
