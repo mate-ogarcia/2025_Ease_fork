@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./data-display/data-display.component').then(m => m.DataDisplayComponent)
   },
   {
+    path: 'login',
+    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
     path: '',
     redirectTo: '/home',
     pathMatch: 'full'

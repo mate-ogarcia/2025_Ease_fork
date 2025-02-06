@@ -35,7 +35,7 @@
   display: flex;
   align-items: center;
   flex: 1; /* Pour occuper l'espace entre logo et user */
-  gap: 35px;
+  gap: 10px;
   padding-left: 20px;
   margin: 0;
   text-align: center;
@@ -71,7 +71,7 @@
   align-items: center;
   width: 50px;
   border-radius: 50%;
-  border: 1px solid #f39c12;
+  border: 1px solid #129714;
   padding: 7px;
 }
 .userprofile {

@@ -71,7 +71,7 @@
   align-items: center;
   width: 50px;
   border-radius: 50%;
-  border: 1px solid #f39c12;
+  border: 1px solid #129714;
   padding: 7px;
 }
 .userprofile {
@@ -88,7 +88,7 @@
 .menu-toggle span {
   width: 25px;
   height: 3px;
-  background: #f39c12;
+  background: #f9f9f9;
   margin: 4px 0;
   transition: 0.3s;
 }
