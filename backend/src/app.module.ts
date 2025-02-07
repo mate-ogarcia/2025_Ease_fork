@@ -10,12 +10,14 @@ import * as Joi from 'joi';
 import { ThrottlerModule } from '@nestjs/throttler';
 // Suivre requete HTTP 
 import { LoggingMiddleware } from './logging.middleware';
+import { RequestHandlerModule } from './requestHandler/requestHandler.module';
 
 
 @Module({
   imports: [
     DatabaseModule,
     DataModule,
+    RequestHandlerModule,
     // Charger les variables d'environnement et valider avec Joi
     ConfigModule.forRoot({
       isGlobal: true, // Rendre les variables disponibles dans tous les modules

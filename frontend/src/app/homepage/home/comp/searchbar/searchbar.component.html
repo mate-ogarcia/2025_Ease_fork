@@ -14,6 +14,7 @@
       placeholder="Rechercher..."
       [(ngModel)]="searchQuery"
       (input)="onSearch()"
+      (keydown.enter)="onEnter($event)" 
     />
     <button (click)="clearSearch()">✖</button>
 

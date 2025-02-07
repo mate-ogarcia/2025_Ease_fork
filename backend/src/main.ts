@@ -1,14 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DatabaseService } from './database/database.service';
-// Utilisation du .env
+// Use of .env
 import { ConfigService } from '@nestjs/config';
-// Logger global
+// Global logger
 import * as winston from 'winston';
 import { WinstonModule } from 'nest-winston';
 
 async function bootstrap() {
-  // Configurer Winston Logger
+  // Configure Winston Logger
   const logger = WinstonModule.createLogger({
     transports: [
       new winston.transports.Console({
@@ -30,15 +30,15 @@ async function bootstrap() {
     ],
   });
 
-  // Charger l'application NestJS avec le logger global
+  // Load NestJS application with global logger
   const app = await NestFactory.create(AppModule, { logger });
 
-  // Récupérer les services nécessaires
+  // Get the necessary services
   const databaseService = app.get(DatabaseService);
   const configService = app.get(ConfigService);
 
   try {
-    // Initialisation de la base de données
+    // Database initialization
     await databaseService.onModuleInit();
     const bucket = databaseService.getBucket();
     logger.log('info', `✅ Connexion réussie au bucket : ${configService.get('BUCKET_NAME')} (main.ts)`);
@@ -46,14 +46,14 @@ async function bootstrap() {
     logger.error(`❌ Erreur lors de l’utilisation du bucket (main.ts) : ${error.message}`);
   }
 
-  // Configurer CORS pour autoriser les requêtes Angular
+  // Configure CORS to allow Angular requests
   app.enableCors({
     origin: configService.get('URL_FRONTEND'),
     methods: 'GET,POST,PUT,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
   });
 
-  // Lancer le serveur
+  // Launch server
   const port = configService.get('BACKEND_PORT') || 3000;
   await app.listen(port, '0.0.0.0');
   logger.log('info', `🚀 Application démarrée sur http://localhost:${port}`);

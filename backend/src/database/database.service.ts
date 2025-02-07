@@ -1,77 +1,122 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as couchbase from 'couchbase';
-// Utilisation du .env
+// Use of .env
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit {
   private cluster!: couchbase.Cluster;
   private bucket!: couchbase.Bucket;
-  
-  constructor(private readonly configService: ConfigService) {}
 
+  constructor(private readonly configService: ConfigService) { }
+
+  /**
+   * Called when the module is initialized.
+   * Connects to the Couchbase database.
+   */
   async onModuleInit() {
     await this.connectToDatabase();
   }
 
   /**
-   * Permet la connection à la DB
+   * Establishes a connection to the Couchbase database.
    * 
-   * /!\ l'IP doit etre celle de la machine qui héberge la DB
+   * This method retrieves database credentials and connection details from environment variables.
+   * It connects to the Couchbase cluster and initializes the bucket.
+   * 
+   * /!\ The IP should be the one of the machine hosting the DB.
    */
   private async connectToDatabase() {
     try {
-      console.log('🟡 Connexion à Couchbase en cours...');
+      console.log('🟡 Connecting to Couchbase...');
       const ipCouchbase = this.configService.get<string>('IP_COUCHBASE');
       const username = this.configService.get<string>('DB_USER', 'default_user');
       const password = this.configService.get<string>('DB_PASSWORD', 'default_password');
+      const bucketName = this.configService.get<string>('BUCKET_NAME');
       this.cluster = await couchbase.connect(ipCouchbase, {
         username,
         password,
       });
 
-      this.bucket = this.cluster.bucket('ProductsBDD');
-      console.log('✅ Connexion réussie à Couchbase !');
+      this.bucket = this.cluster.bucket(bucketName);
+      console.log('✅ Successfully connected to Couchbase!');
     } catch (error) {
-      console.error('❌ Erreur de connexion à Couchbase :', error);
-      throw new Error('Impossible de se connecter à Couchbase');
+      console.error('❌ Connection error to Couchbase:', error);
+      throw new Error('Unable to connect to Couchbase');
     }
   }
 
+  /**
+   * Retrieves the bucket object from the Couchbase cluster.
+   * 
+   * @returns {couchbase.Bucket} The initialized bucket object.
+   * @throws {Error} If the bucket has not been initialized yet.
+   */
   getBucket() {
     if (!this.bucket) {
-      throw new Error('Le bucket Couchbase n\'est pas encore initialisé.');
+      throw new Error('Couchbase bucket is not initialized yet.');
     }
     return this.bucket;
   }
 
+  /**
+   * Retrieves the default collection from the bucket.
+   * 
+   * @returns {couchbase.Collection} The default collection of the initialized bucket.
+   * @throws {Error} If the bucket has not been initialized yet.
+   */
   getCollection() {
     if (!this.bucket) {
-      throw new Error('Le bucket Couchbase n\'est pas encore initialisé.');
+      throw new Error('Couchbase bucket is not initialized yet.');
     }
     return this.bucket.defaultCollection();
   }
 
   /**
-   * @brief Récupère toutes les données de la base de données Couchbase.
+   * Retrieves all data from the Couchbase database using a N1QL query.
    * 
-   * Cette méthode exécute une requête N1QL pour récupérer les
-   * entrées du bucket `my_bucket`. Elle gère également les erreurs éventuelles 
-   * en renvoyant un tableau vide en cas d'échec.
+   * This method executes a query on the specified bucket to fetch all the data entries.
+   * In case of an error, it returns an empty array.
    * 
-   * @returns {Promise<any[]>} Une promesse contenant un tableau avec les données récupérées.
+   * @returns {Promise<any[]>} A promise that resolves to an array of the data retrieved.
    */
   async getAllData(): Promise<any[]> {
     const bucketName = this.configService.get<string>('BUCKET_NAME');
 
     try {
-      const query = `SELECT * FROM \`${bucketName}\``; // Requête N1QL
+      const query = `SELECT * FROM \`${bucketName}\``; // N1QL query
       const result = await this.cluster.query(query);
       return result.rows;
     } catch (error) {
-      console.error('Erreur lors de la récupération des données:', error);
+      console.error('Error while retrieving data:', error);
       return [];
     }
   }
 
+  /**
+   * Executes a Full Text Search (FTS) query on the specified index in Couchbase.
+   * 
+   * This method performs an FTS query using a query string and returns the search results.
+   * 
+   * @param {string} searchQuery - The search query string to be executed.
+   * @returns {Promise<any[]>} A promise that resolves to an array of the search results.
+   * @throws {Error} If there is an error executing the FTS query.
+   */
+  async searchQuery(searchQuery: string): Promise<any[]> {
+    const _indexName = this.configService.get<string>('INDEX_NAME');  // Ensure the index name is correct
+
+    try {
+      // FTS query with SearchQuery.queryString
+      const searchRes = await this.cluster.searchQuery(
+        _indexName, // Index name
+        couchbase.SearchQuery.queryString(searchQuery) // Search using the query string
+      );
+
+      // Returns the search results
+      return searchRes.rows;
+    } catch (error) {
+      console.error('Error FTS : ', error);
+      throw error;
+    }
+  }
 }
