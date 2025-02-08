@@ -1,52 +1,45 @@
-<body>
-    <section class="wrapper">
-      <!-- Formulaire d'inscription -->
-      <div class="form signup">
-        <header id="signupHeader">Signup</header>
-        <form action="#">
-          <input type="text" placeholder="Full name" required />
-          <input type="text" placeholder="Email address" required />
-          <input type="password" placeholder="Password" required />
-          <div class="checkbox">
-            <input type="checkbox" id="signupCheck" />
-            <label for="signupCheck">I accept all terms & conditions</label>
-          </div>
-          <input type="submit" value="Signup" />
-        </form>
+<body [class.dark-mode]="isDarkMode">
+  <img class="wave" src="wave.png">
+  <img class="wavetop" src="wavetop.png">
+
+  <div class="container">
+      <div class="login-content">
+          <form action="index.html">
+              <img src="ours.png">
+              <h2 class="title">Welcome</h2>
+
+              <!-- Champ Username -->
+      <div class="input-container name">
+        <div class="icon-log">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="data">
+          <h5>Username</h5>
+          <input #usernameInput type="text" class="input-log" name="username" [(ngModel)]="username">
+        </div>
       </div>
 
-      <!-- Formulaire de connexion -->
-      <div class="form login">
-        <header id="loginHeader">Login</header>
-        <form action="#">
-          <input type="text" placeholder="Email address" required />
-          <input type="password" placeholder="Password" required />
-          <a href="#">Forgot password?</a>
-          <input type="submit" value="Login" />
-        </form>
+      <!-- Champ Password avec icône d'œil -->
+      <div class="input-container pass">
+        <div class="icon-log"> 
+          <i class="fas fa-lock"></i>
+        </div>
+        <div class="data">
+          <h5>Password</h5>
+          <input #passwordInput [attr.type]="showPassword ? 'text' : 'password'" 
+            class="input-log" name="password" [(ngModel)]="password">
+          <span class="eye-icon" (click)="togglePasswordVisibility()">
+            <i class="fas eyes" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
+          </span>
+        </div>
       </div>
-    </section>
 
-    <!-- JavaScript -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Sélection des éléments du DOM
-            const wrapper = document.querySelector(".wrapper");
-            const signupHeader = document.getElementById("signupHeader");
-            const loginHeader = document.getElementById("loginHeader");
+              <a href="#">Forgot Password?</a>
+              <input type="submit" class="btn" value="Login">
+          </form>
+      </div>
+  </div>
 
-            // Vérifie si les éléments existent
-            if (wrapper && signupHeader && loginHeader) {
-                loginHeader.addEventListener("click", function () {
-                    wrapper.classList.add("active"); // Affiche le formulaire de login
-                });
-
-                signupHeader.addEventListener("click", function () {
-                    wrapper.classList.remove("active"); // Revient au formulaire Signup
-                });
-            } else {
-                console.error("Erreur : Un ou plusieurs éléments ne sont pas trouvés.");
-            }
-        });
-    </script>
+  <!-- Bouton Dark Mode -->
+  <button class="dark-mode-btn" (click)="toggleDarkMode()">🌙</button>
 </body>
