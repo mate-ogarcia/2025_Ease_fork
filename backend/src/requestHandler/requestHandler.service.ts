@@ -10,7 +10,7 @@ export class RequestHandler implements OnModuleInit {
    * You can use this method to perform any setup or initialization tasks.
    */
   async onModuleInit() {
-    // Initialization logic here if needed
+    // TODO ? IDK if needed
     console.log("RequestHandler module initialized.");
   }
 
@@ -35,8 +35,10 @@ export class RequestHandler implements OnModuleInit {
       const searchResults = await this.databaseService.searchQuery(searchQuery);
 
       // Log or return the search results as needed
-      console.log("Search results:", searchResults);
-      return searchResults; // Optionally return or process the results
+      console.log("Search results (requestHandler.service.ts): ", searchResults);
+
+      // Return the search results to the controller
+      return searchResults
     } catch (error) {
       console.error("Error during search:", error);
     }

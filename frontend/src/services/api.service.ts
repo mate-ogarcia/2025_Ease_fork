@@ -15,6 +15,7 @@ import { environment } from '../environments/environment';
 })
 export class ApiService {
   private _backendUrl = environment.backendUrl;
+  private _searchUrl = environment.searchUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -30,6 +31,10 @@ export class ApiService {
     return this.http.get<any[]>(this._backendUrl);
   }
 
+  getSearchResults(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this._searchUrl}?q=${query}`);
+  }
+
   /**
    * @brief Envoie des données au backend via une requête HTTP POST.
    * 
@@ -41,5 +46,18 @@ export class ApiService {
    */
   sendData(payload: any): Observable<any> {
     return this.http.post<any>(this._backendUrl, payload);
+  }
+
+  /**
+   * @brief Envoie des données au backend via une requête HTTP POST.
+   * 
+   * Cette méthode envoie un `payload` au backend (`POST `). Elle retourne 
+   * un `Observable` contenant la réponse du serveur.
+   * 
+   * @param {any} payload - Les données à envoyer au backend.
+   * @returns {Observable<any>} Un `Observable` contenant la réponse du serveur.
+   */
+  sendSearchData(payload: any): Observable<any> {
+    return this.http.post<any>(this._searchUrl, payload);
   }
 }

@@ -109,7 +109,11 @@ export class DatabaseService implements OnModuleInit {
       // FTS query with SearchQuery.queryString
       const searchRes = await this.cluster.searchQuery(
         _indexName, // Index name
-        couchbase.SearchQuery.queryString(searchQuery) // Search using the query string
+        couchbase.SearchQuery.queryString(searchQuery), // Search using the query string
+        {
+          fields: ['*'], // Get all the fields
+          highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "description"] } // Highlight some fields
+        }
       );
 
       // Returns the search results

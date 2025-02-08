@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query  } from '@nestjs/common';
 import { RequestHandler } from './requestHandler.service'; 
 
 @Controller('request-handler')  
@@ -7,10 +7,11 @@ export class RequestHandlerController {
 
   @Post('search')
   async handleProductSearch(@Body() body: { search: string }) {
-    const { search } = body;
-    console.log('Received search query:', search);
-    
+    console.log('Received search query:', body.search);
+
     // Call requestHandler.service to process the search
-    return await this.requestHandlerService.processSearch(search);
+    const results = await this.requestHandlerService.processSearch(body.search); await this.requestHandlerService.processSearch(body.search);
+    // Return the search results as a JSON response to the frontend
+    return results;
   }
 }

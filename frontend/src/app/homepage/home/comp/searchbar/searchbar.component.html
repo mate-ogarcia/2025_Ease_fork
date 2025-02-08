@@ -26,5 +26,23 @@
         </li>
       </ul>
     </div>
+
+    <!--Display search results -->
+    <div class="search-results" *ngIf="searchResults.length > 0">
+      <h3>Résultats de la recherche :</h3>
+      <ul>
+        <li *ngFor="let result of searchResults">
+          {{ result.name }} - {{ result.description }}
+        </li>
+      </ul>
+    </div>
+    
+    <!-- Affichage du message si aucun résultat n'est trouvé -->
+    <div *ngIf="noResultsMessage" class="no-results-message">
+      <p>{{ noResultsMessage }}</p>
+    </div>
+    
+
+
   </div>
 </div>

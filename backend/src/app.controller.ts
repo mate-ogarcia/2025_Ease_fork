@@ -34,20 +34,4 @@ export class AppController {
   async getData(): Promise<any[]> {
     return await this.appService.getData();
   }
-
-  /**
-   * @brief Receives data sent from the frontend and logs it to the backend console.
-   * 
-   * This method intercepts a POST request to the `/data` endpoint and logs the received data.
-   * It then processes the received data using the `RequestHandlerService`.
-   * 
-   * @param {any} data - The data sent from the frontend.
-   * @returns {Promise<void>} A promise that resolves once the data has been processed.
-   */
-  @Post('data') // POST route to receive data
-  async receiveData(@Body() data: any): Promise<any> {
-    console.log("✅  Data received from the frontend (backend):", data);
-    // Call data processing
-    const result = await this.requestHandlerService.processSearch(data.search);
-  }
 }
