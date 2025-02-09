@@ -1,6 +1,7 @@
 <body [class.dark-mode]="isDarkMode">
-  <img class="wave" src="wave.png">
-  <img class="wavetop" src="wavetop.png">
+  <img class="wave" [src]="isDarkMode ? 'wavedark.png' : 'wave.png'">
+  <img class="wavetop" [src]="isDarkMode ? 'wavetopdark.png' : 'wavetop.png'">
+
 
   <div class="container">
       <div class="login-content">

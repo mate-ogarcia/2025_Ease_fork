@@ -1,0 +1,46 @@
+<div class="container">
+    <div class="categ-container">
+        <div class="rayons-container">
+            <div class="rayons-wrapper">
+                <div class="rayon" *ngFor="let rayon of rayons" 
+                     (click)="selectRayon(rayon.name)"
+                     [ngStyle]="{'background-color': getPastelColor(rayon.name)}">
+                    <div class="rayon-icon">{{ rayon.icon }}</div>
+                    <div class="rayon-title">{{ rayon.name }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="details-container">
+            <div class="details-content">
+                <div class="rayon-header">
+                    <div class="title-categ">
+                        <h2>{{ currentRayon || 'Sélectionnez un rayon' }}</h2>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" class="searchbar-prod" [(ngModel)]="searchQuery" (input)="filterProducts()" placeholder="Rechercher un produit...">
+                    </div>    
+                </div>
+                <div id="rayon-products" class="product-grid">
+                    <div *ngFor="let product of filteredProducts" class="product-card">
+                        <div class="product-image">
+                            <img [src]="'https://via.placeholder.com/200x200?text=' + product.name" [alt]="product.name">
+                        </div>
+                        <div class="product-info">
+                            <div>
+                                <h3>{{ product.name }}</h3>
+                                <p class="region">Région: {{ product.region }}</p>
+                                <div class="description-rating-container">
+                                    <p class="description">{{ product.description }}</p>
+                                    <div class="product-rating">
+                                        <span class="rating-dot" [ngClass]="getRatingDotClass(product.ecologicalImpact)"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
