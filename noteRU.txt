@@ -1,0 +1,14 @@
+GitHub page pour deployer site
+glitch.com pour déployer
+
+-----------------------
+persistance docker
+
+héberger front sur github pages et back sur docker
+
+-----------------------
+Semaine pro :
+1. SearchBar opé
+2. Commencer à penser responsive
+3. Permissions/Rôles
+4. Liaison BDD

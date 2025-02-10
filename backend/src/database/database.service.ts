@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit {
-  private cluster!: couchbase.Cluster;
+  private cluster!: couchbase.Cluster; // TODO
   private bucket!: couchbase.Bucket;
   
   constructor(private readonly configService: ConfigService) {}
