@@ -35,10 +35,13 @@ export class RequestHandler implements OnModuleInit {
       const searchResults = await this.databaseService.searchQuery(searchQuery);
 
       // Log or return the search results as needed
-      console.log("Search results (requestHandler.service.ts): ", searchResults);
+      console.log(
+        "Search results (requestHandler.service.ts): ",
+        searchResults
+      );
 
       // Return the search results to the controller
-      return searchResults
+      return searchResults;
     } catch (error) {
       console.error("Error during search:", error);
     }
