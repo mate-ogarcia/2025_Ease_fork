@@ -31,6 +31,7 @@ export class ApiService {
     return this.http.get<any[]>(this._backendUrl);
   }
 
+  // TODO
   getSearchResults(query: string): Observable<any[]> {
     return this.http.get<any[]>(`${this._searchUrl}?q=${query}`);
   }
