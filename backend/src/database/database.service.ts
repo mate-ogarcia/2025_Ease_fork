@@ -103,24 +103,32 @@ export class DatabaseService implements OnModuleInit {
    * @throws {Error} If there is an error executing the FTS query.
    */
   async searchQuery(searchQuery: string): Promise<any[]> {
-    const _indexName = this.configService.get<string>('INDEX_NAME');  // Ensure the index name is correct
-
+    const _indexName = this.configService.get<string>('INDEX_NAME');
+    searchQuery = searchQuery.toLowerCase(); // Normalize the query
+  
     try {
-      // FTS query with SearchQuery.queryString
+      const prefixQuery = couchbase.SearchQuery.prefix(searchQuery); // Prefix search
+      const matchQuery = couchbase.SearchQuery.match(searchQuery); // Natural language search
+  
+      // Combine prefix and match queries
+      const combinedQuery = couchbase.SearchQuery.disjuncts(prefixQuery, matchQuery);
+  
       const searchRes = await this.cluster.searchQuery(
-        _indexName, // Index name
-        couchbase.SearchQuery.queryString(searchQuery), // Search using the query string
+        _indexName,
+        combinedQuery,
         {
-          fields: ['*'], // Get all the fields
-          highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "description"] } // Highlight some fields
+          fields: ["name", "description", "category", "tags"],
+          highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "description", "category", "tags"] }
         }
       );
-
-      // Returns the search results
+  
       return searchRes.rows;
     } catch (error) {
-      console.error('Error FTS : ', error);
+      console.error('Error FTS:', error);
       throw error;
     }
   }
+  
+  
+  
 }
