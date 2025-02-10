@@ -21,9 +21,13 @@ export class DataService {
 
     try {
       // Détection de l'environnement et construction du chemin
+      // Chemin docker
       const basePath =
         process.env.BASE_PATH || path.resolve(__dirname, '..', '..');
       const filePath = path.join(basePath, 'src', 'products.json');
+
+      // Chemin local
+      // const filePath = './src/products.json'
 
       // Chargement du fichier JSON
       const fileData = fs.readFileSync(filePath, 'utf-8');
