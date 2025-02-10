@@ -37,7 +37,7 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
       separation: 90.00,
       alignment: 20.00
     });
-  
+    
   }
 
   ngOnDestroy(): void {
