@@ -1,0 +1,33 @@
+.container {
+    width: 100%;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: aqua;
+    justify-content: center;
+    border-radius: 40px;
+    padding: 20px;
+}
+.prod-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+}
+.product-details{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.product-rating{
+    width: 100%;
+    display: flex; 
+    justify-content: flex-end
+}

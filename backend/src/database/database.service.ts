@@ -1,106 +1,109 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as couchbase from 'couchbase';
+﻿/**
+ * @file database.service.ts
+ * @brief Service for handling database operations.
+ *
+ * This service provides functionalities to interact with the database,
+ * including CRUD operations and connection management.
+ */
+
+import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
+import * as couchbase from "couchbase";
+import * as fs from "fs";
 // Use of .env
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class DatabaseService implements OnModuleInit {
-  private cluster!: couchbase.Cluster; // TODO
-  private bucket!: couchbase.Bucket;
+export class DatabaseService implements OnModuleInit, OnModuleDestroy {
+  private cluster: couchbase.Cluster;
+  private bucket: couchbase.Bucket;
+  private collection: couchbase.Collection;
 
   constructor(private readonly configService: ConfigService) { }
 
   /**
-   * Called when the module is initialized.
-   * Connects to the Couchbase database.
+   * Initializes the Couchbase connection when the module starts.
+   * Loads the SSL certificate and connects to the Couchbase Capella cluster.
    */
   async onModuleInit() {
-    await this.connectToDatabase();
-  }
-
-  /**
-   * Establishes a connection to the Couchbase database.
-   * 
-   * This method retrieves database credentials and connection details from environment variables.
-   * It connects to the Couchbase cluster and initializes the bucket.
-   * 
-   * /!\ The IP should be the one of the machine hosting the DB.
-   */
-  private async connectToDatabase() {
     try {
-      console.log('🟡 Connecting to Couchbase...');
-      const ipCouchbase = this.configService.get<string>('IP_COUCHBASE');
-      const username = this.configService.get<string>('DB_USER', 'default_user');
-      const password = this.configService.get<string>('DB_PASSWORD', 'default_password');
-      const bucketName = this.configService.get<string>('BUCKET_NAME');
-      this.cluster = await couchbase.connect(ipCouchbase, {
-        username,
-        password,
+      console.log("🔹 Waiting before connecting...");
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // 2-second delay
+
+      // Load the SSL root certificate
+      const cert = fs.readFileSync(process.env.SSL_CERT_PATH).toString();
+
+      console.log("🔹 Connecting to Couchbase Capella...");
+      this.cluster = await couchbase.connect(process.env.DB_HOST, {
+        username: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        configProfile: "wanDevelopment", // Required for WAN connections
       });
 
-      this.bucket = this.cluster.bucket(bucketName);
-      console.log('✅ Successfully connected to Couchbase!');
+      this.bucket = this.cluster.bucket(process.env.BUCKET_NAME);
+      this.collection = this.bucket.defaultCollection();
+      console.log("✅ Successfully connected to Couchbase Capella!");
     } catch (error) {
-      console.error('❌ Connection error to Couchbase:', error);
-      throw new Error('Unable to connect to Couchbase');
+      console.error("❌ Connection error to Couchbase Capella:", error.message);
+      throw new Error("Unable to connect to Couchbase Capella");
     }
   }
 
   /**
-   * Retrieves the bucket object from the Couchbase cluster.
-   * 
+   * Closes the connection to the Couchbase cluster when the module is destroyed.
+   */
+  async onModuleDestroy() {
+    await this.cluster.close();
+    console.log("🔹 Couchbase connection closed.");
+  }
+
+  /**
+   * Retrieves the Couchbase bucket instance.
    * @returns {couchbase.Bucket} The initialized bucket object.
    * @throws {Error} If the bucket has not been initialized yet.
    */
-  getBucket() {
+  getBucket(): couchbase.Bucket {
     if (!this.bucket) {
-      throw new Error('Couchbase bucket is not initialized yet.');
+      throw new Error("❌ Couchbase bucket is not initialized yet.");
     }
     return this.bucket;
   }
 
   /**
-   * Retrieves the default collection from the bucket.
-   * 
-   * @returns {couchbase.Collection} The default collection of the initialized bucket.
-   * @throws {Error} If the bucket has not been initialized yet.
+   * Retrieves the default collection from the Couchbase bucket.
+   * @returns {Promise<couchbase.Collection>} The default collection.
+   * @throws {Error} If the collection has not been initialized yet.
    */
-  getCollection() {
-    if (!this.bucket) {
-      throw new Error('Couchbase bucket is not initialized yet.');
+  async getCollection(): Promise<couchbase.Collection> {
+    if (!this.collection) {
+      throw new Error("❌ Collection not initialized");
     }
-    return this.bucket.defaultCollection();
+    return this.collection;
   }
 
   /**
-   * Retrieves all data from the Couchbase database using a N1QL query.
-   * 
-   * This method executes a query on the specified bucket to fetch all the data entries.
-   * In case of an error, it returns an empty array.
-   * 
-   * @returns {Promise<any[]>} A promise that resolves to an array of the data retrieved.
+   * Executes a N1QL query to retrieve all data from the Couchbase bucket.
+   * @returns {Promise<any[]>} A promise that resolves to an array of all documents.
+   * @throws {Error} If the query execution fails.
    */
   async getAllData(): Promise<any[]> {
-    const bucketName = this.configService.get<string>('BUCKET_NAME');
+    const bucketName = process.env.BUCKET_NAME;
 
     try {
-      const query = `SELECT * FROM \`${bucketName}\``; // N1QL query
+      console.log(`🔹 Executing N1QL query: SELECT * FROM \`${bucketName}\``);
+      const query = `SELECT * FROM \`${bucketName}\``;
       const result = await this.cluster.query(query);
       return result.rows;
     } catch (error) {
-      console.error('Error while retrieving data:', error);
+      console.error("❌ Error while retrieving data:", error);
       return [];
     }
   }
 
   /**
-   * Executes a Full Text Search (FTS) query on the specified index in Couchbase.
-   * 
-   * This method performs an FTS query using a query string and returns the search results.
-   * 
-   * @param {string} searchQuery - The search query string to be executed.
-   * @returns {Promise<any[]>} A promise that resolves to an array of the search results.
-   * @throws {Error} If there is an error executing the FTS query.
+   * Executes a Full Text Search (FTS) query on Couchbase Capella.
+   * @param {string} searchQuery - The query string to search for.
+   * @returns {Promise<any[]>} A promise that resolves to an array of search results.
+   * @throws {Error} If the search query execution fails.
    */
   async searchQuery(searchQuery: string): Promise<any[]> {
     const _indexName = this.configService.get<string>('INDEX_NAME');
@@ -117,14 +120,14 @@ export class DatabaseService implements OnModuleInit {
         _indexName,
         combinedQuery,
         {
-          fields: ["name", "category", "tags"],
-          highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "category", "tags"] }
+          fields: ["name", "description", "category", "tags"],
+          highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "description", "category", "tags"] }
         }
       );
   
       return searchRes.rows;
     } catch (error) {
-      console.error('Error FTS:', error);
+      console.error("❌ Error during FTS query:", error);
       throw error;
     }
   }

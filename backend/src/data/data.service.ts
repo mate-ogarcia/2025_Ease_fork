@@ -1,56 +1,62 @@
-/* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import * as fs from 'fs';
-import * as path from 'path';
+/**
+ * @file data.service.ts
+ * @brief Service for handling data operations.
+ *
+ * This service provides functionalities for managing product data,
+ * including adding, retrieving, and checking for duplicates before insertion.
+ */
+
+import { Injectable } from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
+import * as fs from "fs";
+import * as path from "path";
 
 @Injectable()
 export class DataService {
-  constructor(private readonly databaseService: DatabaseService) { }
+  constructor(private readonly databaseService: DatabaseService) {}
 
   async onApplicationBootstrap() {
-    console.log('Démarrage de l’importation des produits...');
+    console.log("Démarrage de l’importation des produits...");
     await this.insertProductsToDatabase();
   }
 
   /**
-   * Insère les produits du fichier products.json dans la db couchBase
+   * Inserts products from the products.json file into the Couchbase database.
+   * Ensures that duplicate products are not inserted.
    */
   async insertProductsToDatabase() {
-    const collection = this.databaseService.getCollection();
+    const collection = await this.databaseService.getCollection();
 
     try {
-      // Détection de l'environnement et construction du chemin
-      // Chemin docker
-      const basePath =
-        process.env.BASE_PATH || path.resolve(__dirname, '..', '..');
-      //const filePath = path.join(basePath, 'src', 'products.json');
+      // Determine environment and construct file path
+      const basePath = path.resolve(__dirname, "..", "..");
+      const filePath = path.join(basePath, "src", "products.json");
 
-      // Chemin local
-      const filePath = './src/products.json'
-
-      // Chargement du fichier JSON
-      const fileData = fs.readFileSync(filePath, 'utf-8');
+      // Load JSON file
+      const fileData = fs.readFileSync(filePath, "utf-8");
       const products = JSON.parse(fileData);
 
-      console.log('Insertion des produits dans Couchbase...');
+      console.log("Inserting products into Couchbase...");
       for (const product of products) {
         try {
+          // Check if product already exists
+          const existingProduct = await collection
+            .get(product.id)
+            .catch(() => null);
+          if (existingProduct) {
+            console.log(`Product already exists, skipping: ${product.id}`);
+            continue;
+          }
+
           await collection.upsert(product.id, product);
-          console.log(`Produit ajouté ou mis à jour : ${product.id}`);
+          console.log(`Product added or updated: ${product.id}`);
         } catch (error) {
-          console.error(
-            `Erreur lors de l'insertion du produit ${product.id} :`,
-            error,
-          );
+          console.error(`Error inserting product ${product.id}:`, error);
         }
       }
-      console.log('Tous les produits ont été traités.');
+      console.log("All products have been processed.");
     } catch (error) {
-      console.error(
-        'Erreur lors de la lecture ou de l’insertion des produits :',
-        error.message,
-      );
+      console.error("Error reading or inserting products:", error.message);
     }
   }
 }
