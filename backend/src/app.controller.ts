@@ -1,12 +1,10 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
-import { RequestHandler } from './requestHandler/requestHandler.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly requestHandlerService: RequestHandler
   ) {}
 
   /**

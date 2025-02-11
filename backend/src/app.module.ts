@@ -1,8 +1,11 @@
 import { MiddlewareConsumer, Module, NestModule  } from '@nestjs/common';
+// App component
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
+// Module import
 import { DatabaseModule } from './database/database.module';
 import { DataModule } from './data/data.module';
-import { AppService } from './app.service';
+import { UserHandlerModule } from './userHandler/userHandler.module';
 // Utilisation du .env
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
@@ -18,6 +21,7 @@ import { RequestHandlerModule } from './requestHandler/requestHandler.module';
     DatabaseModule,
     DataModule,
     RequestHandlerModule,
+    UserHandlerModule,
     // Charger les variables d'environnement et valider avec Joi
     ConfigModule.forRoot({
       isGlobal: true, // Rendre les variables disponibles dans tous les modules
