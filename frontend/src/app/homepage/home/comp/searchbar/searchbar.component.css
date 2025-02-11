@@ -125,6 +125,7 @@ h5 {
   top: 100%;
   left: 0;
   z-index: 9;
+  height: 20vh;
 }
 
 /* Affichage dynamique des suggestions */
@@ -147,3 +148,33 @@ h5 {
 .suggestions ul li:hover {
   background: #f4f4f4;
 }
+/* Style général de la scrollbar */
+::-webkit-scrollbar {
+  width: 6px; /* Largeur de la scrollbar */
+  height: 6px; /* Hauteur pour le scroll horizontal */
+}
+
+/* Style du "thumb" (la partie défilable) */
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.3); /* Couleur grise avec transparence */
+  border-radius: 10px; /* Arrondi */
+  transition: background 0.3s ease-in-out;
+}
+
+/* Changement de couleur au survol */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.5);
+}
+
+/* Couleur de fond de la scrollbar */
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05); /* Très léger gris */
+  border-radius: 10px;
+}
+
+/* Style spécifique pour Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.3) rgba(0, 0, 0, 0.05);
+}
+

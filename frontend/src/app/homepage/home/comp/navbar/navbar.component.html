@@ -1,18 +1,17 @@
 <nav class="navbar">
-    <div class="logo"><img class="easelogo" src="vrailogo.png" alt=""></div>
-    <ul [class.active]="menuOpen">
-      <li><a routerLink="/home">Accueil</a></li>
-      <li><a routerLink="/category">Catégories</a></li>
-      <li><a routerLink="/services">Services</a></li>
-      <li><a routerLink="/contact">Contact</a></li>
-    </ul>
-    <div class="user">
+  <div class="logo"><img class="easelogo" src="vrailogo.png" alt=""></div>
+  <ul [class.active]="menuOpen">
+    <li><a routerLink="/home">Accueil</a></li>
+    <li><a routerLink="/category">Catégories</a></li>
+    <li><a routerLink="/services">Services</a></li>
+    <li><a routerLink="/contact">Contact</a></li>
+    <li class="user">
       <img class="userprofile" src="rhinoceros.png" alt="">
-    </div>
-    <div class="menu-toggle" (click)="toggleMenu()">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
+    </li>
+  </ul>
+  <div class="menu-toggle" (click)="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
 </nav>
-  
