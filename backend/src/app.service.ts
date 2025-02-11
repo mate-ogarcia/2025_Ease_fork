@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { DatabaseService } from './database/database.service';
+import { Injectable } from "@nestjs/common";
+import { DatabaseService } from "./database/database.service";
 
 @Injectable()
 export class AppService {
@@ -9,12 +9,12 @@ export class AppService {
    * Fonction qui renvoie un message "Hello World!" (test des routes)
    */
   getHello(): string {
-    return 'Hello World!';
+    return "Hello World!";
   }
 
   /**
    * Retrieves raw data from the Couchbase database and applies a transformation.
-   * Transformation : 
+   * Transformation :
    * - Convert `name` to uppercase
    * Add a `timestamp` field for each entry.
    * If the field is unknown then replace the field by UNKNOWN
@@ -23,29 +23,30 @@ export class AppService {
    */
   async getData(): Promise<any[]> {
     const rawData = await this.dbService.getAllData();
-  
-    const transformedData = rawData.map(item => {
+
+    const transformedData = rawData.map((item) => {
       // Accéder aux données imbriquées
       const product = item.ProductsBDD; // Change "ProductsBDD" selon ta structure réelle
-  
+
       return {
         id: product?.id || null,
         name: product?.name ? product.name.toUpperCase() : "UNKNOWN",
         category: product?.category ? product.category : "UNKNOWN",
         isEuropean: product?.category ? product.category : "UNKNOWN",
-        description: product?.description ? product.description : "NO DESCRIPTION",
-        environmentalRate: product?.environmentalRate ? product.environmentalRate : "UNKNOWN",
+        description: product?.description
+          ? product.description
+          : "NO DESCRIPTION",
+        environmentalRate: product?.environmentalRate
+          ? product.environmentalRate
+          : "UNKNOWN",
         userRate: product?.userRate ? product.userRate : "UNKNOWN",
         satus: product?.satus ? product.satus : "UNKNOWN",
         tags: product?.tags ? product.tags : "No TAGS",
-        
+
         timestamp: new Date().toISOString(),
       };
     });
-  
+
     return transformedData;
   }
-  
-
-  
 }

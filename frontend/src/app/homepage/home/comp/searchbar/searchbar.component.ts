@@ -90,18 +90,14 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
       color1: 0xff0000,
       color2: 0xd1ff,
       birdSize: 1,
-      quantity: 4.0,
-      speedLimit: 5.0,
-      separation: 90.0,
-      alignment: 20.0,
+      quantity: 4.00,
+      speedLimit: 5.00,
+      separation: 90.00,
+      alignment: 20.00
     });
+    
   }
 
-  /**
-   * @brief Destroys the Vanta.js effect when the component is destroyed.
-   *
-   * This method ensures that the Vanta.js effect is properly removed when the component is destroyed to avoid memory leaks.
-   */
   ngOnDestroy(): void {
     if (this.vantaEffect) {
       this.vantaEffect.destroy();
@@ -162,6 +158,7 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   selectProduct(product: string) {
     this.searchQuery = product; // Fill the search bar with the selected product
     this.filteredResults = [];  // Hide the results list
+    this.noResultsMessage = '';
 
     // Once the product is selected, send it to the backend
     this.apiService.sendSearchData({ search: product }).subscribe({

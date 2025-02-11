@@ -10,7 +10,7 @@ export class RequestHandlerController {
     console.log('Received search query:', body.search);
 
     // Call requestHandler.service to process the search
-    const results = await this.requestHandlerService.processSearch(body.search); await this.requestHandlerService.processSearch(body.search);
+    const results = await this.requestHandlerService.processSearch(body.search); 
     // Return the search results as a JSON response to the frontend
     return results;
   }
