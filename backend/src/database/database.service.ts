@@ -9,12 +9,16 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import * as couchbase from "couchbase";
 import * as fs from "fs";
+// Use of .env
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private cluster: couchbase.Cluster;
   private bucket: couchbase.Bucket;
   private collection: couchbase.Collection;
+
+  constructor(private readonly configService: ConfigService) { }
 
   /**
    * Initializes the Couchbase connection when the module starts.
@@ -42,6 +46,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       console.error("❌ Connection error to Couchbase Capella:", error.message);
       throw new Error("Unable to connect to Couchbase Capella");
     }
+  }
+
+  /**
+   * Closes the connection to the Couchbase cluster when the module is destroyed.
+   */
+  async onModuleDestroy() {
+    await this.cluster.close();
+    console.log("🔹 Couchbase connection closed.");
   }
 
   /**
@@ -119,7 +131,4 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw error;
     }
   }
-  
-  
-  
 }
