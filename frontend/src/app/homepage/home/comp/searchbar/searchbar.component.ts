@@ -1,10 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  AfterViewInit,
-  OnDestroy,
-  ViewChild,
-} from '@angular/core';
+import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild, } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // For [(ngModel)]
 import { CommonModule } from '@angular/common'; // For *ngFor and *ngIf
 import * as VANTA from 'vanta/src/vanta.birds';
