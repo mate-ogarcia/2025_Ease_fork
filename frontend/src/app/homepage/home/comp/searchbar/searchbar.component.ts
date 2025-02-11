@@ -1,10 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  AfterViewInit,
-  OnDestroy,
-  ViewChild,
-} from '@angular/core';
+import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild, } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // For [(ngModel)]
 import { CommonModule } from '@angular/common'; // For *ngFor and *ngIf
 import * as VANTA from 'vanta/src/vanta.birds';
@@ -22,50 +16,7 @@ import { ApiService } from '../../../../../services/api.service';
 export class SearchbarComponent implements AfterViewInit, OnDestroy {
   // Other
   searchQuery: string = '';
-  results: string[] = [
-    'Apple',
-    'Banane',
-    'Cerise',
-    'Datte',
-    'Fraise',
-    'Mangue',
-    'Orange',
-    'Pomme',
-    'Raisin',
-    'Tomate',
-    'Franboise',
-    'Cassis',
-    'Myrtille',
-    'Mûre',
-    'Groseille',
-    'Cranberry',
-    'Clémentine',
-    'Kaki',
-    'Kiwi',
-    'Pamplemousse',
-    'Citron',
-    'Mandarine',
-    'Nectarine',
-    'Pêche',
-    'Abricot',
-    'Prune',
-    'Mirabelle',
-    'Quetsche',
-    'Poire',
-    'Coing',
-    'Figue',
-    'Rhubarbe',
-    'Ananas',
-    'Litchi',
-    'Grenade',
-    'Fruit de la passion',
-    'Papaye',
-    'Goyave',
-    'Mangoustan',
-    'Durian',
-    "Fruit de l'arbre à pain",
-  ];
-  filteredResults: string[] = [];
+  
   // Results of the query from the database
   searchResults: any[] = [];
   noResultsMessage: string = '';
@@ -104,22 +55,11 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * @brief Filters the list of results based on the user's search query.
-   *
-   * This method updates the `filteredResults` array by checking if each item contains the search query.
-   * If the search query is empty, it hides the result list.
-   */
-  onSearch() {
-    if (this.searchQuery.trim() === '') {
-      this.filteredResults = []; // Hide the list if the input is empty
-      return;
-    }
-
-    this.filteredResults = this.results.filter((item) =>
-      item.toLowerCase().includes(this.searchQuery.toLowerCase())
-    );
+  get hasSuggestions(): boolean {
+    return this.searchResults.length > 0;
   }
+  
+  
 
   /**
    * @brief Handles the "Enter" key event to select a product.
@@ -127,12 +67,12 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
    * When the user presses "Enter" in the search input, this method selects the product and clears the filtered results.
    * @param event The keyboard event triggered by the user pressing a key.
    */
-  onEnter(event: any) {
-    const keyboardEvent = event as KeyboardEvent;
-    if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
+  onInputChange(event: any) {
+    if (this.searchQuery.trim() !== '') {
       this.selectProduct(this.searchQuery.trim());
     }
   }
+  
 
   /**
    * @brief Clears the search query and hides the results.
@@ -141,7 +81,6 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
    */
   clearSearch() {
     this.searchQuery = ''; // Clear the search input
-    this.filteredResults = []; // Hide the results
     this.searchResults = [];
     this.noResultsMessage = '';
   }
