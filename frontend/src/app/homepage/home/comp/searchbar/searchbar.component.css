@@ -10,6 +10,7 @@
 }
 .app-navbar{
   width: 100%;
+  z-index: 10000;
 }
 /* Gestion du titre */
 .title {
@@ -22,6 +23,7 @@
   max-width: 600px; /* Évite qu'il devienne trop large */
   gap: 0;
   text-align: center;
+  z-index: 1;
 }
 
 /* Gestion du texte */
@@ -125,7 +127,7 @@ h5 {
   top: 100%;
   left: 0;
   z-index: 9;
-  height: 20vh;
+  max-height: 20vh;
 }
 
 /* Affichage dynamique des suggestions */

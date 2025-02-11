@@ -19,13 +19,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 150px;
+  height: 40px;
   font-size: 1.5em;
+  border-right: 1px solid #f9f9f9 ;
+  padding-right: 12px;
   font-weight: bold;
-  border-radius: 45px;
+  cursor: pointer;
 }
 .easelogo {
-  width: 100%;
+  height: 100%;
   border-radius: 45px;
 }
 
@@ -39,7 +41,6 @@
   padding-left: 20px;
   margin: 0;
   text-align: center;
-  border-left: 1px solid #f9f9f9 ;
   color: #f9f9f9;
 
 }
@@ -67,15 +68,13 @@
 /* User Profile */
 .user {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 50px;
-  border-radius: 50%;
-  border: 1px solid #129714;
-  padding: 7px;
+  justify-content: flex-end;
+  height: 40px;
+  margin-left: auto;
 }
 .userprofile {
-  width: 100%;
+  height: 100%;
+  border-radius: 50%;
 }
 
 /* Menu burger pour mobiles */
@@ -83,6 +82,7 @@
   display: none;
   flex-direction: column;
   cursor: pointer;
+  z-index: 10000;
 }
 
 .menu-toggle span {
@@ -121,5 +121,12 @@
   }
   .menu-toggle {
       display: flex;
+  }
+  .user{
+    margin-left: 0; /* Enlève le push vers la droite */
+
+  }
+  .logo {
+    border-right: none;
   }
 }
