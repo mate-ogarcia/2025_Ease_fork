@@ -6,11 +6,19 @@
  * configures database connections, and starts the server.
  */
 
+// Use of .env
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load the right .env
+const envFile = path.resolve(__dirname, '../../.env.' + (process.env.NODE_ENV || 'development'));
+dotenv.config({ path: envFile });
+console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
+
+// Other
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { DatabaseService } from "./database/database.service";
-// Use of .env
-import { ConfigService } from "@nestjs/config";
 // Global logger
 import * as winston from "winston";
 import { WinstonModule } from "nest-winston";
@@ -41,13 +49,9 @@ async function bootstrap() {
   });
 
   // Load NestJS application with global logger
-  const app = await NestFactory.create(AppModule, { logger });
-
-  /**
-   * Retrieves necessary services from the application context.
-   */
+  const app = await NestFactory.create(AppModule, { logger }); 
+  // Retrieves necessary services from the application context.
   const databaseService = app.get(DatabaseService);
-  const configService = app.get(ConfigService);
 
   try {
     /**
@@ -57,7 +61,7 @@ async function bootstrap() {
     const bucket = databaseService.getBucket();
     logger.log(
       "info",
-      `✅ Successfully connected to bucket: ${configService.get("BUCKET_NAME")} (main.ts)`
+      `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`
     );
   } catch (error) {
     logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
@@ -67,7 +71,7 @@ async function bootstrap() {
    * Configures CORS to allow requests from the Angular frontend.
    */
   app.enableCors({
-    origin: configService.get("URL_FRONTEND"),
+    origin: process.env.URL_FRONTEND,
     methods: "GET,POST,PUT,DELETE,OPTIONS",
     allowedHeaders: "Content-Type, Authorization",
   });
@@ -75,7 +79,7 @@ async function bootstrap() {
   /**
    * Starts the NestJS server on the configured port.
    */
-  const port = configService.get("BACKEND_PORT") || 3000;
+  const port = process.env.BACKEND_PORT || 3000;
   await app.listen(port, "0.0.0.0");
   logger.log("info", `🚀 Application started at http://localhost:${port}`);
 }

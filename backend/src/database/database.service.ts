@@ -6,19 +6,17 @@
  * including CRUD operations and connection management.
  */
 
+
+// Other
 import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import * as couchbase from "couchbase";
 import * as fs from "fs";
-// Use of .env
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private cluster: couchbase.Cluster;
   private bucket: couchbase.Bucket;
   private collection: couchbase.Collection;
-
-  constructor(private readonly configService: ConfigService) { }
 
   /**
    * Initializes the Couchbase connection when the module starts.
@@ -106,7 +104,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {Error} If the search query execution fails.
    */
   async searchQuery(searchQuery: string): Promise<any[]> {
-    const _indexName = this.configService.get<string>('INDEX_NAME');
+    const _indexName = process.env.INDEX_NAME;
     searchQuery = searchQuery.toLowerCase(); // Normalize the query
   
     try {
