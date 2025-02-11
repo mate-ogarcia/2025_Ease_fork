@@ -8,30 +8,23 @@
       <h5>Trouvez des alternatives européennes à vos produits importés en un clic ! </h5>
     </div>
   </div>
-  <div class="search-container">
+  <div class="search-container" [class.has-suggestions]="hasSuggestions">
     <input
       type="text"
       placeholder="Rechercher..."
       [(ngModel)]="searchQuery"
-      (input)="onSearch()"
       (keydown.enter)="onEnter($event)" 
+      (input)="onInputChange($event)" 
     />
+
     <button (click)="clearSearch()">✖</button>
 
-    <!-- Liste des suggestions (DANS la même div que la barre de recherche) -->
-    <div class="suggestions" [class.show]="filteredResults.length > 0">
-      <ul>
-        <li *ngFor="let result of filteredResults" (click)="selectProduct(result)">
-          {{ result }}
-        </li>
-      </ul>
-    </div>
+    
 
     <!--Display search results -->
-    <div class="search-results" *ngIf="searchResults.length > 0">
-      <h3>Résultats de la recherche :</h3>
+    <div class="suggestions" [class.show]="searchResults.length > 0">
       <ul>
-        <li *ngFor="let result of searchResults">
+        <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
           {{ result.name }} - {{ result.description }}
         </li>
       </ul>
@@ -41,8 +34,5 @@
     <div *ngIf="noResultsMessage" class="no-results-message">
       <p>{{ noResultsMessage }}</p>
     </div>
-    
-
-
   </div>
 </div>

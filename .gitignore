@@ -1,5 +1,6 @@
 # Fichiers d'environements
-.env
+/.env.development
+/.env.production
 
 # Ne PAS ignorer les fichiers d'environnement standard
 !/frontend/environments/environment.ts

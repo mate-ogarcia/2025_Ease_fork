@@ -2,6 +2,10 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
+    path: 'products-alternative/:id',
+    loadComponent: () => import('./altprod/altprod.component').then(m => m.AltprodComponent)
+  },
+  {
     path: 'home',
     loadComponent: () => import('./homepage/home/home.component').then(m => m.HomeComponent)
   },
@@ -27,3 +31,4 @@ export const routes: Routes = [
     redirectTo: '/home'
   }
 ];
+

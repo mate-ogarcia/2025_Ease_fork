@@ -1,8 +1,9 @@
 /**
- * @brief Service Angular pour interagir avec l'API backend.
+ * @file api.service.ts
+ * @brief Angular service for interacting with the backend API.
  * 
- * Ce service permet d'effectuer des requêtes HTTP pour récupérer et envoyer des données
- * au backend NestJS via `HttpClient`.
+ * This service provides methods to make HTTP requests to the backend NestJS API
+ * using `HttpClient` to retrieve and send data.
  */
 
 import { Injectable } from '@angular/core';
@@ -16,44 +17,70 @@ import { environment } from '../environments/environment';
 export class ApiService {
   private _backendUrl = environment.backendUrl;
   private _searchUrl = environment.searchUrl;
+  private _productsUrl = environment.productsURL;
 
   constructor(private http: HttpClient) {}
 
   /**
-   * @brief Récupère les données depuis le backend via une requête HTTP GET.
+   * @brief Retrieves data from the backend using an HTTP GET request.
    * 
-   * Cette méthode interroge l'API backend (`GET /data`) pour obtenir les données 
-   * stockées. Elle retourne un `Observable` contenant la réponse.
+   * This method calls the backend API (`GET /data`) to fetch stored data.
+   * Returns an `Observable` containing the response.
    * 
-   * @returns {Observable<any[]>} Un `Observable` contenant les données du backend.
+   * @returns {Observable<any[]>} An `Observable` containing backend data.
    */
   getData(): Observable<any[]> {
     return this.http.get<any[]>(this._backendUrl);
   }
 
   /**
-   * @brief Envoie des données au backend via une requête HTTP POST.
+   * @brief Sends data to the backend using an HTTP POST request.
    * 
-   * Cette méthode envoie un `payload` au backend (`POST /data`). Elle retourne 
-   * un `Observable` contenant la réponse du serveur.
+   * This method sends a `payload` to the backend (`POST /data`). It returns 
+   * an `Observable` containing the server response.
    * 
-   * @param {any} payload - Les données à envoyer au backend.
-   * @returns {Observable<any>} Un `Observable` contenant la réponse du serveur.
+   * @param {any} payload - The data to be sent to the backend.
+   * @returns {Observable<any>} An `Observable` containing the server response.
    */
   sendData(payload: any): Observable<any> {
     return this.http.post<any>(this._backendUrl, payload);
   }
 
   /**
-   * @brief Envoie des données au backend via une requête HTTP POST.
+   * @brief Sends search data to the backend via an HTTP POST request.
    * 
-   * Cette méthode envoie un `payload` au backend (`POST `). Elle retourne 
-   * un `Observable` contenant la réponse du serveur.
+   * This method sends a `payload` to the backend search endpoint (`POST`). 
+   * It returns an `Observable` containing the server response.
    * 
-   * @param {any} payload - Les données à envoyer au backend.
-   * @returns {Observable<any>} Un `Observable` contenant la réponse du serveur.
+   * @param {any} payload - The search data to send to the backend.
+   * @returns {Observable<any>} An `Observable` containing the server response.
    */
   sendSearchData(payload: any): Observable<any> {
     return this.http.post<any>(this._searchUrl, payload);
+  }
+
+  /**
+   * @brief Sends a selected product ID to the backend via an HTTP POST request.
+   * 
+   * This method posts the selected product's ID to the backend for processing.
+   * 
+   * @param {object} data - The object containing the product ID.
+   * @returns {Observable<any>} An `Observable` containing the server response.
+   */
+  postProductSelection(data: { productId: string }) {
+    return this.http.post(`${this._productsUrl}/select`, data);
+  }
+    
+  /**
+   * @brief Retrieves product details by ID using an HTTP GET request.
+   * 
+   * This method calls the backend API to fetch details of a specific product 
+   * based on the provided product ID.
+   * 
+   * @param {string} id - The ID of the product to fetch.
+   * @returns {Observable<any>} An `Observable` containing the product details.
+   */
+  getProductById(id: string): Observable<any> {
+    return this.http.get<any[]>(`${this._productsUrl}/${id}`);
   }
 }

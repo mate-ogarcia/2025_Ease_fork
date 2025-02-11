@@ -1,3 +1,11 @@
+/**
+ * @file login.component.ts
+ * @brief Component for handling user login and registration.
+ * 
+ * This component provides functionality for toggling between login and registration,
+ * managing form input states, and handling dark mode.
+ */
+
 import { Component, ElementRef, ViewChild, AfterViewChecked, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -23,6 +31,9 @@ export class LoginComponent implements AfterViewChecked {
 
   constructor(private renderer: Renderer2) {}
 
+  /**
+   * Called after Angular has checked the view. Sets up focus and blur listeners on input fields.
+   */
   ngAfterViewChecked() {
     if (this.usernameInput?.nativeElement) {
       this.setupFocusBlurListeners(this.usernameInput.nativeElement);
@@ -35,10 +46,17 @@ export class LoginComponent implements AfterViewChecked {
     }
   }
 
+  /**
+   * Toggles password visibility.
+   */
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
 
+  /**
+   * Sets up event listeners for focus and blur on an input field.
+   * @param inputElement The input field to attach listeners to.
+   */
   setupFocusBlurListeners(inputElement: HTMLInputElement) {
     const parentDiv = inputElement.closest('.input-container');
 
@@ -53,6 +71,9 @@ export class LoginComponent implements AfterViewChecked {
     });
   }
 
+  /**
+   * Toggles dark mode by adding or removing the 'dark-mode' class on the body.
+   */
   toggleDarkMode(): void {
     this.isDarkMode = !this.isDarkMode;
     if (this.isDarkMode) {
@@ -62,10 +83,13 @@ export class LoginComponent implements AfterViewChecked {
     }
   }
 
+  /**
+   * Toggles between login and registration modes.
+   */
   toggleLoginRegister(): void {
     this.isLoginMode = !this.isLoginMode;
 
-    // Attendre que Angular mette à jour le DOM avant d'appliquer l'effet au champ Email
+    // Wait for Angular to update the DOM before applying effects to the Email field
     setTimeout(() => {
       if (!this.isLoginMode && this.emailInput?.nativeElement) {
         this.setupFocusBlurListeners(this.emailInput.nativeElement);
@@ -73,6 +97,10 @@ export class LoginComponent implements AfterViewChecked {
     });
   }
 
+  /**
+   * Handles form submission and logs the input values.
+   * @param form The form object containing user input values.
+   */
   onSubmit(form: NgForm): void {
     if (form.invalid) {
       alert("Please fill all required fields correctly.");
@@ -85,8 +113,12 @@ export class LoginComponent implements AfterViewChecked {
       console.log('Registering with:', this.username, this.email, this.password);
     }
   }
+
+  /**
+   * Sets the login mode.
+   * @param isLogin A boolean indicating whether the mode should be login or register.
+   */
   setLoginMode(isLogin: boolean): void {
     this.isLoginMode = isLogin;
   }
-  
 }

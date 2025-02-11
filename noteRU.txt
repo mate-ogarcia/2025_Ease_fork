@@ -10,7 +10,7 @@ héberger front sur github pages et back sur docker
 
 -----------------------
 Semaine pro :
-1. SearchBar opé                    DONE
-2. Commencer à penser responsive
-3. Permissions/Rôles
-4. Liaison BDD
+1. SearchBar opé        (Baptiste)                  DONE
+2. Commencer à penser responsive (Tommy)
+3. Permissions/Rôles    (Mateo && Baptiste)
+4. Liaison BDD          (Matéo)
