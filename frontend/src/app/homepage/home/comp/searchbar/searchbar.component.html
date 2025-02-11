@@ -13,6 +13,7 @@
       type="text"
       placeholder="Rechercher..."
       [(ngModel)]="searchQuery"
+      (keydown.enter)="onEnter($event)" 
       (input)="onInputChange($event)" 
     />
 
@@ -23,7 +24,7 @@
     <!--Display search results -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
       <ul>
-        <li *ngFor="let result of searchResults" (click)="selectProduct(result.name)">
+        <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
           {{ result.name }} - {{ result.description }}
         </li>
       </ul>

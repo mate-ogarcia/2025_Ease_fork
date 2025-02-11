@@ -6,7 +6,6 @@
  * including CRUD operations and connection management.
  */
 
-
 // Other
 import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import * as couchbase from "couchbase";
@@ -106,14 +105,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async searchQuery(searchQuery: string): Promise<any[]> {
     const _indexName = process.env.INDEX_NAME;
     searchQuery = searchQuery.toLowerCase(); // Normalize the query
-  
+
     try {
       const prefixQuery = couchbase.SearchQuery.prefix(searchQuery); // Prefix search
       const matchQuery = couchbase.SearchQuery.match(searchQuery); // Natural language search
-  
+
       // Combine prefix and match queries
       const combinedQuery = couchbase.SearchQuery.disjuncts(prefixQuery, matchQuery);
-  
+
       const searchRes = await this.cluster.searchQuery(
         _indexName,
         combinedQuery,
@@ -122,13 +121,40 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "description", "category", "tags"] }
         }
       );
-  
+
       return searchRes.rows;
     } catch (error) {
       console.error("❌ Error during FTS query:", error);
       throw error;
     }
   }
+
+  /**
+   * Retrieves a specific product from Couchbase by its ID.
+   * @param {string} productId - The ID of the product to retrieve.
+   * @returns {Promise<any>} - A promise resolving with product details or `null` if not found.
+   * @throws {Error} - If the query fails.
+   */
+  async getProductById(productId: string): Promise<any> {
+    const bucketName = process.env.BUCKET_NAME;
   
-   
+    try {
+      console.log(`🔹 Retrieving product with ID: ${productId}`);
+  
+      const query = `SELECT * FROM \`${bucketName}\` WHERE META().id = ?`;
+      const options = { parameters: [productId] };
+  
+      const result = await this.cluster.query(query, options);
+  
+      if (result.rows.length > 0) {
+        return result.rows[0][bucketName];
+      } else {
+        console.warn(`⚠️ Product with ID "${productId}" not found.`);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error retrieving product:", error);
+      throw new Error("Error retrieving product.");
+    }
+  }
 }

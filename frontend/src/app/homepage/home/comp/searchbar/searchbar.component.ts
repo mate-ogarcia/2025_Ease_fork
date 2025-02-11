@@ -1,9 +1,20 @@
-import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild, } from '@angular/core';
+/**
+ * @file searchbar.component.ts
+ * @brief Component for handling product search functionality.
+ * 
+ * This component provides a search bar that fetches product suggestions
+ * from the backend and allows the user to select a product for further actions.
+ */
+
+import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // For [(ngModel)]
 import { CommonModule } from '@angular/common'; // For *ngFor and *ngIf
 import * as VANTA from 'vanta/src/vanta.birds';
 import * as THREE from 'three';
 import { NavbarComponent } from '../navbar/navbar.component';
+import { Router } from '@angular/router';
+import { switchMap } from 'rxjs/operators';
+// Services API
 import { ApiService } from '../../../../../services/api.service';
 
 @Component({
@@ -14,29 +25,26 @@ import { ApiService } from '../../../../../services/api.service';
   standalone: true, // Declare the component as standalone
 })
 export class SearchbarComponent implements AfterViewInit, OnDestroy {
-  // Other
   searchQuery: string = '';
-  
-  // Results of the query from the database
   searchResults: any[] = [];
   noResultsMessage: string = '';
-
+  selectedProduct: string = '';
   private vantaEffect: any;
-
+  
   @ViewChild('vantaBackground', { static: true }) vantaRef!: ElementRef;
 
-  // Declare the ApiService with its constructor
-  constructor(private apiService: ApiService) { }
+  constructor(
+    private apiService: ApiService,
+    private router: Router
+  ) { }
 
   /**
-   * @brief Initializes the Vanta.js effect after the component's view is initialized.
-   *
-   * This method applies a Vanta.js birds effect as the background using Three.js to generate dynamic visuals.
+   * Initializes the Vanta.js birds effect after the component's view is loaded.
    */
   ngAfterViewInit(): void {
     this.vantaEffect = (VANTA as any).default({
       el: '.container',
-      THREE: THREE, // Ensure that Three.js is passed properly
+      THREE: THREE, 
       backgroundColor: 0x13172e,
       color1: 0xff0000,
       color2: 0xd1ff,
@@ -46,9 +54,11 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
       separation: 90.00,
       alignment: 20.00
     });
-    
   }
 
+  /**
+   * Cleans up Vanta.js effect when the component is destroyed.
+   */
   ngOnDestroy(): void {
     if (this.vantaEffect) {
       this.vantaEffect.destroy();
@@ -58,71 +68,76 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   get hasSuggestions(): boolean {
     return this.searchResults.length > 0;
   }
-  
-  
 
   /**
-   * @brief Handles the "Enter" key event to select a product.
-   *
-   * When the user presses "Enter" in the search input, this method selects the product and clears the filtered results.
-   * @param event The keyboard event triggered by the user pressing a key.
+   * Handles input change and fetches search suggestions from the API.
+   * @param event The keyboard event triggered by user input.
    */
   onInputChange(event: any) {
     if (this.searchQuery.trim() !== '') {
-      this.selectProduct(this.searchQuery.trim());
+      this.apiService.sendSearchData({ search: this.searchQuery.trim() }).subscribe({
+        next: (response) => {
+          console.log('🔹 Search results received:', response);
+          this.searchResults = response.length ? response.map((result: any) => ({
+            id: result.id,
+            name: result.fields.name,
+            description: result.fields.description,
+          })) : [];
+          this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+        },
+        error: (error) => console.error("❌ Error during search:", error)
+      });
     }
   }
-  
 
   /**
-   * @brief Clears the search query and hides the results.
-   *
-   * This method resets the `searchQuery` and hides the `filteredResults` list, effectively clearing the search input.
+   * Handles the "Enter" key event to select a product.
+   * @param event The keyboard event triggered by pressing enter.
+   */
+  onEnter(event: any) {
+    if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
+      const product = this.searchResults.find(p => p.name.toLowerCase() === this.searchQuery.trim().toLowerCase());
+      if (product) {
+        this.selectProduct(product);
+      } else {
+        console.warn("⚠️ Product not found in results!");
+      }
+    }
+  }
+
+  /**
+   * Clears the search input and hides the results.
    */
   clearSearch() {
-    this.searchQuery = ''; // Clear the search input
+    this.searchQuery = '';
     this.searchResults = [];
     this.noResultsMessage = '';
   }
 
   /**
-   * @brief Selects a product from the search results and sends it to the backend.
-   *
-   * This method updates the search input with the selected product, clears the result list,
-   * and sends the product to the backend using the ApiService.
-   * It handles the response and updates the results or displays a "no results" message if necessary.
-   * 
-   * @param product The selected product to be sent to the backend.
+   * Selects a product from the search results and navigates to its details page.
+   * @param product The selected product object.
    */
-  selectProduct(product: string) {
-    this.searchQuery = product; // Fill the search bar with the selected product
+  selectProduct(product: any) {
+    this.searchQuery = product.name;
+    this.selectedProduct = product.id;
     this.noResultsMessage = '';
 
-    // Once the product is selected, send it to the backend
-    this.apiService.sendSearchData({ search: product }).subscribe({
-      next: (response) => {
-        console.log(
-          'Searched product sent successfully \nHere is the response: ', response
-        );
+    if (!this.selectedProduct) {
+      console.warn("⚠️ No product ID found!");
+      return;
+    }
 
-        // If no products match
-        if (response.length === 0) {
-          this.noResultsMessage = 'Aucun produit trouvé pour cette recherche.'; // Display a no results message
-          this.searchResults = []; // Clear the search results
-        }
-        // If there are some results
-        else {
-          this.searchResults = response.map((result: any) => {
-            return {
-              id: result.id,
-              name: result.fields.name,
-              description: result.fields.description,
-            }
-          });
-        }
+    this.apiService.postProductSelection({ productId: this.selectedProduct }).subscribe({
+      next: () => {
+        console.log('✅ Product ID successfully sent:', this.selectedProduct);
+        this.router.navigate(['/products-alternative', this.selectedProduct]).then(success => {
+          console.log("✅ Navigation successful!");
+        }).catch(error => {
+          console.error("❌ Navigation error:", error);
+        });
       },
-      // If something went wrong
-      error: (error) => console.error('Error when sending product: ', error)
+      error: (error) => console.error("❌ Error sending product ID:", error)
     });
   }
 }
