@@ -96,7 +96,6 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
    */
   selectProduct(product: string) {
     this.searchQuery = product; // Fill the search bar with the selected product
-    this.filteredResults = [];  // Hide the results list
     this.noResultsMessage = '';
 
     // Once the product is selected, send it to the backend
