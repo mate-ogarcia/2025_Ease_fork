@@ -1,12 +1,20 @@
-import { Module } from '@nestjs/common';
-import { UserHandler } from './userHandler.service';
-import { UserHandlerController } from './userHandler.controller';
-
+import { Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+import { UserHandlerService } from "./userHandler.service";
+import { UserHandlerController } from "./userHandler.controller";
+import { JwtStrategy } from "./userHandler.strategy";
 
 @Module({
-  providers: [UserHandler],
-  imports: [],
+  imports: [
+    PassportModule.register({ defaultStrategy: "jwt" }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || "secretKey",
+      signOptions: { expiresIn: "1h" },
+    }),
+  ],
   controllers: [UserHandlerController],
-  exports: [UserHandler],
+  providers: [UserHandlerService, JwtStrategy],
+  exports: [UserHandlerService],
 })
 export class UserHandlerModule {}
