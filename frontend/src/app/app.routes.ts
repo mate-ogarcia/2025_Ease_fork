@@ -30,11 +30,6 @@ export const routes: Routes = [
       import('./auth/login/login.component').then((m) => m.LoginComponent),
   },
   {
-    path: 'service',
-    loadComponent: () =>
-      import('./service-page/service-page.component').then((m) => m.ServicePageComponent),
-  },
-  {
     path: 'contact',
     loadComponent: () =>
       import('./contact/contact.component').then((m) => m.ContactComponent),
