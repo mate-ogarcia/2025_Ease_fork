@@ -7,18 +7,23 @@
  */
 
 // Other
-import { Injectable, OnModuleInit, OnModuleDestroy, InternalServerErrorException } from "@nestjs/common";
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  InternalServerErrorException,
+} from "@nestjs/common";
 import * as couchbase from "couchbase";
 import * as fs from "fs";
 // HTTP
-import { HttpService } from '@nestjs/axios';
+import { HttpService } from "@nestjs/axios";
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private cluster: couchbase.Cluster;
   private bucket: couchbase.Bucket;
   private collection: couchbase.Collection;
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   /**
    * Initializes the Couchbase connection when the module starts.
@@ -114,14 +119,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const matchQuery = couchbase.SearchQuery.match(searchQuery); // Natural language search
 
       // Combine prefix and match queries
-      const combinedQuery = couchbase.SearchQuery.disjuncts(prefixQuery, matchQuery);
+      const combinedQuery = couchbase.SearchQuery.disjuncts(
+        prefixQuery,
+        matchQuery
+      );
 
       const searchRes = await this.cluster.searchQuery(
         _indexName,
         combinedQuery,
         {
           fields: ["name", "description", "category", "tags"],
-          highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "description", "category", "tags"] }
+          highlight: {
+            style: couchbase.HighlightStyle.HTML,
+            fields: ["name", "description", "category", "tags"],
+          },
         }
       );
 
@@ -163,11 +174,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Retrieves alternative products based on search criteria from Couchbase.
-   * 
+   *
    * This method constructs a dynamic N1QL query to fetch alternative products from Couchbase
    * based on the given search criteria. It also integrates an external API call to retrieve
    * a list of European countries, ensuring that only European-origin products are included.
-   * 
+   *
    * @param {any} searchCriteria - Object containing the search filters such as category, tags, and brand.
    * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
    * @throws {InternalServerErrorException} If the query execution fails or no search criteria are provided.
@@ -183,8 +194,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       console.log(`🔹 Searching alternatives with criteria:`, searchCriteria);
 
       // API call to fetch the list of European countries
-      const response = await this.httpService.axiosRef.get('https://restcountries.com/v3.1/region/europe');
-      const europeanCountries = response.data.map(country => country.name.common);
+      const response = await this.httpService.axiosRef.get(
+        "https://restcountries.com/v3.1/region/europe"
+      );
+      const europeanCountries = response.data.map(
+        (country) => country.name.common
+      );
 
       // Dynamically construct the N1QL query
       let query = `SELECT * FROM \`${bucketName}\` WHERE `;
@@ -214,17 +229,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Finalize the query with conditions and limit the results
       query += queryConditions.join(" AND ") + " LIMIT 10";
 
-      console.log(`🔹 Executing N1QL query: ${query} with params:`, queryParams);
+      console.log(
+        `🔹 Executing N1QL query: ${query} with params:`,
+        queryParams
+      );
 
       // Execute the query in Couchbase
-      const result = await this.cluster.query(query, { parameters: queryParams });
+      const result = await this.cluster.query(query, {
+        parameters: queryParams,
+      });
 
-      return result.rows.map(row => row[bucketName]); // Extract product data
+      return result.rows.map((row) => row[bucketName]); // Extract product data
     } catch (error) {
-      console.error("❌ Error retrieving alternative products (database.service):", error);
-      throw new InternalServerErrorException("Error retrieving alternative products (database.service)");
+      console.error(
+        "❌ Error retrieving alternative products (database.service):",
+        error
+      );
+      throw new InternalServerErrorException(
+        "Error retrieving alternative products (database.service)"
+      );
     }
   }
 }
-
-
