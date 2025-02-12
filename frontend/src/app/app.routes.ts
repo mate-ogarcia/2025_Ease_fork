@@ -6,7 +6,6 @@ export const routes: Routes = [
     path: 'products-alternative/:id',
     loadComponent: () =>
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),
-    canActivate: [AuthGuard], //  Protégé
   },
   {
     path: 'home',
@@ -17,7 +16,6 @@ export const routes: Routes = [
     path: 'category',
     loadComponent: () =>
       import('./category/category.component').then((m) => m.CategoryComponent),
-    canActivate: [AuthGuard], //  Protégé
   },
   {
     path: 'data-display',
@@ -25,7 +23,6 @@ export const routes: Routes = [
       import('./data-display/data-display.component').then(
         (m) => m.DataDisplayComponent
       ),
-    canActivate: [AuthGuard], //  Protégé
   },
   {
     path: 'login',
