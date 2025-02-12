@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
+
 export class LoginComponent implements AfterViewInit {
   username: string = '';
   password: string = '';
@@ -23,7 +24,7 @@ export class LoginComponent implements AfterViewInit {
   @ViewChild('passwordInput', { static: false }) passwordInput!: ElementRef;
   @ViewChild('emailInput', { static: false }) emailInput!: ElementRef;
 
-  constructor(private renderer: Renderer2) {}
+  constructor(private renderer: Renderer2) { }
 
   /**
    * Initialise les listeners après que la vue soit rendue.
@@ -74,7 +75,7 @@ export class LoginComponent implements AfterViewInit {
   setLoginMode(isLogin: boolean): void {
     if (this.isLoginMode !== isLogin) {
       this.isLoginMode = isLogin;
-      
+
       // Réinitialiser les champs pour éviter le lag dû au changement de valeur
       this.email = '';
       this.password = '';

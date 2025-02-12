@@ -55,6 +55,7 @@ export class ProdalternativeComponent implements OnInit {
       }
     });
   }
+  
   getRatingClass(rating: number): string {
     if (rating >= 4) {
       return 'high';
