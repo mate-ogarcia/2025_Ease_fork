@@ -1,3 +1,11 @@
+/**
+ * @file login.component.ts
+ * @brief Component for handling user login and registration.
+ *
+ * This component provides functionality for toggling between login and registration,
+ * managing form input states, and handling dark mode.
+ */
+
 import { Component, ElementRef, ViewChild, AfterViewInit, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -10,16 +18,24 @@ import { FormsModule, NgForm } from '@angular/forms';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements AfterViewInit {
-  username: string = '';
-  password: string = '';
-  email: string = '';
+  // Variables pour Login
+  usernameLogin: string = '';
+  passwordLogin: string = '';
+
+  // Variables pour Register
+  usernameRegister: string = '';
+  emailRegister: string = '';
+  passwordRegister: string = '';
+
   showPassword: boolean = false;
   isDarkMode: boolean = false;
   isLoginMode: boolean = true;
 
   @ViewChild('usernameInput', { static: false }) usernameInput!: ElementRef;
   @ViewChild('passwordInput', { static: false }) passwordInput!: ElementRef;
+  @ViewChild('usernameRegisterInput', { static: false }) usernameRegisterInput!: ElementRef;
   @ViewChild('emailInput', { static: false }) emailInput!: ElementRef;
+  @ViewChild('passwordRegisterInput', { static: false }) passwordRegisterInput!: ElementRef;
 
   constructor(private renderer: Renderer2) {}
 
@@ -41,7 +57,13 @@ export class LoginComponent implements AfterViewInit {
    * Applique les styles dynamiques aux inputs (évite les ajouts répétés).
    */
   setupFocusBlurListeners() {
-    const inputs = [this.usernameInput?.nativeElement, this.passwordInput?.nativeElement, this.emailInput?.nativeElement].filter(Boolean);
+    const inputs = [
+      this.usernameInput?.nativeElement,
+      this.passwordInput?.nativeElement,
+      this.usernameRegisterInput?.nativeElement,
+      this.emailInput?.nativeElement,
+      this.passwordRegisterInput?.nativeElement
+    ].filter(Boolean);
 
     inputs.forEach(input => {
       const parentDiv = input.closest('.input-container');
@@ -67,23 +89,29 @@ export class LoginComponent implements AfterViewInit {
   }
 
   /**
-   * Bascule entre Login et Register de manière fluide.
+   * Bascule entre Login et Register et applique les effets de champ.
    */
   setLoginMode(isLogin: boolean): void {
     if (this.isLoginMode !== isLogin) {
       this.isLoginMode = isLogin;
-      
-      // Réinitialiser les champs pour éviter le lag dû au changement de valeur
-      this.email = '';
-      this.password = '';
-      this.username = '';
 
-      setTimeout(() => this.setupFocusBlurListeners(), 10);
+      // Réinitialisation des champs pour éviter les valeurs persistantes
+      if (this.isLoginMode) {
+        this.usernameRegister = '';
+        this.emailRegister = '';
+        this.passwordRegister = '';
+      } else {
+        this.usernameLogin = '';
+        this.passwordLogin = '';
+      }
+
+      // Attendre que le DOM se mette à jour avant de réappliquer les effets
+      setTimeout(() => this.setupFocusBlurListeners(), 50);
     }
   }
 
   /**
-   * Soumission du formulaire avec validation.
+   * Gère la soumission du formulaire.
    */
   onSubmit(form: NgForm): void {
     if (form.invalid) {
@@ -92,9 +120,9 @@ export class LoginComponent implements AfterViewInit {
     }
 
     if (this.isLoginMode) {
-      console.log('Connexion avec :', this.username, this.password);
+      console.log('Connexion avec :', this.usernameLogin, this.passwordLogin);
     } else {
-      console.log('Inscription avec :', this.username, this.email, this.password);
+      console.log('Inscription avec :', this.usernameRegister, this.emailRegister, this.passwordRegister);
     }
   }
 }
