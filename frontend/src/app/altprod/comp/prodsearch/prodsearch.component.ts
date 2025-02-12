@@ -22,11 +22,6 @@ export class ProdsearchComponent implements OnInit {
   productId: string = '';
   productDetails: any = null;
 
-  /**
-   * Constructor to initialize dependencies.
-   * @param route The ActivatedRoute service to retrieve route parameters.
-   * @param apiService The ApiService to fetch product details.
-   */
   constructor(private route: ActivatedRoute, private apiService: ApiService) {}
 
   /**
@@ -36,13 +31,13 @@ export class ProdsearchComponent implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
-      console.log("🔹 Product ID received:", this.productId);
+      console.log("🔹 Product ID received: (prodSearch)", this.productId);
 
       if (this.productId) {
         this.apiService.getProductById(this.productId).subscribe({
           next: (data) => {
             this.productDetails = data;
-            console.log("✅ Product retrieved:", this.productDetails);
+            console.log("✅ Product retrieved: (prodSearch)", this.productDetails);
           },
           error: (error) => console.error("❌ Error retrieving product:", error)
         });

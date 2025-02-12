@@ -8,7 +8,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable, throwError } from 'rxjs';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -82,5 +82,19 @@ export class ApiService {
    */
   getProductById(id: string): Observable<any> {
     return this.http.get<any[]>(`${this._productsUrl}/${id}`);
+  }
+
+  // TODO : Supposed to get all the alternavtive products of the selected one
+  /**
+   * Retrieves all alternative products for the selected one.
+   * @param {string} id - ID of the selected product
+   */
+  getAlternativeProducts(id: string): Observable<any> {
+    return this.http.get<any[]>(`${this._productsUrl}/alternativeProducts/${id}`).pipe(
+      catchError(error => {
+        console.error("❌ API Error:", error);
+        return throwError(() => new Error('Erreur API : Impossible de récupérer les produits alternatifs.'));
+      })
+    );
   }
 }

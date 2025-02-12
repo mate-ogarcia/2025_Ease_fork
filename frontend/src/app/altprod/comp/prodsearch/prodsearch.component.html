@@ -9,7 +9,6 @@
 <!-- Container for displaying product details, only visible if productDetails exists -->
 <div class="container" *ngIf="productDetails">
     <div class="prod-container">
-        <img src="monster.jpeg" alt="Product Image" class="product-image">
         <!-- Product image, using a placeholder if no image is available -->
         <img [src]="productDetails.imageUrl || 'placeholder-image.svg'" alt="Product Image" class="product-image">
 

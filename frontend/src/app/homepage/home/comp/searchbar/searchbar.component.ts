@@ -61,7 +61,7 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
 
     this._searchSubject
       .pipe(
-        debounceTime(300),
+        debounceTime(50),
         distinctUntilChanged(),
         filter(query => query.trim() !== ''),
         switchMap((query) => {
