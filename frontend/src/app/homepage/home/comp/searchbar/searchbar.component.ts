@@ -1,20 +1,23 @@
 /**
  * @file searchbar.component.ts
- * @brief Component for handling product search functionality.
+ * @brief Component for handling product search functionality with optimized caching.
  * 
  * This component provides a search bar that fetches product suggestions
  * from the backend and allows the user to select a product for further actions.
+ * It includes caching to optimize performance and prevent unnecessary API calls.
  */
 
 import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms'; // For [(ngModel)]
-import { CommonModule } from '@angular/common'; // For *ngFor and *ngIf
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import * as VANTA from 'vanta/src/vanta.birds';
 import * as THREE from 'three';
-import { NavbarComponent } from '../navbar/navbar.component';
 import { Router } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
-// Services API
+// RXJS for debounce
+import { debounceTime, distinctUntilChanged, switchMap, tap, filter } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { NavbarComponent } from '../navbar/navbar.component';
+// API services
 import { ApiService } from '../../../../../services/api.service';
 
 @Component({
@@ -22,7 +25,7 @@ import { ApiService } from '../../../../../services/api.service';
   imports: [FormsModule, CommonModule, NavbarComponent],
   templateUrl: './searchbar.component.html',
   styleUrl: './searchbar.component.css',
-  standalone: true, // Declare the component as standalone
+  standalone: true,
 })
 export class SearchbarComponent implements AfterViewInit, OnDestroy {
   searchQuery: string = '';
@@ -30,34 +33,81 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   noResultsMessage: string = '';
   selectedProduct: string = '';
   private vantaEffect: any;
-  
+  private _searchSubject = new Subject<string>();
+  private _cache = new Map<string, { data: any[], timestamp: number }>();
+  private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes expiration time
+
   @ViewChild('vantaBackground', { static: true }) vantaRef!: ElementRef;
 
-  constructor(
-    private apiService: ApiService,
-    private router: Router
-  ) { }
+  constructor(private apiService: ApiService, private router: Router) {}
 
   /**
-   * Initializes the Vanta.js birds effect after the component's view is loaded.
+   * Initializes the Vanta.js birds effect 
+   * and sets up search functionality with caching.
    */
   ngAfterViewInit(): void {
     this.vantaEffect = (VANTA as any).default({
       el: '.container',
-      THREE: THREE, 
+      THREE: THREE,
       backgroundColor: 0x13172e,
       color1: 0xff0000,
       color2: 0xd1ff,
       birdSize: 1,
-      quantity: 4.00,
-      speedLimit: 5.00,
-      separation: 90.00,
-      alignment: 20.00
+      quantity: 4.0,
+      speedLimit: 5.0,
+      separation: 90.0,
+      alignment: 20.0,
     });
+
+    this._searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        filter(query => query.trim() !== ''),
+        switchMap((query) => {
+          const trimmedQuery = query.trim();
+          const cachedData = this._cache.get(trimmedQuery);
+
+          if (cachedData && (Date.now() - cachedData.timestamp < this.CACHE_DURATION)) {
+            console.log('🔄 Results retrieved from valid cache.');
+            this.searchResults = cachedData.data.map((result: any) => ({
+                id: result.id,
+                name: result.fields?.name || 'Unknown name',
+                description: result.fields?.description || 'No description available',
+            }));
+            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            return of(null);
+          }
+
+          console.log('🌐 Sending request to API.');
+          return this.apiService.sendSearchData({ search: trimmedQuery }).pipe(
+            tap(response => {
+              if (response && Array.isArray(response)) {
+                this._cache.set(trimmedQuery, { data: [...response], timestamp: Date.now() });
+              }
+            })
+          );
+        })
+      )
+      .subscribe({
+        next: (response: any) => {
+          if (response) {
+            this.searchResults = response.length
+              ? response.map((result: any) => ({
+                  id: result.id,
+                  name: result.fields?.name || 'Unknown name',
+                  description: result.fields?.description || 'No description available',
+                }))
+              : [];
+            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+          }
+        },
+        error: (error) => console.error('❌ Error during search:', error),
+      });
   }
 
   /**
-   * Cleans up Vanta.js effect when the component is destroyed.
+   * Cleans up the Vanta.js effect when the component is destroyed.
    */
   ngOnDestroy(): void {
     if (this.vantaEffect) {
@@ -65,48 +115,70 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  /**
+   * @brief Checks if there are search suggestions available.
+   * 
+   * This getter method returns `true` if there are search results available,
+   * otherwise, it returns `false`.
+   * 
+   * @returns {boolean} `true` if there are search results, `false` otherwise.
+   */
   get hasSuggestions(): boolean {
     return this.searchResults.length > 0;
   }
 
   /**
-   * Handles input change and fetches search suggestions from the API.
-   * @param event The keyboard event triggered by user input.
+   * Triggers a new search based on input change.
+   * @param event The input event containing the new search query.
    */
   onInputChange(event: any) {
-    if (this.searchQuery.trim() !== '') {
-      this.apiService.sendSearchData({ search: this.searchQuery.trim() }).subscribe({
-        next: (response) => {
-          console.log('🔹 Search results received:', response);
-          this.searchResults = response.length ? response.map((result: any) => ({
-            id: result.id,
-            name: result.fields.name,
-            description: result.fields.description,
-          })) : [];
-          this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
-        },
-        error: (error) => console.error("❌ Error during search:", error)
-      });
+    if (this.searchQuery.trim() === '') {
+        this.clearSearch();
+        return;
+    }
+    this._searchSubject.next(this.searchQuery);
+  }
+
+  /**
+   * Retrieves cached results when the input field gains focus.
+   */
+  onFocus() {
+    const trimmedQuery = this.searchQuery.trim();
+    if (trimmedQuery === '') {
+        this.clearSearch();
+        return;
+    }
+
+    if (this._cache.has(trimmedQuery)) {
+        this.searchResults = [...this._cache.get(trimmedQuery)?.data || []];
+        this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
     }
   }
 
   /**
-   * Handles the "Enter" key event to select a product.
-   * @param event The keyboard event triggered by pressing enter.
+   * Handles the Enter key press to select a product.
+   * @param event The keyboard event.
    */
   onEnter(event: any) {
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
-      const product = this.searchResults.find(p => p.name.toLowerCase() === this.searchQuery.trim().toLowerCase());
+      const queryLower = this.searchQuery.trim().toLowerCase();
+  
+      // Search for products containing the search, not an exact match
+      const product = this.searchResults.find(
+        (p) => p.name.toLowerCase().includes(queryLower)
+      );
+      
       if (product) {
         this.selectProduct(product);
       } else {
-        console.warn("⚠️ Product not found in results!");
+        console.warn('⚠️ Product not found in results!');
+        this.noResultsMessage = 'No product found.';
       }
     }
   }
-
+  
   /**
-   * Clears the search input and hides the results.
+   * Clears the search input and results.
    */
   clearSearch() {
     this.searchQuery = '';
@@ -115,7 +187,7 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Selects a product from the search results and navigates to its details page.
+   * Selects a product and navigates to its details page.
    * @param product The selected product object.
    */
   selectProduct(product: any) {
@@ -124,20 +196,17 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
     this.noResultsMessage = '';
 
     if (!this.selectedProduct) {
-      console.warn("⚠️ No product ID found!");
+      console.warn('⚠️ No product ID found!');
       return;
     }
 
     this.apiService.postProductSelection({ productId: this.selectedProduct }).subscribe({
       next: () => {
-        console.log('✅ Product ID successfully sent:', this.selectedProduct);
-        this.router.navigate(['/products-alternative', this.selectedProduct]).then(success => {
-          console.log("✅ Navigation successful!");
-        }).catch(error => {
-          console.error("❌ Navigation error:", error);
-        });
+        this.router.navigate(['/products-alternative', this.selectedProduct]).then(
+          () => console.log('✅ Navigation successful!')
+        ).catch((error) => console.error('❌ Navigation error:', error));
       },
-      error: (error) => console.error("❌ Error sending product ID:", error)
+      error: (error) => console.error('❌ Error sending product ID:', error),
     });
   }
 }
