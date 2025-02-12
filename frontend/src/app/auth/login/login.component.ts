@@ -1,21 +1,29 @@
 /**
  * @file login.component.ts
  * @brief Component for handling user login and registration.
- * 
+ *
  * This component provides functionality for toggling between login and registration,
  * managing form input states, and handling dark mode.
  */
 
-import { Component, ElementRef, ViewChild, AfterViewChecked, Renderer2 } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  AfterViewChecked,
+  Renderer2,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { AuthService } from '../../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements AfterViewChecked {
   username: string = '';
@@ -29,7 +37,11 @@ export class LoginComponent implements AfterViewChecked {
   @ViewChild('passwordInput', { static: false }) passwordInput!: ElementRef;
   @ViewChild('emailInput', { static: false }) emailInput!: ElementRef;
 
-  constructor(private renderer: Renderer2) {}
+  constructor(
+    private renderer: Renderer2,
+    private authService: AuthService,
+    private router: Router
+  ) {} // ✅ Inject AuthService et Router
 
   /**
    * Called after Angular has checked the view. Sets up focus and blur listeners on input fields.
@@ -98,27 +110,51 @@ export class LoginComponent implements AfterViewChecked {
   }
 
   /**
-   * Handles form submission and logs the input values.
-   * @param form The form object containing user input values.
-   */
-  onSubmit(form: NgForm): void {
-    if (form.invalid) {
-      alert("Please fill all required fields correctly.");
-      return;
-    }
-
-    if (this.isLoginMode) {
-      console.log('Logging in with:', this.username, this.password);
-    } else {
-      console.log('Registering with:', this.username, this.email, this.password);
-    }
-  }
-
-  /**
    * Sets the login mode.
    * @param isLogin A boolean indicating whether the mode should be login or register.
    */
   setLoginMode(isLogin: boolean): void {
     this.isLoginMode = isLogin;
+  }
+
+  /**
+   * Handles form submission and sends data to the backend.
+   * @param form The form object containing user input values.
+   */
+  onSubmit(form: NgForm): void {
+    if (form.invalid) {
+      alert('Please fill all required fields correctly.');
+      return;
+    }
+
+    if (this.isLoginMode) {
+      // 🔥 Mode Connexion
+      this.authService.login(this.email, this.password).subscribe(
+        (response: any) => {
+          // ✅ Correction du typage de `response`
+          localStorage.setItem('access_token', response.access_token); // ✅ Stocker le token JWT
+          this.router.navigate(['/home']); // ✅ Redirection après connexion
+        },
+        (error: any) => {
+          // ✅ Correction du typage de `error`
+          alert('Identifiants incorrects !');
+        }
+      );
+    } else {
+      // 🔥 Mode Inscription
+      this.authService
+        .register(this.username, this.email, this.password)
+        .subscribe(
+          (response: any) => {
+            // ✅ Correction du typage de `response`
+            alert('Inscription réussie ! Connectez-vous.');
+            this.setLoginMode(true); // ✅ Retour en mode Login
+          },
+          (error: any) => {
+            // ✅ Correction du typage de `error`
+            alert('Erreur lors de l’inscription.');
+          }
+        );
+    }
   }
 }

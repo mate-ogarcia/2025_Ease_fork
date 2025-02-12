@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { DatabaseService } from "./database(svg).service";
+import { DatabaseService } from "./database.service";
 
 describe("DatabaseService", () => {
   let service: DatabaseService;
