@@ -226,5 +226,3 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 }
-
-
