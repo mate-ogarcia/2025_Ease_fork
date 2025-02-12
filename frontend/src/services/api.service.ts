@@ -84,7 +84,6 @@ export class ApiService {
     return this.http.get<any[]>(`${this._productsUrl}/${id}`);
   }
 
-  // TODO : Supposed to get all the alternavtive products of the selected one
   /**
    * Retrieves all alternative products for the selected one.
    * @param {string} id - ID of the selected product
