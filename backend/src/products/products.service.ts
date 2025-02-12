@@ -1,9 +1,20 @@
+/**
+ * @file products.service.ts
+ * @brief Service for managing product-related operations.
+ * 
+ * This service handles product selection, retrieval, and alternative product suggestions.
+ * It interacts with the database service to fetch product details and apply search criteria.
+ * The service is initialized with `onModuleInit` and provides multiple methods for data retrieval.
+ * 
+ * @module ProductsService
+ */
+
 import { Injectable, OnModuleInit, NotFoundException, InternalServerErrorException } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 
 @Injectable()
 export class ProductsService implements OnModuleInit {
-    constructor(private readonly databaseService: DatabaseService) {}
+    constructor(private readonly databaseService: DatabaseService) { }
 
     /**
      * @brief Called when the module is initialized.
@@ -32,16 +43,25 @@ export class ProductsService implements OnModuleInit {
     }
 
     /**
-     * @brief Retrieves alternative European products.
+     * @brief Retrieves alternative European products based on the selected product's attributes.
+     * 
+     * This method fetches a product by its ID and extracts key attributes (category, tags, and brand)
+     * to search for alternative products within the same category and with similar characteristics.
+     * It ensures that alternatives are filtered dynamically based on available product details.
+     * 
+     * @param {string} productId - The ID of the selected product for which alternatives are searched.
+     * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
+     * @throws {NotFoundException} If the selected product does not exist.
+     * @throws {InternalServerErrorException} If an error occurs during the retrieval process.
      */
-    // TODO
-    async getAlternativeProducts(productId: string) {
+    async getAlternativeProducts(productId: string): Promise<any[]> {
         try {
             const selectedProduct = await this.databaseService.getProductById(productId);
             if (!selectedProduct) {
                 throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
             }
-            // Criteria for the alternative products
+
+            // Extract search criteria from the selected product
             const searchCriteria = Object.fromEntries(
                 Object.entries({
                     category: selectedProduct.category,
@@ -49,10 +69,10 @@ export class ProductsService implements OnModuleInit {
                     brand: selectedProduct.brand
                 }).filter(([_, value]) => value !== null && value !== undefined)
             );
-            
-            console.log("🔍 Critères de recherche :", searchCriteria);
-            
-            // Trouver des produits alternatifs
+
+            console.log("🔍 Search criteria:", searchCriteria);
+
+            // Retrieve alternative products based on the extracted criteria
             const alternatives = await this.databaseService.getAlternativeProducts(searchCriteria);
             return alternatives;
         } catch (error) {

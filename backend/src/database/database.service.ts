@@ -161,12 +161,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-
   /**
-   * Retrieves alternative products based on search criteria from Couchbase.
-   * @param {any} searchCriteria - Criteria to filter alternative products.
-   * @returns {Promise<any[]>} - A promise resolving with an array of alternative products.
-   * @throws {InternalServerErrorException} - If the query execution fails.
+   * @brief Retrieves alternative products based on search criteria from Couchbase.
+   * 
+   * This method constructs a dynamic N1QL query to fetch alternative products from Couchbase
+   * based on the given search criteria. It also integrates an external API call to retrieve
+   * a list of European countries, ensuring that only European-origin products are included.
+   * 
+   * @param {any} searchCriteria - Object containing the search filters such as category, tags, and brand.
+   * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
+   * @throws {InternalServerErrorException} If the query execution fails or no search criteria are provided.
    */
   async getAlternativeProducts(searchCriteria: any): Promise<any[]> {
     const bucketName = process.env.BUCKET_NAME;
@@ -178,16 +182,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       console.log(`🔹 Searching alternatives with criteria:`, searchCriteria);
 
-      // Appel API pour récupérer la liste des pays européens
+      // API call to fetch the list of European countries
       const response = await this.httpService.axiosRef.get('https://restcountries.com/v3.1/region/europe');
       const europeanCountries = response.data.map(country => country.name.common);
 
-      // Construction dynamique de la requête N1QL
+      // Dynamically construct the N1QL query
       let query = `SELECT * FROM \`${bucketName}\` WHERE `;
       const queryConditions: string[] = [];
       const queryParams: any[] = [];
 
-      // Ajout des conditions dynamiquement
+      // Add conditions dynamically based on provided criteria
       if (searchCriteria.category) {
         queryConditions.push("category = ?");
         queryParams.push(searchCriteria.category);
@@ -195,33 +199,32 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       if (searchCriteria.tags && searchCriteria.tags.length > 0) {
         queryConditions.push("ANY tag IN tags SATISFIES tag IN ? END");
-        queryParams.push(searchCriteria.tags); // Vérifier si un tag correspond
+        queryParams.push(searchCriteria.tags); // Ensures at least one tag matches
       }
 
       if (searchCriteria.brand) {
         queryConditions.push("brand != ?");
-        queryParams.push(searchCriteria.brand); // Exclure la même marque
+        queryParams.push(searchCriteria.brand); // Exclude the same brand
       }
 
-      // 🔹 Filtrer uniquement les produits européens
+      // 🔹 Filter only European products
       queryConditions.push("origin IN ?");
-      queryParams.push(europeanCountries); // Vérifier si l'origine est européenne
+      queryParams.push(europeanCountries); // Verify if the origin is European
 
-      // Finaliser la requête avec les conditions et limiter les résultats
+      // Finalize the query with conditions and limit the results
       query += queryConditions.join(" AND ") + " LIMIT 10";
 
       console.log(`🔹 Executing N1QL query: ${query} with params:`, queryParams);
 
-      // Exécution de la requête dans Couchbase
+      // Execute the query in Couchbase
       const result = await this.cluster.query(query, { parameters: queryParams });
 
-      return result.rows.map(row => row[bucketName]); // Extraire les données des produits
+      return result.rows.map(row => row[bucketName]); // Extract product data
     } catch (error) {
       console.error("❌ Error retrieving alternative products (database.service):", error);
       throw new InternalServerErrorException("Error retrieving alternative products (database.service)");
     }
   }
-
 }
 
 
