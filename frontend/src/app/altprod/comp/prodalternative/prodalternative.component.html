@@ -1,61 +1,32 @@
 <div class="container">
-    <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
+  <h2>Produits Alternatifs Européens</h2>
+  <!-- dynamic test-->
+  <div class="item">
+    <p *ngIf="isLoading">🔄 Chargement des alternatives...</p>
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+
+    <ul *ngIf="productDetails && productDetails.length > 0">
+      <li *ngFor="let product of productDetails">
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.description }}</p>
+        <div class="origin">
+          <p>
+            Provenance : <b>{{ product.origin || "Inconnue" }}</b>
+          </p>
         </div>
-      </div>
-      <!-- dynamic test-->
-      <div class="container">
-        <h2>Produits Alternatifs Européens</h2>
-      
-        <p *ngIf="isLoading">🔄 Chargement des alternatives...</p>
-        <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
-      
-        <ul *ngIf="productDetails && productDetails.length > 0">
-          <li *ngFor="let product of productDetails">
-            <h3>{{ product.name }}</h3>
-            <p>{{ product.description }}</p>
-            <p><strong>Prix :</strong> {{ product.price }} €</p>
-          </li>
-        </ul>
-      
-        <p *ngIf="productDetails && productDetails.length === 0">⚠️ Aucun produit alternatif trouvé.</p>
-      </div>
-      <!-- End test-->
-      
-      <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
+        
+        <!-- Product rating section -->
+        <div class="product-rating">
+          <span class="rating-label">Note:</span>
+          <span *ngIf="product.rating">{{ product.rating }}/5</span>
+          <span *ngIf="!product.rating">Non noté</span>
         </div>
-      </div>
-      <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
-        </div>
-      </div>
-      <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
-        </div>
-      </div>
+      </li>
+    </ul>
+
+    <p *ngIf="productDetails && productDetails.length === 0">
+      Aucun produit alternatif trouvé.
+    </p>
+  </div>
+  <!-- End test-->
 </div>

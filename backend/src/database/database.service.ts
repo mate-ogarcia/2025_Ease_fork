@@ -7,15 +7,18 @@
  */
 
 // Other
-import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, OnModuleInit, OnModuleDestroy, InternalServerErrorException } from "@nestjs/common";
 import * as couchbase from "couchbase";
 import * as fs from "fs";
+// HTTP
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private cluster: couchbase.Cluster;
   private bucket: couchbase.Bucket;
   private collection: couchbase.Collection;
+  constructor(private readonly httpService: HttpService) { }
 
   /**
    * Initializes the Couchbase connection when the module starts.
@@ -137,15 +140,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getProductById(productId: string): Promise<any> {
     const bucketName = process.env.BUCKET_NAME;
-  
+
     try {
       console.log(`🔹 Retrieving product with ID: ${productId}`);
-  
+
       const query = `SELECT * FROM \`${bucketName}\` WHERE META().id = ?`;
       const options = { parameters: [productId] };
-  
+
       const result = await this.cluster.query(query, options);
-  
+
       if (result.rows.length > 0) {
         return result.rows[0][bucketName];
       } else {
@@ -157,4 +160,68 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error("Error retrieving product.");
     }
   }
+
+
+  /**
+   * Retrieves alternative products based on search criteria from Couchbase.
+   * @param {any} searchCriteria - Criteria to filter alternative products.
+   * @returns {Promise<any[]>} - A promise resolving with an array of alternative products.
+   * @throws {InternalServerErrorException} - If the query execution fails.
+   */
+  async getAlternativeProducts(searchCriteria: any): Promise<any[]> {
+    const bucketName = process.env.BUCKET_NAME;
+
+    try {
+      if (Object.keys(searchCriteria).length === 0) {
+        throw new Error("❌ searchCriteria is empty");
+      }
+
+      console.log(`🔹 Searching alternatives with criteria:`, searchCriteria);
+
+      // Appel API pour récupérer la liste des pays européens
+      const response = await this.httpService.axiosRef.get('https://restcountries.com/v3.1/region/europe');
+      const europeanCountries = response.data.map(country => country.name.common);
+
+      // Construction dynamique de la requête N1QL
+      let query = `SELECT * FROM \`${bucketName}\` WHERE `;
+      const queryConditions: string[] = [];
+      const queryParams: any[] = [];
+
+      // Ajout des conditions dynamiquement
+      if (searchCriteria.category) {
+        queryConditions.push("category = ?");
+        queryParams.push(searchCriteria.category);
+      }
+
+      if (searchCriteria.tags && searchCriteria.tags.length > 0) {
+        queryConditions.push("ANY tag IN tags SATISFIES tag IN ? END");
+        queryParams.push(searchCriteria.tags); // Vérifier si un tag correspond
+      }
+
+      if (searchCriteria.brand) {
+        queryConditions.push("brand != ?");
+        queryParams.push(searchCriteria.brand); // Exclure la même marque
+      }
+
+      // 🔹 Filtrer uniquement les produits européens
+      queryConditions.push("origin IN ?");
+      queryParams.push(europeanCountries); // Vérifier si l'origine est européenne
+
+      // Finaliser la requête avec les conditions et limiter les résultats
+      query += queryConditions.join(" AND ") + " LIMIT 10";
+
+      console.log(`🔹 Executing N1QL query: ${query} with params:`, queryParams);
+
+      // Exécution de la requête dans Couchbase
+      const result = await this.cluster.query(query, { parameters: queryParams });
+
+      return result.rows.map(row => row[bucketName]); // Extraire les données des produits
+    } catch (error) {
+      console.error("❌ Error retrieving alternative products (database.service):", error);
+      throw new InternalServerErrorException("Error retrieving alternative products (database.service)");
+    }
+  }
+
 }
+
+

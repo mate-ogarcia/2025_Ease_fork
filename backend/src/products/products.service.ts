@@ -36,23 +36,29 @@ export class ProductsService implements OnModuleInit {
      */
     // TODO
     async getAlternativeProducts(productId: string) {
-        // try {
-        //     const selectedProduct = await this.databaseService.getProductById(productId);
-        //     if (!selectedProduct) {
-        //         throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
-        //     }
-
-        //     // Trouver des produits alternatifs
-        //     const alternatives = await this.databaseService.findProducts({
-        //         category: selectedProduct.category,
-        //         origin: { $ne: 'USA' } // Exclure les produits non européens
-        //     });
-
-        //     return alternatives;
-        // } catch (error) {
-        //     console.error("❌ Error retrieving alternative products:", error);
-        //     throw new InternalServerErrorException("Error retrieving alternative products.");
-        // }
+        try {
+            const selectedProduct = await this.databaseService.getProductById(productId);
+            if (!selectedProduct) {
+                throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
+            }
+            // Criteria for the alternative products
+            const searchCriteria = Object.fromEntries(
+                Object.entries({
+                    category: selectedProduct.category,
+                    tags: selectedProduct.tags,
+                    brand: selectedProduct.brand
+                }).filter(([_, value]) => value !== null && value !== undefined)
+            );
+            
+            console.log("🔍 Critères de recherche :", searchCriteria);
+            
+            // Trouver des produits alternatifs
+            const alternatives = await this.databaseService.getAlternativeProducts(searchCriteria);
+            return alternatives;
+        } catch (error) {
+            console.error("❌ Error retrieving alternative products:", error);
+            throw new InternalServerErrorException("Error retrieving alternative products.");
+        }
     }
 
     /**
