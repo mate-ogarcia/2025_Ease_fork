@@ -69,7 +69,6 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
           const cachedData = this._cache.get(trimmedQuery);
 
           if (cachedData && (Date.now() - cachedData.timestamp < this.CACHE_DURATION)) {
-            console.log('🔄 Results retrieved from valid cache.');
             this.searchResults = cachedData.data.map((result: any) => ({
                 id: result.id,
                 name: result.fields?.name || 'Unknown name',
@@ -79,7 +78,6 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
             return of(null);
           }
 
-          console.log('🌐 Sending request to API.');
           return this.apiService.sendSearchData({ search: trimmedQuery }).pipe(
             tap(response => {
               if (response && Array.isArray(response)) {
