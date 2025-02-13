@@ -4,4 +4,5 @@ export const environment = {
   searchUrl: 'http://localhost:3000/request-handler/search', // URL de l'API backend
   productsURL : 'http://localhost:3000/products',
   globalBackendUrl: 'http://localhost:3000',
+  authBackendUrl: 'http://localhost:3000/auth',
 };

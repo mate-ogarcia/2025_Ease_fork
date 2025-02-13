@@ -3,8 +3,8 @@
  * @brief Service for handling user authentication.
  *
  * This service manages user authentication, including login and registration.
- * It interacts with the UsersService to retrieve user data and handles password encryption
- * and JWT token generation.
+ * It interacts with the UsersService to retrieve user data, hashes passwords using bcrypt,
+ * and generates JWT tokens for authentication.
  */
 
 import {
@@ -21,58 +21,73 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService
-  ) {}
+  ) { }
 
   /**
    * @brief Logs in a user and generates a JWT token.
-   * @details This method verifies user credentials, hashes the password, and generates
-   * an access token and a refresh token upon successful authentication.
+   * @details This method verifies user credentials, compares the password using bcrypt,
+   * and generates an access token and a refresh token upon successful authentication.
    *
-   * @param email The email of the user.
-   * @param password The user's password.
-   * @returns An object containing the access token and refresh token.
+   * @param {string} email - The email of the user.
+   * @param {string} password - The user's password.
+   * @returns {Promise<{ access_token: string, refresh_token: string }>} An object containing the JWT tokens.
    * @throws {UnauthorizedException} If the user is not found or the password is incorrect.
-   * @throws {InternalServerErrorException} If an error occurs during authentication.
    */
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<{ access_token: string, refresh_token: string }> {
     try {
+      // Retrieve the user from the database
       const user = await this.usersService.findByEmail(email);
-      if (!user) throw new UnauthorizedException("User not found.");
 
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch)
-        throw new UnauthorizedException("Incorrect password.");
+      // Protection against Timing-Attacks (Always compare a hash)
+      const fakeHash = "$2b$10$WQm0wXEnoTb5PfKMZfGtvuG5lTqly5K/9uQ1yQVuxX48vG/UzL2Z6"; // Fake hash to prevent user enumeration
+      const passwordToCompare = user ? user.password : fakeHash;
 
-      const payload = { email: user.email, sub: user.id };
+      // Password verification
+      const passwordMatch = await bcrypt.compare(password, passwordToCompare);
+      if (!passwordMatch) {
+        throw new UnauthorizedException("Invalid email or password.");
+      }
+
+      // Generate JWT token
+      const payload = { email: user.email, sub: user.id, role: user.role };
       return {
         access_token: this.jwtService.sign(payload, { expiresIn: "1h" }),
         refresh_token: this.jwtService.sign(payload, { expiresIn: "7d" }),
       };
     } catch (error) {
       console.error("❌ Error during authentication:", error);
-      throw new InternalServerErrorException("Authentication failed.");
+      throw new UnauthorizedException("Invalid email or password.");
     }
   }
 
   /**
-   * @brief Registers a new user with a hashed password.
-   * @details This method checks if the user already exists, hashes the password,
-   * and stores the new user in the database.
+   * @brief Registers a new user with a securely hashed password.
+   * @details This method first checks if the user already exists.
+   * If not, it hashes the password with bcrypt and stores the user in the database.
    *
-   * @param email The email of the new user.
-   * @param password The user's password.
-   * @returns The created user object.
+   * @param {string} email - The email of the new user.
+   * @param {string} password - The user's password.
+   * @returns {Promise<any>} The created user object.
    * @throws {UnauthorizedException} If the user is already registered.
+   * @throws {InternalServerErrorException} If an error occurs during user creation.
    */
-  async register(email: string, password: string) {
-    const existingUser = await this.usersService
-      .findByEmail(email)
-      .catch(() => null);
-    if (existingUser) {
-      throw new UnauthorizedException("User already registered.");
-    }
+  // TODO
+  async register(email: string, password: string): Promise<any> {
+    try {
+      // Check if the user already exists
+      const existingUser = await this.usersService.findByEmail(email).catch(() => null);
+      if (existingUser) {
+        throw new UnauthorizedException("User already registered.");
+      }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    return this.usersService.create({ email, password: hashedPassword });
+      // Hash the password securely before storing it
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create the user in the database
+      return this.usersService.create({ email, password: hashedPassword });
+    } catch (error) {
+      console.error("❌ Error registering user:", error);
+      throw new InternalServerErrorException("Error during registration.");
+    }
   }
 }

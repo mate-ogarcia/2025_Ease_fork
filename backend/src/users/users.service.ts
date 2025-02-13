@@ -15,7 +15,7 @@ import { DatabaseService } from "../database/database.service";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
 
   /**
    * @brief Searches for a user by email.
@@ -28,14 +28,13 @@ export class UsersService {
    */
   async findByEmail(email: string) {
     try {
-      const query = `SELECT META(u).id, u.* FROM \`UsersBDD\`._default._default u WHERE u.email = $email`;
-      const rows = await this.databaseService.executeQuery(query, { email });
-
-      if (!rows.length) {
+      // 🔹 Calls databaseService to retrieve the user
+      const user = await this.databaseService.getUserByEmail(email);
+      if (!user) {
         throw new NotFoundException("User not found.");
       }
 
-      return rows[0];
+      return user;
     } catch (error) {
       console.error("❌ Error finding user:", error);
       throw new InternalServerErrorException("Internal server error.");
@@ -58,7 +57,7 @@ export class UsersService {
       }
 
       const id = `user::${user.email}`;
-      await this.databaseService.insertDocument("UsersBDD", id, user);
+      // await this.databaseService.insertDocument("UsersBDD", id, user);
       return { id, ...user };
     } catch (error) {
       console.error("❌ Error creating user:", error);

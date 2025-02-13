@@ -32,10 +32,7 @@ export class RequestHandler implements OnModuleInit {
 
     try {
       // Call the searchQuery method from the database service
-      const searchResults = await this.databaseService.searchQuery(
-        "ProductsBDD",
-        searchQuery
-      );
+      const searchResults = await this.databaseService.searchQuery(searchQuery);
 
       // Log or return the search results as needed
       console.log(

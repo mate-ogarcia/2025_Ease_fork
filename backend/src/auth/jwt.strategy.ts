@@ -20,6 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
        * @details Uses the `Authorization` header with a Bearer token.
        */
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // TODO ??
       secretOrKey: process.env.JWT_SECRET,
     });
   }

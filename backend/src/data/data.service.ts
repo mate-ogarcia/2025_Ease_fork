@@ -25,7 +25,7 @@ export class DataService {
    * Ensures that duplicate products are not inserted.
    */
   async insertProductsToDatabase() {
-    const collection = await this.databaseService.getCollection("ProductsBDD");
+    const collection = await this.databaseService.getProductsCollection();
 
     try {
       // Determine environment and construct file path
