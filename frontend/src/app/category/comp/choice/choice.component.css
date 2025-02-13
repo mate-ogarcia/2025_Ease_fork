@@ -48,7 +48,7 @@
 
 .rayons-container {
     width: 20%;
-    background-color: #f8f9fa;
+    background-color: #C3E8BD;
     display: flex;
     flex-direction: column;
     border-radius: 20px; 
@@ -58,7 +58,7 @@
 .rayons-wrapper {
     max-height: 100%;
     overflow-y: auto; /* Active le scroll uniquement ici */
-    background-color: #f8f9fa;
+    background-color: #E5FAE2;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -121,7 +121,7 @@
 }
 
 .details-container {
-    background-color: #ffffff;
+    background-color: #E5FAE2;
     padding: 30px;
     display: flex;
     justify-content: flex-start;
@@ -134,6 +134,8 @@
 .details-content {
     text-align: center;
     width: 100%;
+    background-color: #E5FAE2;
+
 }
 
 #rayon-name {

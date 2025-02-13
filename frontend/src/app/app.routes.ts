@@ -35,6 +35,10 @@ export const routes: Routes = [
       import('./contact/contact.component').then((m) => m.ContactComponent),
   },
   {
+    path: 'product-page/:id',
+    loadComponent: () => import('./prodpage/prodpage.component').then(m => m.ProdpageComponent)
+  },
+  {
     path: '',
     redirectTo: '/home',
     pathMatch: 'full',

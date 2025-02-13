@@ -27,8 +27,19 @@
         </button>
       </div>
       <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
-        <!-- Champ Username -->
-        <div class="input-container name">
+        <!-- Champ Username Login -->
+        <div class="input-container name" *ngIf="isLoginMode">
+          <div class="icon-log">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="data">
+            <h5>Username</h5>
+            <input #usernameInput type="text" class="input-log" name="usernameLogin" [(ngModel)]="username">
+          </div>
+        </div>
+
+        <!-- Champ Username Register -->
+        <div class="input-container" *ngIf="!isLoginMode">
           <div class="icon-log">
             <i class="fas fa-user"></i>
           </div>
@@ -43,8 +54,9 @@
             />
           </div>
         </div>
+
         <!-- Champ Email uniquement pour l'inscription -->
-        <div class="input-container email" *ngIf="!isLoginMode">
+        <div class="input-container" *ngIf="!isLoginMode">
           <div class="icon-log">
             <i class="fas fa-envelope"></i>
           </div>
@@ -93,6 +105,5 @@
     </div>
   </div>
 
-  <!-- Bouton Dark Mode -->
   <button class="dark-mode-btn" (click)="toggleDarkMode()">🌙</button>
 </body>

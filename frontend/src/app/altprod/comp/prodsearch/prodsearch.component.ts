@@ -21,19 +21,34 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './prodsearch.component.css'
 })
 export class ProdsearchComponent implements OnInit {
+  /** @brief Product ID retrieved from the route parameters. */
   productId: string = '';
-  productDetails: any = null;
-  europeanCountries: string[] = []; // Liste des pays européens
-  isEuropean: boolean = true; // Indicateur si le produit est européen
 
+  /** @brief Stores the product details fetched from the API. */
+  productDetails: any = null;
+
+  /** @brief List of European countries fetched from an external API. */
+  europeanCountries: string[] = []; 
+
+  /** @brief Flag indicating if the product is from a European country. */
+  isEuropean: boolean = true; 
+
+  /**
+   * @brief Constructor initializes route, API service, and HTTP client.
+   * @param route ActivatedRoute for retrieving route parameters.
+   * @param apiService Service for fetching product details.
+   * @param http HttpClient for making API requests.
+   */
   constructor(private route: ActivatedRoute, private apiService: ApiService, private http: HttpClient) {}
 
   /**
-   * Lifecycle method called on component initialization.
-   * Retrieves the product ID from the route and fetches product details from the API.
+   * @brief Lifecycle hook that runs on component initialization.
+   * 
+   * Retrieves the product ID from the route parameters and fetches product details.
+   * Also loads the list of European countries.
    */
   ngOnInit() {
-    this.fetchEuropeanCountries(); // Charger les pays européens
+    this.fetchEuropeanCountries(); // Load European countries
 
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
@@ -53,7 +68,10 @@ export class ProdsearchComponent implements OnInit {
   }
 
   /**
-   * Fetch the list of European countries from the API.
+   * @brief Fetches the list of European countries from an external API.
+   * 
+   * Uses the `restcountries.com` API to get a list of European countries.
+   * Stores the country names in the `europeanCountries` array.
    */
   async fetchEuropeanCountries() {
     try {
@@ -68,8 +86,10 @@ export class ProdsearchComponent implements OnInit {
   }
 
   /**
-   * Check if the product's origin is in the list of European countries.
-   * @param origin - The country of origin of the product.
+   * @brief Checks if the product's origin is in the list of European countries.
+   * 
+   * @param origin The country of origin of the product.
+   * @return Updates the `isEuropean` flag.
    */
   checkIfEuropean(origin: string) {
     if (!origin) {
@@ -78,6 +98,13 @@ export class ProdsearchComponent implements OnInit {
     }
     this.isEuropean = this.europeanCountries.includes(origin);
   }
+
+  /**
+   * @brief Returns the CSS class based on the product rating.
+   * 
+   * @param rating Product rating (from 1 to 5).
+   * @return CSS class name: "high", "medium", or "low".
+   */
   getRatingClass(rating: number): string {
     if (rating >= 4) {
       return 'high';
@@ -87,5 +114,4 @@ export class ProdsearchComponent implements OnInit {
       return 'low';
     }
   }
-    
 }
