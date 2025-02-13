@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { AuthGuard } from '../services/auth.guard';
+import { AuthGuard } from '../services/auth/auth.guard';
 
 export const routes: Routes = [
   {
@@ -30,7 +30,7 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./auth/login/login.component').then((m) => m.LoginComponent),
+      import('./auth/auth.component').then((m) => m.AuthComponent),
   },
   {
     path: '',

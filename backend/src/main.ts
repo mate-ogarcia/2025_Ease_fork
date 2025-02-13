@@ -60,11 +60,7 @@ async function bootstrap() {
     /**
      * Initializes the database connection and retrieves the bucket.
      */
-    console.log("COUCHBASE_PASSWORD:", process.env.DB_USER);
-    console.log("COUCHBASE_BUCKET:", process.env.BUCKET_NAME);
-
     await databaseService.onModuleInit();
-    const bucket = databaseService.getBucket();
     logger.log(
       "info",
       `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`
