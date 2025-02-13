@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { NavbarComponent } from '../homepage/home/comp/navbar/navbar.component';
@@ -16,6 +16,7 @@ export class ProdpageComponent implements OnInit {
   product: any = null;
   isLoading: boolean = false;
   errorMessage: string = '';
+  selectedTab: string = 'description'; // ✅ Ajout du state pour les onglets
 
   constructor(
     private route: ActivatedRoute,
@@ -25,9 +26,10 @@ export class ProdpageComponent implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
-      console.log("🔹 ID du produit reçu:", this.productId);
       if (this.productId) {
         this.fetchProductDetails();
+      } else {
+        this.errorMessage = "Aucun produit trouvé.";
       }
     });
   }
@@ -36,17 +38,23 @@ export class ProdpageComponent implements OnInit {
     this.isLoading = true;
     this.apiService.getProductById(this.productId).subscribe({
       next: (data) => {
-        this.product = data;
-        console.log("✅ Détails du produit chargés:", this.product);
+        if (data) {
+          this.product = data;
+        } else {
+          this.errorMessage = "Produit introuvable.";
+        }
       },
       error: () => {
-        this.errorMessage = 'Produit introuvable';
-        console.error("❌ Erreur lors du chargement des détails du produit");
+        this.errorMessage = 'Erreur lors du chargement des détails du produit.';
       },
       complete: () => {
         this.isLoading = false;
       }
     });
   }
-}
 
+  // ✅ Méthode pour changer d'onglet
+  selectTab(tab: string) {
+    this.selectedTab = tab;
+  }
+}
