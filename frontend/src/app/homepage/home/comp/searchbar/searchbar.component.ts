@@ -1,20 +1,32 @@
 /**
  * @file searchbar.component.ts
  * @brief Component for handling product search functionality with optimized caching.
- * 
+ *
  * This component provides a search bar that fetches product suggestions
  * from the backend and allows the user to select a product for further actions.
  * It includes caching to optimize performance and prevent unnecessary API calls.
  */
 
-import { Component, ElementRef, AfterViewInit, OnDestroy, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  AfterViewInit,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import * as VANTA from 'vanta/src/vanta.birds';
 import * as THREE from 'three';
 import { Router } from '@angular/router';
 // RXJS for debounce
-import { debounceTime, distinctUntilChanged, switchMap, tap, filter } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  tap,
+  filter,
+} from 'rxjs/operators';
 import { Subject, of } from 'rxjs';
 import { NavbarComponent } from '../navbar/navbar.component';
 // API services
@@ -34,7 +46,7 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   selectedProduct: string = '';
   private vantaEffect: any;
   private _searchSubject = new Subject<string>();
-  private _cache = new Map<string, { data: any[], timestamp: number }>();
+  private _cache = new Map<string, { data: any[]; timestamp: number }>();
   private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes expiration time
 
   @ViewChild('vantaBackground', { static: true }) vantaRef!: ElementRef;
@@ -42,7 +54,7 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   constructor(private apiService: ApiService, private router: Router) {}
 
   /**
-   * Initializes the Vanta.js birds effect 
+   * Initializes the Vanta.js birds effect
    * and sets up search functionality with caching.
    */
   ngAfterViewInit(): void {
@@ -63,25 +75,34 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
       .pipe(
         debounceTime(50),
         distinctUntilChanged(),
-        filter(query => query.trim() !== ''),
+        filter((query) => query.trim() !== ''),
         switchMap((query) => {
           const trimmedQuery = query.trim();
           const cachedData = this._cache.get(trimmedQuery);
 
-          if (cachedData && (Date.now() - cachedData.timestamp < this.CACHE_DURATION)) {
+          if (
+            cachedData &&
+            Date.now() - cachedData.timestamp < this.CACHE_DURATION
+          ) {
             this.searchResults = cachedData.data.map((result: any) => ({
-                id: result.id,
-                name: result.fields?.name || 'Unknown name',
-                description: result.fields?.description || 'No description available',
+              id: result.id,
+              name: result.fields?.name || 'Unknown name',
+              description:
+                result.fields?.description || 'No description available',
             }));
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length
+              ? ''
+              : 'No product found.';
             return of(null);
           }
 
           return this.apiService.sendSearchData({ search: trimmedQuery }).pipe(
-            tap(response => {
+            tap((response) => {
               if (response && Array.isArray(response)) {
-                this._cache.set(trimmedQuery, { data: [...response], timestamp: Date.now() });
+                this._cache.set(trimmedQuery, {
+                  data: [...response],
+                  timestamp: Date.now(),
+                });
               }
             })
           );
@@ -94,10 +115,13 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
               ? response.map((result: any) => ({
                   id: result.id,
                   name: result.fields?.name || 'Unknown name',
-                  description: result.fields?.description || 'No description available',
+                  description:
+                    result.fields?.description || 'No description available',
                 }))
               : [];
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length
+              ? ''
+              : 'No product found.';
           }
         },
         error: (error) => console.error('❌ Error during search:', error),
@@ -115,10 +139,10 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
 
   /**
    * @brief Checks if there are search suggestions available.
-   * 
+   *
    * This getter method returns `true` if there are search results available,
    * otherwise, it returns `false`.
-   * 
+   *
    * @returns {boolean} `true` if there are search results, `false` otherwise.
    */
   get hasSuggestions(): boolean {
@@ -131,8 +155,8 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
    */
   onInputChange(event: any) {
     if (this.searchQuery.trim() === '') {
-        this.clearSearch();
-        return;
+      this.clearSearch();
+      return;
     }
     this._searchSubject.next(this.searchQuery);
   }
@@ -143,13 +167,15 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   onFocus() {
     const trimmedQuery = this.searchQuery.trim();
     if (trimmedQuery === '') {
-        this.clearSearch();
-        return;
+      this.clearSearch();
+      return;
     }
 
     if (this._cache.has(trimmedQuery)) {
-        this.searchResults = [...this._cache.get(trimmedQuery)?.data || []];
-        this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+      this.searchResults = [...(this._cache.get(trimmedQuery)?.data || [])];
+      this.noResultsMessage = this.searchResults.length
+        ? ''
+        : 'No product found.';
     }
   }
 
@@ -159,22 +185,24 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
    */
   onEnter(event: any) {
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
+      console.log(`🔍 Searching for: "${this.searchQuery}"`);
+
       const queryLower = this.searchQuery.trim().toLowerCase();
-  
-      // Search for products containing the search, not an exact match
-      const product = this.searchResults.find(
-        (p) => p.name.toLowerCase().includes(queryLower)
+      const product = this.searchResults.find((p) =>
+        p.name.toLowerCase().includes(queryLower)
       );
-      
+
       if (product) {
+        console.log('✅ Product found:', product);
         this.selectProduct(product);
       } else {
         console.warn('⚠️ Product not found in results!');
+        console.log('🔹 Current search results:', this.searchResults);
         this.noResultsMessage = 'No product found.';
       }
     }
   }
-  
+
   /**
    * Clears the search input and results.
    */
@@ -198,13 +226,16 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.apiService.postProductSelection({ productId: this.selectedProduct }).subscribe({
-      next: () => {
-        this.router.navigate(['/products-alternative', this.selectedProduct]).then(
-          () => console.log('✅ Navigation successful!')
-        ).catch((error) => console.error('❌ Navigation error:', error));
-      },
-      error: (error) => console.error('❌ Error sending product ID:', error),
-    });
+    this.apiService
+      .postProductSelection({ productId: this.selectedProduct })
+      .subscribe({
+        next: () => {
+          this.router
+            .navigate(['/products-alternative', this.selectedProduct])
+            .then(() => console.log('✅ Navigation successful!'))
+            .catch((error) => console.error('❌ Navigation error:', error));
+        },
+        error: (error) => console.error('❌ Error sending product ID:', error),
+      });
   }
 }

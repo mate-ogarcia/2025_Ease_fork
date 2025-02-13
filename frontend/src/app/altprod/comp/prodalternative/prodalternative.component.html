@@ -1,32 +1,32 @@
 <div class="container">
   <h2>Produits Alternatifs Européens</h2>
-  <!-- dynamic test-->
-  <div class="item">
-    <p *ngIf="isLoading">🔄 Chargement des alternatives...</p>
-    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+  <p *ngIf="isLoading">🔄 Chargement des alternatives...</p>
+  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
 
-    <ul *ngIf="productDetails && productDetails.length > 0">
-      <li *ngFor="let product of productDetails">
-        <h3>{{ product.name }}</h3>
-        <p>{{ product.description }}</p>
-        <div class="origin">
+  <div class="item-container" *ngIf="productDetails && productDetails.length > 0">
+    <div class="item" *ngFor="let product of productDetails">
+      <div class="img-container">
+        <img [src]="product.imageUrl || 'placeholder-image.svg'" alt="{{ product.name }}" class="product-image">
+      </div>
+      <div class="product-details">
+        <h2 class="product-name">{{ product.name }}</h2>
+        <p class="product-description">{{ product.description }}</p>
+        <div class="product-info">
           <p>
             Provenance : <b>{{ product.origin || "Inconnue" }}</b>
           </p>
+          <div class="product-rating">
+            <span class="rating-label">Note:</span>
+            <span *ngIf="productDetails.rating" class="rating-badge" [ngClass]="getRatingClass(productDetails.rating)">
+              {{ productDetails.rating }}/5
+            </span>
+            <span *ngIf="!productDetails.rating">Non noté</span>
+          </div>
         </div>
-        
-        <!-- Product rating section -->
-        <div class="product-rating">
-          <span class="rating-label">Note:</span>
-          <span *ngIf="product.rating">{{ product.rating }}/5</span>
-          <span *ngIf="!product.rating">Non noté</span>
-        </div>
-      </li>
-    </ul>
-
-    <p *ngIf="productDetails && productDetails.length === 0">
-      Aucun produit alternatif trouvé.
-    </p>
+      </div>
   </div>
-  <!-- End test-->
+  
+  <p *ngIf="productDetails && productDetails.length === 0">
+    Aucun produit alternatif trouvé.
+  </p>
 </div>

@@ -55,4 +55,14 @@ export class ProdalternativeComponent implements OnInit {
       }
     });
   }
+  
+  getRatingClass(rating: number): string {
+    if (rating >= 4) {
+      return 'high';
+    } else if (rating === 3) {
+      return 'medium';
+    } else {
+      return 'low';
+    }
+  }
 }
