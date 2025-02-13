@@ -139,6 +139,8 @@ export class AuthComponent implements AfterViewInit {
         },
         error: (err) => {
           console.log("Login error:", err);
+          alert('Login or username incorrect');
+
           this.errorMessage = 'Invalid email or password.';
         },
       });
