@@ -28,7 +28,7 @@ export class UsersService {
    */
   async findByEmail(email: string) {
     try {
-      // 🔹 Calls databaseService to retrieve the user
+      // Calls databaseService to retrieve the user
       const user = await this.databaseService.getUserByEmail(email);
       if (!user) {
         throw new NotFoundException("User not found.");
