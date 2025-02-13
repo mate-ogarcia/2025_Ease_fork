@@ -22,6 +22,10 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'product-page/:id',
+    loadComponent: () => import('./prodpage/prodpage.component').then(m => m.ProdpageComponent)
+  },
+  {
     path: '',
     redirectTo: '/home',
     pathMatch: 'full'

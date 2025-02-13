@@ -49,9 +49,10 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
     this.vantaEffect = (VANTA as any).default({
       el: '.container',
       THREE: THREE,
-      backgroundColor: 0x13172e,
-      color1: 0xff0000,
-      color2: 0xd1ff,
+      colorMode: "variance",
+      backgroundColor: 0x5A7F4F,
+      color1: 0x671c87,
+      color2: 0xAEE1BB,
       birdSize: 1,
       quantity: 4.0,
       speedLimit: 5.0,

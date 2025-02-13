@@ -1,32 +1,34 @@
 <div class="container">
-  <h2>Produits Alternatifs Européens</h2>
+  <div class="title">
+    <h2>Produits Alternatifs Européens</h2>
+  </div>
+  
   <p *ngIf="isLoading">🔄 Chargement des alternatives...</p>
   <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
 
   <div class="item-container" *ngIf="productDetails && productDetails.length > 0">
-    <div class="item" *ngFor="let product of productDetails">
+    <div class="item" *ngFor="let product of productDetails" (click)="goToProduct(product)">
       <div class="img-container">
-        <img [src]="product.imageUrl || 'placeholder-image.svg'" alt="{{ product.name }}" class="product-image">
+        <img class="product-image" [src]="product.imageUrl || 'placeholder-image.svg'" alt="{{ product.name }}">
       </div>
       <div class="product-details">
         <h2 class="product-name">{{ product.name }}</h2>
-        <p class="product-description">{{ product.description }}</p>
         <div class="product-info">
-          <p>
-            Provenance : <b>{{ product.origin || "Inconnue" }}</b>
-          </p>
+          <div class="origin">
+            Origine : <b>{{ product.origin || "Inconnue" }}</b>
+          </div>
           <div class="product-rating">
             <span class="rating-label">Note:</span>
-            <span *ngIf="productDetails.rating" class="rating-badge" [ngClass]="getRatingClass(productDetails.rating)">
-              {{ productDetails.rating }}/5
+            <span *ngIf="product.rating" class="rating-badge" [ngClass]="getRatingClass(product.rating)">
+              {{ product.rating }}/5
             </span>
-            <span *ngIf="!productDetails.rating">Non noté</span>
+            <span *ngIf="!product.rating">Non noté</span>
           </div>
         </div>
       </div>
+    </div>
+    <p *ngIf="productDetails && productDetails.length === 0">
+      Aucun produit alternatif trouvé.
+    </p>
   </div>
-  
-  <p *ngIf="productDetails && productDetails.length === 0">
-    Aucun produit alternatif trouvé.
-  </p>
 </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../../services/api.service';
 
@@ -12,16 +12,16 @@ import { ApiService } from '../../../../services/api.service';
 })
 export class ProdalternativeComponent implements OnInit {
   productId: string = '';
-  productDetails: any = null;
+  productDetails: any[] = [];
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  constructor(private route: ActivatedRoute, private apiService: ApiService) {}
+  constructor(
+    private route: ActivatedRoute, 
+    private router: Router,
+    private apiService: ApiService
+  ) {}
 
-  /**
-   * Lifecycle method called on component initialization.
-   * Retrieves the product ID from the route and fetches product details from the API.
-   */
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
@@ -33,10 +33,6 @@ export class ProdalternativeComponent implements OnInit {
     });
   }
 
-  /**
-   * Fetches alternative European products from the API.
-   * @param {string} productId - ID of the selected product
-   */
   fetchAlternativeProducts(productId: string) {
     this.isLoading = true;
     this.errorMessage = '';
@@ -55,6 +51,7 @@ export class ProdalternativeComponent implements OnInit {
       }
     });
   }
+
   getRatingClass(rating: number): string {
     if (rating >= 4) {
       return 'high';
@@ -62,6 +59,23 @@ export class ProdalternativeComponent implements OnInit {
       return 'medium';
     } else {
       return 'low';
+    }
+  }
+
+  /**
+   * Redirige vers la page du produit sélectionné.
+   * @param {any} product - Objet produit sélectionné
+   */
+  goToProduct(product: any) {
+    if (product?.id) {
+      console.log("🔹 Redirection vers le produit:", product);
+      this.router.navigate([`/product-page/${product.id}`]).then(() => {
+        console.log(`✅ Navigation réussie vers /product-page/${product.id}`);
+      }).catch(error => {
+        console.error("❌ Erreur de navigation :", error);
+      });
+    } else {
+      console.warn("⚠️ Produit non valide ou ID manquant");
     }
   }
 }

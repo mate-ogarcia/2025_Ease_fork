@@ -97,6 +97,7 @@
 @media (max-width: 768px) {
   .navbar {
       flex-direction: row;
+      padding: 10px 10px 10px 3px;
   }
 
   .navbar ul {
@@ -114,7 +115,8 @@
   }
 
   .navbar ul.active {
-      display: flex;
+ 
+    display: flex;
   }
   .navbar ul li a {
     color: black;
