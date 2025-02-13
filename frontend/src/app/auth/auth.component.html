@@ -1,0 +1,109 @@
+<body [class.dark-mode]="isDarkMode">
+
+  <img class="wave" [src]="isDarkMode ? 'wavedark.png' : 'wave.png'" />
+  <img class="wavetop" [src]="isDarkMode ? 'wavetopdark.png' : 'wavetop.png'" />
+
+  <div class="container">
+    <div class="login-content">
+      <div class="header-form">
+        <img src="ours.png" />
+      </div>
+      <div class="switch-container">
+        <button
+          type="button"
+          class="switch-button"
+          [class.active]="isLoginMode"
+          (click)="setLoginMode(true)"
+        >
+          Login
+        </button>
+        <button
+          type="button"
+          class="switch-button"
+          [class.active]="!isLoginMode"
+          (click)="setLoginMode(false)"
+        >
+          Register
+        </button>
+      </div>
+      <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
+        <!-- Champ Username Login -->
+        <div class="input-container name" *ngIf="isLoginMode">
+          <div class="icon-log">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="data">
+            <h5>Username</h5>
+            <input #usernameInput type="text" class="input-log" name="usernameLogin" [(ngModel)]="username">
+          </div>
+        </div>
+
+        <!-- Champ Username Register -->
+        <div class="input-container" *ngIf="!isLoginMode">
+          <div class="icon-log">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="data">
+            <h5>Username</h5>
+            <input
+              #usernameInput
+              type="text"
+              class="input-log"
+              name="username"
+              [(ngModel)]="username"
+            />
+          </div>
+        </div>
+
+        <!-- Champ Email uniquement pour l'inscription -->
+        <div class="input-container" *ngIf="!isLoginMode">
+          <div class="icon-log">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="data">
+            <h5>Email</h5>
+            <input
+              #emailInput
+              type="email"
+              class="input-log"
+              name="email"
+              [(ngModel)]="email"
+            />
+          </div>
+        </div>
+        <!-- Champ Password avec icône d'œil -->
+        <div class="input-container pass">
+          <div class="icon-log">
+            <i class="fas fa-lock"></i>
+          </div>
+          <div class="data">
+            <h5>Password</h5>
+            <input
+              #passwordInput
+              [attr.type]="showPassword ? 'text' : 'password'"
+              class="input-log"
+              name="password"
+              [(ngModel)]="password"
+            />
+            <span class="eye-icon" (click)="togglePasswordVisibility()">
+              <i
+                class="fas eyes"
+                [class.fa-eye]="showPassword"
+                [class.fa-eye-slash]="!showPassword"
+              ></i>
+            </span>
+          </div>
+        </div>
+
+        <a href="#" *ngIf="isLoginMode">Forgot Password?</a>
+        <input
+          type="submit"
+          class="btn"
+          [value]="isLoginMode ? 'Login' : 'Register'"
+        />
+      </form>
+    </div>
+  </div>
+
+  <button class="dark-mode-btn" (click)="toggleDarkMode()">🌙</button>
+</body>

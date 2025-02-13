@@ -351,7 +351,39 @@
       "category": "Sports",
       "tags": ["running", "trail", "salomon", "shoes"],
       "origin": "France"
-    }
-  
+    },
+    {
+      "id": "product45",
+      "name": "Holly",
+      "description": "Wlh c trkl",
+      "category": "Beverages",
+      "tags": ["energy drink", "redbull", "boisson énergisante", "alternative européenne"],
+      "origin": "Germany",
+      "envRate" : "",
+      "userRate": "",
+      "status" : ""
+    },
+    {
+      "id": "product46",
+      "name": "XMG Neo 15",
+      "description": "Un ordinateur portable gaming ultra-performant conçu en Allemagne avec des composants haut de gamme.",
+      "category": "Electronics",
+      "tags": ["laptop", "gaming", "xmg", "alternative européenne"],
+      "origin": "Germany",
+      "envRate": "",
+      "userRate": "",
+      "status": ""
+  },
+  {
+      "id": "product47",
+      "name": "Medion Erazer Beast X40",
+      "description": "Un PC portable gaming allemand offrant des performances de pointe pour les gamers exigeants.",
+      "category": "Electronics",
+      "tags": ["laptop", "gaming", "medion", "alternative européenne"],
+      "origin": "Germany",
+      "envRate": "",
+      "userRate": "",
+      "status": ""
+  }
   
 ]

@@ -1,52 +1,57 @@
 <div class="container">
-    <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
+  <!-- Main section title -->
+  <div class="title">
+    <h2>European Alternative Products</h2>
+  </div>
+  
+  <!-- Loading message displayed while data is being fetched -->
+  <p *ngIf="isLoading">🔄 Loading alternatives...</p>
+
+  <!-- Error message displayed in case of an issue -->
+  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+
+  <!-- Main product container, only displayed if there are products available -->
+  <div class="item-container" *ngIf="productDetails && productDetails.length > 0">
+    
+    <!-- Loop through the product list and display each product -->
+    <div class="item" *ngFor="let product of productDetails" (click)="goToProduct(product)">
+      
+      <!-- Product image container -->
+      <div class="img-container">
+        <img class="product-image" 
+             [src]="product.imageUrl || 'placeholder-image.svg'" 
+             alt="{{ product.name }}">
+      </div>
+      
+      <!-- Product details -->
+      <div class="product-details">
+        <h2 class="product-name">{{ product.name }}</h2>
+        
+        <!-- Additional product information -->
+        <div class="product-info">
+          <div class="origin">
+            <!-- Display the origin, with "Unknown" as default if no data is available -->
+            Origin: <b>{{ product.origin || "Unknown" }}</b>
+          </div>
+          
           <div class="product-rating">
-            <span class="rating-label">Note:</span>
+            <span class="rating-label">Rating:</span>
+            <!-- Display the rating with a dynamic class for styling -->
+            <span *ngIf="product.rating" 
+                  class="rating-badge" 
+                  [ngClass]="getRatingClass(product.rating)">
+              {{ product.rating }}/5
+            </span>
+            <!-- Alternative message if the product is not rated -->
+            <span *ngIf="!product.rating">Not rated</span>
           </div>
         </div>
       </div>
-      <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
-        </div>
-      </div>
-      <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
-        </div>
-      </div>
-      <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
-        </div>
-      </div>
-      <div class="item">
-        <img src="placeholder-image.svg" alt="Product Image" class="product-image">
-        <div class="product-details">
-          <h2 class="product-name">Nom du Produit</h2>
-          <p class="product-description">Ceci est une description du produit. Elle peut contenir plusieurs lignes d'informations intéressantes sur le produit.</p>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-          </div>
-        </div>
-      </div>
+    </div>
+
+    <!-- Message displayed if the product list is empty -->
+    <p *ngIf="productDetails && productDetails.length === 0">
+      No alternative products found.
+    </p>
+  </div>
 </div>

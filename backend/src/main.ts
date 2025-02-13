@@ -7,11 +7,14 @@
  */
 
 // Use of .env
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import * as dotenv from "dotenv";
+import * as path from "path";
 
 // Load the right .env
-const envFile = path.resolve(__dirname, '../../.env.' + (process.env.NODE_ENV || 'development'));
+const envFile = path.resolve(
+  __dirname,
+  "../../.env." + (process.env.NODE_ENV || "development")
+);
 dotenv.config({ path: envFile });
 console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
 
@@ -49,7 +52,7 @@ async function bootstrap() {
   });
 
   // Load NestJS application with global logger
-  const app = await NestFactory.create(AppModule, { logger }); 
+  const app = await NestFactory.create(AppModule, { logger });
   // Retrieves necessary services from the application context.
   const databaseService = app.get(DatabaseService);
 
@@ -58,7 +61,6 @@ async function bootstrap() {
      * Initializes the database connection and retrieves the bucket.
      */
     await databaseService.onModuleInit();
-    const bucket = databaseService.getBucket();
     logger.log(
       "info",
       `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`
