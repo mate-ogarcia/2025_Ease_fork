@@ -61,7 +61,6 @@ async function bootstrap() {
      * Initializes the database connection and retrieves the bucket.
      */
     await databaseService.onModuleInit();
-    const bucket = databaseService.getBucket();
     logger.log(
       "info",
       `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`

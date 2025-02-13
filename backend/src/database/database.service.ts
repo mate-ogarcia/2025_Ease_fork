@@ -2,45 +2,48 @@
  * @file database.service.ts
  * @brief Service for handling database operations.
  *
- * This service provides functionalities to interact with the database,
- * including CRUD operations and connection management.
+ * This service provides functionalities to interact with Couchbase,
+ * including CRUD operations, connection management, and full-text search.
  */
 
-// Other
-import { Injectable, OnModuleInit, OnModuleDestroy, InternalServerErrorException } from "@nestjs/common";
+// Dependencies
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  InternalServerErrorException,
+} from "@nestjs/common";
 import * as couchbase from "couchbase";
-import * as fs from "fs";
-// HTTP
-import { HttpService } from '@nestjs/axios';
+// HTTP Client for external API calls
+import { HttpService } from "@nestjs/axios";
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private cluster: couchbase.Cluster;
-  private bucket: couchbase.Bucket;
-  private collection: couchbase.Collection;
-  constructor(private readonly httpService: HttpService) { }
+  private buckets: Record<string, couchbase.Bucket> = {}; // Stores multiple buckets dynamically
+
+  constructor(private readonly httpService: HttpService) {}
 
   /**
-   * Initializes the Couchbase connection when the module starts.
-   * Loads the SSL certificate and connects to the Couchbase Capella cluster.
+   * @brief Initializes the Couchbase connection when the module starts.
+   * It dynamically loads multiple buckets for handling data.
+   * @throws {Error} If the connection to Couchbase fails.
    */
   async onModuleInit() {
     try {
-      console.log("🔹 Waiting before connecting...");
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // 2-second delay
-
-      // Load the SSL root certificate
-      const cert = fs.readFileSync(process.env.SSL_CERT_PATH).toString();
-
       console.log("🔹 Connecting to Couchbase Capella...");
       this.cluster = await couchbase.connect(process.env.DB_HOST, {
         username: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
-        configProfile: "wanDevelopment", // Required for WAN connections
+        configProfile: "wanDevelopment",
       });
 
-      this.bucket = this.cluster.bucket(process.env.BUCKET_NAME);
-      this.collection = this.bucket.defaultCollection();
+      // Dynamically initializing buckets (UsersBDD & ProductsBDD)
+      const bucketNames = ["UsersBDD", "ProductsBDD"];
+      bucketNames.forEach((bucketName) => {
+        this.buckets[bucketName] = this.cluster.bucket(bucketName);
+      });
+
       console.log("✅ Successfully connected to Couchbase Capella!");
     } catch (error) {
       console.error("❌ Connection error to Couchbase Capella:", error.message);
@@ -49,7 +52,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Closes the connection to the Couchbase cluster when the module is destroyed.
+   * @brief Closes the Couchbase connection when the module is destroyed.
    */
   async onModuleDestroy() {
     await this.cluster.close();
@@ -57,141 +60,128 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Retrieves the Couchbase bucket instance.
-   * @returns {couchbase.Bucket} The initialized bucket object.
-   * @throws {Error} If the bucket has not been initialized yet.
+   * @brief Retrieves the default collection from a specified Couchbase bucket.
+   * @param {string} bucketName - The name of the bucket.
+   * @returns {Promise<couchbase.Collection>} - The collection of the specified bucket.
+   * @throws {Error} If the bucket is not initialized.
    */
-  getBucket(): couchbase.Bucket {
-    if (!this.bucket) {
-      throw new Error("❌ Couchbase bucket is not initialized yet.");
+  async getCollection(bucketName: string): Promise<couchbase.Collection> {
+    if (!this.buckets[bucketName]) {
+      throw new Error(`❌ Bucket "${bucketName}" is not initialized.`);
     }
-    return this.bucket;
+    return this.buckets[bucketName].defaultCollection();
   }
 
   /**
-   * Retrieves the default collection from the Couchbase bucket.
-   * @returns {Promise<couchbase.Collection>} The default collection.
-   * @throws {Error} If the collection has not been initialized yet.
-   */
-  async getCollection(): Promise<couchbase.Collection> {
-    if (!this.collection) {
-      throw new Error("❌ Collection not initialized");
-    }
-    return this.collection;
-  }
-
-  /**
-   * Executes a N1QL query to retrieve all data from the Couchbase bucket.
-   * @returns {Promise<any[]>} A promise that resolves to an array of all documents.
+   * @brief Executes a N1QL query to retrieve all data from the specified Couchbase bucket.
+   * @returns {Promise<any[]>} A list of all documents.
    * @throws {Error} If the query execution fails.
    */
-  async getAllData(): Promise<any[]> {
-    const bucketName = process.env.BUCKET_NAME;
-
+  async getAllData(bucketName: string): Promise<any[]> {
     try {
       console.log(`🔹 Executing N1QL query: SELECT * FROM \`${bucketName}\``);
       const query = `SELECT * FROM \`${bucketName}\``;
       const result = await this.cluster.query(query);
       return result.rows;
     } catch (error) {
-      console.error("❌ Error while retrieving data:", error);
+      console.error(
+        `❌ Error while retrieving data from ${bucketName}:`,
+        error
+      );
       return [];
     }
   }
 
   /**
-   * Executes a Full Text Search (FTS) query on Couchbase Capella.
-   * @param {string} searchQuery - The query string to search for.
-   * @returns {Promise<any[]>} A promise that resolves to an array of search results.
-   * @throws {Error} If the search query execution fails.
+   * @brief Executes a N1QL query dynamically.
+   * @param {string} query - The N1QL query string.
+   * @param {any} [params] - Optional parameters for the query.
+   * @returns {Promise<any[]>} - The query result.
+   * @throws {InternalServerErrorException} If the query execution fails.
    */
-  async searchQuery(searchQuery: string): Promise<any[]> {
-    const _indexName = process.env.INDEX_NAME;
-    searchQuery = searchQuery.toLowerCase(); // Normalize the query
-
+  async executeQuery(query: string, params?: any): Promise<any[]> {
     try {
-      const prefixQuery = couchbase.SearchQuery.prefix(searchQuery); // Prefix search
-      const matchQuery = couchbase.SearchQuery.match(searchQuery); // Natural language search
-
-      // Combine prefix and match queries
-      const combinedQuery = couchbase.SearchQuery.disjuncts(prefixQuery, matchQuery);
-
-      const searchRes = await this.cluster.searchQuery(
-        _indexName,
-        combinedQuery,
-        {
-          fields: ["name", "description", "category", "tags"],
-          highlight: { style: couchbase.HighlightStyle.HTML, fields: ["name", "description", "category", "tags"] }
-        }
-      );
-
-      return searchRes.rows;
+      console.log(`🔹 Executing query: ${query} with params:`, params);
+      const result = await this.cluster.query(query, { parameters: params });
+      return result.rows;
     } catch (error) {
-      console.error("❌ Error during FTS query:", error);
-      throw error;
+      console.error("❌ Error executing query:", error);
+      throw new InternalServerErrorException("Database query failed");
     }
   }
 
   /**
-   * Retrieves a specific product from Couchbase by its ID.
-   * @param {string} productId - The ID of the product to retrieve.
-   * @returns {Promise<any>} - A promise resolving with product details or `null` if not found.
-   * @throws {Error} - If the query fails.
+   * @brief Inserts a document into the specified bucket.
+   * @param {string} bucketName - The name of the bucket.
+   * @param {string} docId - The document ID.
+   * @param {any} data - The data to be inserted.
+   * @throws {InternalServerErrorException} If the insertion fails.
    */
-  async getProductById(productId: string): Promise<any> {
-    const bucketName = process.env.BUCKET_NAME;
-
+  async insertDocument(
+    bucketName: string,
+    docId: string,
+    data: any
+  ): Promise<void> {
     try {
-      console.log(`🔹 Retrieving product with ID: ${productId}`);
+      const collection = await this.getCollection(bucketName);
+      await collection.insert(docId, data);
+      console.log(`✅ Successfully inserted document into ${bucketName}`);
+    } catch (error) {
+      console.error(`❌ Error inserting document into ${bucketName}:`, error);
+      throw new InternalServerErrorException(
+        `Error inserting document into ${bucketName}`
+      );
+    }
+  }
 
+  /**
+   * @brief Retrieves a document from Couchbase by its ID.
+   * @param {string} bucketName - The name of the bucket.
+   * @param {string} docId - The document ID.
+   * @returns {Promise<any>} The retrieved document or `null` if not found.
+   * @throws {Error} If the query fails.
+   */
+  async getDocumentById(bucketName: string, docId: string): Promise<any> {
+    try {
+      console.log(
+        `🔹 Retrieving document with ID: ${docId} from ${bucketName}`
+      );
       const query = `SELECT * FROM \`${bucketName}\` WHERE META().id = ?`;
-      const options = { parameters: [productId] };
-
+      const options = { parameters: [docId] };
       const result = await this.cluster.query(query, options);
 
-      if (result.rows.length > 0) {
-        return result.rows[0][bucketName];
-      } else {
-        console.warn(`⚠️ Product with ID "${productId}" not found.`);
-        return null;
-      }
+      return result.rows.length > 0 ? result.rows[0][bucketName] : null;
     } catch (error) {
-      console.error("❌ Error retrieving product:", error);
-      throw new Error("Error retrieving product.");
+      console.error(`❌ Error retrieving document from ${bucketName}:`, error);
+      throw new Error(`Error retrieving document from ${bucketName}`);
     }
   }
 
   /**
-   * @brief Retrieves alternative products based on search criteria from Couchbase.
-   * 
-   * This method constructs a dynamic N1QL query to fetch alternative products from Couchbase
-   * based on the given search criteria. It also integrates an external API call to retrieve
-   * a list of European countries, ensuring that only European-origin products are included.
-   * 
-   * @param {any} searchCriteria - Object containing the search filters such as category, tags, and brand.
+   * @brief Retrieves alternative products based on search criteria.
+   * @param {string} bucketName - The name of the bucket.
+   * @param {any} searchCriteria - Object containing search filters (category, tags, brand).
    * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
-   * @throws {InternalServerErrorException} If the query execution fails or no search criteria are provided.
+   * @throws {InternalServerErrorException} If the query execution fails.
    */
-  async getAlternativeProducts(searchCriteria: any): Promise<any[]> {
-    const bucketName = process.env.BUCKET_NAME;
-
+  async getAlternativeProducts(
+    bucketName: string,
+    searchCriteria: any
+  ): Promise<any[]> {
     try {
       if (Object.keys(searchCriteria).length === 0) {
         throw new Error("❌ searchCriteria is empty");
       }
 
-      console.log(`🔹 Searching alternatives with criteria:`, searchCriteria);
+      console.log(
+        `🔹 Searching alternatives in ${bucketName} with criteria:`,
+        searchCriteria
+      );
 
-      // API call to fetch the list of European countries
-      const response = await this.httpService.axiosRef.get('https://restcountries.com/v3.1/region/europe');
-      const europeanCountries = response.data.map(country => country.name.common);
-
-      // Dynamically construct the N1QL query
       let query = `SELECT * FROM \`${bucketName}\` WHERE `;
       const queryConditions: string[] = [];
       const queryParams: any[] = [];
 
-      // Add conditions dynamically based on provided criteria
       if (searchCriteria.category) {
         queryConditions.push("category = ?");
         queryParams.push(searchCriteria.category);
@@ -199,30 +189,66 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       if (searchCriteria.tags && searchCriteria.tags.length > 0) {
         queryConditions.push("ANY tag IN tags SATISFIES tag IN ? END");
-        queryParams.push(searchCriteria.tags); // Ensures at least one tag matches
+        queryParams.push(searchCriteria.tags);
       }
 
       if (searchCriteria.brand) {
         queryConditions.push("brand != ?");
-        queryParams.push(searchCriteria.brand); // Exclude the same brand
+        queryParams.push(searchCriteria.brand);
       }
 
-      // 🔹 Filter only European products
-      queryConditions.push("origin IN ?");
-      queryParams.push(europeanCountries); // Verify if the origin is European
-
-      // Finalize the query with conditions and limit the results
       query += queryConditions.join(" AND ") + " LIMIT 10";
+      console.log(`🔹 Executing query: ${query} with params:`, queryParams);
 
-      console.log(`🔹 Executing N1QL query: ${query} with params:`, queryParams);
-
-      // Execute the query in Couchbase
-      const result = await this.cluster.query(query, { parameters: queryParams });
-
-      return result.rows.map(row => row[bucketName]); // Extract product data
+      const result = await this.cluster.query(query, {
+        parameters: queryParams,
+      });
+      return result.rows.map((row) => row[bucketName]);
     } catch (error) {
-      console.error("❌ Error retrieving alternative products (database.service):", error);
-      throw new InternalServerErrorException("Error retrieving alternative products (database.service)");
+      console.error(
+        `❌ Error retrieving alternative products from ${bucketName}:`,
+        error
+      );
+      throw new InternalServerErrorException(
+        `Error retrieving alternative products from ${bucketName}`
+      );
+    }
+  }
+
+  /**
+   * @brief Executes a Full-Text Search (FTS) query on Couchbase.
+   * @param {string} bucketName - The name of the bucket.
+   * @param {string} searchQuery - The query string to search for.
+   * @returns {Promise<any[]>} A promise resolving with an array of search results.
+   * @throws {Error} If the search query execution fails.
+   */
+  async searchQuery(bucketName: string, searchQuery: string): Promise<any[]> {
+    try {
+      console.log(`🔹 Performing search in ${bucketName} for: ${searchQuery}`);
+
+      const prefixQuery = couchbase.SearchQuery.prefix(searchQuery);
+      const matchQuery = couchbase.SearchQuery.match(searchQuery);
+      const combinedQuery = couchbase.SearchQuery.disjuncts(
+        prefixQuery,
+        matchQuery
+      );
+
+      const searchRes = await this.cluster.searchQuery(
+        bucketName,
+        combinedQuery,
+        {
+          fields: ["name", "description", "category", "tags"],
+          highlight: {
+            style: couchbase.HighlightStyle.HTML,
+            fields: ["name", "description", "category", "tags"],
+          },
+        }
+      );
+
+      return searchRes.rows;
+    } catch (error) {
+      console.error(`❌ Error executing search query in ${bucketName}:`, error);
+      throw error;
     }
   }
 }
