@@ -37,12 +37,13 @@ export class AuthService {
    * 
    * Sends a registration request to the backend with the user's email and password.
    * 
+   * @param {string} username - The username.
    * @param {string} email - The email address of the user.
    * @param {string} password - The user's password.
    * @returns {Observable<any>} The API response.
    */
-  register(email: string, password: string): Observable<any> {
-    return this.http.post(`${this._authBackendUrl}/register`, { email, password });
+  register(username: string, email: string, password: string): Observable<any> {
+    return this.http.post(`${this._authBackendUrl}/register`, {username, email, password });
   }
 
   /**

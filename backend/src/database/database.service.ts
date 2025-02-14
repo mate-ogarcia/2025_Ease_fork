@@ -24,6 +24,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // Collections
   private productsCollection: couchbase.Collection;
   private usersCollection: couchbase.Collection;
+  // User role
+  private _role = {
+    Admin: 'Admin',
+    User: 'User'
+  };
 
 
   constructor(private readonly httpService: HttpService) { }
@@ -126,7 +131,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
     return this.usersBucket;
   }
-  
+
   /**
    * Returns the products collection.
    */
@@ -300,12 +305,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
- * @brief Retrieves a user from Couchbase by their email.
- * 
- * @param {string} email - The email of the user to retrieve.
- * @returns {Promise<any>} - The user details or `null` if not found.
- * @throws {InternalServerErrorException} If an error occurs during retrieval.
- */
+  * @brief Retrieves a user from Couchbase by their email.
+  * 
+  * @param {string} email - The email of the user to retrieve.
+  * @returns {Promise<any>} - The user details or `null` if not found.
+  * @throws {InternalServerErrorException} If an error occurs during retrieval.
+  */
   async getUserByEmail(email: string): Promise<any> {
     try {
       // Check if users bucket is initialized
@@ -328,6 +333,66 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error retrieving user by email:", error);
       throw new InternalServerErrorException("Error retrieving user by email.");
+    }
+  }
+
+  /**
+   * @brief Adds a new user to the Couchbase database.
+   *
+   * @details This function checks if the user's email already exists in the database. If not, it creates a new user document with the provided username, email, password, and a default role of "User". The document is inserted into the Couchbase database.
+   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the user was created and last updated.
+   * 
+   * @param username The username of the new user.
+   * @param email The email of the new user, used as the unique identifier.
+   * @param password The password of the new user, stored as plain text (must be hashed before actual usage).
+   * 
+   * @returns A Promise that resolves to the result of the insertion query, or null if the user already exists.
+   * 
+   * @throws InternalServerErrorException If there is an error during the insertion process.
+   */
+  async addUser(username: string, email: string, password: string): Promise<any> {
+    try {
+      // Check if the users bucket is initialized
+      if (!this.usersBucket) {
+        throw new Error("❌ Users bucket is not initialized.");
+      }
+
+      // Check if a user with the same email already exists
+      const existingUser = await this.getUserByEmail(email);
+      if (existingUser) {
+        console.warn(`⚠️ A user with the email "${email}" already exists.`);
+        return null; // Return null if the user already exists
+      }
+
+      // Create the user object with the provided information
+      const newUser = {
+        username: username,
+        email: email,
+        password: password,
+        role: this._role.User, // Default user role
+        createdAt: new Date().toISOString(), // Adding createdAt timestamp
+        updatedAt: new Date().toISOString()  // Adding updatedAt timestamp
+      };
+
+      // Generate a unique identifier for the user document
+      const userId = `user::${email}`; // Unique ID based on the email
+
+      // Construct the N1QL query to insert the user
+      const query = `
+      INSERT INTO \`${this.usersBucket.name}\`._default._default (KEY, VALUE)
+      VALUES ($userId, $newUser)
+    `;
+
+      // Execute the query with the parameters
+      const result = await this.cluster.query(query, {
+        parameters: { userId, newUser }
+      });
+
+      // Return the result of the insertion
+      return result;
+    } catch (error) {
+      console.error("❌ Error occurred while adding the user:", error);
+      throw new InternalServerErrorException("Error occurred while adding the user.");
     }
   }
 }
