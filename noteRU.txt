@@ -5,10 +5,10 @@ TODO :
 Semaine pro :
 categ générale      DONE
 register            DONE
-searchBar filtre/Recherche avancée    
+searchBar filtre/Recherche avancée (Localisation, categ, prix?, ) 
 BDD                 DONE
-type de compte (visiteur, user, admin)
-documentation (avec .env)
+type de compte (visiteur, user, admin)  MATEO
+documentation (avec .env)   DONE
 API type food open facts -> se renseigner comment faire
 docker dans le back
 

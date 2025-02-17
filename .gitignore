@@ -1,11 +1,11 @@
-# Fichiers d'environements
+# Environments files
 /.env.development
 /.env.production
+/frontend/src/environments/environment.ts
 
-# Ne PAS ignorer les fichiers d'environnement standard
-!/frontend/environments/environment.ts
+# Do not ignore example .env
 !/.env.sample
 
-# Fichier local
+# Local files
 /delDeps.bat
 /noteRU.txt
