@@ -5,8 +5,8 @@ TODO :
 Semaine pro :
 categ générale      DONE
 register            DONE
-searchBar filtre    ?
-BDD                 ?
+searchBar filtre/Recherche avancée    
+BDD                 DONE
 type de compte (visiteur, user, admin)
 documentation (avec .env)
 API type food open facts -> se renseigner comment faire
