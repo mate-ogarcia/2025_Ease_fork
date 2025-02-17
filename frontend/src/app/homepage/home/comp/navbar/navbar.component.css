@@ -12,6 +12,7 @@
   border-radius: 40px;
   width: 100%;
   color: #f9f9f9;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Logo */
@@ -47,6 +48,7 @@
 
 .navbar ul li {
   display: inline-block;
+  height: fit-content;
 }
 
 .navbar ul li a {
@@ -54,8 +56,8 @@
   color: #f9f9f9;
   font-weight: 500;
   border-radius: 40px;
-  transition: all 0.3s ease-in-out;  
   padding: 10px 15px;
+  transition: all 0.3s ease-in-out;  
   cursor: pointer;
 }
 
@@ -103,6 +105,7 @@
   position: absolute;
   right: 10px;
   top: 50px;
+  gap: 10px;
   background: white;
   border: 1px solid #ddd;
   border-radius: 5px;
@@ -111,17 +114,24 @@
   min-width: 120px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
-
-/* ✅ Style du bouton logout dans le menu */
+.profile-btn {
+  padding: 10px 15px;
+  border-bottom: 1px solid #778081;
+  color: black;
+  cursor: pointer;
+}
+/* Style du bouton logout dans le menu */
 .logout-btn {
   background-color: red;
   color: white;
+  padding: 10px 0;
   font-weight: 500;
   border: none;
-  padding: 10px 15px;
-  border-radius: 20px;
+  border-radius: 30px;
   cursor: pointer;
   transition: 0.3s;
   width: 100%;
@@ -146,7 +156,6 @@
 @media (max-width: 768px) {
   .navbar {
       flex-direction: row;
-      padding: 10px 10px 10px 3px;
   }
 
   .navbar ul {
@@ -175,9 +184,47 @@
   }
   .user{
     margin-left: 0; 
-
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
   }
   .logo {
     border-right: none;
   }
+  .log-container {
+    position: relative; /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: fit-content;
+    gap: 10px;
+    margin-left: auto;
+    flex-direction: column;
+  }
+  .userprofile{
+    display: none;
+  }
+  
+  .profile-btn{
+    width: 85%;
+    border-top: 1px solid #778081;
+  }
+  .dropdown-menu {
+    position: relative;
+    display: flex !important; /* Toujours visible */
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-weight: 500;
+    border: none;
+    top: auto;
+    right: auto;
+    width: 100%;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: none;
+    padding: 0;
+  }
+  
 }
