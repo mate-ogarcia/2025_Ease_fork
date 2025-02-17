@@ -1,2 +1,31 @@
-<app-searchbar></app-searchbar>
-<app-data-display></app-data-display>
+<div #vantaBackground class="container">
+    <app-navbar class="app-navbar"></app-navbar>
+  
+    <!-- Section Titre -->
+    <div class="title">
+      <div class="slogan">
+        <h1>Consommez local, trouvez l’alternative idéale !</h1>
+      </div>
+      <div class="explication">
+        <h5>Trouvez des alternatives européennes à vos produits importés en un clic !</h5>
+      </div>
+    </div>
+  
+    <app-searchbar class="app-searchbar"></app-searchbar>
+  
+    <!-- Bouton engrenage -->
+    <div class="settings-icon" [class.open]="isSettingsOpen" (click)="toggleSettingsPanel()">
+      ⚙
+    </div>
+  
+    <!-- Menu des paramètres -->
+    <div class="settings-menu" [class.open]="isSettingsOpen">
+      <button class="settings-btn" (click)="toggleDarkMode()" title="Mode Sombre">
+        {{ isDarkMode ? '☀' : '🌙' }}
+      </button>
+      <button class="settings-btn" (click)="toggleVantaEffect()" title="Animation">
+        {{ isVantaActive ? '💨' : '🎨' }}
+      </button>
+    </div>
+  </div>
+  

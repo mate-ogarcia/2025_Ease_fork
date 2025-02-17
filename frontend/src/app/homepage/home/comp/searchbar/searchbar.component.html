@@ -1,52 +1,25 @@
-<div #vantaBackground class="container">
-  <app-navbar class="app-navbar"></app-navbar>
-  <div class="title">
-    <div class="slogan">
-      <h1>Consommez local, trouvez l’alternative idéale !</h1>
-    </div>
-    <div class="explication">
-      <h5>Trouvez des alternatives européennes à vos produits importés en un clic ! </h5>
-    </div>
+<div class="search-container" [class.has-suggestions]="hasSuggestions">
+  <input
+    type="text"
+    placeholder="Rechercher..."
+    [(ngModel)]="searchQuery"
+    (keydown.enter)="onEnter($event)" 
+    (input)="onInputChange($event)" 
+  />
+  
+  <button (click)="clearSearch()">✖</button>
+
+  <!-- Display search results -->
+  <div class="suggestions" [class.show]="searchResults.length > 0">
+    <ul>
+      <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
+        {{ result.name }} - {{ result.description }}
+      </li>
+    </ul>
   </div>
-  <div class="search-container" [class.has-suggestions]="hasSuggestions">
-    <input
-      type="text"
-      placeholder="Rechercher..."
-      [(ngModel)]="searchQuery"
-      (keydown.enter)="onEnter($event)" 
-      (input)="onInputChange($event)" 
-    />
-
-    <button (click)="clearSearch()">✖</button>
-
-    
-
-    <!--Display search results -->
-    <div class="suggestions" [class.show]="searchResults.length > 0">
-      <ul>
-        <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
-          {{ result.name }} - {{ result.description }}
-        </li>
-      </ul>
-    </div>
-    
-    <!-- Affichage du message si aucun résultat n'est trouvé -->
-    <div *ngIf="noResultsMessage" class="no-results-message">
-      <p>{{ noResultsMessage }}</p>
-    </div>
-  </div>
-  <!-- Bouton engrenage -->
-  <div class="settings-icon" [class.open]="isSettingsOpen" (click)="toggleSettingsPanel()">
-    ⚙
-  </div>
-
-  <!-- Menu rond des paramètres -->
-  <div class="settings-menu" [class.open]="isSettingsOpen">
-    <button class="settings-btn" (click)="toggleDarkMode()" title="Mode Sombre">
-      {{ isDarkMode ? '☀' : '🌙' }}
-    </button>
-    <button class="settings-btn" (click)="toggleVantaEffect()" title="Animation">
-      {{ isVantaActive ? '💨' : '🎨' }}
-    </button>
+  
+  <!-- Message si aucun résultat trouvé -->
+  <div *ngIf="noResultsMessage" class="no-results-message">
+    <p>{{ noResultsMessage }}</p>
   </div>
 </div>

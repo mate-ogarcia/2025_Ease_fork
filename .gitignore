@@ -1,7 +1,7 @@
 # Environments files
 /.env.development
 /.env.production
-/frontend/src/environments/environment.ts
+/frontend/src/environments/
 
 # Do not ignore example .env
 !/.env.sample
