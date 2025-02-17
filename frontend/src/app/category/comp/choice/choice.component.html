@@ -4,41 +4,61 @@
             <div class="rayons-wrapper">
                 <div class="rayon" *ngFor="let rayon of rayons" 
                      (click)="selectRayon(rayon.name)"
-                     [ngStyle]="{'background-color': getPastelColor(rayon.name)}">
+                     [ngStyle]="{'background-color': rayon.backgroundColor, 'color': rayon.textColor}">
                     <div class="rayon-icon">{{ rayon.icon }}</div>
                     <div class="rayon-title">{{ rayon.name }}</div>
                 </div>
             </div>
         </div>
-        
+
         <div class="details-container">
             <div class="details-content">
                 <div class="rayon-header">
                     <div class="title-categ">
-                        <h2>{{ currentRayon || 'Sélectionnez un rayon' }}</h2>
+                        <h2>{{ currentRayon || 'Sélectionnez une catégorie' }}</h2>
                     </div>
-                    <div class="search-container">
-                        <input type="text" class="searchbar-prod" [(ngModel)]="searchQuery" (input)="filterProducts()" placeholder="Rechercher un produit...">
-                    </div>    
+                
+                
+                    <!-- Barre de recherche -->
+                <div class="search-container">
+                    <input type="text" class="searchbar-prod" [(ngModel)]="searchQuery" (input)="filterProducts()" placeholder="Rechercher un produit...">
                 </div>
+            </div>
+                <!-- Barre de sous-catégories -->
+                <div class="sub-categories-container" *ngIf="currentSubCategories.length > 0">
+                    <div class="sub-categories-wrapper">
+                        <div *ngFor="let subCategory of currentSubCategories" 
+                             (click)="selectSubCategory(subCategory)"
+                             [ngClass]="{'selected': currentSubCategory === subCategory}"
+                             class="sub-category">
+                            {{ subCategory }}
+                        </div>
+                    </div>
+                </div>
+
+                
+
+                <!-- Produits affichés -->
                 <div id="rayon-products" class="product-grid">
                     <div *ngFor="let product of filteredProducts" class="product-card">
                         <div class="product-image">
                             <img [src]="'https://via.placeholder.com/200x200?text=' + product.name" [alt]="product.name">
                         </div>
                         <div class="product-info">
-                            <div>
-                                <h3>{{ product.name }}</h3>
-                                <p class="region">Région: {{ product.region }}</p>
-                                <div class="description-rating-container">
-                                    <p class="description">{{ product.description }}</p>
-                                    <div class="product-rating">
-                                        <span class="rating-dot" [ngClass]="getRatingDotClass(product.ecologicalImpact)"></span>
-                                    </div>
-                                </div>
+                            <h3>{{ product.name }}</h3>
+                            <p class="region">Région: {{ product.region }}</p>
+                            <p class="description">{{ product.description }}</p>
+                            <div class="product-impact">
+                                Impact écologique: 
+                                <span [ngClass]="{'impact-good': product.ecologicalImpact === 'good', 
+                                                 'impact-neutral': product.ecologicalImpact === 'neutral',
+                                                 'impact-bad': product.ecologicalImpact === 'bad'}">
+                                    {{ product.ecologicalImpact }}
+                                </span>
                             </div>
                         </div>
                     </div>
+                    <p *ngIf="filteredProducts.length === 0" class="no-results">Aucun produit trouvé.</p>
                 </div>
             </div>
         </div>

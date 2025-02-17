@@ -28,10 +28,10 @@
 
 /* Gestion du texte */
 h1 {
-  font-size: 3.5rem; /* Taille fixe pour que le texte reste identique */
+  font-size: 3.6rem; /* Taille fixe pour que le texte reste identique */
   font-weight: 900;
   text-align: center;
-  color: #0F0F0B;
+  color: #2dd096;
   font-style: 800;
   line-height: 1.2; /* Ajuste l'espacement entre les lignes */
   word-wrap: break-word; /* Permet de couper le texte si nécessaire */
@@ -151,6 +151,112 @@ h5 {
 .suggestions ul li:hover {
   background: #f4f4f4;
 }
+/* Icône engrenage */
+.settings-icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #2DD096;
+  color: white;
+  font-size: 24px;
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 9999; /* Toujours au-dessus */
+}
+
+/* Animation rotation au survol */
+.settings-icon.open{
+  background-color: #1dd27b;
+  transform: rotate(180deg);
+}
+
+/* Menu des paramètres qui s'affiche sous l'engrenage */
+.settings-menu {
+  position: fixed;
+  bottom: 75px; /* 🔥 Placé SOUS l'engrenage */
+  right: 23px;
+  width: 50px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 30px;
+  border-radius: 20px 20px 0 0 ; /* 🔥 Coins arrondis en bas */
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(-20px) scale(0);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 9998; /* Sous l'engrenage */
+  transform: translateY(50px);
+
+}
+
+/* Apparition fluide du menu */
+.settings-menu.open {
+  opacity: 1;
+  transform: translateY(20px); 
+  pointer-events: all;
+}
+
+/* Style des boutons ronds */
+.settings-btn {
+  width: 50px;
+  height: 50px;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 24px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.settings-btn:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.1);
+}
+
+
+/* Mode sombre */
+.dark-mode {
+  background-color: var(--background-dark);
+  color: white;
+}
+
+.dark-mode .settings-menu {
+  background: rgba(50, 50, 50, 0.9);
+}
+
+.dark-mode .settings-btn {
+  background-color: #888;
+}
+
+.dark-mode .settings-btn:hover {
+  background-color: #666;
+}
+
+/* Background clair quand l'animation est désactivée */
+.light-gradient-background {
+  background: linear-gradient(135deg, #a8e6cf, #d4fc79);
+  width: 100%;
+  height: 100vh;
+  transition: background 0.5s ease-in-out;
+}
+
 /* Style général de la scrollbar */
 ::-webkit-scrollbar {
   width: 6px; /* Largeur de la scrollbar */

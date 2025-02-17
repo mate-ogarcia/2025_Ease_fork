@@ -5,6 +5,9 @@
  * This component provides a search bar that fetches product suggestions
  * from the backend and allows the user to select a product for further actions.
  * It includes caching to optimize performance and prevent unnecessary API calls.
+ * 
+ * Additionally, it allows toggling the Vanta.js animated background effect
+ * and switching to Dark Mode.
  */
 
 import {
@@ -45,6 +48,11 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   noResultsMessage: string = '';
   selectedProduct: string = '';
   private vantaEffect: any;
+  
+  isVantaActive: boolean = true; // Gestion de l'animation Vanta.js
+  isDarkMode: boolean = false; // Gestion du mode sombre
+  isSettingsOpen: boolean = false; // État du panneau des paramètres
+
   private _searchSubject = new Subject<string>();
   private _cache = new Map<string, { data: any[]; timestamp: number }>();
   private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes expiration time
@@ -54,23 +62,12 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   constructor(private apiService: ApiService, private router: Router) {}
 
   /**
-   * Initializes the Vanta.js birds effect
-   * and sets up search functionality with caching.
+   * Initializes the Vanta.js birds effect and search functionality with caching.
    */
   ngAfterViewInit(): void {
-    this.vantaEffect = (VANTA as any).default({
-      el: '.container',
-      THREE: THREE,
-      colorMode: "variance",
-      backgroundColor: 0x5A7F4F,
-      color1: 0x671c87,
-      color2: 0xAEE1BB,
-      birdSize: 1,
-      quantity: 4.0,
-      speedLimit: 5.0,
-      separation: 90.0,
-      alignment: 20.0,
-    });
+    if (this.isVantaActive) {
+      this.initVantaEffect();
+    }
 
     this._searchSubject
       .pipe(
@@ -130,6 +127,49 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
+   * Initializes the Vanta.js birds effect.
+   */
+  private initVantaEffect(): void {
+    this.vantaEffect = (VANTA as any).default({
+      el: '.container',
+      THREE: THREE,
+      colorMode: "variance",
+      backgroundColor: 0x023436,
+      color1: 0xff0000,
+      color2: 0xd1ff,
+      birdSize: 1,
+      quantity: 4.0,
+      speedLimit: 5.0,
+      separation: 90.0,
+      alignment: 20.0,
+    });
+  }
+
+  toggleSettingsPanel(): void {
+    this.isSettingsOpen = !this.isSettingsOpen;
+  }
+  
+  toggleVantaEffect(): void {
+    this.isVantaActive = !this.isVantaActive;
+    const container = document.querySelector('.container');
+  
+    if (this.isVantaActive) {
+      this.initVantaEffect();
+      container?.classList.remove('light-gradient-background');
+    } else if (this.vantaEffect) {
+      this.vantaEffect.destroy();
+      this.vantaEffect = null;
+      container?.classList.add('light-gradient-background');
+    }
+  }
+  
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+    document.body.classList.toggle('dark-mode', this.isDarkMode);
+  }
+  
+
+  /**
    * Cleans up the Vanta.js effect when the component is destroyed.
    */
   ngOnDestroy(): void {
@@ -139,21 +179,13 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * @brief Checks if there are search suggestions available.
-   *
-   * This getter method returns `true` if there are search results available,
-   * otherwise, it returns `false`.
-   *
+   * Checks if there are search suggestions available.
    * @returns {boolean} `true` if there are search results, `false` otherwise.
    */
   get hasSuggestions(): boolean {
     return this.searchResults.length > 0;
   }
 
-  /**
-   * Triggers a new search based on input change.
-   * @param event The input event containing the new search query.
-   */
   onInputChange(event: any) {
     if (this.searchQuery.trim() === '') {
       this.clearSearch();
@@ -162,68 +194,33 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
     this._searchSubject.next(this.searchQuery);
   }
 
-  /**
-   * Retrieves cached results when the input field gains focus.
-   */
-  onFocus() {
-    const trimmedQuery = this.searchQuery.trim();
-    if (trimmedQuery === '') {
-      this.clearSearch();
-      return;
-    }
-
-    if (this._cache.has(trimmedQuery)) {
-      this.searchResults = [...(this._cache.get(trimmedQuery)?.data || [])];
-      this.noResultsMessage = this.searchResults.length
-        ? ''
-        : 'No product found.';
-    }
-  }
-
-  /**
-   * Handles the Enter key press to select a product.
-   * @param event The keyboard event.
-   */
   onEnter(event: any) {
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
-      console.log(`🔍 Searching for: "${this.searchQuery}"`);
-
       const queryLower = this.searchQuery.trim().toLowerCase();
       const product = this.searchResults.find((p) =>
         p.name.toLowerCase().includes(queryLower)
       );
 
       if (product) {
-        console.log('✅ Product found:', product);
         this.selectProduct(product);
       } else {
-        console.warn('⚠️ Product not found in results!');
-        console.log('🔹 Current search results:', this.searchResults);
         this.noResultsMessage = 'No product found.';
       }
     }
   }
 
-  /**
-   * Clears the search input and results.
-   */
   clearSearch() {
     this.searchQuery = '';
     this.searchResults = [];
     this.noResultsMessage = '';
   }
 
-  /**
-   * Selects a product and navigates to its details page.
-   * @param product The selected product object.
-   */
   selectProduct(product: any) {
     this.searchQuery = product.name;
     this.selectedProduct = product.id;
     this.noResultsMessage = '';
 
     if (!this.selectedProduct) {
-      console.warn('⚠️ No product ID found!');
       return;
     }
 
@@ -233,7 +230,6 @@ export class SearchbarComponent implements AfterViewInit, OnDestroy {
         next: () => {
           this.router
             .navigate(['/products-alternative', this.selectedProduct])
-            .then(() => console.log('✅ Navigation successful!'))
             .catch((error) => console.error('❌ Navigation error:', error));
         },
         error: (error) => console.error('❌ Error sending product ID:', error),
