@@ -26,8 +26,7 @@
     background-color: #ced4da;
 }
 
-
-.container{
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -35,6 +34,7 @@
     width: 100%;
     height: 100%;
 }
+
 .categ-container {
     display: flex;
     flex-direction: row;
@@ -51,42 +51,52 @@
     background-color: #C3E8BD;
     display: flex;
     flex-direction: column;
-    border-radius: 20px; 
-    overflow: hidden; /* Cache tout débordement */
+    border-radius: 20px;
+    overflow: hidden;
 }
 
 .rayons-wrapper {
     max-height: 100%;
-    overflow-y: auto; /* Active le scroll uniquement ici */
+    overflow-y: auto;
     background-color: #E5FAE2;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    border-radius: 20px; 
+    border-radius: 20px;
 }
 
-/* Styles de la Scrollbar */
-.rayons-wrapper::-webkit-scrollbar {
-    width: 8px; /* Réduit la largeur */
-}
-
-.rayons-wrapper::-webkit-scrollbar-track {
-    background: #f8f9fa; /* Fond de la track */
-    border-radius: 10px; /* Suit le border-radius */
-}
-
-.rayons-wrapper::-webkit-scrollbar-thumb {
-    background-color: #dee2e6;
+/* Barre de sous-catégories */
+.sub-categories-container {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 10px 0;
+    background-color: #f8f9fa;
     border-radius: 10px;
-    border: 2px solid #f8f9fa; /* Évite que la scrollbar soit collée */
 }
 
-.rayons-wrapper::-webkit-scrollbar-thumb:hover {
-    background-color: #ced4da;
+.sub-categories-wrapper {
+    display: flex;
+    gap: 10px;
+    padding: 0 15px;
 }
 
+.sub-category {
+    background-color: #dee2e6;
+    padding: 8px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+}
 
+.sub-category:hover,
+.sub-category.selected {
+    background-color: #adb5bd;
+}
+
+/* Rayons */
 .rayon {
     display: flex;
     align-items: flex-start;
@@ -120,6 +130,7 @@
     margin-bottom: 20px;
 }
 
+/* Détails produits */
 .details-container {
     background-color: #E5FAE2;
     padding: 30px;
@@ -135,14 +146,9 @@
     text-align: center;
     width: 100%;
     background-color: #E5FAE2;
-
 }
 
-#rayon-name {
-    color: #343a40;
-    margin-bottom: 20px;
-}
-
+/* Produits */
 .product-grid {
     display: flex;
     flex-direction: column;
@@ -210,28 +216,13 @@
     margin-bottom: 15px;
 }
 
-.rating-container {
-    background-color: #ffffff;
-    border-radius: 10px;
-    overflow: hidden;
-    height: 25px;
-    width: 100%;
-}
-
-.rating-bar {
-    background-color: #28a745;
-    height: 100%;
-    position: relative;
-    transition: width 0.5s ease;
-}
-
-.rating-text {
-    position: absolute;
-    right: 5px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: white;
-    font-size: 0.8em;
+/* Notation produit */
+.product-rating {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+    color: #495057;
+    flex-shrink: 0;
 }
 
 .rating-dot {
@@ -244,33 +235,28 @@
 }
 
 .rating-dot-bad {
-    background-color: #dc3545; 
+    background-color: #dc3545;
 }
 
 .rating-dot-neutral {
-    background-color: #ffc107; 
+    background-color: #ffc107;
 }
 
 .rating-dot-good {
-    background-color: #28a745; 
+    background-color: #28a745;
 }
 
-.product-rating {
-    display: flex;
-    align-items: center;
-    font-size: 0.9em;
-    color: #495057;
-    flex-shrink: 0;
-}
-
+/* Barre de recherche */
 .search-container {
     display: flex;
     align-items: center;
     background-color: #e9ecef;
     border-radius: 20px;
     width: 250px;
+    margin-bottom: 20px;
 }
-.searchbar-prod{
+
+.searchbar-prod {
     width: 100%;
     padding: 10px 15px;
     border: none;
@@ -278,35 +264,23 @@
     outline: none;
 }
 
-#search-input {
-    flex-grow: 1;
-    border: none;
-    background-color: transparent;
-    padding: 5px;
-    outline: none;
-    font-size: 0.9em;
-}
-
-.search-icon {
-    color: #6c757d;
-    margin-left: 10px;
-}
+/* Responsive */
 @media screen and (max-width: 1100px) {
     .categ-container {
-        flex-direction: column; /* Empile les rayons et les détails */
-        align-items: center; /* Centre le contenu */
+        flex-direction: column;
+        align-items: center;
     }
-    .rayons-wrapper{
-        max-width: 100%;
-        overflow-x: auto; /* Active le scroll uniquement ici */
-        padding: 20px;
-        flex-direction: row;
-    }    
     
+    .rayons-wrapper {
+        max-width: 100%;
+        overflow-x: auto;
+        flex-direction: row;
+    }
+
     .rayons-container {
-        display: grid; /* Transforme les rayons en grille */
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Colonnes responsives */
-        gap: 20px; /* Espacement entre les cartes */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
         width: 100%;
         height: 33%;
         padding: 20px;
@@ -316,7 +290,7 @@
     .rayon {
         justify-content: center;
         align-items: center;
-        flex-direction: column; /* Place l’icône au-dessus du texte */        
+        flex-direction: column;
         min-width: 120px;
     }
 
@@ -332,33 +306,25 @@
         padding: 5px 10px;
         border-radius: 10px;
     }
-    .rayon-header {
-        flex-direction: column-reverse;
-        
-    }
-    .search-container{
-        position: sticky;
-        top: 0; /* Positionne l'élément à 0px du haut */
-        z-index: 10;
-    }
+
     .details-container {
         width: 100%;
         height: 60%;
-        scrollbar-width: none; /* Pour les navigateurs compatibles avec Firefox */
-        -ms-overflow-style: none; /* Pour Internet Explorer */
-    }
-    .details-content{
-        width: 100%;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
 }
+
 @media screen and (max-width: 600px) {
     .product-card {
-        flex-direction: column; /* Empile les éléments */
+        flex-direction: column;
     }
-    .product-image{
-        display: none; /* Cache l'image */
+
+    .product-image {
+        display: none;
     }
-    .title-categ{
+
+    .title-categ {
         display: flex;
         width: 100%;
     }

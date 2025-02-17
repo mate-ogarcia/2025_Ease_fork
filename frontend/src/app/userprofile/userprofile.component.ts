@@ -1,0 +1,14 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { NavbarComponent } from '../homepage/home/comp/navbar/navbar.component';
+import { UsercompComponent } from './usercomp/usercomp.component';
+
+@Component({
+  selector: 'app-userprofile',
+  imports: [NavbarComponent,UsercompComponent],
+  templateUrl: './userprofile.component.html',
+  styleUrl: './userprofile.component.css'
+})
+export class UserprofileComponent {
+
+}

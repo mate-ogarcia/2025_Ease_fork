@@ -35,4 +35,18 @@
       <p>{{ noResultsMessage }}</p>
     </div>
   </div>
+  <!-- Bouton engrenage -->
+  <div class="settings-icon" [class.open]="isSettingsOpen" (click)="toggleSettingsPanel()">
+    ⚙
+  </div>
+
+  <!-- Menu rond des paramètres -->
+  <div class="settings-menu" [class.open]="isSettingsOpen">
+    <button class="settings-btn" (click)="toggleDarkMode()" title="Mode Sombre">
+      {{ isDarkMode ? '☀' : '🌙' }}
+    </button>
+    <button class="settings-btn" (click)="toggleVantaEffect()" title="Animation">
+      {{ isVantaActive ? '💨' : '🎨' }}
+    </button>
+  </div>
 </div>

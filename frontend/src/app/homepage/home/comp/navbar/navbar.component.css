@@ -68,12 +68,26 @@
 /* User Profile */
 .user {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
   height: 40px;
   margin-left: auto;
 }
+.log-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  gap: 10px;
+  margin-left: auto;
+}
+.login-btn{
+  background-color: #011f20;
+  color: white;
+}
 .userprofile {
   height: 100%;
+  cursor: pointer;
   border-radius: 50%;
 }
 
@@ -84,6 +98,41 @@
   cursor: pointer;
   z-index: 10000;
 }
+/* Position et style du menu déroulant */
+.dropdown-menu {
+  position: absolute;
+  right: 10px;
+  top: 50px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+/* ✅ Style du bouton logout dans le menu */
+.logout-btn {
+  background-color: red;
+  color: white;
+  font-weight: 500;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 100%;
+  text-align: center;
+}
+
+.logout-btn:hover {
+  background-color: darkred;
+}
+
+
 
 .menu-toggle span {
   width: 25px;
