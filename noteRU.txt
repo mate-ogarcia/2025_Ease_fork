@@ -3,10 +3,10 @@ TODO :
 
 -----------------------
 Semaine pro :
-categ générale
-register
-searchBar filtre
-BDD
+categ générale      DONE
+register            DONE
+searchBar filtre    ?
+BDD                 ?
 type de compte (visiteur, user, admin)
 documentation (avec .env)
 API type food open facts -> se renseigner comment faire
@@ -14,4 +14,3 @@ docker dans le back
 
 lier front et .env
 ----------------------
-angular style composant -> keyword : host
