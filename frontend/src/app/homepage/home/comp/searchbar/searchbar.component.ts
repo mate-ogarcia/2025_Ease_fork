@@ -18,6 +18,10 @@ export class SearchbarComponent {
   searchResults: any[] = [];
   noResultsMessage: string = '';
   selectedProduct: string = '';
+  isFilterPanelOpen: boolean = false;
+  filter1: boolean = false;
+  filter2: boolean = false;
+  filter3: boolean = false;
 
   private _searchSubject = new Subject<string>();
   private _cache = new Map<string, { data: any[]; timestamp: number }>();
@@ -121,5 +125,13 @@ export class SearchbarComponent {
       },
       error: (error) => console.error('❌ Error sending product ID:', error),
     });
+  }
+
+  toggleFilterPanel() {
+    this.isFilterPanelOpen = !this.isFilterPanelOpen;
+  }
+
+  applyFilters() {
+    console.log("Applying filters...");
   }
 }

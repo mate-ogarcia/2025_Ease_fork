@@ -15,7 +15,7 @@
   padding: 10px;
   gap: 20px;
 }
-.app-navbar{
+.app-navbar, .app-searchbar{
   width: 100%;
   z-index: 10000;
 }
@@ -55,14 +55,7 @@ h5 {
 }
 
 /* Lorsque les suggestions sont affichées, enlever le border-radius bas */
-.search-container.has-suggestions {
-  border-radius: 20px 20px 0 0;
-}
 
-/* Ajuster aussi l'input */
-.search-container.has-suggestions input {
-  border-radius: 20px 20px 0 0;
-}
 
 
 /* Réduction de la taille pour les écrans très petits */
@@ -85,78 +78,6 @@ h5 {
   h5 {
     font-size: 1em;
   }
-}
-
-.search-container {
-  position: relative;
-  width: 70%; /* Taille de la barre */
-  background: white; /* Fond blanc de la barre */
-  border-radius: 40px; /* Coins arrondis de la barre */
-  padding: 8px;
-  z-index: 10;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optionnel : légère ombre */
-}
-
-
-/* Input de recherche */
-.search-container input {
-  border: none;
-  outline: none;
-  flex: 1;
-  width: 100%;
-  font-size: 16px;
-  padding: 8px;
-  border-radius: 20px;
-}
-
-/* Bouton de recherche */
-.search-container button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: #13172e;
-  position: absolute;
-  right: 15px;
-  top: 12px;
-}
-
-/* Suggestions */
-.suggestions {
-  width: 100%;
-  background: white;
-  border-top: 1px solid #ddd;
-  max-height: 200px;
-  overflow-y: auto;
-  border-radius: 0 0 20px 20px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 9;
-  max-height: 20vh;
-}
-
-/* Affichage dynamique des suggestions */
-.suggestions.show {
-  display: block;
-}
-
-.suggestions ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.suggestions ul li {
-  padding: 10px 15px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.suggestions ul li:hover {
-  background: #f4f4f4;
 }
 /* Icône engrenage */
 .settings-icon {

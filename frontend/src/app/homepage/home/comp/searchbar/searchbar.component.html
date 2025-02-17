@@ -1,25 +1,45 @@
-<div class="search-container" [class.has-suggestions]="hasSuggestions">
-  <input
-    type="text"
-    placeholder="Rechercher..."
-    [(ngModel)]="searchQuery"
-    (keydown.enter)="onEnter($event)" 
-    (input)="onInputChange($event)" 
-  />
-  
-  <button (click)="clearSearch()">✖</button>
+<div class="container">
+  <div class="search-container" [class.has-suggestions]="hasSuggestions">
+    <input
+      type="text"
+      placeholder="Rechercher..."
+      [(ngModel)]="searchQuery"
+      (keydown.enter)="onEnter($event)" 
+      (input)="onInputChange($event)" 
+    />
+    
+    <button class="search-btn" (click)="clearSearch()">✖</button>
+    <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filtres</button>
 
-  <!-- Display search results -->
-  <div class="suggestions" [class.show]="searchResults.length > 0">
-    <ul>
-      <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
-        {{ result.name }} - {{ result.description }}
-      </li>
-    </ul>
-  </div>
-  
-  <!-- Message si aucun résultat trouvé -->
-  <div *ngIf="noResultsMessage" class="no-results-message">
-    <p>{{ noResultsMessage }}</p>
+    <!-- Display search results -->
+    <div class="suggestions" [class.show]="searchResults.length > 0">
+      <ul>
+        <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
+          {{ result.name }} - {{ result.description }}
+        </li>
+      </ul>
+    </div>
+    
+    <!-- Message si aucun résultat trouvé -->
+    <div *ngIf="noResultsMessage" class="no-results-message">
+      <p>{{ noResultsMessage }}</p>
+    </div>
   </div>
 </div>
+
+<!-- Panneau latéral des filtres -->
+<div class="filter-panel" [class.open]="isFilterPanelOpen">
+  <button class="close-btn" (click)="toggleFilterPanel()">✖</button>
+  <h3>Filtres</h3>
+  <label>
+    <input type="checkbox" [(ngModel)]="filter1"> Filtre 1
+  </label>
+  <label>
+    <input type="checkbox" [(ngModel)]="filter2"> Filtre 2
+  </label>
+  <label>
+    <input type="checkbox" [(ngModel)]="filter3"> Filtre 3
+  </label>
+  <button (click)="applyFilters()">Appliquer</button>
+</div>
+
