@@ -71,20 +71,10 @@ export class AuthService {
    * @throws {UnauthorizedException} If the user is already registered.
    * @throws {InternalServerErrorException} If an error occurs during user creation.
    */
-  // TODO
-  async register(email: string, password: string): Promise<any> {
+  async register(username: string, email: string, password: string): Promise<any> {
     try {
-      // Check if the user already exists
-      const existingUser = await this.usersService.findByEmail(email).catch(() => null);
-      if (existingUser) {
-        throw new UnauthorizedException("User already registered.");
-      }
-
-      // Hash the password securely before storing it
-      const hashedPassword = await bcrypt.hash(password, 10);
-
       // Create the user in the database
-      return this.usersService.create({ email, password: hashedPassword });
+      return this.usersService.createUser({ username, email, password});
     } catch (error) {
       console.error("❌ Error registering user:", error);
       throw new InternalServerErrorException("Error during registration.");

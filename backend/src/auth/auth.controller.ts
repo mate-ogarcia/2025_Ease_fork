@@ -19,7 +19,7 @@ export class AuthController {
   /**
    * @brief Registers a new user.
    * 
-   * This endpoint allows a user to create an account by providing an email and password.
+   * This endpoint allows a user to create an account by providing an email, an username and password.
    * The password is securely hashed before being stored in the database.
    * 
    * @param {RegisterDto} body - The request body containing user credentials.
@@ -29,7 +29,7 @@ export class AuthController {
    */
   @Post("register")
   async register(@Body() body: RegisterDto): Promise<any> {
-    return this.authService.register(body.email, body.password);
+    return this.authService.register(body.username, body.email, body.password);
   }
 
   /**

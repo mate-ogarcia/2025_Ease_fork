@@ -12,6 +12,7 @@ import { AuthService } from '../../services/auth/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as bcrypt from 'bcryptjs';
 
 @Component({
   selector: 'app-auth',
@@ -122,20 +123,18 @@ export class AuthComponent implements AfterViewInit {
    * 
    * @param {any} form - The submitted form object containing user inputs.
    */
-  onSubmit(form: any): void { 
+  async onSubmit(form: any): Promise<void> { 
     if (!form.valid) {
       this.errorMessage = 'Please fill in all fields correctly.';
       return;
-    }
+    }   
     
-    console.log("Form submitted! Mode:", this.isLoginMode ? "Login" : "Register");
-    console.log("Submitted values:", this.username, this.password);
-  
+    // If the user wants to log in
     if (this.isLoginMode) {
       this.authService.login(this.username, this.password).subscribe({
         next: (response) => {
           console.log("Server response:", response);
-          this.router.navigate(['/profile']);
+          this.router.navigate(['/home']);
         },
         error: (err) => {
           console.log("Login error:", err);
@@ -145,5 +144,23 @@ export class AuthComponent implements AfterViewInit {
         },
       });
     }
+  // If the user wants to create an account
+  if (!this.isLoginMode) {
+    // Hash the password before sending it to the server
+      const hashedPassword = await bcrypt.hash(this.password, 10);
+
+      // Call register with the hashed password
+      this.authService.register(this.username, this.email, hashedPassword).subscribe({
+        next: (response) => {
+          console.log("Server response:", response);
+          // Navigate to profile or home, or show success message
+          // this.router.navigate(['/profile']);
+        },
+        error: (err) => {
+          console.log("Register error:", err);
+          this.errorMessage = 'Invalid email or password.';
+        },
+      });
+    };
   }
 }
