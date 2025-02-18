@@ -64,13 +64,12 @@ export class ProductsService implements OnModuleInit {
             // Extract search criteria from the selected product
             const searchCriteria = Object.fromEntries(
                 Object.entries({
+                    searchedProductID: productId,
                     category: selectedProduct.category,
                     tags: selectedProduct.tags,
                     brand: selectedProduct.brand
                 }).filter(([_, value]) => value !== null && value !== undefined)
             );
-
-            console.log("🔍 Search criteria:", searchCriteria);
 
             // Retrieve alternative products based on the extracted criteria
             const alternatives = await this.databaseService.getAlternativeProducts(searchCriteria);
@@ -111,4 +110,31 @@ export class ProductsService implements OnModuleInit {
             throw new InternalServerErrorException("Error retrieving all products.");
         }
     }
+
+    /**
+     * @brief Retrieves filtered products based on the provided filters.
+     * 
+     * This method accepts a filter criteria object and calls the `getProductsWithFilters` method 
+     * from the `databaseService` to fetch products that match the provided filters. If an error 
+     * occurs during the retrieval process, an `InternalServerErrorException` is thrown.
+     * 
+     * @param filters The filter criteria used to retrieve products. It can include parameters like 
+     * category, price range, and other relevant attributes.
+     * 
+     * @returns {Promise<any[]>} A promise that resolves to an array of products matching the filters.
+     * 
+     * @throws {InternalServerErrorException} If there is an error retrieving the filtered products 
+     * from the database, an exception will be thrown with an error message.
+     */
+    async getFilteredProducts(filters: any) {
+        console.log("filters from products.Service:", filters);
+
+        try {
+            return await this.databaseService.getProductsWithFilters(filters);
+        } catch (error) {
+            console.error("❌ Error retrieving filtered products:", error);
+            throw new InternalServerErrorException("Error retrieving filtered products.");
+        }
+    }
+
 }

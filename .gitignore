@@ -1,10 +1,11 @@
 # Environments files
 /.env.development
 /.env.production
-/frontend/src/environments/
+/frontend/src/environments/*
 
 # Do not ignore example .env
 !/.env.sample
+!/frontend/src/environments/environment.sample.ts
 
 # Local files
 /delDeps.bat

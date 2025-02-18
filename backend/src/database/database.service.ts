@@ -21,9 +21,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // Buckets
   private productsBucket: couchbase.Bucket;
   private usersBucket: couchbase.Bucket;
+  private categBucket: couchbase.Bucket;
   // Collections
   private productsCollection: couchbase.Collection;
   private usersCollection: couchbase.Collection;
+  private categCollection: couchbase.Collection;
+
   // User role
   private _role = {
     Admin: 'Admin',
@@ -84,6 +87,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       this.usersBucket = this.cluster.bucket(usersBucketName);
       this.usersCollection = this.usersBucket.defaultCollection();
 
+      // Connect to the category bucket
+      const categBucketName = process.env.CATEGORY_BUCKET_NAME;
+      if (!categBucketName) {
+        throw new Error("❌ CATEGORY_BUCKET_NAME is not defined in environment variables in database.service.ts");
+      }
+      this.categBucket = this.cluster.bucket(categBucketName);
+      this.categCollection = this.categBucket.defaultCollection();
+
       console.log("✅ Successfully connected to Couchbase Capella!");
     } catch (error) {
       console.error("❌ Connection error to Couchbase Capella:", error.message);
@@ -133,6 +144,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * @brief Retrieves the Couchbase bucket instance for category.
+   * 
+   * This method returns the initialized Couchbase bucket for managing category data.
+   * If the bucket is not initialized, it throws an error.
+   * 
+   * @returns {couchbase.Bucket} The initialized category bucket.
+   * @throws {Error} If the category bucket is not initialized.
+   */
+  getCategBucket(): couchbase.Bucket {
+    if (!this.categBucket) {
+      throw new Error("❌ Couchbase bucket is not initialized yet.");
+    }
+    return this.categBucket;
+  }
+
+  /**
    * Returns the products collection.
    */
   getProductsCollection(): couchbase.Collection {
@@ -150,6 +177,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error("Users collection is not initialized.");
     }
     return this.usersCollection;
+  }
+
+  /**
+   * Returns the category collection.
+   */
+  getCategCollection(): couchbase.Collection {
+    if (!this.categCollection) {
+      throw new Error("Users collection is not initialized.");
+    }
+    return this.categCollection;
   }
 
   // ======================== UTILITY FUNCTIONS
@@ -251,7 +288,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {InternalServerErrorException} If the query execution fails or no search criteria are provided.
    */
   async getAlternativeProducts(searchCriteria: any): Promise<any[]> {
-    const bucketName = process.env.BUCKET_NAME;
+    const bucketName = this.productsBucket.name;
 
     try {
       if (Object.keys(searchCriteria).length === 0) {
@@ -270,6 +307,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const queryParams: any[] = [];
 
       // Add conditions dynamically based on provided criteria
+      // Exclude the product that was searched (by ID)
+      if (searchCriteria.searchedProductID) {
+        queryConditions.push("id != ?");
+        queryParams.push(searchCriteria.searchedProductID); // Exclude the searched product
+      }
+
       if (searchCriteria.category) {
         queryConditions.push("category = ?");
         queryParams.push(searchCriteria.category);
@@ -285,24 +328,24 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         queryParams.push(searchCriteria.brand); // Exclude the same brand
       }
 
-      // 🔹 Filter only European products
+      // Filter only European products
       queryConditions.push("origin IN ?");
       queryParams.push(europeanCountries); // Verify if the origin is European
 
-      // Finalize the query with conditions and limit the results
-      query += queryConditions.join(" AND ") + " LIMIT 10";
+      // Finalize the query with conditions
+      query += queryConditions.join(" AND ");
 
       console.log(`🔹 Executing N1QL query: ${query} with params:`, queryParams);
 
       // Execute the query in Couchbase
       const result = await this.cluster.query(query, { parameters: queryParams });
-
       return result.rows.map(row => row[bucketName]); // Extract product data
     } catch (error) {
       console.error("❌ Error retrieving alternative products (database.service):", error);
       throw new InternalServerErrorException("Error retrieving alternative products (database.service)");
     }
   }
+
 
   /**
   * @brief Retrieves a user from Couchbase by their email.
@@ -393,6 +436,97 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error occurred while adding the user:", error);
       throw new InternalServerErrorException("Error occurred while adding the user.");
+    }
+  }
+
+  /**
+   * @brief Retrieves all category names from the Couchbase database.
+   *
+   * @returns {Promise<any[]>} - A promise that resolves with an array of category names.
+   * @throws {InternalServerErrorException} If an error occurs during retrieval.
+   */
+  async getAllCategName(): Promise<any[]> {
+    try {
+      // Check if the categories bucket is initialized
+      if (!this.categBucket) {
+        throw new Error("❌ Categories bucket is not initialized.");
+      }
+
+      // Build the N1QL query to retrieve category names
+      const query = `
+      SELECT c.name
+      FROM \`${this.categBucket.name}\`._default._default c
+    `;
+
+      // Execute the query
+      const result = await this.cluster.query(query);
+
+      // If no categories are found
+      if (result.rows.length === 0) {
+        console.warn("⚠️ No categories found.");
+        return [];
+      }
+
+      // Extract the category names from the result
+      const categoryNames = result.rows.map((row: any) => row.name);
+
+      return categoryNames; // Return the list of category names
+    } catch (error) {
+      console.error("❌ Error retrieving category names:", error);
+      throw new InternalServerErrorException("Error retrieving category names.");
+    }
+  }
+
+  /**
+   * @brief Retrieves products based on provided filters (category, country, price range).
+   * 
+   * This function constructs a dynamic N1QL query to search for products that match the given
+   * criteria, such as category, country of origin, and price range. It then executes the query 
+   * and returns the matching products.
+   * 
+   * @param filters The filters to apply to the product search. This object can contain the following fields:
+   *    - `category`: The category of the product to filter by.
+   *    - `country`: The country of origin of the product to filter by.
+   *    - `minPrice`: The minimum price to filter the products by.
+   *    - `maxPrice`: The maximum price to filter the products by.
+   * 
+   * @returns A Promise that resolves to an array of products that match the given filters.
+   * 
+   * @throws InternalServerErrorException If an error occurs during the query or retrieval process.
+   */
+  async getProductsWithFilters(filters: any): Promise<any[]> {
+    const bucketName = this.productsBucket.name;
+
+    try {
+      if (Object.keys(filters).length === 0) {
+        throw new Error("❌ Filters are empty");
+      }
+      // Dynamically construct the N1QL query
+      let query = `SELECT * FROM ${bucketName} WHERE `;
+      const queryConditions: string[] = [];
+
+      // Add conditions based on filters
+      if (filters.category) {
+        queryConditions.push(`category = '${filters.category}'`);
+      }
+      if (filters.country) {
+        queryConditions.push(`origin = '${filters.country}'`);
+      }
+      if (filters.minPrice && filters.maxPrice) {
+        queryConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+      }
+
+      // Finalize the query with conditions
+      query += queryConditions.join(" AND ");
+
+      console.log(`🔹 Executing N1QL query: ${query}`);
+
+      // Execute the query in Couchbase
+      const result = await this.cluster.query(query);
+      return result.rows.map(row => row[bucketName]); // Extract product data
+    } catch (error) {
+      console.error("❌ Error retrieving filtered products:", error);
+      throw new InternalServerErrorException("Error retrieving filtered products.");
     }
   }
 }
