@@ -20,10 +20,10 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: 100vh;
+    height: fit-content;
     padding: 10px;
     gap: 20px;
-    background-color: #5A7F4F;  
+    background-color: #023436;  
 }
 
 /**
@@ -32,7 +32,17 @@
 .app-navbar{
     width: 100%;
 }
-
+.app-searchbar{
+    width: 50%;
+}
+.advanced-research{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    
+}
 /**
  * @brief Container for displaying search results.
  * Aligns child elements in a row by default.
@@ -59,7 +69,7 @@
  * @brief Styles for the arrow icon.
  */
 .fa-arrow-right{
-    font-size: 40px;
+    font-size: 60px;
     color: aliceblue;
 }
 

@@ -26,14 +26,14 @@
                   {{ product.description }}
               </p>
 
-              <!-- SKU & Tags -->
+              <!-- id & Tags -->
               <div class="extra-info">
-                  <span class="sku">ID product: {{productId}}</span>
+                  <span class="id">ID product: {{productId}}</span>
               </div>
           </div>
       </div>
 
-      <!-- ✅ Onglets de navigation (PLACÉS SOUS LA SECTION PRODUIT) -->
+      <!--  Onglets de navigation (PLACÉS SOUS LA SECTION PRODUIT) -->
       <div class="tabs-container">
           <div class="tabs">
               <button 
@@ -56,7 +56,7 @@
               </button>
           </div>
 
-          <!-- ✅ Contenu dynamique selon l'onglet -->
+          <!--  Contenu dynamique selon l'onglet -->
           <div class="tab-content">
               <div *ngIf="selectedTab === 'description'">
                   <p>

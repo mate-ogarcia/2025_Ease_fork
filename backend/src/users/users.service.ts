@@ -49,16 +49,10 @@ export class UsersService {
    * @returns {Promise<any>} - The created user object.
    * @throws {InternalServerErrorException} If the user already exists or if an error occurs during creation.
    */
-  async create(user: any) {
+  async createUser(user: any) {
     try {
-      const existingUser = await this.findByEmail(user.email).catch(() => null);
-      if (existingUser) {
-        throw new InternalServerErrorException("User already exists.");
-      }
-
-      const id = `user::${user.email}`;
-      // await this.databaseService.insertDocument("UsersBDD", id, user);
-      return { id, ...user };
+      const result = await this.databaseService.addUser(user.username, user.email, user.password);
+      return result;
     } catch (error) {
       console.error("❌ Error creating user:", error);
       throw new InternalServerErrorException("Error during registration.");

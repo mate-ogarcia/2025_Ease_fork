@@ -15,6 +15,15 @@ import { IsEmail, IsNotEmpty, MinLength } from "class-validator";
  * This class defines the structure and validation rules for user registration requests.
  */
 export class RegisterDto {
+
+  /**
+  * @property username
+  * @brief The username of the user.
+  * @details Must not be empty and have a minimum length of 1 character.
+  */
+  @IsNotEmpty()
+  @MinLength(1)
+  username: string;
   /**
    * @property email
    * @brief The email of the user.

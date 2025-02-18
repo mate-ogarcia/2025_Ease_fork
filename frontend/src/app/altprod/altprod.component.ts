@@ -7,6 +7,7 @@ import { Component } from '@angular/core';
 import { NavbarComponent } from '../homepage/home/comp/navbar/navbar.component';
 import { ProdalternativeComponent } from './comp/prodalternative/prodalternative.component'; 
 import { ProdsearchComponent } from './comp/prodsearch/prodsearch.component';
+import { SearchbarComponent } from '../homepage/home/comp/searchbar/searchbar.component';
 
 /**
  * @class AltprodComponent
@@ -14,7 +15,7 @@ import { ProdsearchComponent } from './comp/prodsearch/prodsearch.component';
  */
 @Component({
   selector: 'app-altprod', ///< The HTML tag used to include this component.
-  imports: [NavbarComponent, ProdalternativeComponent, ProdsearchComponent], ///< Imported components used within AltProd.
+  imports: [NavbarComponent, ProdalternativeComponent, ProdsearchComponent, SearchbarComponent], ///< Imported components used within AltProd.
   templateUrl: './altprod.component.html', ///< Template file defining the component's structure.
   styleUrl: './altprod.component.css' ///< Stylesheet applied to this component.
 })

@@ -1,0 +1,48 @@
+<div class="profile-container">
+    <!-- Section du profil -->
+    <div class="profile-header">
+      <img class="profile-image" src="rhinoceros.png" alt="Profile Picture">
+      <div class="profile-info">
+        <h2 class="username">Choca64</h2>
+        <p class="location">Pau, France</p>
+        <div class="profile-actions">
+          <button class="edit-profile-btn">Edit Profile</button>
+          <button class="more-options">...</button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Navigation des onglets -->
+    <nav class="profile-nav">
+      <ul>
+        <li [class.active]="activeTab === 'Historique'" (click)="changeTab('Historique')">Historique</li>
+        <li [class.active]="activeTab === 'Favoris'" (click)="changeTab('Favoris')">Favoris</li>
+      </ul>
+    </nav>
+  
+    <!-- Contenu des onglets -->
+    <div class="content-section">
+      <!-- Onglet Historique -->
+      <div *ngIf="activeTab === 'Historique'">
+        <h3>Historique</h3>
+        <p>Voici votre historique d'activités.</p>
+        <ul class="history-list">
+          <li>Action 1 - 12 février 2024</li>
+          <li>Action 2 - 10 février 2024</li>
+          <li>Action 3 - 5 février 2024</li>
+        </ul>
+      </div>
+  
+      <!-- Onglet Favoris -->
+      <div *ngIf="activeTab === 'Favoris'">
+        <h3>Favoris</h3>
+        <p>Voici vos éléments favoris.</p>
+        <ul class="favorites-list">
+          <li>Favori 1 - Projet Design</li>
+          <li>Favori 2 - Template UI</li>
+          <li>Favori 3 - Icônes et ressources</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  

@@ -1,16 +1,16 @@
 TODO :
 
-GitHub page pour deployer site
-glitch.com pour déployer
-
------------------------
-persistance docker
-
-héberger front sur github pages et back sur docker
 
 -----------------------
 Semaine pro :
-1. SearchBar opé        (Baptiste)                  DONE
-2. Commencer à penser responsive (Tommy)
-3. Permissions/Rôles    (Mateo && Baptiste)
-4. Liaison BDD          (Matéo)
+categ générale      DONE
+register            DONE
+searchBar filtre/Recherche avancée (Localisation, categ, prix?, ) MOSTLY DONE
+        -> How to fetch all the category in our BDD
+BDD                 DONE
+type de compte (visiteur, user, admin)  MATEO
+documentation (avec .env)   DONE
+API type food open facts -> se renseigner comment faire
+docker dans le back
+
+----------------------

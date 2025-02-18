@@ -9,10 +9,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 // API service
 import { ApiService } from '../../../../services/api.service';
-import { HttpClient } from '@angular/common/http';
+import { ApiEuropeanCountries } from '../../../../services/europeanCountries/api.europeanCountries';
 
 @Component({
   selector: 'app-prodsearch',
@@ -26,20 +26,16 @@ export class ProdsearchComponent implements OnInit {
 
   /** @brief Stores the product details fetched from the API. */
   productDetails: any = null;
-
-  /** @brief List of European countries fetched from an external API. */
-  europeanCountries: string[] = []; 
-
-  /** @brief Flag indicating if the product is from a European country. */
-  isEuropean: boolean = true; 
+  isEuropean: boolean = false;
 
   /**
    * @brief Constructor initializes route, API service, and HTTP client.
    * @param route ActivatedRoute for retrieving route parameters.
    * @param apiService Service for fetching product details.
+   * @param apicountries Service for fetching products origin
    * @param http HttpClient for making API requests.
    */
-  constructor(private route: ActivatedRoute, private apiService: ApiService, private http: HttpClient) {}
+  constructor(private route: ActivatedRoute, private apiService: ApiService, private apicountries: ApiEuropeanCountries , private http: HttpClient) {}
 
   /**
    * @brief Lifecycle hook that runs on component initialization.
@@ -48,7 +44,7 @@ export class ProdsearchComponent implements OnInit {
    * Also loads the list of European countries.
    */
   ngOnInit() {
-    this.fetchEuropeanCountries(); // Load European countries
+    this.apicountries.fetchEuropeanCountries // Load European countries
 
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
@@ -59,44 +55,12 @@ export class ProdsearchComponent implements OnInit {
           next: (data) => {
             this.productDetails = data;
             console.log("✅ Product retrieved: (prodSearch)", this.productDetails);
-            this.checkIfEuropean(this.productDetails.origin);
+            this.isEuropean = this.apicountries.checkIfEuropean(this.productDetails.origin);  // Check if the country is european to put the color (green is european, red if not)
           },
           error: (error) => console.error("❌ Error retrieving product:", error)
         });
       }
     });
-  }
-
-  /**
-   * @brief Fetches the list of European countries from an external API.
-   * 
-   * Uses the `restcountries.com` API to get a list of European countries.
-   * Stores the country names in the `europeanCountries` array.
-   */
-  async fetchEuropeanCountries() {
-    try {
-      const response = await firstValueFrom(
-        this.http.get<any[]>('https://restcountries.com/v3.1/region/europe')
-      );
-      this.europeanCountries = response.map(country => country.name.common);
-      console.log("🔹 European countries loaded:", this.europeanCountries);
-    } catch (error) {
-      console.error("❌ Error fetching European countries:", error);
-    }
-  }
-
-  /**
-   * @brief Checks if the product's origin is in the list of European countries.
-   * 
-   * @param origin The country of origin of the product.
-   * @return Updates the `isEuropean` flag.
-   */
-  checkIfEuropean(origin: string) {
-    if (!origin) {
-      this.isEuropean = false;
-      return;
-    }
-    this.isEuropean = this.europeanCountries.includes(origin);
   }
 
   /**
