@@ -19,6 +19,9 @@
   width: 100%;
   z-index: 10000;
 }
+.app-searchbar{
+  height: 6%;
+}
 /* Gestion du titre */
 .title {
   display: flex;

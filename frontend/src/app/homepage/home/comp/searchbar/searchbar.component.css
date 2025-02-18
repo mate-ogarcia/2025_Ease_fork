@@ -1,14 +1,16 @@
 .container{
   width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 10px;
 }
 
 .search-container {
   position: relative;
   width: 70%;
-  height: 50px;
+  height: 100%;
   background: white;
   border-radius: 40px;
   z-index: 10;
@@ -30,6 +32,7 @@
   outline: none;
   flex: 1;
   width: 100%;
+  height: 100%;
   font-size: 16px;
   padding: 15px;
   border-radius: 25px;
@@ -55,7 +58,7 @@
   display: flex;
   align-items: center; /* Centrer l'icône verticalement */
   justify-content: center;
-  height: 100%; /* Assurez-vous qu'il prend la hauteur de son parent */
+  height: 65%; /* Assurez-vous qu'il prend la hauteur de son parent */
   cursor: pointer;
 }
 
@@ -94,6 +97,17 @@
 
 .suggestions ul li:hover {
   background: #f4f4f4;
+}
+.add-btn{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f4f4;
+  color: #13172e;
+  border-radius: 50%;
+  height: 100%;
+  width: 50px;
+  cursor: pointer;
 }
 
 /* Scrollbar styling */

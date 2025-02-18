@@ -36,6 +36,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       backgroundColor: 0x023436,
       color1: 0xff0000,
       color2: 0xd1ff,
+      birdSize: 1.20,
+      wingSpan: 27.00,
+      speedLimit: 2.00,
+      separation: 62.00,
+      cohesion: 79.00,
+      quantity: 4.00,
     });
   }
 
