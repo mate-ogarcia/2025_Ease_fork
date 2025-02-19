@@ -481,19 +481,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @brief Retrieves products based on provided filters (category, country, price range).
    * 
    * This function constructs a dynamic N1QL query to search for products that match the given
-   * criteria, such as category, country of origin, and price range. It then executes the query 
-   * and returns the matching products.
+   * criteria, including category, country of origin, and price range. If a specific product is selected,
+   * the function retrieves similar products based on its attributes (category, tags, origin, and price proximity).
+   * The function executes the constructed query and returns the matching products.
    * 
-   * @param filters The filters to apply to the product search. This object can contain the following fields:
-   *    - `category`: The category of the product to filter by.
-   *    - `country`: The country of origin of the product to filter by.
-   *    - `minPrice`: The minimum price to filter the products by.
-   *    - `maxPrice`: The maximum price to filter the products by.
+   * @param filters An object containing the filters to apply to the product search. Possible fields:
+   *   - `category` (string): Category to filter products by.
+   *   - `country` (string): Country of origin to filter products by.
+   *   - `minPrice` (number): Minimum price for filtering.
+   *   - `maxPrice` (number): Maximum price for filtering.
+   *   - `productId` (string, optional): ID of a selected product for similarity-based search.
    * 
-   * @returns A Promise that resolves to an array of products that match the given filters.
+   * @returns {Promise<any[]>} A promise resolving to an array of products matching the applied filters.
    * 
-   * @throws InternalServerErrorException If an error occurs during the query or retrieval process.
+   * @throws {InternalServerErrorException} If an error occurs during the query construction or execution.
    */
+  // TODO : Maybe need to be modify w/ better algorithm
   async getProductsWithFilters(filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
 
@@ -501,32 +504,74 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       if (Object.keys(filters).length === 0) {
         throw new Error("❌ Filters are empty");
       }
-      // Dynamically construct the N1QL query
-      let query = `SELECT * FROM ${bucketName} WHERE `;
+
+      let query = `SELECT * FROM \`${bucketName}\` WHERE `;
       const queryConditions: string[] = [];
 
-      // Add conditions based on filters
-      if (filters.category) {
-        queryConditions.push(`category = '${filters.category}'`);
-      }
-      if (filters.country) {
-        queryConditions.push(`origin = '${filters.country}'`);
-      }
-      if (filters.minPrice && filters.maxPrice) {
-        queryConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+      // If a product is selected for similarity search
+      if (filters.productId) {
+        console.log(`🔎 Searching for products similar to: ${filters.productId}`);
+
+        // Retrieve the selected product details
+        const selectedProduct = await this.getProductById(filters.productId);
+        if (!selectedProduct) {
+          throw new Error(`❌ Product with ID ${filters.productId} not found.`);
+        }
+        console.log(`🔹 Selected product:`, selectedProduct);
+
+        // Exclude the selected product from the results
+        queryConditions.push(`META().id != '${filters.productId}'`);
+
+        // Build similarity criteria based on the selected product
+
+        // Match category (either from filters or the selected product)
+        if (filters.category && filters.category === selectedProduct.category) {
+          queryConditions.push(`category = '${filters.category}'`);
+        } else if (selectedProduct.category) {
+          queryConditions.push(`category = '${selectedProduct.category}'`);
+        }
+
+        // Match similar tags (if available)
+        if (selectedProduct.tags?.length) {
+          queryConditions.push(`ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`);
+        }
+
+        // Match origin (based on filters or selected product)
+        if (filters.country && filters.country === selectedProduct.origin) {
+          queryConditions.push(`origin = '${filters.country}'`);
+        }
+
+        // Match similar price range (±20%) or based on provided filters
+        if (filters.minPrice && filters.maxPrice) {
+          queryConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+        } else if (selectedProduct.price) {
+          const minPrice = selectedProduct.price * 0.8;
+          const maxPrice = selectedProduct.price * 1.2;
+          queryConditions.push(`price BETWEEN ${minPrice} AND ${maxPrice}`);
+        }
+
+      } else {
+        // Apply only the provided filters (no product selected)
+        if (filters.category) queryConditions.push(`category = '${filters.category}'`);
+        if (filters.country) queryConditions.push(`origin = '${filters.country}'`);
+        if (filters.minPrice && filters.maxPrice) {
+          queryConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+        }
       }
 
-      // Finalize the query with conditions
+      // Finalize and execute the query
       query += queryConditions.join(" AND ");
-
       console.log(`🔹 Executing N1QL query: ${query}`);
 
-      // Execute the query in Couchbase
       const result = await this.cluster.query(query);
-      return result.rows.map(row => row[bucketName]); // Extract product data
+      const products = result.rows.map(row => row[bucketName]);
+
+      console.log(`📦 Found similar products: ${products.length}`);
+      return products;
+
     } catch (error) {
       console.error("❌ Error retrieving filtered products:", error);
-      throw new InternalServerErrorException("Error retrieving filtered products.");
+      throw new InternalServerErrorException("An error occurred while retrieving the filtered products.");
     }
   }
 }

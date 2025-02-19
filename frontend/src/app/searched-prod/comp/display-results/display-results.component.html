@@ -1,17 +1,14 @@
-<p>display-results works!</p>
 <div *ngIf="resultsArray.length > 0; else noResults">
-    <h2>🔍 Résultats trouvés :</h2>
-    <ul>
-      <li *ngFor="let product of resultsArray">
-        <h3>{{ product.name }}</h3>
-        <p><strong>Catégorie:</strong> {{ product.category }}</p>
-        <p><strong>Description:</strong> {{ product.description }}</p>
-        <p><strong>ID:</strong> {{ product.id }}</p>
-      </li>
-    </ul>
-  </div>
-  
-  <ng-template #noResults>
-    <p>Aucun résultat trouvé.</p>
-  </ng-template>
-  
+  <h2>🔎 Produits similaires trouvés :</h2>
+  <ul>
+    <li *ngFor="let product of resultsArray">
+      <h3>{{ product.name }}</h3>
+      <p><strong>Catégorie :</strong> {{ product.category }}</p>
+      <p><strong>Description :</strong> {{ product.description }}</p>
+    </li>
+  </ul>
+</div>
+
+<ng-template #noResults>
+  <p>Aucun produit trouvé avec ces critères.</p>
+</ng-template>

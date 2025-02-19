@@ -1,12 +1,14 @@
 <div class="container">
   <div class="search-container" [class.has-suggestions]="hasSuggestions">
     <input
-      type="text"
-      placeholder="Rechercher..."
-      [(ngModel)]="searchQuery"
-      (keydown.enter)="onEnter($event)"
-      (input)="onInputChange($event)"
-    />
+    type="text"
+    placeholder="Rechercher..."
+    [(ngModel)]="searchQuery"
+    (keydown.enter)="onEnter($event)"
+    (input)="onInputChange($event)"
+  />
+  
+  
 
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filtres</button>
@@ -131,6 +133,8 @@
       />
     </label>
   </div>
-
+  
+  <!-- Search buttons -->
   <button (click)="applyFilters()">Appliquer</button>
+  <button (click)="searchWithoutFilters()">Chercher les produits parmi les filtres</button>
 </div>

@@ -162,8 +162,6 @@ export class ApiService {
    * @throws {Error} If there is an issue with the API request, an error is thrown with a message indicating the failure.
    */
   postProductsWithFilters(filters: any): Observable<any> {
-    console.log('🔹 TEST: ', filters);
-
     return this.http
       .post<any[]>(`${this._productsUrl}/filteredProducts`, filters)
       .pipe(
