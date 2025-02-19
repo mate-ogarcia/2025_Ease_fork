@@ -478,12 +478,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @brief Retrieves products based on provided filters (category, country, price range).
+   * @brief Retrieves products based on provided filters and/or similarity to a selected product.
    * 
-   * This function constructs a dynamic N1QL query to search for products that match the given
-   * criteria, including category, country of origin, and price range. If a specific product is selected,
-   * the function retrieves similar products based on its attributes (category, tags, origin, and price proximity).
-   * The function executes the constructed query and returns the matching products.
+   * This function constructs a dynamic N1QL query to fetch products that either match the provided filters 
+   * (such as category, country, and price range) or are similar to a selected product (based on category, tags, and price range).
+   * If both a product ID and filters are provided, the function searches for products that match both conditions.
+   * 
+   * ---------------------
+   * Logic summary:
+   * - With `productId`: Searches for products similar to the selected product according to:
+   *   - Category
+   *   - Tags
+   *   - Similar price range (±20%)
+   * - Without `productId`: Searches according to the directly provided filters (category, country, price).
+   * - Combined: If both `productId` and filters are provided, products must satisfy both similarity and filter conditions.
+   * ---------------------
    * 
    * @param filters An object containing the filters to apply to the product search. Possible fields:
    *   - `category` (string): Category to filter products by.
@@ -492,11 +501,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    *   - `maxPrice` (number): Maximum price for filtering.
    *   - `productId` (string, optional): ID of a selected product for similarity-based search.
    * 
-   * @returns {Promise<any[]>} A promise resolving to an array of products matching the applied filters.
+   * @returns {Promise<any[]>} A promise resolving to an array of products matching the applied filters and/or similarity criteria.
    * 
    * @throws {InternalServerErrorException} If an error occurs during the query construction or execution.
    */
-  // TODO : Maybe need to be modify w/ better algorithm
   async getProductsWithFilters(filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
 
@@ -505,69 +513,97 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         throw new Error("❌ Filters are empty");
       }
 
-      let query = `SELECT * FROM \`${bucketName}\` WHERE `;
-      const queryConditions: string[] = [];
+      const similarToProductConditions: string[] = [];
+      const similarToFiltersConditions: string[] = [];
+      let queryWithJoin = "";
 
-      // If a product is selected for similarity search
+      // ---------------------
+      // Part 1: Similarity search based on a selected product (if productId is provided)
+      // ---------------------
       if (filters.productId) {
         console.log(`🔎 Searching for products similar to: ${filters.productId}`);
 
-        // Retrieve the selected product details
         const selectedProduct = await this.getProductById(filters.productId);
         if (!selectedProduct) {
           throw new Error(`❌ Product with ID ${filters.productId} not found.`);
         }
+
         console.log(`🔹 Selected product:`, selectedProduct);
 
-        // Exclude the selected product from the results
-        queryConditions.push(`META().id != '${filters.productId}'`);
+        // Exclude the selected product itself from the search results
+        const exclusionCondition = `META().id != '${filters.productId}'`;
 
-        // Build similarity criteria based on the selected product
+        // Similarity criteria based on the selected product's attributes
+        const subSimilarityConditions: string[] = [];
 
-        // Match category (either from filters or the selected product)
-        if (filters.category && filters.category === selectedProduct.category) {
-          queryConditions.push(`category = '${filters.category}'`);
-        } else if (selectedProduct.category) {
-          queryConditions.push(`category = '${selectedProduct.category}'`);
+        // Match products with the same category
+        if (selectedProduct.category) {
+          subSimilarityConditions.push(`category = '${selectedProduct.category}'`);
         }
 
-        // Match similar tags (if available)
+        // Match products with at least one similar tag
         if (selectedProduct.tags?.length) {
-          queryConditions.push(`ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`);
+          subSimilarityConditions.push(`ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`);
         }
 
-        // Match origin (based on filters or selected product)
-        if (filters.country && filters.country === selectedProduct.origin) {
-          queryConditions.push(`origin = '${filters.country}'`);
-        }
-
-        // Match similar price range (±20%) or based on provided filters
-        if (filters.minPrice && filters.maxPrice) {
-          queryConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
-        } else if (selectedProduct.price) {
+        // Match products within ±20% price range of the selected product
+        if (selectedProduct.price) {
           const minPrice = selectedProduct.price * 0.8;
           const maxPrice = selectedProduct.price * 1.2;
-          queryConditions.push(`price BETWEEN ${minPrice} AND ${maxPrice}`);
+          subSimilarityConditions.push(`price BETWEEN ${minPrice} AND ${maxPrice}`);
+        }
+
+        // ---------------------
+        // Part 2: Search based on directly provided filters
+        // ---------------------
+        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
+        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
+        if (filters.minPrice && filters.maxPrice) {
+          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+        }
+
+        // ---------------------
+        // Query construction combining similarity and filter conditions
+        // ---------------------
+        if (subSimilarityConditions.length > 0 && similarToFiltersConditions.length > 0) {
+          queryWithJoin = `SELECT * FROM \`${bucketName}\` 
+          WHERE (${exclusionCondition} AND (${subSimilarityConditions.join(" OR ")})) 
+          AND (${similarToFiltersConditions.join(" OR ")})`;
+        } else if (subSimilarityConditions.length > 0) {
+          queryWithJoin = `SELECT * FROM \`${bucketName}\` 
+          WHERE ${exclusionCondition} AND (${subSimilarityConditions.join(" OR ")})`;
+        } else if (similarToFiltersConditions.length > 0) {
+          queryWithJoin = `SELECT * FROM \`${bucketName}\` WHERE ${similarToFiltersConditions.join(" OR ")}`;
         }
 
       } else {
-        // Apply only the provided filters (no product selected)
-        if (filters.category) queryConditions.push(`category = '${filters.category}'`);
-        if (filters.country) queryConditions.push(`origin = '${filters.country}'`);
+        // ---------------------
+        // No productId provided: Apply only the provided filters
+        // ---------------------
+        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
+        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
         if (filters.minPrice && filters.maxPrice) {
-          queryConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+        }
+
+        if (similarToFiltersConditions.length > 0) {
+          queryWithJoin = `SELECT * FROM \`${bucketName}\` WHERE ${similarToFiltersConditions.join(" OR ")}`;
         }
       }
 
-      // Finalize and execute the query
-      query += queryConditions.join(" AND ");
-      console.log(`🔹 Executing N1QL query: ${query}`);
+      // ---------------------
+      // Execute the constructed query
+      // ---------------------
+      let combinedResults: any[] = [];
 
-      const result = await this.cluster.query(query);
-      const products = result.rows.map(row => row[bucketName]);
+      if (queryWithJoin) {
+        console.log(`🔹 Executing combined similarity and filters query: ${queryWithJoin}`);
+        const resultCombined = await this.cluster.query(queryWithJoin);
+        combinedResults = resultCombined.rows.map(row => row[bucketName]);
+      }
 
-      console.log(`📦 Found similar products: ${products.length}`);
-      return products;
+      console.log(`📦 Total combined products: ${combinedResults.length}`);
+      return combinedResults;
 
     } catch (error) {
       console.error("❌ Error retrieving filtered products:", error);

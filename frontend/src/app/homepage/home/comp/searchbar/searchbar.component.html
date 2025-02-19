@@ -1,14 +1,12 @@
 <div class="container">
   <div class="search-container" [class.has-suggestions]="hasSuggestions">
     <input
-    type="text"
-    placeholder="Rechercher..."
-    [(ngModel)]="searchQuery"
-    (keydown.enter)="onEnter($event)"
-    (input)="onInputChange($event)"
-  />
-  
-  
+      type="text"
+      placeholder="Rechercher..."
+      [(ngModel)]="searchQuery"
+      (keydown.enter)="onEnter($event)"
+      (input)="onInputChange($event)"
+    />
 
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filtres</button>
@@ -73,11 +71,24 @@
     <label>
       <select [(ngModel)]="selectedCategory">
         <option value="">Sélectionnez une catégorie</option>
-        <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+        <option *ngFor="let category of categories" [value]="category">
+          {{ category }}
+        </option>
       </select>
     </label>
   </div>
 
+  <!-- Brand Filter  TODO -->
+  <label> <input type="checkbox" [(ngModel)]="categoryFilter" /> Marque </label>
+
+  <label>
+    <select [(ngModel)]="selectedCountry" (change)="onCountryChange()">
+      <option value="">Sélectionnez une marque (Pas encore implémenté)</option>
+      <option *ngFor="let country of countries" [value]="country">
+        {{ country }}
+      </option>
+    </select>
+  </label>
 
   <!-- Price Filter -->
   <label> <input type="checkbox" [(ngModel)]="priceFilter" /> Prix </label>
@@ -133,8 +144,10 @@
       />
     </label>
   </div>
-  
+
   <!-- Search buttons -->
   <button (click)="applyFilters()">Appliquer</button>
-  <button (click)="searchWithoutFilters()">Chercher les produits parmi les filtres</button>
+  <button (click)="searchWithoutFilters()">
+    Chercher les produits parmi les filtres
+  </button>
 </div>
