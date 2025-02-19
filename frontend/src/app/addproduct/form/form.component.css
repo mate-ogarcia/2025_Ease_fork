@@ -1,11 +1,4 @@
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #0d262d;
-    color: white;
-    padding: 40px;
-    display: flex;
-    justify-content: center;
-}
+
 
 .container {
     width: 100%;
@@ -19,79 +12,151 @@ body {
 .add-product-container {
     width: 90%;
     height: fit-content;
-    background: #17333c;
+    background: #d5f5ea;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-}
+    gap: 20px;
+    justify-content:center;
+    flex-direction: column;
+    transition: all 0.3s ease;
 
-.general-info, .upload-section, .details {
-    flex: 1 1 60%;
-    margin-bottom: 20px;
+}
+.top-info{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    flex-direction: row;
+}
+.general-info, .details {
+   display: flex;
+   width: 60%;
+   flex-direction: column;
+   justify-content: center;
+   
 }
 
 .upload-section {
-    flex: 1 1 35%;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 35%;
 }
-.file-upload{
+input[type="file"] {
+    display: none;
+}
+
+.custom-file-upload, .submit {
+    display: inline-block;
+    padding: 8px 16px;
     cursor: pointer;
-    border-style: none;
+    border: 2px solid #ccc;
+    border-radius: 20px;
+    color: #25555e;
+    background-color: white;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
 }
 
+.custom-file-upload:hover, .submit:hover {
+    color: #eee;
+    background-color: #25555e;
+    border-color: #aaa;
+    transition: all 0.3s ease;
 
+}
 
 .submit-btn {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
+    
 }
 
 h2 {
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 10px;
-    color: #f4f4f4;
+    color: #023436;
+    transition: all 0.3s ease;
+
 }
 
 label {
     display: block;
     font-weight: bold;
     margin-top: 10px;
-    color: #b8c1c8;
+    color: #023436;
+    transition: all 0.3s ease;
+
 }
 
 input, textarea, select {
     width: 100%;
     padding: 10px;
     margin-top: 5px;
-    border: 1px solid #ccc;
+    border: 2px solid #ccc;
     border-radius: 25px;
-    background-color: #20444d;
-    color: white;
+    background-color: white;
+    color: #023436;
     font-size: 14px;
+    transition: all 0.3s ease;
+
 }
 
 button {
     padding: 8px 12px;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 25px;
     background-color: #25555e;
     transition: 0.3s;
-    font-size: 14px;
+    font-size: 20px;
     color: white;
 }
 
 button.selected {
     background-color: #4caf50;
     color: white;
+    
 }
 
 .image-preview {
+    width: 100%;
+    height: 200px;
+    background-color: white;
+    border-radius: 25px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #023436;
+    transition: all 0.3s ease;
+
+}
+
+/*---------------- DarkMode -------------------*/
+
+.dark-mode .add-product-container {
+    width: 90%;
+    height: fit-content;
+    background: #17333c;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    gap: 20px;
+    justify-content:center;
+    flex-direction: column;
+    transition: all 0.3s ease;
+
+}
+.dark-mode .image-preview {
     width: 100%;
     height: 200px;
     background-color: #2b4f58;
@@ -102,4 +167,71 @@ button.selected {
     justify-content: center;
     font-size: 14px;
     color: #ddd;
+} 
+.dark-mode .custom-file-upload,.dark-mode .submit {
+    display: inline-block;
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 2px solid #ccc;
+    border-radius: 20px;
+    background-color: #25555e;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
 }
+.dark-mode .custom-file-upload:hover,.dark-mode .submit:hover {
+    background-color: #eee;
+    color: #25555e;
+    border-color: #aaa;
+}
+.dark-mode h2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #f4f4f4;
+    transition: all 0.3s ease;
+
+}
+
+.dark-mode label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+    color: #b8c1c8;
+    transition: all 0.3s ease;
+
+}
+
+.dark-mode input,.dark-mode textarea,.dark-mode select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 2px solid #ccc;
+    border-radius: 25px;
+    background-color: #20444d;
+    color: white;
+    font-size: 14px;
+    transition: all 0.3s ease;
+
+}
+/* Bouton Mode Sombre */
+.dark-mode-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 10px;
+    background-color: #38d39f;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+  }
+  
+  .dark-mode-btn:hover {
+    background-color: #2e9b7f;
+    transform: scale(1.1);
+  }

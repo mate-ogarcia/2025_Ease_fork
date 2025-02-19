@@ -9,7 +9,9 @@
     />
 
     <button class="search-btn" (click)="clearSearch()">✖</button>
-    <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filtres</button>
+    <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filter</button>
+    <button class="add-btn" routerLink="/add-product">➕ Add-product</button>
+      
 
     <!-- Display search results -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
@@ -27,9 +29,6 @@
     <div *ngIf="noResultsMessage" class="no-results-message">
       <p>{{ noResultsMessage }}</p>
     </div>
-  </div>
-  <div class="add-btn">
-    <i class="fa-solid fa-plus" routerLink="/add-product"></i>
   </div>
 </div>
 

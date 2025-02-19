@@ -1,30 +1,37 @@
-<div class="container">
-    <div class="add-product-container">
-        <section class="general-info">
-            <h2>Informations Générales</h2>
-            <label for="product-name">Nom du Produit</label>
-            <input id="product-name" type="text" placeholder="Name product ...">
-            
-            <label for="description">Description</label>
-            <textarea id="description" rows="4" placeholder="Make a short description of the product ..."></textarea>
-        </section>
+<div [class.dark-mode]="isDarkMode" class="container">
+    <!-- Bouton pour basculer entre le mode sombre et clair -->
 
-        <section class="upload-section">
-            <h2>Image du Produit</h2>
-            <div class="image-preview">Aperçu de l'image</div>
-            <input type="file" class="file-upload">
-        </section>
+    <div class="add-product-container">
+        <div class="top-info">
+            <section class="general-info">
+                <h2>Informations Générales</h2>
+                <label for="product-name">Nom du Produit</label>
+                <input id="product-name" type="text" placeholder="Nom du produit ...">
+
+                <label for="description">Description</label>
+                <textarea id="description" rows="4" placeholder="Faites une courte description du produit ..."></textarea>
+            </section>
+
+            <section class="upload-section">
+                <h2>Image du Produit</h2>
+                <div class="image-preview">Aperçu de l'image</div>
+                <label for="file-upload" class="custom-file-upload">
+                    Choisir un fichier
+                </label>
+                <input id="file-upload" type="file" class="file-upload">
+            </section>
+        </div>
 
         <section class="details">
             <h2>Détails</h2>
             <label for="base-price">Prix de Base</label>
-            <input id="base-price" type="text" value="$47.55">
-            
+            <input id="base-price" type="text" value="10€">
+
             <label for="origin">Origine</label>
             <select id="origin-type">
                 <option>Select Origin ...</option>
             </select>
-            
+
             <label for="category">Catégorie</label>
             <select id="category">
                 <option>Select Category ...</option>
@@ -37,7 +44,8 @@
         </section>
 
         <section class="submit-btn">
-            <button>Submit</button>
+            <button class="submit">Soumettre</button>
         </section>
     </div>
+    <button class="dark-mode-btn" (click)="toggleDarkMode()">🌙</button>
 </div>
