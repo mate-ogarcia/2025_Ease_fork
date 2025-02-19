@@ -231,15 +231,16 @@ export class SearchbarComponent implements OnInit {
     }
 
     // Send post request with the selected product ID to store the selection.
-    this.apiService.postProductSelection({ productId: this.selectedProduct }).subscribe({
-      next: () => {
-        // Navigate to the product's details page after selection.
-        this.router.navigate(['/products-alternative', this.selectedProduct]).catch((error) =>
-          console.error('❌ Navigation error:', error)
-        );
-      },
-      error: (error) => console.error('❌ Error sending product ID:', error),
-    });
+    // TODO
+    // this.apiService.postProductSelection({ productId: this.selectedProduct }).subscribe({
+    //   next: () => {
+    //     // Navigate to the product's details page after selection.
+    //     this.router.navigate(['/products-alternative', this.selectedProduct]).catch((error) =>
+    //       console.error('❌ Navigation error:', error)
+    //     );
+    //   },
+    //   error: (error) => console.error('❌ Error sending product ID:', error),
+    // });
   }
   // ======================== FILTER FUNCTIONS
   /**
@@ -328,14 +329,15 @@ export class SearchbarComponent implements OnInit {
       next: (response) => {
         // Process the response
         console.log('Filtered products:', response);
-        // TODO modify this part, need a other html page to display the products searched with a filter
-        const test = response[0].id;
-        console.log(test);
+        // // TODO modify this part, need a other html page to display the products searched with a filter
 
-        // Navigate to the product's details page after selection
-        this.router.navigate(['/products-alternative', test]).catch((error) =>
-          console.error('❌ Navigation error:', error)
-        );
+        // Utiliser NavigationExtras avec 'state'
+        const navigationExtras = {
+          state: { resultsArray: response }
+        };
+
+        this.router.navigate(['/searched-prod'], navigationExtras)
+          .catch((error) => console.error('❌ Navigation error:', error));
       },
       error: (error) => {
         console.error('❌ Error applying filters', error);

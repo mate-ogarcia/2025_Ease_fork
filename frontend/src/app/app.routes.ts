@@ -28,12 +28,12 @@ export const routes: Routes = [
       import('./addproduct/addproduct.component').then((m) => m.AddproductComponent),
   },
   {
-    path: 'data-display',
+    path: 'searched-prod',
     loadComponent: () =>
-      import('./data-display/data-display.component').then(
-        (m) => m.DataDisplayComponent
+      import('./searched-prod/searched-prod.component').then(
+        (m) => m.SearchedProdComponent
       ),
-  },
+  },  
   {
     path: 'login',
     loadComponent: () =>
