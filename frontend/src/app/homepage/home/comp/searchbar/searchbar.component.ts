@@ -49,9 +49,9 @@ export class SearchbarComponent implements OnInit {
   // Save the filters
   appliedFilters: any = {};
   // Range boundaries for price filter
-  minPriceRange: number = 0;     
-  maxPriceRange: number = 5000;  
-  stepPrice: number = 10;        
+  minPriceRange: number = 0;
+  maxPriceRange: number = 5000;
+  stepPrice: number = 10;
   // Research & cache
   private _searchSubject = new Subject<string>(); // Subject to manage search input and trigger search requests.
   private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results for efficient reuse.
@@ -103,10 +103,10 @@ export class SearchbarComponent implements OnInit {
           if (response) {
             const fullResults = response.length
               ? response.map((result: any) => ({
-                  id: result.id,
-                  name: result.fields?.name || 'Unknown name',
-                  description: result.fields?.description || 'No description available',
-                }))
+                id: result.id,
+                name: result.fields?.name || 'Unknown name',
+                description: result.fields?.description || 'No description available',
+              }))
               : [];
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5);
@@ -171,8 +171,11 @@ export class SearchbarComponent implements OnInit {
    * @param event The keyboard event.
    */
   onEnter(event: any) {
+    event as KeyboardEvent;
+    this.toggleFilterPanel();
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
       if (this.selectedProduct) {
+        console.log("selected :", this.selectedProduct);
         this.searchWithFilters(true); // Use the selected product in search
       } else {
         // If no product selected, navigate using the full search results
@@ -267,23 +270,30 @@ export class SearchbarComponent implements OnInit {
   searchWithFilters(includeSelectedProduct: boolean = false) {
     this.applyFilters(); // Apply filters before the research
 
+    console.log("W/Filters launched");
+
     const filtersToSend = {
       ...this.appliedFilters,
       productId: includeSelectedProduct ? this.selectedProduct : null, // Include the selected product if asked
     };
 
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
-      next: (response) => this.router.navigate(['/searched-prod'], { state: { resultsArray: response } }),
+      next: (response) => {
+        // Allow the reload the page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
+        });
+      },
       error: (error) => console.error('❌ Search error:', error),
     });
   }
-
 
   /**
    * @brief Searches without including a selected product.
    */
   searchWithoutFilters() {
     this.applyFilters();
+    console.log("W/Filters launched");
 
     if (!Object.keys(this.appliedFilters).length) {
       console.warn('⚠️ No filters applied.');
@@ -291,7 +301,13 @@ export class SearchbarComponent implements OnInit {
     }
 
     this.apiService.postProductsWithFilters(this.appliedFilters).subscribe({
-      next: (response) => this.router.navigate(['/searched-prod'], { state: { resultsArray: response } }),
+      next: (response) => {
+        // Allow the reload the page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
+        });
+        console.log("response :", response);
+      },
       error: (error) => console.error('❌ Search error:', error),
     });
   }

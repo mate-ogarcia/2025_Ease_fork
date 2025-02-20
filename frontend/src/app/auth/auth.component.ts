@@ -153,8 +153,8 @@ export class AuthComponent implements AfterViewInit {
       this.authService.register(this.username, this.email, hashedPassword).subscribe({
         next: (response) => {
           console.log("Server response:", response);
-          // Navigate to profile or home, or show success message
-          // this.router.navigate(['/profile']);
+          // Navigate to the login page, or show success message
+          this.router.navigate(['/login']);
         },
         error: (err) => {
           console.log("Register error:", err);
