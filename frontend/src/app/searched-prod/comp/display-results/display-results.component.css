@@ -1,141 +1,62 @@
-/* === Main Container === */
 .container{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #d5f5ea;
+  padding: 20px;
+  border-radius: 15px;
+  scroll-behavior: smooth;
+}
+.result-container{
     width: 100%;
-    height: 80vh;
-    border-radius: 30px;
-    background-color: #E3F0CE;
-    padding: 20px;
-    border: 3px solid #36de1c;
-  }
-  
-  /* === Items Container === */
-  .item-container{
-    display: flex;
-    width: 100%;
-    padding: 10px;
-    height: 100%;
-    flex-direction: column;
-    gap: 10px;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-  }
-  
-  /* === Individual Item Card === */
-  .item {
-    width: 100%;
-    min-height: 150px;
-    max-height: 150px;
-    background-color: #F9EBDE;
-    gap: 10px;
-    display: flex;
-    border: 2px solid #36de1c;
-    border-radius: 20px;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    font-family: sans-serif;
-    align-items: center;
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
-  }
-  
-  /* === Item Hover Effect === */
-  .item:hover{
-    scale: 1.02;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  /* === Scrollbar Styling for Item Container === */
-  .item-container::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .item-container::-webkit-scrollbar-thumb {
-    background-color: #aaa;
-    border-radius: 10px;
-  }
-  
-  .item-container::-webkit-scrollbar-track {
-    background-color: #f0f0f0;
-  }
-  
-  /* === Product Details Container === */
-  .product-details {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  /* === Product Name === */
-  .product-name {
-    font-size: 1.2em;
-    margin-bottom: 8px;
-  }
-  
-  /* === Product Description === */
-  .product-description {
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 12px;
-    max-height: 40px;
-    overflow-y: auto;
-  }
-  
-  /* === Hide Scrollbar for Product Description === */
-  .product-description::-webkit-scrollbar {
-    display: none;
-  }
-  
-  /* === Product Info (Category, etc.) === */
-  .product-info{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    width: 100%;
-  }
-  
-  /* === Text Styling for Category Information === */
-  .origin{
-    white-space: nowrap;
-  }
-  
-  /* === Responsive Design for Screens ≤ 1300px === */
-  @media (max-width: 1300px) {
-    .product-name {
-      font-size: 1.1em;
-    }
-  
-    .product-description {
-      font-size: 0.85em;
-    }
-  
-    .product-info {
-      font-size: 0.9em;
-    }
-  }
-  
-  /* === Responsive Design for Screens ≤ 500px === */
-  @media (max-width: 500px) {
-    .container {
-      height: 50vh;
-    }
-  
-    .product-name {
-      font-size: 0.8em;
-    }
-  
-    .product-description {
-      font-size: 0.55em;
-    }
-  
-    .product-info {
-      font-size: 0.63em;
-    }
-  }
-  
+}
+.item-container{  
+  display: flex;
+  width: 100%;
+  height: auto;
+  padding: 15px;
+  flex-direction: column;
+  background-color: transparent
+}
+
+.items-list{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  list-style: none;
+  gap: 10px;
+}
+.item{
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  background-color: white ;
+  gap: 10px;
+  padding: 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+
+}
+.item:hover{
+  transform: scale(1.02);
+  transition: all 0.3s ease-in-out;
+}
+.img-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 10%;
+  height: auto;
+}
+.product-image{
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+.categ{
+  color: rgb(23, 241, 41);
+}

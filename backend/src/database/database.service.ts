@@ -35,7 +35,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     User: 'User'
   };
 
-
   constructor(private readonly httpService: HttpService) { }
 
   // ======================== DATABASE INIT AND CONNECTION

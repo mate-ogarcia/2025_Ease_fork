@@ -1,14 +1,27 @@
-<div *ngIf="resultsArray.length > 0; else noResults">
-  <h2>🔎 Produits similaires trouvés :</h2>
-  <ul>
-    <li *ngFor="let product of resultsArray">
-      <h3>{{ product.name }}</h3>
-      <p><strong>Catégorie :</strong> {{ product.category }}</p>
-      <p><strong>Description :</strong> {{ product.description }}</p>
-    </li>
-  </ul>
-</div>
+<div class="container">
+  <div class="result-container" *ngIf="resultsArray.length > 0; else noResults">
+    <h2>🔎 Produits similaires trouvés :</h2>
+    <div class="item-container">
+      <ul class="items-list">
+        <li class="item" 
+            *ngFor="let product of resultsArray; trackBy: trackByProduct" 
+            (click)="goToProduct(product)"
+            tabindex="0" 
+            [attr.aria-label]="'Voir le produit ' + product.name">
+          <div class="img-container">
+            <img class="product-image" [src]="product.imageUrl || 'assets/placeholder.jpg'" alt="{{ product.name }}">
+          </div> 
+          <div class="product-details">
+            <p class="categ">{{ product.category }}</p>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <p class="product-description"><strong>Description :</strong> {{ product.description }}</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
 
-<ng-template #noResults>
-  <p>Aucun produit trouvé avec ces critères.</p>
-</ng-template>
+  <ng-template #noResults>
+    <p>Aucun produit trouvé avec ces critères.</p>
+  </ng-template>
+</div>

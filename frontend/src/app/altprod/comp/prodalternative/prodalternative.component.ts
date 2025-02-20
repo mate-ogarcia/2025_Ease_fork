@@ -7,39 +7,35 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../../services/api.service';
+import { UnsplashService } from '../../../../services/unsplash.service'; // ajuste le chemin selon ta structure
 
-/**
- * @class ProdalternativeComponent
- * @brief Component for fetching and displaying alternative products based on a given product ID.
- */
 @Component({
-  selector: 'app-prodalternative', ///< The HTML tag used to include this component.
-  standalone: true, ///< Indicates that this component can work independently.
-  imports: [CommonModule], ///< Imports required modules for common functionalities.
-  templateUrl: './prodalternative.component.html', ///< Path to the component's template.
-  styleUrl: './prodalternative.component.css' ///< Path to the component's stylesheet.
+  selector: 'app-prodalternative',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './prodalternative.component.html',
+  styleUrls: ['./prodalternative.component.css']
 })
 export class ProdalternativeComponent implements OnInit {
-  productId: string = ''; ///< Stores the product ID retrieved from the route parameters.
-  productDetails: any[] = []; ///< Holds the list of alternative products.
-  isLoading: boolean = false; ///< Indicates whether the API request is in progress.
-  errorMessage: string = ''; ///< Stores any error messages encountered during data fetching.
+  productId: string = '';
+  productDetails: any[] = [];
+  isLoading: boolean = false;
+  errorMessage: string = '';
 
-  /**
-   * @brief Constructor for ProdalternativeComponent.
-   * @param route ActivatedRoute service for accessing route parameters.
-   * @param router Router service for navigation.
-   * @param apiService ApiService for fetching alternative products.
-   */
   constructor(
     private route: ActivatedRoute, 
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private unsplashService: UnsplashService
   ) {}
+
+  // Fonction trackBy pour améliorer les performances du *ngFor
+  trackByProduct(index: number, product: any): any {
+    return product.id;
+  }
 
   /**
    * @brief Lifecycle hook executed when the component is initialized.
-   * Retrieves the product ID from route parameters and fetches alternative products.
    */
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -63,7 +59,25 @@ export class ProdalternativeComponent implements OnInit {
     this.apiService.getAlternativeProducts(productId).subscribe({
       next: (data) => {
         this.productDetails = data;
-        console.log("✅ Alternative products received: (prodAlt)", this.productDetails);
+        console.log("Alternative products received: (prodAlt)", this.productDetails);
+
+        // Pour chaque produit, lancer la recherche d'image depuis Unsplash
+        this.productDetails.forEach(product => {
+          if (product && product.name) {
+            this.unsplashService.searchPhotos(product.name).subscribe(response => {
+              if (response.results && response.results.length > 0) {
+                // Utilisation de l'URL raw pour forcer une taille uniforme via les paramètres
+                // Ici, on demande une image de 300x300 pixels, recadrée si nécessaire
+                const rawUrl = response.results[0].urls.raw;
+                product.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+              } else {
+                console.log(`Aucune image trouvée pour ${product.name}`);
+              }
+            }, error => {
+              console.error("Erreur lors de la récupération d'image depuis Unsplash :", error);
+            });
+          }
+        });
       },
       error: (error) => {
         console.error("❌ Error retrieving alternative products:", error);
