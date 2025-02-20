@@ -22,10 +22,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private productsBucket: couchbase.Bucket;
   private usersBucket: couchbase.Bucket;
   private categBucket: couchbase.Bucket;
+  private brandBucket: couchbase.Bucket;
   // Collections
   private productsCollection: couchbase.Collection;
   private usersCollection: couchbase.Collection;
   private categCollection: couchbase.Collection;
+  private brandCollection: couchbase.Collection;
 
   // User role
   private _role = {
@@ -95,6 +97,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       this.categBucket = this.cluster.bucket(categBucketName);
       this.categCollection = this.categBucket.defaultCollection();
 
+      // Connect to the brand bucket
+      const brandBucketName = process.env.BRAND_BUCKET_NAME;
+      if (!brandBucketName) {
+        throw new Error("❌ BRAND_BUCKET_NAME is not defined in environment variables in database.service.ts");
+      }
+      this.brandBucket = this.cluster.bucket(brandBucketName);
+      this.brandCollection = this.brandBucket.defaultCollection();
+
       console.log("✅ Successfully connected to Couchbase Capella!");
     } catch (error) {
       console.error("❌ Connection error to Couchbase Capella:", error.message);
@@ -160,6 +170,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * @brief Retrieves the Couchbase bucket instance for brand.
+   * 
+   * This method returns the initialized Couchbase bucket for managing brand data.
+   * If the bucket is not initialized, it throws an error.
+   * 
+   * @returns {couchbase.Bucket} The initialized brand bucket.
+   * @throws {Error} If the brand bucket is not initialized.
+   */
+  getBrandBucket(): couchbase.Bucket {
+    if (!this.brandBucket) {
+      throw new Error("❌ Couchbase bucket is not initialized yet.");
+    }
+    return this.brandBucket;
+  }
+
+  /**
    * Returns the products collection.
    */
   getProductsCollection(): couchbase.Collection {
@@ -187,6 +213,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error("Users collection is not initialized.");
     }
     return this.categCollection;
+  }
+
+  /**
+   * Returns the brand collection.
+   */
+  getBrandCollection(): couchbase.Collection {
+    if (!this.brandCollection) {
+      throw new Error("Brand collection is not initialized.");
+    }
+    return this.brandCollection;
   }
 
   // ======================== UTILITY FUNCTIONS
@@ -478,6 +514,49 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * @brief Retrieves all brand names from the database.
+   * 
+   * This function executes a N1QL query to fetch all brand names from the specified Couchbase bucket.
+   * It checks the initialization of the brand bucket before executing the query and handles potential errors.
+   * If no brands are found, an empty array is returned.
+   * 
+   * @returns {Promise<any[]>} A promise resolving to an array of brand names.
+   * 
+   * @throws {InternalServerErrorException} If the brand bucket is not initialized or if an error occurs during query execution.
+   */
+  async getAllBrandName(): Promise<any[]> {
+    try {
+      // Verify if the brand bucket is initialized
+      if (!this.brandBucket) {
+        throw new Error("❌ Brand bucket is not initialized.");
+      }
+
+      // Construct the N1QL query to retrieve brand names
+      const query = `
+      SELECT b.name
+      FROM \`${this.brandBucket.name}\`._default._default b
+    `;
+
+      // Execute the query
+      const result = await this.cluster.query(query);
+
+      // Handle the case where no brands are found
+      if (result.rows.length === 0) {
+        console.warn("⚠️ No brand names found.");
+        return [];
+      }
+
+      // Extract and return the brand names from the query result
+      const brandNames = result.rows.map((row: any) => row.name);
+      return brandNames;
+
+    } catch (error) {
+      console.error("❌ Error retrieving brand names:", error);
+      throw new InternalServerErrorException("Error retrieving brand names.");
+    }
+  }
+
+  /**
    * @brief Retrieves products based on provided filters and/or similarity to a selected product.
    * 
    * This function constructs a dynamic N1QL query to fetch products that either match the provided filters 
@@ -505,6 +584,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * 
    * @throws {InternalServerErrorException} If an error occurs during the query construction or execution.
    */
+  // TODO : Add the brand filter
   async getProductsWithFilters(filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
 

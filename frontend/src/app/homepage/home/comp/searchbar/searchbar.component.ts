@@ -42,9 +42,12 @@ export class SearchbarComponent implements OnInit {
   countries: string[] = [] // Initialize with an empty promise
   selectedCountry: string = ''; // Store the selected country
   selectedDepartment: string = ''; // Store the department input by the user
-  categoryFilter: boolean = false; // State of the second filter.
+  categoryFilter: boolean = false; // State of the category filter.
   selectedCategory: string = '';
   categories: any[] = [];   // Contains all the categories name
+  brandFilter: boolean = false // State of the brand filter
+  selectedBrand: string = '';
+  brands: any[] = [] // Contains all the brands
   // Price filter
   priceFilter: boolean = false; // State of the third filter.
   minPrice: number = 0;          // Min price selected by the user
@@ -126,13 +129,21 @@ export class SearchbarComponent implements OnInit {
    * @details Fetches European countries and categories upon initialization.
    */
   ngOnInit(): void {
+    // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
       this.countries = this.apiCountries.europeanCountries.sort();
     }).catch((error) => console.error('❌ Error fetching countries:', error));
 
+    // Get all the category in the DB
     this.apiService.getAllCategories().subscribe({
       next: (categories) => this.categories = categories.sort(),
       error: (error) => console.error('❌ Error fetching categories:', error),
+    });
+
+    // Get all the brands on the DB
+    this.apiService.getAllBrands().subscribe({
+      next: (brands) => this.brands = brands.sort(),
+      error: (error) => console.error('❌ Error fetching brands:', error),
     });
   }
 
@@ -235,7 +246,8 @@ export class SearchbarComponent implements OnInit {
     const filters = {
       country: this.selectedCountry || null,
       department: this.selectedDepartment || null,
-      category: this.categoryFilter ? this.selectedCategory : null,
+      category: this.categoryFilter && this.selectedCategory ? this.selectedCategory : null,
+      brand: this.brandFilter ? this.selectedBrand : null,
       price: this.priceFilter ? { min: this.minPrice, max: this.maxPrice } : null,
     };
 
@@ -249,7 +261,12 @@ export class SearchbarComponent implements OnInit {
    * @param includeSelectedProduct Indicates if the selected product should be included.
    */
   searchWithFilters(includeSelectedProduct: boolean = false) {
-    const filtersToSend = { ...this.appliedFilters, productId: includeSelectedProduct ? this.selectedProduct : null };
+    this.applyFilters(); // Apply filters before the research
+
+    const filtersToSend = {
+      ...this.appliedFilters,
+      productId: includeSelectedProduct ? this.selectedProduct : null, // Include the selected product if asked
+    };
 
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => this.router.navigate(['/searched-prod'], { state: { resultsArray: response } }),
@@ -257,16 +274,22 @@ export class SearchbarComponent implements OnInit {
     });
   }
 
+
   /**
    * @brief Searches without including a selected product.
    */
   searchWithoutFilters() {
     this.applyFilters();
-    if (!Object.keys(this.appliedFilters).length) return;
+
+    if (!Object.keys(this.appliedFilters).length) {
+      console.warn('⚠️ No filters applied.');
+      return;
+    }
 
     this.apiService.postProductsWithFilters(this.appliedFilters).subscribe({
       next: (response) => this.router.navigate(['/searched-prod'], { state: { resultsArray: response } }),
       error: (error) => console.error('❌ Search error:', error),
     });
   }
+
 }

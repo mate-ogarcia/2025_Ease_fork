@@ -11,7 +11,6 @@
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filter</button>
     <button class="add-btn" routerLink="/add-product">➕ Add-product</button>
-      
 
     <!-- Display search results -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
@@ -78,16 +77,20 @@
   </div>
 
   <!-- Brand Filter  TODO -->
-  <label> <input type="checkbox" [(ngModel)]="categoryFilter" /> Marque </label>
-
-  <label>
-    <select [(ngModel)]="selectedCountry" (change)="onCountryChange()">
-      <option value="">Sélectionnez une marque (Pas encore implémenté)</option>
-      <option *ngFor="let country of countries" [value]="country">
-        {{ country }}
-      </option>
-    </select>
-  </label>
+  <label> <input type="checkbox" [(ngModel)]="brandFilter" /> Marque </label>
+  <!-- Display filters is category is selected -->
+  <div *ngIf="brandFilter">
+    <label>
+      <select [(ngModel)]="selectedBrand">
+        <option value="">
+          Sélectionnez une marque
+        </option>
+        <option *ngFor="let brand of brands" [value]="brand">
+          {{ brand }}
+        </option>
+      </select>
+    </label>
+  </div>
 
   <!-- Price Filter -->
   <label> <input type="checkbox" [(ngModel)]="priceFilter" /> Prix </label>

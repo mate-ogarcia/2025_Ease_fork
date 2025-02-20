@@ -89,6 +89,10 @@ export class ApiService {
     return this.http.get<any[]>(`${this._dbUrl}/categName`);
   }
 
+  getAllBrands(): Observable<any> {
+    return this.http.get<any[]>(`${this._dbUrl}/brandName`);
+  }
+
   /**
    * @brief Performs a product search on the backend using an HTTP GET request.
    *
