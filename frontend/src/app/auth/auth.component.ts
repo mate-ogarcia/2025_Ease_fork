@@ -134,11 +134,12 @@ export class AuthComponent implements AfterViewInit {
       this.authService.login(this.username, this.password).subscribe({
         next: (response) => {
           console.log("Server response:", response);
+          window.alert("Connect successfully");
           this.router.navigate(['/home']);
         },
         error: (err) => {
           console.log("Login error:", err);
-          alert('Login or username incorrect');
+          window.alert('Something\'s gone wrong : Username or Password incorrect');
 
           this.errorMessage = 'Invalid email or password.';
         },
@@ -153,11 +154,15 @@ export class AuthComponent implements AfterViewInit {
       this.authService.register(this.username, this.email, hashedPassword).subscribe({
         next: (response) => {
           console.log("Server response:", response);
-          // Navigate to profile or home, or show success message
-          // this.router.navigate(['/profile']);
+          window.alert("Register successfully");
+          // Navigate to the login page
+          this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+            this.router.navigate(['/login']);
+          });
         },
         error: (err) => {
           console.log("Register error:", err);
+          window.alert('Something\'s gone wrong : please try again');
           this.errorMessage = 'Invalid email or password.';
         },
       });

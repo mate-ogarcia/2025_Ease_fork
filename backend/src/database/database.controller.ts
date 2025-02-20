@@ -39,4 +39,18 @@ export class DatabaseController {
             );
         }
     }
+
+    @Get("brandName")
+    async getAllBrandName() {
+        try {
+            // Call the database service to retrieve brand names
+            return await this.databaseService.getAllBrandName()
+        } catch (error) {
+            // Log the error and throw an InternalServerErrorException if something goes wrong
+            console.error("❌ Error retrieving the brands name:", error);
+            throw new InternalServerErrorException(
+                "Error retrieving the brands name."
+            );
+        }
+    }
 }

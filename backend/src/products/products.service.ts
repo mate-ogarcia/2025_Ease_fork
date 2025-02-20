@@ -128,7 +128,6 @@ export class ProductsService implements OnModuleInit {
      */
     async getFilteredProducts(filters: any) {
         console.log("filters from products.Service:", filters);
-
         try {
             return await this.databaseService.getProductsWithFilters(filters);
         } catch (error) {

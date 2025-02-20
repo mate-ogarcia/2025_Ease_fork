@@ -1,17 +1,11 @@
 /**
  * @file searchbar.component.ts
- * @description
- * This component implements a search bar with real-time search functionality, caching of results,
- * and product selection. It uses RxJS to debounce and manage search input while displaying results.
- * Filters are also available for refining search queries.
+ * @brief Implements a search bar with real-time search, result caching, and filtering capabilities.
+ * @details This component provides a search bar with real-time search capabilities, efficient caching of results, 
+ * and product selection functionalities. It uses RxJS to debounce user input, manages cached search results to improve 
+ * performance, and includes filtering options to refine search queries by country, department, category, and price.
  * 
  * @component SearchbarComponent
- * @example
- * <app-searchbar></app-searchbar>
- * 
- * @author Your Name
- * @version 1.0
- * @since 2025-02-18
  */
 
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
@@ -24,41 +18,40 @@ import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../../../services/api.service';
 import { ApiEuropeanCountries } from '../../../../../services/europeanCountries/api.europeanCountries';
 
-/**
- * @class SearchbarComponent
- * @description
- * The SearchbarComponent is responsible for managing search input, fetching search results, 
- * and handling the product selection process. It includes search query caching, debouncing, 
- * and the ability to apply filters to refine search results.
- */
 @Component({
   selector: 'app-searchbar',
   standalone: true,
   imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './searchbar.component.html',
-  styleUrl: './searchbar.component.css',
+  styleUrls: ['./searchbar.component.css']
 })
 export class SearchbarComponent implements OnInit {
   searchQuery: string = ''; // The current search query entered by the user.
-  searchResults: any[] = []; // The list of search results to display.
+  searchResults: any[] = []; // The list of suggestions to display (limited to 5).
+  fullSearchResults: any[] = []; // The complete list of results from the API.
   noResultsMessage: string = ''; // Message to display if no results are found.
   selectedProduct: string = ''; // The ID of the selected product.
   isFilterPanelOpen: boolean = false; ///< Indicates if the filter panel is open.
   // filters
-  countries: string[] = [] // Initialize with an empty promise
+  countries: string[] = [];
   selectedCountry: string = ''; // Store the selected country
   selectedDepartment: string = ''; // Store the department input by the user
-  categoryFilter: boolean = false; // State of the second filter.
+  categoryFilter: boolean = false; // State of the category filter.
   selectedCategory: string = '';
   categories: any[] = [];   // Contains all the categories name
+  brandFilter: boolean = false // State of the brand filter
+  selectedBrand: string = '';
+  brands: any[] = [] // Contains all the brands
   // Price filter
   priceFilter: boolean = false; // State of the third filter.
   minPrice: number = 0;          // Min price selected by the user
-  maxPrice: number = 1000;       // Max price selected by the user
+  maxPrice: number = 5000;       // Max price selected by the user
+  // Save the filters
+  appliedFilters: any = {};
   // Range boundaries for price filter
-  minPriceRange: number = 0;     // Min value for the price range
-  maxPriceRange: number = 5000;  // Max value for the price range
-  stepPrice: number = 10;        // Step for the price increment in the slider
+  minPriceRange: number = 0;
+  maxPriceRange: number = 5000;
+  stepPrice: number = 10;
   // Research & cache
   private _searchSubject = new Subject<string>(); // Subject to manage search input and trigger search requests.
   private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results for efficient reuse.
@@ -69,7 +62,6 @@ export class SearchbarComponent implements OnInit {
   /**
    * @constructor
    * Initializes the search functionality with debounced input handling and caching of results.
-   * Subscribes to the search subject to handle input changes and triggers API calls when necessary.
    */
   constructor(
     private apiService: ApiService,
@@ -78,29 +70,28 @@ export class SearchbarComponent implements OnInit {
   ) {
     this._searchSubject
       .pipe(
-        debounceTime(50), // Waits for the user to stop typing for 50ms before triggering the search.
-        distinctUntilChanged(), // Prevents unnecessary API calls if the query hasn't changed.
-        filter((query) => query.trim() !== ''), // Ignores empty queries.
+        debounceTime(50),
+        distinctUntilChanged(),
+        filter((query) => query.trim() !== ''),
         switchMap((query) => {
           const trimmedQuery = query.trim();
           const cachedData = this._cache.get(trimmedQuery);
 
           if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_DURATION) {
-            // If results are cached and not expired, use them directly.
-            this.searchResults = cachedData.data.map((result: any) => ({
+            const fullResults = cachedData.data.map((result: any) => ({
               id: result.id,
               name: result.fields?.name || 'Unknown name',
               description: result.fields?.description || 'No description available',
             }));
+            this.fullSearchResults = fullResults;
+            this.searchResults = fullResults.slice(0, 5);  // Limit to 5 suggestions for display
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
-            return of(null); // Skip API call and return cached data.
+            return of(null);
           }
 
-          // Otherwise, make the API call to fetch new results.
           return this.apiService.sendSearchData({ search: trimmedQuery }).pipe(
             tap((response) => {
               if (response && Array.isArray(response)) {
-                // Cache the new results if the response is valid.
                 this._cache.set(trimmedQuery, { data: [...response], timestamp: Date.now() });
               }
             })
@@ -110,57 +101,49 @@ export class SearchbarComponent implements OnInit {
       .subscribe({
         next: (response: any) => {
           if (response) {
-            // Process the response and update the search results.
-            this.searchResults = response.length
+            const fullResults = response.length
               ? response.map((result: any) => ({
                 id: result.id,
                 name: result.fields?.name || 'Unknown name',
                 description: result.fields?.description || 'No description available',
               }))
               : [];
+            this.fullSearchResults = fullResults;
+            this.searchResults = fullResults.slice(0, 5);
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
           }
         },
-        error: (error) => console.error('❌ Error during search:', error), // Log error if search fails.
+        error: (error) => console.error('❌ Error during search:', error),
       });
   }
 
   /**
-   * @brief Initializes the component by fetching the list of European countries.
-   * 
-   * This method is called when the component is initialized. It calls the `fetchEuropeanCountries` method
-   * of the `ApiEuropeanCountries` service to retrieve the list of European countries. Once the countries are
-   * fetched successfully, the `countries` property is updated with the list of country names.
-   * If there is an error during the fetch process, an error message is logged to the console.
-   * 
-   * @returns {void} 
-   * @throws {Error} Logs an error to the console if the countries cannot be fetched.
+   * @brief Lifecycle hook that initializes the component.
    */
   ngOnInit(): void {
-    // Fetch the countries and update the countriesList
+    // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
       this.countries = this.apiCountries.europeanCountries.sort();
-    }).catch(error => {
-      console.error('❌ Error fetching countries:', error);
+    }).catch((error) => console.error('❌ Error fetching countries:', error));
+
+    // Get all the category in the DB
+    this.apiService.getAllCategories().subscribe({
+      next: (categories) => this.categories = categories.sort(),
+      error: (error) => console.error('❌ Error fetching categories:', error),
     });
 
-    // Fetch all the category name
-    this.apiService.getAllCategories().subscribe({
-      next: (categories) => {
-        this.categories = categories;
-        console.log("Categories name fetched.");
-      },
-      error: (error) => {
-        console.error('❌ Erreur lors de la récupération des catégories:', error);
-      },
+    // Get all the brands on the DB
+    this.apiService.getAllBrands().subscribe({
+      next: (brands) => this.brands = brands.sort(),
+      error: (error) => console.error('❌ Error fetching brands:', error),
     });
   }
 
   // ======================== RESEARCH FUNCTIONS
+
   /**
    * @function hasSuggestions
-   * @description
-   * A getter that returns whether there are any search results to display.
+   * @description A getter that returns whether there are any search results to display.
    * @returns {boolean} True if there are search results, false otherwise.
    */
   get hasSuggestions(): boolean {
@@ -169,44 +152,45 @@ export class SearchbarComponent implements OnInit {
 
   /**
    * @function onInputChange
-   * @description
-   * Handles changes to the search input field. If the query is non-empty, it triggers the search logic.
+   * @description Handles changes to the search input field.
    * @param event The input change event.
    */
   onInputChange(event: any) {
     if (this.searchQuery.trim() === '') {
-      this.clearSearch(); // Clears search results and message if the query is empty.
+      this.clearSearch();
       return;
     }
-    this._searchSubject.next(this.searchQuery); // Triggers the search with the current input.
+    this._searchSubject.next(this.searchQuery);
   }
 
   /**
    * @function onEnter
-   * @description
-   * Handles the Enter key press. If a product matches the query, it selects that product.
-   * If no product is found, it displays a "no product found" message.
-   * @param event The keyboard event triggered by pressing Enter.
+   * @description Sends a search request when the Enter key is pressed.
+   * If a product is selected, it includes that product in the filters; otherwise, it performs a search
+   * using all the full search results (even those not displayed).
+   * @param event The keyboard event.
    */
   onEnter(event: any) {
+    event as KeyboardEvent;
+    this.toggleFilterPanel();
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
-      const queryLower = this.searchQuery.trim().toLowerCase();
-      const product = this.searchResults.find((p) =>
-        p.name.toLowerCase().includes(queryLower) // Checks if product name matches the query.
-      );
-
-      if (product) {
-        this.selectProduct(product); // Select the product if it matches the query.
+      if (this.selectedProduct) {
+        console.log("selected :", this.selectedProduct);
+        this.searchWithFilters(true); // Use the selected product in search
       } else {
-        this.noResultsMessage = 'No product found.'; // Show message if no match is found.
+        // If no product selected, navigate using the full search results
+        if (this.fullSearchResults.length > 0) {
+          this.router.navigate(['/searched-prod'], { state: { resultsArray: this.fullSearchResults } });
+        } else {
+          // Fallback: if no full results available, perform a search without filters
+          this.searchWithoutFilters();
+        }
       }
     }
   }
 
   /**
-   * @function clearSearch
-   * @description
-   * Clears the search query, results, and message, essentially resetting the search bar.
+   * @brief Clears the search query and results.
    */
   clearSearch() {
     this.searchQuery = '';
@@ -215,134 +199,117 @@ export class SearchbarComponent implements OnInit {
   }
 
   /**
-   * @function selectProduct
-   * @description
-   * Selects a product from the search results and navigates to its details page.
-   * If a valid product is selected, it sends a post request with the product ID.
-   * @param product The product that was selected.
+   * @brief Selects a product from the search suggestions.
+   * After selection, the suggestions are hidden.
+   * @param product The product selected from suggestions.
    */
   selectProduct(product: any) {
     this.searchQuery = product.name;
     this.selectedProduct = product.id;
     this.noResultsMessage = '';
-
-    if (!this.selectedProduct) {
-      return; // Exit if no valid product is selected.
-    }
-
-    // Send post request with the selected product ID to store the selection.
-    this.apiService.postProductSelection({ productId: this.selectedProduct }).subscribe({
-      next: () => {
-        // Navigate to the product's details page after selection.
-        this.router.navigate(['/products-alternative', this.selectedProduct]).catch((error) =>
-          console.error('❌ Navigation error:', error)
-        );
-      },
-      error: (error) => console.error('❌ Error sending product ID:', error),
-    });
+    this.searchResults = []; // Hide suggestions after selection.
   }
+
   // ======================== FILTER FUNCTIONS
+
   /**
    * @function toggleFilterPanel
-   * @description
-   * Toggles the visibility of the filter panel.
+   * @description Toggles the visibility of the filter panel.
    */
   toggleFilterPanel() {
     this.isFilterPanelOpen = !this.isFilterPanelOpen;
   }
 
-  // Function that gets triggered when a country is selected
-  //TODO ?
+  /**
+   * @function onCountryChange
+   * @description Called when a country is selected.
+   */
   onCountryChange() {
-    // Optionally, fetch departments based on the selected country
-  }
-
-  // Method to handle min price update from the slider or manual input
-  updateMinPrice() {
-    if (this.minPrice < this.minPriceRange) {
-      this.minPrice = this.minPriceRange;
-    }
-    if (this.minPrice > this.maxPrice) {
-      this.maxPrice = this.minPrice;  // Ensure max is not lower than min
-    }
-  }
-
-  // Method to handle max price update from the slider or manual input
-  updateMaxPrice() {
-    if (this.maxPrice > this.maxPriceRange) {
-      this.maxPrice = this.maxPriceRange;
-    }
-    if (this.maxPrice < this.minPrice) {
-      this.minPrice = this.maxPrice;  // Ensure min is not higher than max
-    }
+    // Optionally, fetch departments based on the selected country.
   }
 
   /**
-   * @function applyFilters
-   * @description
-   * This function is triggered when the user clicks the "Appliquer" button. It checks the selected filters
-   * and applies the logic accordingly.
+   * @brief Updates minimum price based on slider or manual input.
+   */
+  updateMinPrice() {
+    if (this.minPrice < this.minPriceRange) this.minPrice = this.minPriceRange;
+    if (this.minPrice > this.maxPrice) this.maxPrice = this.minPrice;
+  }
+
+  /**
+   * @brief Updates maximum price based on slider or manual input.
+   */
+  updateMaxPrice() {
+    if (this.maxPrice > this.maxPriceRange) this.maxPrice = this.maxPriceRange;
+    if (this.maxPrice < this.minPrice) this.minPrice = this.maxPrice;
+  }
+
+  /**
+   * @brief Applies selected filters without triggering a search.
    */
   applyFilters() {
-    // Log the selected filters
-    console.log({
-      selectedCountry: this.selectedCountry,
-      selectedDepartment: this.selectedDepartment,
-      categoryFilter: this.categoryFilter,
-      selectedCategory: this.selectedCategory,  // Log the selected category
-      priceFilter: this.priceFilter,
-      minPrice: this.minPrice,
-      maxPrice: this.maxPrice
-    });
-
-    // Build the filters object based on selected values
     const filters = {
-      country: this.selectedCountry,
-      department: this.selectedDepartment,
-      category: this.categoryFilter ? this.selectedCategory : null,  // Add selected category if filter is enabled
+      country: this.selectedCountry || null,
+      department: this.selectedDepartment || null,
+      category: this.categoryFilter && this.selectedCategory ? this.selectedCategory : null,
+      brand: this.brandFilter ? this.selectedBrand : null,
       price: this.priceFilter ? { min: this.minPrice, max: this.maxPrice } : null,
     };
 
-    // Remove any null filters or filters with empty values
-    const filteredParams = Object.fromEntries(
-      Object.entries(filters).filter(([key, value]) => {
-        // For boolean filters (like checkboxes)
-        if (typeof value === 'boolean') {
-          return value; // Only include if true
-        }
-        // For object filters (like price with min and max values)
-        if (typeof value === 'object' && value !== null) {
-          return value.min != null && value.max != null; // Only include if both min and max are defined
-        }
-        // For string filters (like country, category)
-        if (typeof value === 'string') {
-          return value.trim() !== ''; // Only include if the string is not empty
-        }
-        // Exclude null and undefined values
-        return value !== null && value !== undefined;
-      })
+    this.appliedFilters = Object.fromEntries(
+      Object.entries(filters).filter(([_, value]) => value !== null && value !== '')
     );
+    // Once filters are applied close the panel
+    this.toggleFilterPanel();
+  }
 
-    // Send a request to query products with the selected filters
-    this.apiService.postProductsWithFilters(filteredParams).subscribe({
+  /**
+   * @brief Searches with applied filters and navigates to results page.
+   * @param includeSelectedProduct Indicates if the selected product should be included.
+   */
+  searchWithFilters(includeSelectedProduct: boolean = false) {
+    this.applyFilters(); // Apply filters before the research
+
+    console.log("W/Filters launched");
+
+    const filtersToSend = {
+      ...this.appliedFilters,
+      productId: includeSelectedProduct ? this.selectedProduct : null, // Include the selected product if asked
+    };
+
+    this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
-        // Process the response
-        console.log('Filtered products:', response);
-        // TODO modify this part, need a other html page to display the products searched with a filter
-        const test = response[0].id;
-        console.log(test);
-
-        // Navigate to the product's details page after selection
-        this.router.navigate(['/products-alternative', test]).catch((error) =>
-          console.error('❌ Navigation error:', error)
-        );
+        // Allow the reload the page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
+        });
       },
-      error: (error) => {
-        console.error('❌ Error applying filters', error);
-      },
+      error: (error) => console.error('❌ Search error:', error),
     });
   }
 
+  /**
+   * @brief Searches without including a selected product.
+   */
+  searchWithoutFilters() {
+    this.applyFilters();
+    console.log("W/Filters launched");
 
+    if (!Object.keys(this.appliedFilters).length) {
+      console.warn('⚠️ No filters applied.');
+      return;
+    }
+
+    this.apiService.postProductsWithFilters(this.appliedFilters).subscribe({
+      next: (response) => {
+        // Allow the reload the page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
+        });
+        console.log("response :", response);
+      },
+      error: (error) => console.error('❌ Search error:', error),
+    });
+  }
 
 }

@@ -8,8 +8,10 @@
       (input)="onInputChange($event)"
     />
 
-    <button class="search-btn" (click)="clearSearch()">✖</button>
-    <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filtres</button>
+    <button type="button" class="search-btn" (click)="clearSearch()">✖</button>
+    <button type="button" class="filter-btn" (click)="toggleFilterPanel()"><i class="fa-solid fa-filter"></i></button>
+    <button type="button" class="add-btn" routerLink="/add-product"><i class="fa-solid fa-square-plus"></i></button>
+      
 
     <!-- Display search results -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
@@ -27,9 +29,6 @@
     <div *ngIf="noResultsMessage" class="no-results-message">
       <p>{{ noResultsMessage }}</p>
     </div>
-  </div>
-  <div class="add-btn">
-    <i class="fa-solid fa-plus" routerLink="/add-product"></i>
   </div>
 </div>
 
@@ -71,11 +70,28 @@
     <label>
       <select [(ngModel)]="selectedCategory">
         <option value="">Sélectionnez une catégorie</option>
-        <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+        <option *ngFor="let category of categories" [value]="category">
+          {{ category }}
+        </option>
       </select>
     </label>
   </div>
 
+  <!-- Brand Filter  TODO -->
+  <label> <input type="checkbox" [(ngModel)]="brandFilter" /> Marque </label>
+  <!-- Display filters is category is selected -->
+  <div *ngIf="brandFilter">
+    <label>
+      <select [(ngModel)]="selectedBrand">
+        <option value="">
+          Sélectionnez une marque
+        </option>
+        <option *ngFor="let brand of brands" [value]="brand">
+          {{ brand }}
+        </option>
+      </select>
+    </label>
+  </div>
 
   <!-- Price Filter -->
   <label> <input type="checkbox" [(ngModel)]="priceFilter" /> Prix </label>
@@ -132,5 +148,9 @@
     </label>
   </div>
 
+  <!-- Search buttons -->
   <button (click)="applyFilters()">Appliquer</button>
+  <button (click)="searchWithoutFilters()">
+    Chercher les produits parmi les filtres
+  </button>
 </div>

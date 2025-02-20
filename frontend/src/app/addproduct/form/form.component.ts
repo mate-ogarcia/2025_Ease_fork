@@ -7,5 +7,9 @@ import { Component } from '@angular/core';
   styleUrl: './form.component.css'
 })
 export class FormComponent {
+  isDarkMode: boolean = false;
 
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+  }
 }

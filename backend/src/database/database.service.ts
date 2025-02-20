@@ -22,17 +22,18 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private productsBucket: couchbase.Bucket;
   private usersBucket: couchbase.Bucket;
   private categBucket: couchbase.Bucket;
+  private brandBucket: couchbase.Bucket;
   // Collections
   private productsCollection: couchbase.Collection;
   private usersCollection: couchbase.Collection;
   private categCollection: couchbase.Collection;
+  private brandCollection: couchbase.Collection;
 
   // User role
   private _role = {
     Admin: 'Admin',
     User: 'User'
   };
-
 
   constructor(private readonly httpService: HttpService) { }
 
@@ -94,6 +95,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       }
       this.categBucket = this.cluster.bucket(categBucketName);
       this.categCollection = this.categBucket.defaultCollection();
+
+      // Connect to the brand bucket
+      const brandBucketName = process.env.BRAND_BUCKET_NAME;
+      if (!brandBucketName) {
+        throw new Error("❌ BRAND_BUCKET_NAME is not defined in environment variables in database.service.ts");
+      }
+      this.brandBucket = this.cluster.bucket(brandBucketName);
+      this.brandCollection = this.brandBucket.defaultCollection();
 
       console.log("✅ Successfully connected to Couchbase Capella!");
     } catch (error) {
@@ -160,6 +169,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * @brief Retrieves the Couchbase bucket instance for brand.
+   * 
+   * This method returns the initialized Couchbase bucket for managing brand data.
+   * If the bucket is not initialized, it throws an error.
+   * 
+   * @returns {couchbase.Bucket} The initialized brand bucket.
+   * @throws {Error} If the brand bucket is not initialized.
+   */
+  getBrandBucket(): couchbase.Bucket {
+    if (!this.brandBucket) {
+      throw new Error("❌ Couchbase bucket is not initialized yet.");
+    }
+    return this.brandBucket;
+  }
+
+  /**
    * Returns the products collection.
    */
   getProductsCollection(): couchbase.Collection {
@@ -187,6 +212,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error("Users collection is not initialized.");
     }
     return this.categCollection;
+  }
+
+  /**
+   * Returns the brand collection.
+   */
+  getBrandCollection(): couchbase.Collection {
+    if (!this.brandCollection) {
+      throw new Error("Brand collection is not initialized.");
+    }
+    return this.brandCollection;
   }
 
   // ======================== UTILITY FUNCTIONS
@@ -346,7 +381,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-
   /**
   * @brief Retrieves a user from Couchbase by their email.
   * 
@@ -478,55 +512,264 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @brief Retrieves products based on provided filters (category, country, price range).
+   * @brief Retrieves all brand names from the database.
    * 
-   * This function constructs a dynamic N1QL query to search for products that match the given
-   * criteria, such as category, country of origin, and price range. It then executes the query 
-   * and returns the matching products.
+   * This function executes a N1QL query to fetch all brand names from the specified Couchbase bucket.
+   * It checks the initialization of the brand bucket before executing the query and handles potential errors.
+   * If no brands are found, an empty array is returned.
    * 
-   * @param filters The filters to apply to the product search. This object can contain the following fields:
-   *    - `category`: The category of the product to filter by.
-   *    - `country`: The country of origin of the product to filter by.
-   *    - `minPrice`: The minimum price to filter the products by.
-   *    - `maxPrice`: The maximum price to filter the products by.
+   * @returns {Promise<any[]>} A promise resolving to an array of brand names.
    * 
-   * @returns A Promise that resolves to an array of products that match the given filters.
+   * @throws {InternalServerErrorException} If the brand bucket is not initialized or if an error occurs during query execution.
+   */
+  async getAllBrandName(): Promise<any[]> {
+    const brandBucketName = this.brandBucket.name;
+    try {
+      // Verify if the brand bucket is initialized
+      if (!this.brandBucket) {
+        throw new Error("❌ Brand bucket is not initialized.");
+      }
+
+      // Construct the N1QL query to retrieve brand names
+      const query = `
+      SELECT b.name
+      FROM \`${brandBucketName}\`._default._default b
+    `;
+
+      // Execute the query
+      const result = await this.cluster.query(query);
+
+      // Handle the case where no brands are found
+      if (result.rows.length === 0) {
+        console.warn("⚠️ No brand names found.");
+        return [];
+      }
+
+      // Extract and return the brand names from the query result
+      const brandNames = result.rows.map((row: any) => row.name);
+      return brandNames;
+
+    } catch (error) {
+      console.error("❌ Error retrieving brand names:", error);
+      throw new InternalServerErrorException("Error retrieving brand names.");
+    }
+  }
+
+  /**
+   * @brief Retrieves products associated with a specified brand.
    * 
-   * @throws InternalServerErrorException If an error occurs during the query or retrieval process.
+   * @details
+   * Executes a N1QL query that performs a join between the products and brands buckets.
+   * This function searches for products whose foreign key (`FK_Brands`) matches the given brand name.
+   * 
+   * @param brandName The name of the brand to search for.
+   * 
+   * @returns {Promise<any[]>} An array of objects containing product and brand names.  
+   * 
+   * @throws {Error} Throws an error if the query execution fails.
+   */
+  async getProductsByBrand(brandName: string): Promise<any> {
+    const productsBucketName = this.productsBucket.name;
+    const brandBucketName = this.brandBucket.name;
+
+    const query = `
+      SELECT p.name AS productName, b.name AS brandName
+      FROM \`${productsBucketName}\` p
+      JOIN \`${brandBucketName}\` b ON KEYS p.FK_Brands
+      WHERE b.name = $brandName
+    `;
+
+    try {
+      const result = await this.cluster.query(query, { parameters: { brandName } });
+      console.log("Query result:\n", result.rows);
+      return result.rows;
+    } catch (error) {
+      console.error("Error executing query:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * @brief Retrieves products based on provided filters and/or similarity to a selected product.
+   * 
+   * @details
+   * This function dynamically constructs a N1QL query to fetch products that either:
+   * - Match the provided filters (e.g., category, country, price range, brand), OR
+   * - Are similar to a selected product (based on category, tags, price range, and brand).
+   * 
+   * ### Query Logic:
+   * - **With `productId`:** Searches for products similar to the selected product using:
+   *   - Category match
+   *   - Shared tags
+   *   - Price range within ±20% of the selected product's price
+   *   - Same brand association (via `FK_Brands`)
+   * - **Without `productId`:** Filters products directly based on provided filters.
+   * - **Combined case:** If both `productId` and filters are provided, products must satisfy either similarity conditions or provided filters.
+   * 
+   * @param filters An object containing search filters. Possible fields:
+   * - `category` (string): Category to filter products by.
+   * - `country` (string): Country of origin to filter products by.
+   * - `minPrice` (number): Minimum price for filtering.
+   * - `maxPrice` (number): Maximum price for filtering.
+   * - `brand` (string, optional): Brand to filter products by.
+   * - `productId` (string, optional): ID of a selected product to find similar products.
+   * 
+   * @returns {Promise<any[]>} An array of products matching the filters and/or similarity criteria.
+   * 
+   * @throws {InternalServerErrorException} Thrown if there is an error during query construction or execution.
    */
   async getProductsWithFilters(filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
+    const brandBucketName = this.brandBucket.name;
 
     try {
       if (Object.keys(filters).length === 0) {
         throw new Error("❌ Filters are empty");
       }
-      // Dynamically construct the N1QL query
-      let query = `SELECT * FROM ${bucketName} WHERE `;
-      const queryConditions: string[] = [];
 
-      // Add conditions based on filters
-      if (filters.category) {
-        queryConditions.push(`category = '${filters.category}'`);
+      const similarToProductConditions: string[] = [];
+      const similarToFiltersConditions: string[] = [];
+      let queryWithJoin = "";
+
+      // ---------------------
+      // Part 1: Similarity search based on a selected product (if productId is provided)
+      // ---------------------
+      if (filters.productId) {
+        console.log(`🔎 Searching for products similar to: ${filters.productId}`);
+
+        const selectedProduct = await this.getProductById(filters.productId);
+        if (!selectedProduct) {
+          throw new Error(`❌ Product with ID ${filters.productId} not found.`);
+        }
+
+        console.log(`🔹 Selected product:`, selectedProduct);
+
+        // ---------------------
+        // Similarity criteria based on the selected product's attributes
+        // ---------------------
+        const subSimilarityConditions: string[] = [];
+
+        // Match products with the same category
+        if (selectedProduct.category) {
+          subSimilarityConditions.push(`category = '${selectedProduct.category}'`);
+        }
+
+        // Match products with at least one similar tag
+        if (selectedProduct.tags?.length) {
+          subSimilarityConditions.push(`ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`);
+        }
+
+        // Match products within ±20% price range of the selected product
+        if (selectedProduct.price) {
+          const minPrice = selectedProduct.price * 0.8;
+          const maxPrice = selectedProduct.price * 1.2;
+          subSimilarityConditions.push(`price BETWEEN ${minPrice} AND ${maxPrice}`);
+        }
+
+        // Add brand filter directly if product has a FK_Brands
+        if (selectedProduct.FK_Brands) {
+          console.log("🔎 Using brand from selected product:", selectedProduct.FK_Brands);
+          subSimilarityConditions.push(`FK_Brands = '${selectedProduct.FK_Brands}'`);
+        }
+
+        console.log("✅ subSimilarityConditions:\n", subSimilarityConditions);
+
+        // ---------------------
+        // Part 2: Search based on directly provided filters
+        // ---------------------
+        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
+        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
+        if (filters.minPrice && filters.maxPrice) {
+          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+        } else if (filters.minPrice) {
+          similarToFiltersConditions.push(`price >= ${filters.minPrice}`);
+        } else if (filters.maxPrice) {
+          similarToFiltersConditions.push(`price <= ${filters.maxPrice}`);
+        }
+
+        // If brand is provided (without a selected product), use getProductsByBrand to fetch FK_Brands
+        if (filters.brand && !filters.productId) {
+          const brandResult = await this.getProductsByBrand(filters.brand);
+          if (brandResult?.length) {
+            const brandFK = brandResult[0].FK_Brands; // Assumes getProductsByBrand returns FK_Brands
+            if (brandFK) {
+              similarToFiltersConditions.push(`FK_Brands = '${brandFK}'`);
+            }
+          }
+        }
+
+        console.log("✅ similarToFiltersConditions:\n", similarToFiltersConditions);
+
+        // ---------------------
+        // Query construction combining similarity and filter conditions
+        // ---------------------
+        const similarityClause = subSimilarityConditions.length > 0 ? `(${subSimilarityConditions.join(" AND ")})` : "";
+        const filtersClause = similarToFiltersConditions.length > 0 ? `(${similarToFiltersConditions.join(" AND ")})` : "";
+
+        if (similarityClause && filtersClause) {
+          queryWithJoin = `
+            SELECT * FROM \`${bucketName}\`
+            WHERE ${similarityClause} OR ${filtersClause}
+          `;
+        } else if (similarityClause) {
+          queryWithJoin = `
+            SELECT * FROM \`${bucketName}\`
+            WHERE ${similarityClause}
+          `;
+        } else if (filtersClause) {
+          queryWithJoin = `
+            SELECT * FROM \`${bucketName}\`
+            WHERE ${filtersClause}
+          `;
+        }
       }
-      if (filters.country) {
-        queryConditions.push(`origin = '${filters.country}'`);
+      else {
+        // ---------------------
+        // No productId provided: Apply only the provided filters
+        // ---------------------
+        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
+        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
+        if (filters.minPrice && filters.maxPrice) {
+          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+        }
+
+        // Add brand filter with subquery
+        if (filters.brand) {
+          console.log(`🔎 Adding brand filter with subquery for brand: ${filters.brand}`);
+
+          const brandSubquery = `
+            (SELECT RAW META(b).id FROM \`${brandBucketName}\` b WHERE b.name = '${filters.brand}' LIMIT 1)
+          `;
+
+          similarToFiltersConditions.push(`FK_Brands = ${brandSubquery}`);
+        }
+
+        // ---------------------
+        // building the final request
+        // ---------------------
+        if (similarToFiltersConditions.length > 0) {
+          queryWithJoin = `
+            SELECT * FROM \`${bucketName}\`
+            WHERE ${similarToFiltersConditions.join(" OR ")}
+          `;
+        }
       }
-      if (filters.minPrice && filters.maxPrice) {
-        queryConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
+
+      // ---------------------
+      // Execute the constructed query
+      // ---------------------
+      let combinedResults: any[] = [];
+
+      if (queryWithJoin) {
+        console.log(`🔹 Executing combined similarity and filters query: ${queryWithJoin}`);
+        const resultCombined = await this.cluster.query(queryWithJoin);
+        combinedResults = resultCombined.rows.map(row => row[bucketName]);
       }
-
-      // Finalize the query with conditions
-      query += queryConditions.join(" AND ");
-
-      console.log(`🔹 Executing N1QL query: ${query}`);
-
-      // Execute the query in Couchbase
-      const result = await this.cluster.query(query);
-      return result.rows.map(row => row[bucketName]); // Extract product data
+      console.log(`📦 Total combined products: ${combinedResults.length}`);
+      return combinedResults;
     } catch (error) {
       console.error("❌ Error retrieving filtered products:", error);
-      throw new InternalServerErrorException("Error retrieving filtered products.");
+      throw new InternalServerErrorException("An error occurred while retrieving the filtered products.");
     }
   }
 }

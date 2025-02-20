@@ -12,34 +12,35 @@
 
   <div class="prod-container">
     <!-- Product image, using a placeholder if no image is available -->
-    <div class="img-container">
-      <img
-        [src]="productDetails.imageUrl || 'placeholder-image.svg'"
-        alt="Product Image"
-        class="product-image"
-      />
-    </div>
-    <!-- Product details section -->
-      <div class="product-details">
-        <h2 class="product-name">{{ productDetails.name }}</h2>
-        <p class="product-description">{{ productDetails.description }}</p>
-        
-        <div class="product-info">
-          <div class="origin">
-            <p>
-              Origin : <b>{{ productDetails.origin || "Inconnue" }}</b>
-            </p>
-          </div>
-          <div class="product-rating">
-            <span class="rating-label">Note:</span>
-            <span *ngIf="productDetails.rating" class="rating-badge" [ngClass]="getRatingClass(productDetails.rating)">
-              {{ productDetails.rating }}/5
-            </span>
-            <span *ngIf="!productDetails.rating">Non noté</span>
-          </div>
+      <div class="img-container">
+        <div class="wrapper">
+          <img class="product-image"
+            [src]="productDetails.imageUrl || 'placeholder-image.svg'" 
+            alt="Product Image"/>
         </div>
       </div>
-
+    <!-- Product details section -->
+    <div class="product-details">
+      <h2 class="product-name">{{ productDetails.name }}</h2>
+      <p class="product-description"><strong> Description : </strong> {{ productDetails.description }}</p>
+        
+      <div class="product-info">
+        <div class="origin">
+          <p>
+            Origin : <b>{{ productDetails.origin || "Inconnue" }}</b>
+          </p>
+        </div>
+        <div class="product-rating">
+          <span class="rating-label">Note:</span>
+          <span *ngIf="productDetails.rating" 
+                class="rating-badge" 
+                [ngClass]="getRatingClass(productDetails.rating)">
+            {{ productDetails.rating }}/5
+          </span>
+          <span *ngIf="!productDetails.rating">Non noté</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
