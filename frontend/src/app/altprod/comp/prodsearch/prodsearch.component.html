@@ -13,14 +13,16 @@
   <div class="prod-container">
     <!-- Product image, using a placeholder if no image is available -->
       <div class="img-container">
-        <img class="product-image"
-          [src]="productDetails.imageUrl || 'placeholder-image.svg'" 
-          alt="Product Image"/>
+        <div class="wrapper">
+          <img class="product-image"
+            [src]="productDetails.imageUrl || 'placeholder-image.svg'" 
+            alt="Product Image"/>
+        </div>
       </div>
     <!-- Product details section -->
     <div class="product-details">
       <h2 class="product-name">{{ productDetails.name }}</h2>
-      <p class="product-description">{{ productDetails.description }}</p>
+      <p class="product-description"><strong> Description : </strong> {{ productDetails.description }}</p>
         
       <div class="product-info">
         <div class="origin">

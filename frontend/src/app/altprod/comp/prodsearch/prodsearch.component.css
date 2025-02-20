@@ -1,98 +1,130 @@
-/* Main container styling */
+/* === Main Container === */
 .container {
-    width: 100%;
-    height: 80vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #E3F0CE;
-    justify-content: center;
-    border-radius: 40px;
-    padding: 20px;
-    border: 3px solid #36de1c;
+  width: 100%;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #E3F0CE;
+  justify-content: center;
+  border-radius: 40px;
+  padding: 20px;
+  gap: 10px;
+  border: 3px solid #36de1c;
+  box-sizing: border-box;
+  /* overflow-y: auto; */ /* Retiré pour éviter les décalages */
 }
 
-/* Container for product items */
+/* === Container for product items === */
 .prod-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    gap: 25px;
-    width: 100%;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
-/* Product details layout */
+/* === Product details layout === */
 .product-details {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    min-height: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Texte toujours en bas */
+  gap: 10px;
+  width: 100%;
+  height: 50%;
+  min-height: 20%;
+  box-sizing: border-box;
 }
-.product-image{
-    width: auto;
-    max-width: 100%;
-    height: 80%;
-    border-radius: 10px;
-}
-/* Centering image inside its container */
+
+/* === Image Container (Fixed Square) === */
 .img-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-height: 70%;
+  width:auto;
+  height: 50%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
-/* Aligns product rating to the right */
+
+/* Optionnel: wrapper si nécessaire */
+.wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* === Product Image: Fill Container as a Square === */
+.product-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+/* === Product Rating Alignment === */
 .product-rating {
-    width: 100%;
-    display: flex; 
-    justify-content: flex-end;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
 }
 
-/* Styling for non-European products */
+/* === Styling for non-European products === */
 .non-european {
-    border: 3px solid red;
-    width: 100%;
-    height: 80vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #EDB4B4;
-    justify-content: center;
-    border-radius: 40px;
-    padding: 20px;
+  border: 3px solid red;
+  width: 100%;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #EDB4B4;
+  justify-content: center;
+  border-radius: 40px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-
-
-/* Layout for product information */
+/* === Layout for product information === */
 .product-info {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 10px;
-    width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Styling for product name */
+/* === Styling for product name === */
 .product-name {
-    font-weight: 900;
+  font-weight: 900;
+  font-size: clamp(1rem, 2vw, 1.5rem);
 }
 
-/* Layout for origin information */
+/* === Layout for origin information === */
 .origin {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
 }
 
-/* Responsive styling for smaller screens */
-@media (max-width:500px) {
-    .container {
-        height: 50vh;
-    }
+/* === Responsive styling for smaller screens === */
+@media (max-width: 600px) {
+  .container {
+    height: auto;
+    padding: 10px;
+  }
+  .img-container {
+    max-width: 150px;
+    aspect-ratio: 1 / 1;
+  }
+  .product-details {
+    min-height: auto;
+  }
 }
+  
