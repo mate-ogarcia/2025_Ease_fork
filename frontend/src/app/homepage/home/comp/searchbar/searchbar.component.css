@@ -61,7 +61,11 @@
   height: 65%; /* Assurez-vous qu'il prend la hauteur de son parent */
   cursor: pointer;
 }
-
+.add-btn {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 5px;
+}
 
 .suggestions {
   width: 100%;

@@ -49,7 +49,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this.isVantaActive = !this.isVantaActive;
     if (this.isVantaActive) {
       this.initVantaEffect();
-    } else if (this.vantaEffect) {
+    } else if (!this.isVantaActive) {
       this.vantaEffect.destroy();
       this.vantaEffect = null;
     }
