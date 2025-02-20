@@ -1,4 +1,5 @@
-.container{
+/* === Main Container === */
+.container {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -9,19 +10,24 @@
   border-radius: 15px;
   scroll-behavior: smooth;
 }
-.result-container{
-    width: 100%;
+
+/* === Result Container === */
+.result-container {
+  width: 100%;
 }
-.item-container{  
+
+/* === Items Container === */
+.item-container {  
   display: flex;
   width: 100%;
   height: auto;
   padding: 15px;
   flex-direction: column;
-  background-color: transparent
+  background-color: transparent;
 }
 
-.items-list{
+/* === Items List === */
+.items-list {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -29,34 +35,62 @@
   list-style: none;
   gap: 10px;
 }
-.item{
+
+/* === Individual Item Card === */
+.item {
   width: 100%;
   display: flex;
   flex-direction: row;
-  background-color: white ;
+  background-color: white;
   gap: 10px;
   padding: 15px;
   border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out;
+  max-height: 300px; /* Limite la hauteur de l'item */
+  overflow: hidden;
+}
 
-}
-.item:hover{
+.item:hover {
   transform: scale(1.02);
-  transition: all 0.3s ease-in-out;
 }
-.img-container{
+
+/* === Fixed Image Container === */
+.img-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 10%;
-  height: auto;
+  width: 220px;   /* Carré de 220px x 220px */
+  height: 220px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
-.product-image{
+
+/* === Product Image: Remplit le conteneur carré === */
+.product-image {
   width: 100%;
-  height: auto;
+  height: 100%;
   border-radius: 10px;
+  object-fit: cover; /* L'image est recadrée pour remplir le conteneur */
 }
-.categ{
+
+/* === Text Styling for Category === */
+.categ {
   color: rgb(23, 241, 41);
+}
+
+/* === Responsive Design for Screens ≤ 768px === */
+@media screen and (max-width: 768px) {
+  .item {
+    flex-direction: column;
+    max-height: none;
+  }
+  .img-container {
+    width: 100%;
+    height: auto;
+  }
+  .product-image {
+    width: 100%;
+    height: auto;
+  }
 }

@@ -384,6 +384,208 @@
       "envRate": "",
       "userRate": "",
       "status": ""
-  }
+  },
+  
+    {
+      "id": "product47",
+      "name": "Fanta Orange",
+      "description": "Une boisson gazeuse rafraîchissante, parfaite pour les chaudes journées d'été.",
+      "category": "Beverages",
+      "tags": ["soft drink", "fanta", "orange", "boisson"],
+      "origin": "USA"
+    },
+    {
+      "id": "product48",
+      "name": "Pepsi Max",
+      "description": "Une boisson gazeuse sans sucre au goût intense, idéale pour ceux qui veulent limiter leur apport calorique.",
+      "category": "Beverages",
+      "tags": ["soft drink", "pepsi", "sugar-free", "boisson"],
+      "origin": "USA"
+    },
+    {
+      "id": "product49",
+      "name": "Mountain Dew",
+      "description": "Une boisson énergisante et rafraîchissante, appréciée pour son goût unique et son effet stimulant.",
+      "category": "Beverages",
+      "tags": ["soft drink", "mountain dew", "energy", "boisson"],
+      "origin": "USA"
+    },
+    {
+      "id": "product50",
+      "name": "Sprite",
+      "description": "Une boisson gazeuse citron-lime, connue pour sa fraîcheur et son goût léger.",
+      "category": "Beverages",
+      "tags": ["soft drink", "sprite", "citron", "lime", "boisson"],
+      "origin": "USA"
+    },
+    {
+      "id": "product51",
+      "name": "Apple iPhone 14",
+      "description": "Le dernier iPhone avec des fonctionnalités avancées, une caméra améliorée et une performance exceptionnelle.",
+      "category": "Electronics",
+      "tags": ["smartphone", "apple", "iPhone", "mobile"],
+      "origin": "USA"
+    },
+    {
+      "id": "product52",
+      "name": "Samsung Galaxy S22",
+      "description": "Smartphone haut de gamme avec un écran dynamique, une caméra performante et une interface utilisateur intuitive.",
+      "category": "Electronics",
+      "tags": ["smartphone", "samsung", "android", "mobile"],
+      "origin": "South Korea"
+    },
+    {
+      "id": "product53",
+      "name": "Dell XPS 13",
+      "description": "Ultrabook élégant et performant, idéal pour le travail et la mobilité.",
+      "category": "Electronics",
+      "tags": ["laptop", "dell", "ultrabook", "computing"],
+      "origin": "USA"
+    },
+    {
+      "id": "product54",
+      "name": "HP Spectre x360",
+      "description": "Ordinateur portable convertible offrant puissance et polyvalence pour un usage professionnel.",
+      "category": "Electronics",
+      "tags": ["laptop", "hp", "convertible", "ultrabook"],
+      "origin": "USA"
+    },
+    {
+      "id": "product55",
+      "name": "Sony PlayStation 5",
+      "description": "Console de jeu nouvelle génération avec graphismes impressionnants et performances ultra-rapides.",
+      "category": "Electronics",
+      "tags": ["gaming", "console", "sony", "playstation"],
+      "origin": "Japan"
+    },
+    {
+      "id": "product56",
+      "name": "Microsoft Xbox Series X",
+      "description": "Console de jeu puissante pour une expérience immersive en 4K avec des temps de chargement réduits.",
+      "category": "Electronics",
+      "tags": ["gaming", "console", "xbox", "microsoft"],
+      "origin": "USA"
+    },
+    {
+      "id": "product57",
+      "name": "Amazon Echo Dot",
+      "description": "Enceinte connectée compacte avec Alexa, pour un contrôle vocal intelligent de la maison.",
+      "category": "Electronics",
+      "tags": ["smart home", "amazon", "voice assistant", "iot"],
+      "origin": "USA"
+    },
+    {
+      "id": "product58",
+      "name": "Google Nest Hub",
+      "description": "Assistant intelligent avec écran tactile, parfait pour gérer votre maison connectée.",
+      "category": "Electronics",
+      "tags": ["smart home", "google", "assistant", "display"],
+      "origin": "USA"
+    },
+    {
+      "id": "product59",
+      "name": "LG OLED TV",
+      "description": "Télévision OLED offrant des noirs profonds, des couleurs éclatantes et un design ultramince.",
+      "category": "Electronics",
+      "tags": ["TV", "LG", "OLED", "home entertainment"],
+      "origin": "South Korea"
+    },
+    {
+      "id": "product60",
+      "name": "Bose QuietComfort 45",
+      "description": "Casque à réduction de bruit active offrant une qualité sonore exceptionnelle et un confort optimal.",
+      "category": "Electronics",
+      "tags": ["headphones", "bose", "wireless", "noise-cancelling"],
+      "origin": "USA"
+    },
+    {
+      "id": "product61",
+      "name": "Nike Air Max 270",
+      "description": "Chaussures de sport avec amorti maximal, alliant confort et style moderne.",
+      "category": "Fashion",
+      "tags": ["shoes", "nike", "sneakers", "athletic"],
+      "origin": "USA"
+    },
+    {
+      "id": "product62",
+      "name": "Adidas Superstar",
+      "description": "Sneakers emblématiques avec un design classique et une grande durabilité.",
+      "category": "Fashion",
+      "tags": ["shoes", "adidas", "sneakers", "casual"],
+      "origin": "USA"
+    },
+    {
+      "id": "product63",
+      "name": "Puma Suede Classic",
+      "description": "Chaussures iconiques avec un look rétro, parfaites pour un style décontracté.",
+      "category": "Fashion",
+      "tags": ["shoes", "puma", "sneakers", "casual"],
+      "origin": "Germany"
+    },
+    {
+      "id": "product64",
+      "name": "Levi’s 511 Jeans",
+      "description": "Jean moderne offrant un ajustement slim et un style intemporel.",
+      "category": "Fashion",
+      "tags": ["jeans", "levis", "denim", "casual"],
+      "origin": "USA"
+    },
+    {
+      "id": "product65",
+      "name": "Ray-Ban Wayfarer Sunglasses",
+      "description": "Lunettes de soleil classiques, alliant style et protection UV optimale.",
+      "category": "Fashion",
+      "tags": ["sunglasses", "ray-ban", "accessories", "fashion"],
+      "origin": "USA"
+    },
+    {
+      "id": "product66",
+      "name": "Gucci Marmont Bag",
+      "description": "Sac emblématique alliant luxe et élégance, parfait pour compléter un look sophistiqué.",
+      "category": "Fashion",
+      "tags": ["bag", "gucci", "luxury", "accessories"],
+      "origin": "Italy"
+    },
+    {
+      "id": "product67",
+      "name": "Prada Nylon Backpack",
+      "description": "Sac à dos moderne et fonctionnel, idéal pour les déplacements quotidiens.",
+      "category": "Fashion",
+      "tags": ["backpack", "prada", "luxury", "accessories"],
+      "origin": "Italy"
+    },
+    {
+      "id": "product68",
+      "name": "Rolex Daytona",
+      "description": "Montre de luxe emblématique, symbole de performance et d'élégance intemporelle.",
+      "category": "Fashion",
+      "tags": ["watch", "rolex", "luxury", "timepiece"],
+      "origin": "Switzerland"
+    },
+    {
+      "id": "product69",
+      "name": "Omega Seamaster",
+      "description": "Montre élégante et robuste, appréciée pour sa précision et son design intemporel.",
+      "category": "Fashion",
+      "tags": ["watch", "omega", "luxury", "timepiece"],
+      "origin": "Switzerland"
+    },
+    {
+      "id": "product70",
+      "name": "Fender Stratocaster",
+      "description": "Guitare électrique légendaire utilisée par de nombreux artistes de renommée mondiale.",
+      "category": "Electronics",
+      "tags": ["guitar", "fender", "music", "instrument"],
+      "origin": "USA"
+    },
+    {
+      "id": "product71",
+      "name": "Gibson Les Paul",
+      "description": "Guitare électrique iconique, reconnue pour son son puissant et sa qualité de fabrication.",
+      "category": "Electronics",
+      "tags": ["guitar", "gibson", "music", "instrument"],
+      "origin": "USA"
+    }
+   
   
 ]
