@@ -1,9 +1,11 @@
-import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef, OnInit } from '@angular/core';
 import * as VANTA from 'vanta/src/vanta.birds';
 import * as THREE from 'three';
 // Component
 import { SearchbarComponent } from './comp/searchbar/searchbar.component';
 import { NavbarComponent } from './comp/navbar/navbar.component';
+// Cookies
+import { CookieService } from 'ngx-cookie-service';
 
 @Component({
   selector: 'app-home',
@@ -15,13 +17,35 @@ import { NavbarComponent } from './comp/navbar/navbar.component';
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent implements AfterViewInit, OnDestroy {
+export class HomeComponent implements AfterViewInit, OnDestroy, OnInit {
   @ViewChild('vantaBackground', { static: true }) vantaRef!: ElementRef;
   
   isVantaActive: boolean = true;
   isDarkMode: boolean = false;
   isSettingsOpen: boolean = false;
   private vantaEffect: any;
+  // Test cookies
+  username: string = '';
+  token: string = '';
+
+    constructor(
+      private cookieService: CookieService,
+    ) { }
+  
+
+  ngOnInit(): void {
+    this.token = this.cookieService.get('auth_token');
+    this.username = this.cookieService.get('username');
+
+    if (this.token) {
+      console.log('User is logged in with token:', this.token);
+      console.log('Logged in as:', this.username);
+    } else {
+      console.log('No active session found.');
+    }
+  }
+
+
 
   ngAfterViewInit(): void {
     if (this.isVantaActive) {

@@ -26,26 +26,26 @@ import { ApiEuropeanCountries } from '../../../../../services/europeanCountries/
   styleUrls: ['./searchbar.component.css']
 })
 export class SearchbarComponent implements OnInit {
-  searchQuery: string = ''; // The current search query entered by the user.
-  searchResults: any[] = []; // The list of suggestions to display (limited to 5).
-  fullSearchResults: any[] = []; // The complete list of results from the API.
-  noResultsMessage: string = ''; // Message to display if no results are found.
-  selectedProduct: string = ''; // The ID of the selected product.
-  isFilterPanelOpen: boolean = false; ///< Indicates if the filter panel is open.
+  searchQuery: string = '';         // The current search query entered by the user.
+  searchResults: any[] = [];        // The list of suggestions to display (limited to 5).
+  fullSearchResults: any[] = [];    // The complete list of results from the API.
+  noResultsMessage: string = '';    // Message to display if no results are found.
+  selectedProduct: string = '';     // The ID of the selected product.
+  isFilterPanelOpen: boolean = false; // Indicates if the filter panel is open.
   // filters
   countries: string[] = [];
-  selectedCountry: string = ''; // Store the selected country
-  selectedDepartment: string = ''; // Store the department input by the user
-  categoryFilter: boolean = false; // State of the category filter.
+  selectedCountry: string = '';     // Store the selected country
+  selectedDepartment: string = '';  // Store the department input by the user
+  categoryFilter: boolean = false;  // State of the category filter.
   selectedCategory: string = '';
-  categories: any[] = [];   // Contains all the categories name
-  brandFilter: boolean = false // State of the brand filter
+  categories: any[] = [];           // Contains all the categories name
+  brandFilter: boolean = false      // State of the brand filter
   selectedBrand: string = '';
-  brands: any[] = [] // Contains all the brands
+  brands: any[] = []                // Contains all the brands
   // Price filter
-  priceFilter: boolean = false; // State of the third filter.
-  minPrice: number = 0;          // Min price selected by the user
-  maxPrice: number = 5000;       // Max price selected by the user
+  priceFilter: boolean = false;     // State of the third filter.
+  minPrice: number = 0;             // Min price selected by the user
+  maxPrice: number = 5000;          // Max price selected by the user
   // Save the filters
   appliedFilters: any = {};
   // Range boundaries for price filter

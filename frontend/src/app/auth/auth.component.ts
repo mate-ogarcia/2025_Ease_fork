@@ -7,22 +7,27 @@
  * and form submission handling.
  */
 
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AuthService } from '../../services/auth/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as bcrypt from 'bcryptjs';
+// Cookies
+import { CookieService } from 'ngx-cookie-service';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css'],
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, 
+    FormsModule,
+  ],
   providers: []
 })
-export class AuthComponent implements AfterViewInit {
+export class AuthComponent implements AfterViewInit, OnInit {
   isLoginMode: boolean = true;
   isDarkMode: boolean = false;
   showPassword: boolean = false;
@@ -35,6 +40,7 @@ export class AuthComponent implements AfterViewInit {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private cookieService: CookieService,
   ) { }
 
   @ViewChild('usernameInput', { static: false }) usernameInput!: ElementRef;
@@ -49,6 +55,10 @@ export class AuthComponent implements AfterViewInit {
    */
   ngAfterViewInit() {
     this.setupFocusBlurListeners();
+  }
+
+  ngOnInit(): void {
+
   }
 
   /**
@@ -135,6 +145,21 @@ export class AuthComponent implements AfterViewInit {
         next: (response) => {
           console.log("Server response:", response);
           window.alert("Connect successfully");
+
+          // Store the token and some user's informations into the cookies
+          // TODO
+          this.cookieService.set('auth_token', response.access_token, { expires: 1, secure: true, sameSite: 'Strict' });
+          this.cookieService.set('username', JSON.stringify(this.username), { expires: 1, secure: true, sameSite: 'Strict' });
+
+          // TODO : Test cookies
+          const token = this.cookieService.get('auth_token');
+          const username = this.cookieService.get('username');
+          if (token && username) {
+            console.log('Token:', token);
+            console.log('User Info:', username);
+          }
+
+          
           this.router.navigate(['/home']);
         },
         error: (err) => {
