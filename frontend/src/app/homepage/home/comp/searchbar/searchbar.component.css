@@ -1,119 +1,68 @@
-/* Styles généraux */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  .container{
   width: 100%;
-  height: 100vh;
-  padding: 10px;
-  gap: 20px;
-}
-.app-navbar{
-  width: 100%;
-  z-index: 10000;
-}
-/* Gestion du titre */
-.title {
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  height: 50%;
-  width: 80%; /* Rend plus adaptable sur petits écrans */
-  max-width: 600px; /* Évite qu'il devienne trop large */
-  gap: 0;
-  text-align: center;
-  z-index: 1;
-}
-
-/* Gestion du texte */
-h1 {
-  font-size: 3rem; /* Taille fixe pour que le texte reste identique */
-  font-weight: bold;
-  text-align: center;
-  color: #ffffff;
-  line-height: 1.2; /* Ajuste l'espacement entre les lignes */
-  word-wrap: break-word; /* Permet de couper le texte si nécessaire */
-  max-width: 800px; /* Évite que le texte s'étale trop */
-  margin: 0 auto;
-}
-
-h5 {
-  font-size: 1.5rem; /* Taille plus petite pour le sous-titre */
-  text-align: center;
-  color: #ffffff;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-/* Lorsque les suggestions sont affichées, enlever le border-radius bas */
-.search-container.has-suggestions {
-  border-radius: 20px 20px 0 0;
-}
-
-/* Ajuster aussi l'input */
-.search-container.has-suggestions input {
-  border-radius: 20px 20px 0 0;
-}
-
-
-/* Réduction de la taille pour les écrans très petits */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2.5em; /* Taille plus adaptée aux mobiles */
-  }
-  
-  h5 {
-    font-size: 1.2em;
-  }
-}
-
-/* Pour les très petits écrans */
-@media (max-width: 480px) {
-  h1 {
-    font-size: 2em;
-  }
-  
-  h5 {
-    font-size: 1em;
-  }
+  gap: 10px;
 }
 
 .search-container {
   position: relative;
-  width: 70%; /* Taille de la barre */
-  background: white; /* Fond blanc de la barre */
-  border-radius: 40px; /* Coins arrondis de la barre */
-  padding: 8px;
+  width: 70%;
+  height: 100%;
+  background: white;
+  border-radius: 40px;
   z-index: 10;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optionnel : légère ombre */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
 }
 
+.search-container.has-suggestions {
+  border-radius: 20px 20px 0 0;
+}
 
-/* Input de recherche */
+.search-container.has-suggestions input {
+  border-radius: 20px 20px 0 0;
+}
+
 .search-container input {
   border: none;
   outline: none;
   flex: 1;
   width: 100%;
+  height: 100%;
   font-size: 16px;
-  padding: 8px;
-  border-radius: 20px;
+  padding: 15px;
+  border-radius: 25px;
 }
 
-/* Bouton de recherche */
-.search-container button {
+.search-btn {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 18px;
   color: #13172e;
-  position: absolute;
-  right: 15px;
-  top: 12px;
+  margin-left: 8px;
 }
 
-/* Suggestions */
+.filter-btn, .add-btn {
+  border: none;
+  border-left: 1px solid rgb(64, 60, 60);
+  margin-left: 10px;
+  color: black;
+  background-color: transparent;
+  padding: 6px 12px;
+  width: auto;
+  display: flex;
+  align-items: center; /* Centrer l'icône verticalement */
+  justify-content: center;
+  height: 65%; /* Assurez-vous qu'il prend la hauteur de son parent */
+  cursor: pointer;
+}
+
+
 .suggestions {
   width: 100%;
   background: white;
@@ -130,7 +79,6 @@ h5 {
   max-height: 20vh;
 }
 
-/* Affichage dynamique des suggestions */
 .suggestions.show {
   display: block;
 }
@@ -150,33 +98,76 @@ h5 {
 .suggestions ul li:hover {
   background: #f4f4f4;
 }
-/* Style général de la scrollbar */
+
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px; /* Largeur de la scrollbar */
-  height: 6px; /* Hauteur pour le scroll horizontal */
+  width: 6px;
+  height: 6px;
 }
 
-/* Style du "thumb" (la partie défilable) */
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.3); /* Couleur grise avec transparence */
-  border-radius: 10px; /* Arrondi */
+  background: rgba(100, 100, 100, 0.3);
+  border-radius: 10px;
   transition: background 0.3s ease-in-out;
 }
 
-/* Changement de couleur au survol */
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 100, 100, 0.5);
 }
 
-/* Couleur de fond de la scrollbar */
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05); /* Très léger gris */
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 10px;
 }
 
-/* Style spécifique pour Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 100, 100, 0.3) rgba(0, 0, 0, 0.05);
 }
 
+/* Panneau latéral des filtres */
+.filter-panel {
+  position: fixed;
+  right: -300px;
+  top: 0;
+  width: 300px;
+  height: 100%;
+  background: white;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: right 0.3s ease-in-out;
+  z-index: 100;
+}
+
+.filter-panel.open {
+  right: 0;
+}
+
+.filter-panel h3 {
+  margin-top: 0;
+}
+
+.close-btn {
+  background: red;
+  color: white;
+  padding: 6px;
+  border-radius: 50%;
+  float: right;
+  cursor: pointer;
+}
+
+.filter-panel label {
+  display: block;
+  margin: 10px 0;
+}
+
+.filter-panel button {
+  background: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}

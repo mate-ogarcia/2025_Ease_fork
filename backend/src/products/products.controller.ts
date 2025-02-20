@@ -19,7 +19,7 @@ import { ProductsService } from "./products.service";
 
 @Controller("products")
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   /**
    * @brief Selects a product based on the provided product ID.
@@ -78,4 +78,30 @@ export class ProductsController {
       throw new InternalServerErrorException("Error retrieving all products.");
     }
   }
+
+
+  /**
+   * @brief Handles the POST request to fetch products based on filters.
+   * 
+   * This endpoint accepts a POST request containing filter criteria in the request body,
+   * then calls the `getFilteredProducts` method from the `productsService` to retrieve 
+   * products that match the provided filters. If an error occurs during this process,
+   * an error response is thrown with a message indicating the failure.
+   * 
+   * @param filters The filter criteria used to retrieve the products. This object contains various properties such as category, price range, etc.
+   * 
+   * @returns {Promise<any>} A promise that resolves to the list of filtered products retrieved from the database.
+   * 
+   * @throws {InternalServerErrorException} If an error occurs during the retrieval of filtered products, an InternalServerErrorException is thrown.
+   */
+  @Post("filteredProducts")
+  async getFilteredProducts(@Body() filters: any) {
+    try {
+      return await this.productsService.getFilteredProducts(filters);
+    } catch (error) {
+      console.error("❌ Error retrieving filtered products:", error);
+      throw new InternalServerErrorException("Error retrieving filtered products.");
+    }
+  }
+
 }

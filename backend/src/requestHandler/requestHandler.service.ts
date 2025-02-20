@@ -2,18 +2,8 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 
 @Injectable()
-export class RequestHandler implements OnModuleInit {
+export class RequestHandler {
   constructor(private readonly databaseService: DatabaseService) {}
-
-  /**
-   * @brief Called when the module is initialized.
-   * You can use this method to perform any setup or initialization tasks.
-   */
-  async onModuleInit() {
-    // TODO ? IDK if needed
-    console.log("RequestHandler module initialized.");
-  }
-
   /**
    * @brief Processes a search query
    *
@@ -32,10 +22,7 @@ export class RequestHandler implements OnModuleInit {
 
     try {
       // Call the searchQuery method from the database service
-      const searchResults = await this.databaseService.searchQuery(
-        "ProductsBDD",
-        searchQuery
-      );
+      const searchResults = await this.databaseService.searchQuery(searchQuery);
 
       // Log or return the search results as needed
       console.log(

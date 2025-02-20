@@ -1,17 +1,35 @@
-<nav class="navbar">
-  <div class="logo" routerLink="/home"><img class="easelogo" src="vrailogo.png" alt=""></div>
-  <ul [class.active]="menuOpen">
-    <li><a routerLink="/home">Accueil</a></li>
-    <li><a routerLink="/category">Catégories</a></li>
-    <li><a routerLink="/service">Services</a></li>
-    <li><a routerLink="/contact">Contact</a></li>
-    <li class="user">
-      <img class="userprofile" src="rhinoceros.png" alt="">
-    </li>
-  </ul>
-  <div class="menu-toggle" (click)="toggleMenu()">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
-</nav>
+  <nav class="navbar">
+    <div class="logo" routerLink="/home">
+      <img class="easelogo" src="vrailogo.png" alt="">
+    </div>
+
+    <ul [class.active]="menuOpen">
+      <li><a routerLink="/home">Accueil</a></li>
+      <li><a routerLink="/category">Catégories</a></li>
+      <li><a routerLink="/contact">Contact</a></li>
+
+      <li class="user">
+        <div class="log-container">
+          <ng-container class="log-info" *ngIf="isAuthenticated; else loginTemplate">
+            <!--Image de profil qui ouvre le menu déroulant -->
+            <img class="userprofile" src="rhinoceros.png" alt="Profile" (click)="toggleDropdown()">
+            <!-- Menu déroulant -->
+            <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
+              <span routerLink="/user-profile" class="profile-btn">Profile</span>            
+              <span (click)="logout()" class="logout-btn">Log out</span>
+            </div>
+          </ng-container>
+
+          <ng-template #loginTemplate>
+            <a routerLink="/login" class="login-btn">Login</a>
+          </ng-template>
+        </div>
+      </li>
+    </ul>
+
+    <div class="menu-toggle" (click)="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>

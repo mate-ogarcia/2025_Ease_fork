@@ -19,9 +19,11 @@ export class ApiService {
   private _backendUrl = environment.backendUrl;
   private _searchUrl = environment.searchUrl;
   private _productsUrl = environment.productsURL;
+  private _dbUrl = environment.databaseBackendURL;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
+  // ======================== GET
   /**
    * @brief Retrieves data from the backend using an HTTP GET request.
    *
@@ -32,64 +34,6 @@ export class ApiService {
    */
   getData(): Observable<any[]> {
     return this.http.get<any[]>(this._backendUrl);
-  }
-
-  /**
-   * @brief Performs a product search on the backend using an HTTP GET request.
-   *
-   * @param {string} query - The search term entered by the user.
-   * @returns {Observable<any[]>} An `Observable` containing the search results.
-   */
-  searchProducts(query: string): Observable<any[]> {
-    console.log('🔹 Sending search request:', `${this._searchUrl}?q=${query}`);
-
-    return this.http.get<any[]>(`${this._searchUrl}?q=${query}`).pipe(
-      tap((response) => console.log('🔹 API Response:', response)), // <== Ajout du log pour voir la réponse
-      catchError((error) => {
-        console.error('❌ Search API Error:', error);
-        return throwError(
-          () => new Error("Erreur API : Impossible d'effectuer la recherche.")
-        );
-      })
-    );
-  }
-
-  /**
-   * @brief Sends data to the backend using an HTTP POST request.
-   *
-   * This method sends a `payload` to the backend (`POST /data`). It returns
-   * an `Observable` containing the server response.
-   *
-   * @param {any} payload - The data to be sent to the backend.
-   * @returns {Observable<any>} An `Observable` containing the server response.
-   */
-  sendData(payload: any): Observable<any> {
-    return this.http.post<any>(this._backendUrl, payload);
-  }
-
-  /**
-   * @brief Sends search data to the backend via an HTTP POST request.
-   *
-   * This method sends a `payload` to the backend search endpoint (`POST`).
-   * It returns an `Observable` containing the server response.
-   *
-   * @param {any} payload - The search data to send to the backend.
-   * @returns {Observable<any>} An `Observable` containing the server response.
-   */
-  sendSearchData(payload: any): Observable<any> {
-    return this.http.post<any>(this._searchUrl, payload);
-  }
-
-  /**
-   * @brief Sends a selected product ID to the backend via an HTTP POST request.
-   *
-   * This method posts the selected product's ID to the backend for processing.
-   *
-   * @param {object} data - The object containing the product ID.
-   * @returns {Observable<any>} An `Observable` containing the server response.
-   */
-  postProductSelection(data: { productId: string }) {
-    return this.http.post(`${this._productsUrl}/select`, data);
   }
 
   /**
@@ -132,4 +76,109 @@ export class ApiService {
         })
       );
   }
+
+  /**
+   * @function getAllCategories
+   * @description
+   * This method sends an HTTP GET request to the backend to retrieve all category names from the database.
+   * It returns an observable that will emit an array of category names when the request is successful.
+   * 
+   * @returns {Observable<any[]>} An observable that emits an array of category names.
+   */
+  getAllCategories(): Observable<any> {
+    return this.http.get<any[]>(`${this._dbUrl}/categName`);
+  }
+
+  getAllBrands(): Observable<any> {
+    return this.http.get<any[]>(`${this._dbUrl}/brandName`);
+  }
+
+  /**
+   * @brief Performs a product search on the backend using an HTTP GET request.
+   *
+   * @param {string} query - The search term entered by the user.
+   * @returns {Observable<any[]>} An `Observable` containing the search results.
+   */
+  searchProducts(query: string): Observable<any[]> {
+    console.log('🔹 Sending search request:', `${this._searchUrl}?q=${query}`);
+
+    return this.http.get<any[]>(`${this._searchUrl}?q=${query}`).pipe(
+      tap((response) => console.log('🔹 API Response:', response)),
+      catchError((error) => {
+        console.error('❌ Search API Error:', error);
+        return throwError(
+          () => new Error("Erreur API : Impossible d'effectuer la recherche.")
+        );
+      })
+    );
+  }
+  // ======================== SEND/POST
+
+  /**
+   * @brief Sends data to the backend using an HTTP POST request.
+   *
+   * This method sends a `payload` to the backend (`POST /data`). It returns
+   * an `Observable` containing the server response.
+   *
+   * @param {any} payload - The data to be sent to the backend.
+   * @returns {Observable<any>} An `Observable` containing the server response.
+   */
+  sendData(payload: any): Observable<any> {
+    return this.http.post<any>(this._backendUrl, payload);
+  }
+
+  /**
+   * @brief Sends search data to the backend via an HTTP POST request.
+   *
+   * This method sends a `payload` to the backend search endpoint (`POST`).
+   * It returns an `Observable` containing the server response.
+   *
+   * @param {any} payload - The search data to send to the backend.
+   * @returns {Observable<any>} An `Observable` containing the server response.
+   */
+  sendSearchData(payload: any): Observable<any> {
+    return this.http.post<any>(this._searchUrl, payload);
+  }
+
+  /**
+   * @brief Sends a selected product ID to the backend via an HTTP POST request.
+   *
+   * This method posts the selected product's ID to the backend for processing.
+   *
+   * @param {object} data - The object containing the product ID.
+   * @returns {Observable<any>} An `Observable` containing the server response.
+   */
+  postProductSelection(data: { productId: string }) {
+    return this.http.post(`${this._productsUrl}/select`, data);
+  }
+
+  /**
+   * @brief Sends a POST request to fetch products based on the provided filters.
+   * 
+   * This method sends a request to the server to retrieve a list of products based on the filter parameters.
+   * It takes the filter criteria as input, sends a POST request to the backend API, and returns the response as an Observable.
+   * If an error occurs during the request, it logs the error and throws a new error with a descriptive message.
+   * 
+   * @param filters The filter criteria for fetching products. This can include various parameters such as category, price, etc.
+   * 
+   * @returns {Observable<any>} An Observable that emits the response from the server, which should contain the filtered products.
+   * 
+   * @throws {Error} If there is an issue with the API request, an error is thrown with a message indicating the failure.
+   */
+  postProductsWithFilters(filters: any): Observable<any> {
+    return this.http
+      .post<any[]>(`${this._productsUrl}/filteredProducts`, filters)
+      .pipe(
+        catchError((error) => {
+          console.error('❌ API Error:', error);
+          return throwError(
+            () =>
+              new Error(
+                'API error: Unable to retrieve filtered products.'
+              )
+          );
+        })
+      );
+  }
+
 }

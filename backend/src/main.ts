@@ -15,8 +15,10 @@ import { DatabaseService } from "./database/database.service";
 import * as winston from "winston";
 import { WinstonModule } from "nest-winston";
 import * as cookieParser from "cookie-parser";
-import csurf from "csurf"; // ✅ Import correct
-import helmet from "helmet"; // ✅ Import correct
+// import csurf from "csurf";
+const csurf = require("csurf");
+
+import helmet from "helmet";
 
 async function bootstrap() {
   const logger = WinstonModule.createLogger({
@@ -59,6 +61,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // ✅ Protection CSRF (empêche les attaques sur les requêtes POST, PUT, DELETE)
+
   app.use(
     csurf({
       cookie: {

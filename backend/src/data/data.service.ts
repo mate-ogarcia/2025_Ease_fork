@@ -25,7 +25,7 @@ export class DataService {
    * Ensures that duplicate products are not inserted.
    */
   async insertProductsToDatabase() {
-    const collection = await this.databaseService.getCollection("ProductsBDD");
+    const collection = await this.databaseService.getProductsCollection();
 
     try {
       // Determine environment and construct file path
@@ -44,12 +44,12 @@ export class DataService {
             .get(product.id)
             .catch(() => null);
           if (existingProduct) {
-            console.log(`Product already exists, skipping: ${product.id}`);
+            // console.log(`Product already exists, skipping: ${product.id}`);
             continue;
           }
 
           await collection.upsert(product.id, product);
-          console.log(`Product added or updated: ${product.id}`);
+          // console.log(`Product added or updated: ${product.id}`);
         } catch (error) {
           console.error(`Error inserting product ${product.id}:`, error);
         }

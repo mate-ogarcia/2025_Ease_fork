@@ -22,7 +22,7 @@ export class AppService {
    * @returns {Promise<any[]>} A promise containing the transformed data.
    */
   async getData(): Promise<any[]> {
-    const rawData = await this.dbService.getAllData("ProductsBDD");
+    const rawData = await this.dbService.getAllProductsData();
 
     const transformedData = rawData.map((item) => {
       // Accéder aux données imbriquées

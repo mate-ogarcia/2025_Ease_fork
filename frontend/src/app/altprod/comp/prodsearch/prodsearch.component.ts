@@ -9,10 +9,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 // API service
 import { ApiService } from '../../../../services/api.service';
-import { HttpClient } from '@angular/common/http';
+import { ApiEuropeanCountries } from '../../../../services/europeanCountries/api.europeanCountries';
 
 @Component({
   selector: 'app-prodsearch',
@@ -21,19 +21,30 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './prodsearch.component.css'
 })
 export class ProdsearchComponent implements OnInit {
+  /** @brief Product ID retrieved from the route parameters. */
   productId: string = '';
-  productDetails: any = null;
-  europeanCountries: string[] = []; // Liste des pays européens
-  isEuropean: boolean = true; // Indicateur si le produit est européen
 
-  constructor(private route: ActivatedRoute, private apiService: ApiService, private http: HttpClient) {}
+  /** @brief Stores the product details fetched from the API. */
+  productDetails: any = null;
+  isEuropean: boolean = false;
 
   /**
-   * Lifecycle method called on component initialization.
-   * Retrieves the product ID from the route and fetches product details from the API.
+   * @brief Constructor initializes route, API service, and HTTP client.
+   * @param route ActivatedRoute for retrieving route parameters.
+   * @param apiService Service for fetching product details.
+   * @param apicountries Service for fetching products origin
+   * @param http HttpClient for making API requests.
+   */
+  constructor(private route: ActivatedRoute, private apiService: ApiService, private apicountries: ApiEuropeanCountries , private http: HttpClient) {}
+
+  /**
+   * @brief Lifecycle hook that runs on component initialization.
+   * 
+   * Retrieves the product ID from the route parameters and fetches product details.
+   * Also loads the list of European countries.
    */
   ngOnInit() {
-    this.fetchEuropeanCountries(); // Charger les pays européens
+    this.apicountries.fetchEuropeanCountries // Load European countries
 
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
@@ -44,7 +55,7 @@ export class ProdsearchComponent implements OnInit {
           next: (data) => {
             this.productDetails = data;
             console.log("✅ Product retrieved: (prodSearch)", this.productDetails);
-            this.checkIfEuropean(this.productDetails.origin);
+            this.isEuropean = this.apicountries.checkIfEuropean(this.productDetails.origin);  // Check if the country is european to put the color (green is european, red if not)
           },
           error: (error) => console.error("❌ Error retrieving product:", error)
         });
@@ -53,31 +64,11 @@ export class ProdsearchComponent implements OnInit {
   }
 
   /**
-   * Fetch the list of European countries from the API.
+   * @brief Returns the CSS class based on the product rating.
+   * 
+   * @param rating Product rating (from 1 to 5).
+   * @return CSS class name: "high", "medium", or "low".
    */
-  async fetchEuropeanCountries() {
-    try {
-      const response = await firstValueFrom(
-        this.http.get<any[]>('https://restcountries.com/v3.1/region/europe')
-      );
-      this.europeanCountries = response.map(country => country.name.common);
-      console.log("🔹 European countries loaded:", this.europeanCountries);
-    } catch (error) {
-      console.error("❌ Error fetching European countries:", error);
-    }
-  }
-
-  /**
-   * Check if the product's origin is in the list of European countries.
-   * @param origin - The country of origin of the product.
-   */
-  checkIfEuropean(origin: string) {
-    if (!origin) {
-      this.isEuropean = false;
-      return;
-    }
-    this.isEuropean = this.europeanCountries.includes(origin);
-  }
   getRatingClass(rating: number): string {
     if (rating >= 4) {
       return 'high';
@@ -87,5 +78,4 @@ export class ProdsearchComponent implements OnInit {
       return 'low';
     }
   }
-    
 }

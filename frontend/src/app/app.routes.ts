@@ -18,26 +18,35 @@ export const routes: Routes = [
       import('./category/category.component').then((m) => m.CategoryComponent),
   },
   {
-    path: 'data-display',
+    path: 'user-profile',
     loadComponent: () =>
-      import('./data-display/data-display.component').then(
-        (m) => m.DataDisplayComponent
-      ),
+      import('./userprofile/userprofile.component').then((m) => m.UserprofileComponent),
   },
+  {
+    path: 'add-product',
+    loadComponent: () =>
+      import('./addproduct/addproduct.component').then((m) => m.AddproductComponent),
+  },
+  {
+    path: 'searched-prod',
+    loadComponent: () =>
+      import('./searched-prod/searched-prod.component').then(
+        (m) => m.SearchedProdComponent
+      ),
+  },  
   {
     path: 'login',
     loadComponent: () =>
       import('./auth/auth.component').then((m) => m.AuthComponent),
   },
-  // {
-  //   path: 'service',
-  //   loadComponent: () =>
-  //     import('./service-page/service-page.component').then((m) => m.ServicePageComponent),
-  // },
   {
     path: 'contact',
     loadComponent: () =>
       import('./contact/contact.component').then((m) => m.ContactComponent),
+  },
+  {
+    path: 'product-page/:id',
+    loadComponent: () => import('./prodpage/prodpage.component').then(m => m.ProdpageComponent)
   },
   {
     path: '',

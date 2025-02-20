@@ -1,10 +1,6 @@
 /**
  * @file auth.controller.ts
  * @brief Controller for handling authentication requests.
- *
- * This controller provides endpoints for user authentication,
- * including registration, login, retrieving the authenticated user's profile, and logout.
- * It interacts with the AuthService to perform authentication operations.
  */
 
 import {
@@ -16,96 +12,89 @@ import {
   Req,
   Res,
   HttpStatus,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./auth.guard";
 import { RegisterDto, LoginDto } from "./dto/auth.dto";
 import { Response } from "express";
+import { Roles } from "../roles/roles.decorator";
+import { RolesGuard } from "../roles/roles.guard";
+import { Role } from "../roles/roles.enum";
 
 @Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  /**
-   * @brief Registers a new user.
-   *
-   * This endpoint allows a user to create an account by providing an email and password.
-   * The password is securely hashed before being stored in the database.
-   *
-   * @param {RegisterDto} body - The request body containing user credentials.
-   * @returns {Promise<any>} - The created user object.
-   * @throws {UnauthorizedException} If the user already exists.
-   * @throws {InternalServerErrorException} If an error occurs during registration.
-   */
   @Post("register")
-  async register(@Body() body: RegisterDto) {
-    return this.authService.register(body.email, body.password);
+  async register(@Body() body: RegisterDto): Promise<any> {
+    return this.authService.register(body.username, body.email, body.password);
   }
 
-  /**
-   * @brief Logs in a user.
-   *
-   * This endpoint authenticates a user by verifying their email and password.
-   * If authentication is successful, access and refresh tokens are stored in secure HTTP-only cookies.
-   *
-   * @param {LoginDto} body - The request body containing user credentials.
-   * @param {Response} res - The response object used to set HTTP-only cookies.
-   * @returns {Promise<Response>} A success message if authentication is successful.
-   * @throws {UnauthorizedException} If credentials are invalid.
-   */
   @Post("login")
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response
-  ): Promise<Response> {
-    try {
-      const tokens = await this.authService.login(body.email, body.password);
+  ): Promise<{ message: string }> {
+    const { access_token, refresh_token } = await this.authService.login(
+      body.email,
+      body.password
+    );
 
-      // Store the access token in a secure HTTP-only cookie
-      res.cookie("auth_token", tokens.access_token, {
-        httpOnly: true, // Prevent JavaScript access (protection against XSS)
-        secure: process.env.NODE_ENV === "production", // Enable HTTPS in production
-        sameSite: "strict", // Prevent CSRF attacks
-        maxAge: 24 * 60 * 60 * 1000, // Expires in 24 hours
-      });
+    res.cookie("accessToken", access_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 3600_000, // 1h
+    });
 
-      return res.status(HttpStatus.OK).json({ message: "Login successful" });
-    } catch (error) {
-      console.error("❌ Login error:", error);
-      return res
-        .status(HttpStatus.UNAUTHORIZED)
-        .json({ message: "Invalid credentials" });
-    }
+    res.cookie("refreshToken", refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 604800_000, // 7d
+    });
+
+    return { message: "Logged in successfully" };
   }
 
-  /**
-   * @brief Retrieves the authenticated user's profile.
-   *
-   * This endpoint is protected and requires a valid JWT token stored in an HTTP-only cookie.
-   * It returns the currently authenticated user's details.
-   *
-   * @param {Request} req - The request object containing the authenticated user details.
-   * @returns {Promise<any>} - The authenticated user's profile information.
-   * @throws {UnauthorizedException} If the user is not authenticated.
-   */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Get("profile")
-  async getProfile(@Req() req) {
+  async getProfile(@Req() req): Promise<any> {
     return req.user;
   }
 
-  /**
-   * @brief Logs out the user by clearing authentication cookies.
-   *
-   * This endpoint removes the authentication cookies, effectively logging out the user.
-   *
-   * @param {Response} res - The response object used to clear authentication cookies.
-   * @returns {Promise<Response>} A success message indicating logout completion.
-   */
+  @Get("refresh")
+  async refresh(@Res({ passthrough: true }) res: Response) {
+    const refreshToken = res.req.cookies?.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException("No refresh token found");
+    }
+    const newAccessToken =
+      await this.authService.refreshAccessToken(refreshToken);
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 3600_000,
+    });
+
+    return { message: "Access token refreshed" };
+  }
+
   @Post("logout")
   async logout(@Res({ passthrough: true }) res: Response): Promise<Response> {
-    res.clearCookie("auth_token");
-    res.clearCookie("refresh_token");
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
     return res.status(HttpStatus.OK).json({ message: "Logout successful" });
+  }
+
+  // Ex. route protégée par un rôle
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get("adminOnly")
+  adminOnlyEndpoint() {
+    return { secret: "Admin only data" };
   }
 }

@@ -1,15 +1,18 @@
+/* Main container styling */
 .container {
     width: 100%;
     height: 80vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #ffffff;
+    background-color: #E3F0CE;
     justify-content: center;
     border-radius: 40px;
     padding: 20px;
-    border: 4px solid #36de1c;
+    border: 3px solid #36de1c;
 }
+
+/* Container for product items */
 .prod-container {
     display: flex;
     flex-direction: column;
@@ -19,7 +22,9 @@
     width: 100%;
     height: 100%;
 }
-.product-details{
+
+/* Product details layout */
+.product-details {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -27,41 +32,60 @@
     width: 100%;
 }
 
-.product-rating{
+/* Aligns product rating to the right */
+.product-rating {
     width: 100%;
     display: flex; 
-    justify-content: flex-end
+    justify-content: flex-end;
 }
 
+/* Styling for non-European products */
 .non-european {
-    border: 2px solid red;
+    border: 3px solid red;
     width: 100%;
     height: 80vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #ffffff;
+    background-color: #EDB4B4;
     justify-content: center;
     border-radius: 40px;
     padding: 20px;
-  }
-.img-container{
+}
+
+/* Centering image inside its container */
+.img-container {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     height: 50%;
 }
-.product-info{
+
+/* Layout for product information */
+.product-info {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     gap: 10px;
     width: 100%;
-  }
-.origin{
+}
+
+/* Styling for product name */
+.product-name {
+    font-weight: 900;
+}
+
+/* Layout for origin information */
+.origin {
     display: flex;
     flex-direction: row;
     width: 100%;
 }
-  
+
+/* Responsive styling for smaller screens */
+@media (max-width:500px) {
+    .container {
+        height: 50vh;
+    }
+}

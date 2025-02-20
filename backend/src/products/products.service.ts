@@ -1,141 +1,139 @@
 /**
  * @file products.service.ts
  * @brief Service for managing product-related operations.
- *
+ * 
  * This service handles product selection, retrieval, and alternative product suggestions.
  * It interacts with the database service to fetch product details and apply search criteria.
  * The service is initialized with `onModuleInit` and provides multiple methods for data retrieval.
- *
+ * 
  * @module ProductsService
  */
 
-import {
-  Injectable,
-  OnModuleInit,
-  NotFoundException,
-  InternalServerErrorException,
-} from "@nestjs/common";
+import { Injectable, OnModuleInit, NotFoundException, InternalServerErrorException } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 
 @Injectable()
 export class ProductsService implements OnModuleInit {
-  constructor(private readonly databaseService: DatabaseService) {}
+    constructor(private readonly databaseService: DatabaseService) { }
 
-  /**
-   * @brief Called when the module is initialized.
-   */
-  async onModuleInit() {
-    console.log("✅ ProductsService module initialized.");
-  }
-
-  /**
-   * @brief Selects a product based on its ID.
-   */
-  async selectProduct(productId: string) {
-    try {
-      console.log("🔹 Fetching product ID:", productId);
-      const product = await this.databaseService.getDocumentById(
-        "ProductsBDD",
-        productId
-      );
-
-      if (!product) {
-        throw new NotFoundException(
-          `⚠️ Product with ID "${productId}" not found.`
-        );
-      }
-
-      return { success: true, product };
-    } catch (error) {
-      console.error("❌ Error selecting product:", error);
-      throw new InternalServerErrorException("Error selecting product.");
+    /**
+     * @brief Called when the module is initialized.
+     */
+    async onModuleInit() {
+        console.log("✅ ProductsService module initialized.");
     }
-  }
 
-  /**
-   * @brief Retrieves alternative European products based on the selected product's attributes.
-   *
-   * This method fetches a product by its ID and extracts key attributes (category, tags, and brand)
-   * to search for alternative products within the same category and with similar characteristics.
-   * It ensures that alternatives are filtered dynamically based on available product details.
-   *
-   * @param {string} productId - The ID of the selected product for which alternatives are searched.
-   * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
-   * @throws {NotFoundException} If the selected product does not exist.
-   * @throws {InternalServerErrorException} If an error occurs during the retrieval process.
-   */
-  async getAlternativeProducts(productId: string): Promise<any[]> {
-    try {
-      const selectedProduct = await this.databaseService.getDocumentById(
-        "ProductsBDD",
-        productId
-      );
+    /**
+     * @brief Selects a product based on its ID.
+     */
+    async selectProduct(productId: string) {
+        try {
+            console.log("🔹 Fetching product ID:", productId);
+            const product = await this.databaseService.getProductById(productId);
 
-      if (!selectedProduct) {
-        throw new NotFoundException(
-          `⚠️ Product with ID "${productId}" not found.`
-        );
-      }
+            if (!product) {
+                throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
+            }
 
-      // Extract search criteria from the selected product
-      const searchCriteria = Object.fromEntries(
-        Object.entries({
-          category: selectedProduct.category,
-          tags: selectedProduct.tags,
-          brand: selectedProduct.brand,
-        }).filter(([_, value]) => value !== null && value !== undefined)
-      );
-
-      console.log("🔍 Search criteria:", searchCriteria);
-
-      // Retrieve alternative products based on the extracted criteria
-      const alternatives = await this.databaseService.getAlternativeProducts(
-        "ProductsBDD",
-        searchCriteria
-      );
-
-      return alternatives;
-    } catch (error) {
-      console.error("❌ Error retrieving alternative products:", error);
-      throw new InternalServerErrorException(
-        "Error retrieving alternative products."
-      );
+            return { success: true, product };
+        } catch (error) {
+            console.error("❌ Error selecting product:", error);
+            throw new InternalServerErrorException("Error selecting product.");
+        }
     }
-  }
 
-  /**
-   * @brief Retrieves a product by its ID.
-   */
-  async getProductById(productId: string) {
-    try {
-      console.log(`🔹 Attempting to retrieve product with ID: ${productId}`);
-      const product = await this.databaseService.getDocumentById(
-        "ProductsBDD",
-        productId
-      );
+    /**
+     * @brief Retrieves alternative European products based on the selected product's attributes.
+     * 
+     * This method fetches a product by its ID and extracts key attributes (category, tags, and brand)
+     * to search for alternative products within the same category and with similar characteristics.
+     * It ensures that alternatives are filtered dynamically based on available product details.
+     * 
+     * @param {string} productId - The ID of the selected product for which alternatives are searched.
+     * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
+     * @throws {NotFoundException} If the selected product does not exist.
+     * @throws {InternalServerErrorException} If an error occurs during the retrieval process.
+     */
+    async getAlternativeProducts(productId: string): Promise<any[]> {
+        try {
+            const selectedProduct = await this.databaseService.getProductById(productId);
+            if (!selectedProduct) {
+                throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
+            }
 
-      if (!product) {
-        throw new NotFoundException(
-          `⚠️ Product with ID "${productId}" not found.`
-        );
-      }
+            // Extract search criteria from the selected product
+            const searchCriteria = Object.fromEntries(
+                Object.entries({
+                    searchedProductID: productId,
+                    category: selectedProduct.category,
+                    tags: selectedProduct.tags,
+                    brand: selectedProduct.brand
+                }).filter(([_, value]) => value !== null && value !== undefined)
+            );
 
-      return product;
-    } catch (error) {
-      console.error("❌ Error retrieving product:", error);
-      throw new InternalServerErrorException("Error retrieving product.");
+            // Retrieve alternative products based on the extracted criteria
+            const alternatives = await this.databaseService.getAlternativeProducts(searchCriteria);
+            return alternatives;
+        } catch (error) {
+            console.error("❌ Error retrieving alternative products:", error);
+            throw new InternalServerErrorException("Error retrieving alternative products.");
+        }
     }
-  }
 
-  /**
-   * @brief Retrieves all products from the database.
-   */
-  async getAllProducts() {
-    try {
-      return await this.databaseService.getAllData("ProductsBDD");
-    } catch (error) {
-      console.error("❌ Error retrieving all products:", error);
-      throw new InternalServerErrorException("Error retrieving all products.");
+    /**
+     * @brief Retrieves a product by its ID.
+     */
+    async getProductById(productId: string) {
+        try {
+            console.log(`🔹 Attempting to retrieve product with ID: ${productId}`);
+            const product = await this.databaseService.getProductById(productId);
+
+            if (!product) {
+                throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
+            }
+
+            return product;
+        } catch (error) {
+            console.error("❌ Error retrieving product:", error);
+            throw new InternalServerErrorException("Error retrieving product.");
+        }
     }
-  }
+
+    /**
+     * @brief Retrieves all products from the database.
+     */
+    async getAllProducts() {
+        try {
+            return await this.databaseService.getAllProductsData();
+        } catch (error) {
+            console.error("❌ Error retrieving all products:", error);
+            throw new InternalServerErrorException("Error retrieving all products.");
+        }
+    }
+
+    /**
+     * @brief Retrieves filtered products based on the provided filters.
+     * 
+     * This method accepts a filter criteria object and calls the `getProductsWithFilters` method 
+     * from the `databaseService` to fetch products that match the provided filters. If an error 
+     * occurs during the retrieval process, an `InternalServerErrorException` is thrown.
+     * 
+     * @param filters The filter criteria used to retrieve products. It can include parameters like 
+     * category, price range, and other relevant attributes.
+     * 
+     * @returns {Promise<any[]>} A promise that resolves to an array of products matching the filters.
+     * 
+     * @throws {InternalServerErrorException} If there is an error retrieving the filtered products 
+     * from the database, an exception will be thrown with an error message.
+     */
+    async getFilteredProducts(filters: any) {
+        console.log("filters from products.Service:", filters);
+        try {
+            return await this.databaseService.getProductsWithFilters(filters);
+        } catch (error) {
+            console.error("❌ Error retrieving filtered products:", error);
+            throw new InternalServerErrorException("Error retrieving filtered products.");
+        }
+    }
+
 }
