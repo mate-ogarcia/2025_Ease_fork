@@ -627,7 +627,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         throw new Error("❌ Filters are empty");
       }
 
-      const similarToProductConditions: string[] = [];
       const similarToFiltersConditions: string[] = [];
       let queryWithJoin = "";
 
