@@ -10,3 +10,6 @@
 # Local files
 /delDeps.bat
 /noteRU.txt
+
+#node_modules
+node_modules

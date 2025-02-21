@@ -8,6 +8,7 @@
       (input)="onInputChange($event)"
     />
 
+<<<<<<< HEAD
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" (click)="toggleFilterPanel()">🔍 Filter</button>
     <button
@@ -17,6 +18,12 @@
     >
       ➕ Add-product
     </button>
+=======
+    <button type="button" class="search-btn" (click)="clearSearch()">✖</button>
+    <button type="button" class="filter-btn" (click)="toggleFilterPanel()"><i class="fa-solid fa-filter"></i></button>
+    <button type="button" class="add-btn" routerLink="/add-product"><i class="fa-solid fa-square-plus"></i></button>
+      
+>>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
 
     <!-- Display search results -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
