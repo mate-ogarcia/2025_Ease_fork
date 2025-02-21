@@ -29,7 +29,6 @@ export class AuthService {
     private cookieService: CookieService,
   ) { }
 
-
   /**
    * @brief Checks if a token is stored in local storage.
    * 
@@ -67,10 +66,8 @@ export class AuthService {
     return this.http.post(`${this._authBackendUrl}/login`, { email, password }).pipe(
       map((response: any) => {
         // Store the token and some user's informations into the cookies
-        // TODO
-        this.cookieService.set('auth_token', response.access_token, { expires: 1, secure: true, sameSite: 'Strict' });
-        this.cookieService.set('email', JSON.stringify(email), { expires: 1, secure: true, sameSite: 'Strict' });
-        // localStorage.setItem('token', response.access_token);
+        this.cookieService.set('access_token', response.access_token, { expires: 1, secure: true, sameSite: 'Strict' });
+        // Redirection to the home page
         this.authStatus.next(true);
         return response;
       })
@@ -84,7 +81,9 @@ export class AuthService {
    * the authentication status, and redirects the user to the login page.
    */
   logout(): void {
-    localStorage.removeItem('token');
+    // Delete the cookies
+    this.cookieService.deleteAll();
+    // Redirection to the login page
     this.authStatus.next(false);
     this.router.navigate(['/login']);
   }

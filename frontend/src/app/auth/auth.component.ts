@@ -153,7 +153,6 @@ export class AuthComponent implements AfterViewInit {
 
     // If the user wants to create an account
     if (!this.isLoginMode) {
-
       // Call register with the hashed password
       this.authService.register(this.username, this.email, hashedPassword).subscribe({
         next: (response) => {
