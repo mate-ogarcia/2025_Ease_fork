@@ -13,8 +13,6 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as bcrypt from 'bcryptjs';
-// Cookies
-import { CookieService } from 'ngx-cookie-service';
 
 @Component({
   selector: 'app-auth',
@@ -22,12 +20,12 @@ import { CookieService } from 'ngx-cookie-service';
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css'],
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
   ],
   providers: []
 })
-export class AuthComponent implements AfterViewInit, OnInit {
+export class AuthComponent implements AfterViewInit {
   isLoginMode: boolean = true;
   isDarkMode: boolean = false;
   showPassword: boolean = false;
@@ -40,7 +38,6 @@ export class AuthComponent implements AfterViewInit, OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private cookieService: CookieService,
   ) { }
 
   @ViewChild('usernameInput', { static: false }) usernameInput!: ElementRef;
@@ -55,10 +52,6 @@ export class AuthComponent implements AfterViewInit, OnInit {
    */
   ngAfterViewInit() {
     this.setupFocusBlurListeners();
-  }
-
-  ngOnInit(): void {
-
   }
 
   /**
@@ -133,47 +126,33 @@ export class AuthComponent implements AfterViewInit, OnInit {
    * 
    * @param {any} form - The submitted form object containing user inputs.
    */
-  async onSubmit(form: any): Promise<void> { 
+  async onSubmit(form: any): Promise<void> {
     if (!form.valid) {
       this.errorMessage = 'Please fill in all fields correctly.';
       return;
-    }   
-    
+    }
+
+    // Hash the password before sending it to the server
+    const hashedPassword = await bcrypt.hash(this.password, 10);
+
     // If the user wants to log in
     if (this.isLoginMode) {
       this.authService.login(this.username, this.password).subscribe({
         next: (response) => {
           console.log("Server response:", response);
           window.alert("Connect successfully");
-
-          // Store the token and some user's informations into the cookies
-          // TODO
-          this.cookieService.set('auth_token', response.access_token, { expires: 1, secure: true, sameSite: 'Strict' });
-          this.cookieService.set('username', JSON.stringify(this.username), { expires: 1, secure: true, sameSite: 'Strict' });
-
-          // TODO : Test cookies
-          const token = this.cookieService.get('auth_token');
-          const username = this.cookieService.get('username');
-          if (token && username) {
-            console.log('Token:', token);
-            console.log('User Info:', username);
-          }
-
-          
           this.router.navigate(['/home']);
         },
         error: (err) => {
           console.log("Login error:", err);
-          window.alert('Something\'s gone wrong : Username or Password incorrect');
-
+          window.alert('Username or Password incorrect');
           this.errorMessage = 'Invalid email or password.';
         },
       });
     }
-  // If the user wants to create an account
-  if (!this.isLoginMode) {
-    // Hash the password before sending it to the server
-      const hashedPassword = await bcrypt.hash(this.password, 10);
+
+    // If the user wants to create an account
+    if (!this.isLoginMode) {
 
       // Call register with the hashed password
       this.authService.register(this.username, this.email, hashedPassword).subscribe({
