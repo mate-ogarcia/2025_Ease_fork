@@ -24,10 +24,6 @@ import * as THREE from 'three';                  // Three.js for rendering 3D gr
 import { SearchbarComponent } from './comp/searchbar/searchbar.component';
 import { NavbarComponent } from './comp/navbar/navbar.component';
 
-// Services
-import { UsersService } from '../../../services/users/users.service';
-import { CookieService } from 'ngx-cookie-service'; // For cookie management
-
 /**
  * @class HomeComponent
  * @brief Handles the home page UI, Vanta.js background animation, dark mode, and user settings.
@@ -46,7 +42,7 @@ import { CookieService } from 'ngx-cookie-service'; // For cookie management
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent implements AfterViewInit, OnDestroy, OnInit {
+export class HomeComponent implements AfterViewInit, OnDestroy {
   @ViewChild('vantaBackground', { static: true }) vantaRef!: ElementRef; // Reference to the Vanta background element
 
   isVantaActive: boolean = true;    // Determines whether the Vanta effect is active
@@ -54,29 +50,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy, OnInit {
   isSettingsOpen: boolean = false;  // State for settings panel visibility
 
   private vantaEffect: any;         // Instance of the Vanta.js effect
-
-  username: string = '';            // Placeholder for the user's name (if needed)
-  token: string = '';               // Placeholder for the JWT token (if needed)
-
-  /**
-   * @brief Constructor injecting necessary services.
-   * @param cookieService Service for managing cookies.
-   * @param usersService Service for fetching user information from JWT tokens.
-   */
-  constructor(
-    private usersService: UsersService,
-  ) { }
-
-  /**
-   * @brief Lifecycle hook called upon component initialization.
-   * 
-   * @details
-   * - Retrieves and logs the user role from the stored JWT token in cookies.
-   */
-  ngOnInit(): void {
-    const userRole = this.usersService.getUserRole();
-    console.log("🔑 User Role from Cookie:", userRole);
-  }
 
   /**
    * @brief Lifecycle hook called after the component's view is initialized.

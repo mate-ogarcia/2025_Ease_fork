@@ -17,6 +17,7 @@ import { Router, RouterLink } from '@angular/router';
 // API
 import { ApiService } from '../../../../../services/api.service';
 import { ApiEuropeanCountries } from '../../../../../services/europeanCountries/api.europeanCountries';
+import { UsersService } from '../../../../../services/users/users.service';
 
 @Component({
   selector: 'app-searchbar',
@@ -32,6 +33,8 @@ export class SearchbarComponent implements OnInit {
   noResultsMessage: string = '';    // Message to display if no results are found.
   selectedProduct: string = '';     // The ID of the selected product.
   isFilterPanelOpen: boolean = false; // Indicates if the filter panel is open.
+  // Display the add-product button or not
+  canAddProduct: boolean = false;   // Default: user cannot add product
   // filters
   countries: string[] = [];
   selectedCountry: string = '';     // Store the selected country
@@ -66,7 +69,8 @@ export class SearchbarComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private apiCountries: ApiEuropeanCountries,
-    private router: Router
+    private router: Router,
+    private usersService: UsersService,
   ) {
     this._searchSubject
       .pipe(
@@ -137,6 +141,12 @@ export class SearchbarComponent implements OnInit {
       next: (brands) => this.brands = brands.sort(),
       error: (error) => console.error('❌ Error fetching brands:', error),
     });
+
+    // Get the cookie's info
+    const userRole = this.usersService.getUserRole();
+    console.log("🔑 User Role from Cookie:", userRole);
+    // Check if the role allows you to add a product
+    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
   }
 
   // ======================== RESEARCH FUNCTIONS
