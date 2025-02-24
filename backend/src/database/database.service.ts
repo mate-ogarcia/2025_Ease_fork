@@ -621,6 +621,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getProductsWithFilters(filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
     const brandBucketName = this.brandBucket.name;
+    const currentRoute = filters.currentRoute;
 
     try {
       if (Object.keys(filters).length === 0) {
@@ -700,27 +701,55 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         console.log("✅ similarToFiltersConditions:\n", similarToFiltersConditions);
 
         // ---------------------
-        // Query construction combining similarity and filter conditions
+        // Build a query based on currentRoute :
+        // If the user is on the /home page, the function returns filters OR similar selected products.
+        // If the user is on the /search-prod page, the function returns the filters AND the selected products.
         // ---------------------
         const similarityClause = subSimilarityConditions.length > 0 ? `(${subSimilarityConditions.join(" AND ")})` : "";
         const filtersClause = similarToFiltersConditions.length > 0 ? `(${similarToFiltersConditions.join(" AND ")})` : "";
-
-        if (similarityClause && filtersClause) {
-          queryWithJoin = `
-            SELECT * FROM \`${bucketName}\`
-            WHERE ${similarityClause} OR ${filtersClause}
-          `;
-        } else if (similarityClause) {
-          queryWithJoin = `
-            SELECT * FROM \`${bucketName}\`
-            WHERE ${similarityClause}
-          `;
-        } else if (filtersClause) {
-          queryWithJoin = `
-            SELECT * FROM \`${bucketName}\`
-            WHERE ${filtersClause}
-          `;
+        // Searched-prod
+        if (currentRoute === '/searched-prod') {
+          console.log("currentRoute :", currentRoute);
+          if (similarityClause && filtersClause) {
+            queryWithJoin = `
+              SELECT * FROM \`${bucketName}\`
+              WHERE ${similarityClause} AND ${filtersClause}
+            `;
+          } else if (similarityClause) {
+            queryWithJoin = `
+              SELECT * FROM \`${bucketName}\`
+              WHERE ${similarityClause}
+            `;
+          } else if (filtersClause) {
+            queryWithJoin = `
+              SELECT * FROM \`${bucketName}\`
+              WHERE ${filtersClause}
+            `;
+          }
+          // home
+        } else if (currentRoute === '/home') {
+          if (similarityClause && filtersClause) {
+            queryWithJoin = `
+              SELECT * FROM \`${bucketName}\`
+              WHERE ${similarityClause} OR ${filtersClause}
+            `;
+          } else if (similarityClause) {
+            queryWithJoin = `
+              SELECT * FROM \`${bucketName}\`
+              WHERE ${similarityClause}
+            `;
+          } else if (filtersClause) {
+            queryWithJoin = `
+              SELECT * FROM \`${bucketName}\`
+              WHERE ${filtersClause}
+            `;
+          }
         }
+        // Other route
+        else {
+          throw new Error(`❌ Unknown route: ${currentRoute}`);
+        }
+
       }
       else {
         // ---------------------
@@ -740,7 +769,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
             (SELECT RAW META(b).id FROM \`${brandBucketName}\` b WHERE b.name = '${filters.brand}' LIMIT 1)
           `;
 
-          similarToFiltersConditions.push(`FK_Brands = ${brandSubquery}`);
+          similarToFiltersConditions.push(`FK_Brands IN ${brandSubquery}`); // /!\ brandSubquery returns an array
         }
 
         // ---------------------

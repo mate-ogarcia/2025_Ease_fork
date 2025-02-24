@@ -125,6 +125,11 @@ export class SearchbarComponent implements OnInit {
    * @brief Lifecycle hook that initializes the component.
    */
   ngOnInit(): void {
+
+    const currentRoute = this.router.url;  // Get the active route
+    console.log("current route:", currentRoute);
+
+
     // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
       this.countries = this.apiCountries.europeanCountries.sort();
@@ -186,14 +191,14 @@ export class SearchbarComponent implements OnInit {
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
       if (this.selectedProduct) {
         console.log("selected :", this.selectedProduct);
-        this.searchWithFilters(true); // Use the selected product in search
+        this.searchWithProductSelected(true); // Use the selected product in search
       } else {
         // If no product selected, navigate using the full search results
         if (this.fullSearchResults.length > 0) {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: this.fullSearchResults } });
         } else {
           // Fallback: if no full results available, perform a search without filters
-          this.searchWithoutFilters();
+          this.searchWithoutProductSelected();
         }
       }
     }
@@ -277,7 +282,7 @@ export class SearchbarComponent implements OnInit {
    * @brief Searches with applied filters and navigates to results page.
    * @param includeSelectedProduct Indicates if the selected product should be included.
    */
-  searchWithFilters(includeSelectedProduct: boolean = false) {
+  searchWithProductSelected(includeSelectedProduct: boolean = false) {
     this.applyFilters(); // Apply filters before the research
 
     console.log("W/Filters launched");
@@ -285,6 +290,7 @@ export class SearchbarComponent implements OnInit {
     const filtersToSend = {
       ...this.appliedFilters,
       productId: includeSelectedProduct ? this.selectedProduct : null, // Include the selected product if asked
+      currentRoute: this.router.url,
     };
 
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
@@ -301,9 +307,9 @@ export class SearchbarComponent implements OnInit {
   /**
    * @brief Searches without including a selected product.
    */
-  searchWithoutFilters() {
+  searchWithoutProductSelected() {
     this.applyFilters();
-    console.log("W/Filters launched");
+    console.log("W/out Filters launched");
 
     if (!Object.keys(this.appliedFilters).length) {
       console.warn('⚠️ No filters applied.');
