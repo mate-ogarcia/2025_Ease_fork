@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+// Cookies
+import { CookieService } from 'ngx-cookie-service';
 
 @Injectable({
   providedIn: 'root',
@@ -17,7 +19,11 @@ export class AuthService {
   private roleSubject = new BehaviorSubject<string | null>(null);
   public role$ = this.roleSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private cookieService: CookieService
+  ) {}
 
   register(username: string, email: string, password: string): Observable<any> {
     return this.http.post(`${this._authBackendUrl}/register`, {
@@ -29,19 +35,25 @@ export class AuthService {
 
   login(email: string, password: string): Observable<any> {
     return this.http
-      .post(
-        `${this._authBackendUrl}/login`,
-        { email, password },
-        { withCredentials: true }
-      )
+      .post(`${this._authBackendUrl}/login`, { email, password })
       .pipe(
-        tap(() => {
-          // Le backend place les tokens dans des cookies httpOnly.
-          // Ici, on met à jour le statut (par exemple, on suppose que le login a réussi).
+        map((response: any) => {
+          // Store the token and some user's informations into the cookies
+          // TODO
+          this.cookieService.set('auth_token', response.access_token, {
+            expires: 1,
+            secure: true,
+            sameSite: 'Strict',
+          });
+          this.cookieService.set('email', JSON.stringify(email), {
+            expires: 1,
+            secure: true,
+            sameSite: 'Strict',
+          });
+          // localStorage.setItem('token', response.access_token);
           this.authStatus.next(true);
-        }),
-        // Après le login, on récupère le profil pour connaître le rôle
-        map((response: any) => response)
+          return response;
+        })
       );
   }
 
