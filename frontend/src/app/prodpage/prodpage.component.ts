@@ -76,6 +76,6 @@ export class ProdpageComponent implements OnInit {
     this.selectedTab = tab;
   }
   trackByProduct(index: number, product: any): any {
-    return product.id; // Assurez-vous que chaque produit possède un identifiant unique
+    return product.id; 
   }
 }

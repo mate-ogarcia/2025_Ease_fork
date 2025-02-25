@@ -1,50 +1,36 @@
-<!-- 
-  @file prodsearch.component.html
-  @brief Template for displaying product details.
-  
-  This template dynamically displays product information retrieved from the API.
-  If no product is found, a fallback message is shown.
--->
-
-<!-- Container for displaying product details, only visible if productDetails exists -->
-<div class="container" *ngIf="productDetails" [ngClass]="{ 'non-european': !isEuropean }">
-  <h2>Produits Research</h2>
-
-  <div class="prod-container">
-    <!-- Product image, using a placeholder if no image is available -->
-      <div class="img-container">
-        <div class="wrapper">
-          <img class="product-image"
-            [src]="productDetails.imageUrl || 'placeholder-image.svg'" 
-            alt="Product Image"/>
-        </div>
-      </div>
-    <!-- Product details section -->
-    <div class="product-details">
-      <h2 class="product-name">{{ productDetails.name }}</h2>
-      <p class="product-description"><strong> Description : </strong> {{ productDetails.description }}</p>
-        
-      <div class="product-info">
-        <div class="origin">
-          <p>
-            Origin : <b>{{ productDetails.origin || "Inconnue" }}</b>
-          </p>
-        </div>
-        <div class="product-rating">
-          <span class="rating-label">Note:</span>
-          <span *ngIf="productDetails.rating" 
-                class="rating-badge" 
-                [ngClass]="getRatingClass(productDetails.rating)">
-            {{ productDetails.rating }}/5
-          </span>
-          <span *ngIf="!productDetails.rating">Non noté</span>
-        </div>
-      </div>
+<div class="container sticky-container" [ngClass]="{'non-european': !isEuropean}" *ngIf="productDetails; else noResults">
+  <div class="result-container">
+    <div class="item-container">
+      <ul class="items-list">
+        <li class="item" tabindex="0" [attr.aria-label]="'Voir le produit ' + productDetails.name">
+          <div class="img-container">
+            <img class="product-image" [src]="productDetails.imageUrl || 'assets/placeholder.jpg'" alt="{{ productDetails.name }}">
+          </div>
+          <div class="product-details">
+            <div class="title-info">
+              <h3 class="product-name">{{ productDetails.name }}</h3>
+            </div>
+            <div class="other-info">
+              <div class="origin">
+                Origin: <b>{{ productDetails.origin || 'Inconnue' }}</b>
+              </div>
+              <div class="rating">
+                <span *ngIf="productDetails.rating; else notRated" class="rating-badge">
+                  {{ productDetails.rating }}/5
+                </span>
+                <ng-template #notRated>
+                  <span>Non noté</span>
+                </ng-template>
+              </div>
+            </div>
+            <p class="product-description"><strong>Description: </strong>{{ productDetails.description }}</p>
+          </div>
+        </li>
+      </ul>
     </div>
   </div>
 </div>
 
-<!-- Display a message if no product is found -->
-<div *ngIf="!productDetails" class="no-product">
-  <p>❌ Produit introuvable</p>
-</div>
+<ng-template #noResults>
+  <p>Aucun produit trouvé avec ces critères.</p>
+</ng-template>

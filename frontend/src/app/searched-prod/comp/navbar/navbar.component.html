@@ -1,0 +1,41 @@
+<nav class="navbar">
+  <!-- Logo -->
+  <div class="logo" routerLink="/home">
+    <img class="easelogo" src="vrailogo.png" alt="Logo">
+  </div>
+
+  <!-- Section Desktop -->
+  <div class="desktop-section">
+    <!-- Zone centrale avec la searchbar -->
+    <div class="nav-center">
+      <app-searchbar></app-searchbar>
+    </div>
+
+    <!-- Partie utilisateur (Desktop) -->
+    <div class="user" (click)="toggleDropdown()">
+      <div class="log-container">
+        <ng-container *ngIf="isAuthenticated; else loginTemplate">
+          <!-- Le clic sur la zone entière déclenche toggleDropdown() -->
+          <img class="userprofile" src="rhinoceros.png" alt="Profile">
+          <div
+            *ngIf="showDropdown"
+            class="dropdown-menu user-dropdown active"
+            (click)="$event.stopPropagation()"
+          >
+            <a routerLink="/home" >Accueil</a>
+            <a routerLink="/category">Catégories</a>
+            <a routerLink="/contact">Contact</a>
+            <hr />
+            <a routerLink="/user-profile" class="profile-btn">
+              Profile
+            </a>
+            <button class="logout-btn" (click)="logout()">Log out</button>
+          </div>
+        </ng-container>
+        <ng-template #loginTemplate>
+          <button class="login-btn" routerLink="/login">Login</button>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</nav>

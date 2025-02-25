@@ -22,7 +22,12 @@ import { UnsplashService } from '../../../../services/unsplash.service'; // Adju
   styleUrls: ['./display-results.component.css'],
 })
 export class DisplayResultsComponent implements OnInit {
+<<<<<<< HEAD
   resultsArray: any[] = []; // Array containing the list of products to display.
+=======
+  resultsArray: any[] = [];
+  viewMode: 'list' | 'grid' = 'list'; // mode par défaut
+>>>>>>> f86bb0168aa659aae2760ebd178fc24411901cb1
 
   /**
    * @constructor
@@ -58,9 +63,13 @@ export class DisplayResultsComponent implements OnInit {
             // Primary attempt: use high-quality raw URL with cropping parameters
             if (response.results[0].urls.raw) {
               finalUrl = `${response.results[0].urls.raw}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+<<<<<<< HEAD
             } 
             // Fallback: use the smaller version if raw is not available
             else if (response.results[0].urls.small) {
+=======
+            } else if (response.results[0].urls.small) {
+>>>>>>> f86bb0168aa659aae2760ebd178fc24411901cb1
               finalUrl = response.results[0].urls.small;
             }
 
@@ -75,6 +84,7 @@ export class DisplayResultsComponent implements OnInit {
     });
   }
 
+<<<<<<< HEAD
   /**
    * @brief Navigates to the detailed view of the selected product.
    *
@@ -82,6 +92,13 @@ export class DisplayResultsComponent implements OnInit {
    * @returns {void}
    */
   goToProduct(product: any): void {
+=======
+  setViewMode(mode: 'list' | 'grid'): void {
+    this.viewMode = mode;
+  }
+
+  goToProduct(product: any) {
+>>>>>>> f86bb0168aa659aae2760ebd178fc24411901cb1
     if (product?.id) {
       console.log("🔹 Redirecting to product:", product);
       this.router.navigate([`/products-alternative/${product.id}`]).then(() => {
@@ -105,6 +122,10 @@ export class DisplayResultsComponent implements OnInit {
    * @returns {any} The unique identifier of the product (product ID).
    */
   trackByProduct(index: number, product: any): any {
+<<<<<<< HEAD
     return product.id; // Ensure that each product has a unique identifier
+=======
+    return product.id;
+>>>>>>> f86bb0168aa659aae2760ebd178fc24411901cb1
   }
 }

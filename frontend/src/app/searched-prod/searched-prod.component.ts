@@ -9,7 +9,6 @@ import { NavbarComponent } from '../homepage/home/comp/navbar/navbar.component';
   imports: [
     DisplayResultsComponent,
     NavbarComponent,
-    SearchbarComponent
   ],
   templateUrl: './searched-prod.component.html',
   styleUrl: './searched-prod.component.css'
