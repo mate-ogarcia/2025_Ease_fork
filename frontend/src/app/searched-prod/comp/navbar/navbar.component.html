@@ -1,41 +1,50 @@
 <nav class="navbar">
   <!-- Logo -->
   <div class="logo" routerLink="/home">
-    <img class="easelogo" src="vrailogo.png" alt="Logo">
+    <picture>
+      <!-- En dessous de 700px, on utilise ours.png -->
+      <source media="(max-width: 700px)" srcset="ours.png">
+      <!-- Sinon, on utilise vrailogo.png (fallback par défaut) -->
+      <img class="easelogo" src="vrailogo.png" alt="Logo">
+    </picture>
   </div>
-
-  <!-- Section Desktop -->
-  <div class="desktop-section">
-    <!-- Zone centrale avec la searchbar -->
-    <div class="nav-center">
-      <app-searchbar></app-searchbar>
-    </div>
-
-    <!-- Partie utilisateur (Desktop) -->
-    <div class="user" (click)="toggleDropdown()">
-      <div class="log-container">
-        <ng-container *ngIf="isAuthenticated; else loginTemplate">
-          <!-- Le clic sur la zone entière déclenche toggleDropdown() -->
-          <img class="userprofile" src="rhinoceros.png" alt="Profile">
-          <div
-            *ngIf="showDropdown"
-            class="dropdown-menu user-dropdown active"
-            (click)="$event.stopPropagation()"
-          >
-            <a routerLink="/home" >Accueil</a>
-            <a routerLink="/category">Catégories</a>
-            <a routerLink="/contact">Contact</a>
-            <hr />
-            <a routerLink="/user-profile" class="profile-btn">
-              Profile
-            </a>
-            <button class="logout-btn" (click)="logout()">Log out</button>
-          </div>
-        </ng-container>
-        <ng-template #loginTemplate>
-          <button class="login-btn" routerLink="/login">Login</button>
-        </ng-template>
+  
+  <!-- Zone centrale avec la searchbar et le dropdown navigation -->
+  <div class="nav-center">
+    <app-searchbar class="app-searchbar"></app-searchbar>
+    
+    <!-- Menu déroulant de navigation -->
+    <div class="nav-dropdown">
+      <button class="nav-dropdown-toggle" (click)="toggleNavDropdown()">
+        Menu
+      </button>
+      <div class="nav-dropdown-menu" [ngClass]="{'active': showNavDropdown}" (click)="$event.stopPropagation()">
+        <a routerLink="/home">Accueil</a>
+        <a routerLink="/category">Catégorie</a>
+        <a routerLink="/contact">Contact</a>
       </div>
+    </div>
+  </div>
+  
+  <!-- Partie utilisateur -->
+  <div class="user" (click)="toggleDropdown()">
+    <div class="log-container">
+      <ng-container *ngIf="isAuthenticated; else loginTemplate">
+        <img class="userprofile" src="rhinoceros.png" alt="Profile">
+        <div *ngIf="showDropdown" class="user-dropdown active" (click)="$event.stopPropagation()">
+            <div class="navigation-container">
+              <a routerLink="/home">Accueil</a>
+              <a routerLink="/category">Catégories</a>
+              <a routerLink="/contact">Contact</a>
+            </div>
+          <hr />
+          <a routerLink="/user-profile" class="profile-btn">Profile</a>
+          <button class="logout-btn" (click)="logout()">Log out</button>
+        </div>
+      </ng-container>
+      <ng-template #loginTemplate>
+        <button class="login-btn" routerLink="/login">Login</button>
+      </ng-template>
     </div>
   </div>
 </nav>

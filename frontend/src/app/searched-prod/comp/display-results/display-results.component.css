@@ -29,7 +29,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #d5f5ea;
   padding: 20px;
   border-radius: 15px;
   scroll-behavior: smooth;
@@ -45,7 +44,7 @@
   display: flex;
   width: 100%;
   height: auto;
-  padding: 15px;
+  padding: 15px 0;
   flex-direction: column;
   background-color: transparent;
 }
@@ -61,12 +60,15 @@
 }
 
 /* === Items List en mode grille === */
-/* Dans ce mode, chaque item est fixé à 300px de largeur */
 .items-list.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 300px);
+  grid-template-columns: repeat(auto-fill, 270px);
   gap: 20px;
+  width: 100%;
   justify-content: center;
+}
+.items-list.grid .item{
+  align-items: center;
 }
 
 /* === Individual Item Card === */
@@ -74,7 +76,7 @@
   width: 100%;
   display: flex;
   flex-direction: row;
-  background-color: white;
+  background-color: #f9ebde;
   gap: 10px;
   padding: 15px;
   border-radius: 20px;

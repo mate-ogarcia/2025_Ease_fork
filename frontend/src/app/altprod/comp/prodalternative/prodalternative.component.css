@@ -50,7 +50,7 @@
   width: 100%;
   display: flex;
   flex-direction: row;
-  background-color: white;
+  background-color: #f9ebde;
   border: 3px solid #80eb70;
 
   gap: 10px;

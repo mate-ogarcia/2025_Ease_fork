@@ -32,17 +32,8 @@
 .app-navbar{
     width: 100%;
 }
-.app-searchbar{
-    width: 50%;
-}
-.advanced-research{
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    
-}
+
+
 /**
  * @brief Container for displaying search results.
  * Aligns child elements in a row by default.
@@ -65,21 +56,7 @@
     height: 50%;
     width: 100%;
 }
-.sticky-container-first {
-    position: sticky;
-    top: 0;
-    z-index: 1000; /* Permet à l'élément de rester visible par-dessus d'autres contenus */
-  }
-.sticky-container-second {
-    position: sticky;
-    top: 40px; /* ajuster en fonction de la hauteur de .sticky-first */
-    z-index: 1000; /* Permet à l'élément de rester visible par-dessus d'autres contenus */
-  }
-.sticky-container-third {
-    position: sticky;
-    top: 1000px; /* ajuster en fonction de la hauteur de .sticky-first */
-    z-index: 1000; /* Permet à l'élément de rester visible par-dessus d'autres contenus */
-  }
+
 /**
  * @brief Styles for the arrow icon.
  */
@@ -89,17 +66,5 @@
     rotate: 90deg;
 }
 
-/**
- * @brief Responsive design adjustments for smaller screens.
- */
-@media (max-width : 1100px){
-    
-    .app-prodsearch, .app-prodalternative{
-        height: 50%;
-        width: 100%;
-    }
-    .container{
-        height: fit-content;
-    }
-    
-}
+
+
