@@ -177,7 +177,7 @@
     display: flex;
   }
   .navbar ul li a {
-    color: white;
+    color: black;
   }
   .menu-toggle {
       display: flex;

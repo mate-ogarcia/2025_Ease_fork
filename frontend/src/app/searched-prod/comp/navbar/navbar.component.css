@@ -83,12 +83,12 @@ picture {
   display: flex;
 }
 
-.nav-dropdown-menu a {
+.nav-dropdown-menu a,
+.navigation-container,
+.profile-info {
   text-decoration: none;
   color: #333;
   font-weight: 500;
-  padding: 8px 0;
-  border-radius: 4px;
   transition: background 0.2s;
 }
 
@@ -98,26 +98,30 @@ picture {
 
 /* Dropdown utilisateur (Desktop) */
 .user-dropdown a,
-.user-dropdown .profile-btn {
+.user-dropdown .logout-btn {
   display: block;
   text-decoration: none;
+  padding : 10px 15px;
   color: #333;
   font-weight: 500;
-  padding: 8px 0;
   border-radius: 4px;
   transition: background 0.2s;
 }
-
+.profile-btn{
+  border-top: 1px solid #778081;
+  border-radius: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
 .user-dropdown a:hover,
 .user-dropdown .profile-btn:hover {
   background-color: #f4f4f4;
 }
 
-.user-dropdown hr {
-  border: none;
-  border-top: 1px solid #ddd;
-  margin: 0;
-}
+
 
 /* Partie utilisateur (Desktop) */
 .user {
@@ -128,6 +132,8 @@ picture {
   margin-left: auto;
 }
 .navigation-container{
+  font-weight: 500;
+
   display: none;
 }
 .log-container {
@@ -155,6 +161,7 @@ picture {
   border-radius: 50%;
 }
 
+/* Style du bouton logout dans le menu */
 .logout-btn {
   background-color: red;
   color: white;
@@ -175,17 +182,18 @@ picture {
 /* Dropdown utilisateur (Desktop) */
 .user-dropdown {
   position: absolute;
-  top: 110%;
-  right: 0;
-  background: #fff;
+  right: 10px;
+  top: 50px;
+  background: white;
   border: 1px solid #ddd;
+  border-radius: 5px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  min-width: 200px;
-  padding: 15px;
-  display: none;
+  padding: 10px;
+  width: 150px;
+  display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
@@ -193,12 +201,25 @@ picture {
 .user-dropdown.active {
   display: flex;
 }
+.profile-info{
+  font-weight: 500;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
+}
 @media screen and (max-width: 900px) {
   .app-searchbar {
     width: 90%;
   }
-  
+  .navigation-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
   .nav-center {
     padding-left: 10px;
   }

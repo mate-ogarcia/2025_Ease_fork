@@ -32,14 +32,15 @@
       <ng-container *ngIf="isAuthenticated; else loginTemplate">
         <img class="userprofile" src="rhinoceros.png" alt="Profile">
         <div *ngIf="showDropdown" class="user-dropdown active" (click)="$event.stopPropagation()">
-            <div class="navigation-container">
-              <a routerLink="/home">Accueil</a>
-              <a routerLink="/category">Catégories</a>
-              <a routerLink="/contact">Contact</a>
-            </div>
-          <hr />
-          <a routerLink="/user-profile" class="profile-btn">Profile</a>
-          <button class="logout-btn" (click)="logout()">Log out</button>
+          <div class="navigation-container">
+            <a routerLink="/home">Accueil</a>
+            <a routerLink="/category">Catégories</a>
+            <a routerLink="/contact">Contact</a>
+          </div>
+          <div class="profile-info">
+            <span routerLink="/user-profile" class="profile-btn">Profile</span>
+            <span class="logout-btn" (click)="logout()">Log out</span>
+          </div>
         </div>
       </ng-container>
       <ng-template #loginTemplate>
