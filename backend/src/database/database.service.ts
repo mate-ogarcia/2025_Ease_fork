@@ -36,8 +36,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   };
 
   constructor(private readonly httpService: HttpService) { }
-
+  // ========================================================================
   // ======================== DATABASE INIT AND CONNECTION
+  // ========================================================================
+
   /**
    * @brief Initializes the Couchbase connection when the module starts.
    * 
@@ -119,7 +121,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     console.log("🔹 Couchbase connections closed.");
   }
 
+  // ========================================================================
   // ======================== DATABASE GET BUCKETS AND COLLECTION
+  // ========================================================================
+
   /**
    * @brief Retrieves the Couchbase bucket instance for products.
    * 
@@ -589,7 +594,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // ========================================================================
   // ======================== SEARCH FUNCTIONS (ALTERNATIVE PRODUCTS, NOT THE SUGGESTIONS)
+  // ========================================================================
+
   // =========== UTILITY FUNCTIONS
   /**
    * @brief Builds a SQL WHERE clause from an array of conditions.
