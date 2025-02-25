@@ -16,9 +16,9 @@ export class NavbarComponent implements OnInit {
   isAuthenticated = false;
   showDropdown = false; // Gère le menu sur desktop (affiché sur clic de la photo)
   isMobile = false; // Détecte si on est en mode responsive
-  showNavDropdown  = false;
+  showNavDropdown = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
   ngOnInit(): void {
     this.authService.isAuthenticated().subscribe((status) => {
@@ -37,7 +37,7 @@ export class NavbarComponent implements OnInit {
     this.showNavDropdown = !this.showNavDropdown;
   }
 
-  
+
   logout(): void {
     this.authService.logout();
     this.showDropdown = false;

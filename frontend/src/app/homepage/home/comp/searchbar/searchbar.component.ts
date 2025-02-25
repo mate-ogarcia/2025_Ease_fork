@@ -59,6 +59,8 @@ export class SearchbarComponent implements OnInit {
   private _searchSubject = new Subject<string>(); // Subject to manage search input and trigger search requests.
   private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results for efficient reuse.
   private CACHE_DURATION = 5 * 60 * 1000; // Cache expiration time (5 minutes).
+  // Dropdown for filters (renamed for cohérence with the new design)
+  filterDropdownOpen: boolean = false; // Indicates if the filter dropdown is open.
 
   @Output() searchExecuted = new EventEmitter<void>(); // Event to notify when a search is completed.
 
@@ -149,6 +151,15 @@ export class SearchbarComponent implements OnInit {
     this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
   }
 
+
+  /**
+ * @function toggleFilterDropdown
+ * @description Toggles the visibility of the filter dropdown.
+ */
+  toggleFilterDropdown() {
+    this.filterDropdownOpen = !this.filterDropdownOpen;
+  }
+
   // ======================== RESEARCH FUNCTIONS
 
   /**
@@ -182,7 +193,6 @@ export class SearchbarComponent implements OnInit {
    */
   onEnter(event: any) {
     event as KeyboardEvent;
-    this.toggleFilterPanel();
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
       if (this.selectedProduct) {
         console.log("selected :", this.selectedProduct);
@@ -274,14 +284,6 @@ export class SearchbarComponent implements OnInit {
   // ======================== FILTER FUNCTIONS
 
   /**
-   * @function toggleFilterPanel
-   * @description Toggles the visibility of the filter panel.
-   */
-  toggleFilterPanel() {
-    this.isFilterPanelOpen = !this.isFilterPanelOpen;
-  }
-
-  /**
    * @function onCountryChange
    * @description Called when a country is selected.
    */
@@ -320,7 +322,5 @@ export class SearchbarComponent implements OnInit {
     this.appliedFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, value]) => value !== null && value !== '')
     );
-    // Once filters are applied close the panel
-    this.toggleFilterPanel();
   }
 }
