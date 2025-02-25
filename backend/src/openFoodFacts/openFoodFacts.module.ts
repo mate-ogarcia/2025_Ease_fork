@@ -1,11 +1,12 @@
 import { Module } from "@nestjs/common";
-import { openFoodFactsService } from "./openFoodFacts.service";
-import { openFoodFactsController } from "./openFoodFacts.controller";
+import { HttpModule } from '@nestjs/axios';
+import { OpenFoodFactsService } from "./openFoodFacts.service";
+import { OpenFoodFactsController } from "./openFoodFacts.controller";
 
 @Module({
-  providers: [openFoodFactsService],
-  imports: [],
-  exports: [openFoodFactsService],
-  controllers: [openFoodFactsController]
+  providers: [OpenFoodFactsService],
+  imports: [HttpModule],
+  controllers: [OpenFoodFactsController],
+  exports: [OpenFoodFactsService],
 })
-export class DatabaseModule {}
+export class OpenFoodFactsModule {}

@@ -18,6 +18,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../../../services/api.service';
 import { ApiEuropeanCountries } from '../../../../../services/europeanCountries/api.europeanCountries';
 import { UsersService } from '../../../../../services/users/users.service';
+import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
 
 @Component({
   selector: 'app-searchbar',
@@ -73,6 +74,7 @@ export class SearchbarComponent implements OnInit {
     private apiCountries: ApiEuropeanCountries,
     private router: Router,
     private usersService: UsersService,
+    private apiOFF: ApiOpenFoodFacts,
   ) {
     this._searchSubject
       .pipe(
@@ -126,7 +128,16 @@ export class SearchbarComponent implements OnInit {
   /**
    * @brief Lifecycle hook that initializes the component.
    */
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    // TODO : DELETE AFTER
+    console.log('test');
+    console.log('test');
+    (await this.apiOFF.getProductInfo('Nutella')).subscribe(
+      (data) => console.log('Résultat:', data),
+      (error) => console.error('Erreur:', error)
+    );
+    
+
     // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
       this.countries = this.apiCountries.europeanCountries.sort();

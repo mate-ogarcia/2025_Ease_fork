@@ -17,7 +17,7 @@ import {
     Param,
     Query,
 } from "@nestjs/common";
-import { openFoodFactsService } from "./openFoodFacts.service";
+import { OpenFoodFactsService } from "./openFoodFacts.service";
 
 /**
  * @class openFoodFactsController
@@ -27,7 +27,7 @@ import { openFoodFactsService } from "./openFoodFacts.service";
  * It interacts with the `openFoodFactsService` to perform searches for product information.
  */
 @Controller("openFoodFacts")
-export class openFoodFactsController {
+export class OpenFoodFactsController {
   
     /**
      * @brief Constructor injecting the OpenFoodFacts service.
@@ -35,7 +35,7 @@ export class openFoodFactsController {
      * @param openFoodFactsService Service responsible for communication with OpenFoodFacts API.
      */
     constructor(
-        private openFoodFactsService: openFoodFactsService
+        private openFoodFactsService: OpenFoodFactsService
     ) {}
 
     /**
