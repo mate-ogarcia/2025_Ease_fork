@@ -173,11 +173,11 @@
   }
 
   .navbar ul.active {
- 
+    
     display: flex;
   }
   .navbar ul li a {
-    color: black;
+    color: white;
   }
   .menu-toggle {
       display: flex;

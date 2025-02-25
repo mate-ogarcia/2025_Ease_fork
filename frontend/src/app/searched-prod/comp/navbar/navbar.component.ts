@@ -16,6 +16,7 @@ export class NavbarComponent implements OnInit {
   isAuthenticated = false;
   showDropdown = false; // Gère le menu sur desktop (affiché sur clic de la photo)
   isMobile = false; // Détecte si on est en mode responsive
+  showNavDropdown  = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -32,7 +33,11 @@ export class NavbarComponent implements OnInit {
   toggleDropdown(): void {
     this.showDropdown = !this.showDropdown;
   }
+  toggleNavDropdown() {
+    this.showNavDropdown = !this.showNavDropdown;
+  }
 
+  
   logout(): void {
     this.authService.logout();
     this.showDropdown = false;
