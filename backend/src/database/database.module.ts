@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file database.module.ts
  * @brief Module for database-related services.
  *
@@ -14,6 +14,6 @@ import { HttpModule } from "@nestjs/axios";
   providers: [DatabaseService],
   imports: [HttpModule],
   exports: [DatabaseService],
-  controllers: [DatabaseController],
+  controllers: [DatabaseController]
 })
 export class DatabaseModule {}

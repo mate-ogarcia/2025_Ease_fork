@@ -15,13 +15,12 @@ import {
 import { UsersService } from "../users/users.service";
 import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
-import { Role } from "../roles/roles.enum";
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   /**
@@ -36,7 +35,7 @@ export class AuthService {
    */
   async login(
     email: string,
-    password: string
+    password: string,
   ): Promise<{ access_token: string; refresh_token: string }> {
     try {
       // Retrieve the user from the database
@@ -79,7 +78,7 @@ export class AuthService {
   async register(
     username: string,
     email: string,
-    password: string
+    password: string,
   ): Promise<any> {
     try {
       // Create the user in the database
@@ -90,19 +89,19 @@ export class AuthService {
     }
   }
 
-  async refreshAccessToken(refreshToken: string): Promise<string> {
+  /**
+   * @brief Retrieves all users from the database.
+   * @details This method is restricted to admin users only and returns a list of all registered users.
+   *
+   * @returns {Promise<any>} A list of all users in the system.
+   * @throws {InternalServerErrorException} If an error occurs while retrieving users.
+   */
+  async findAll(): Promise<any> {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_SECRET || "DEFAULT_SECRET",
-      });
-      // Vous pouvez recharger l'utilisateur depuis la DB si nécessaire
-      // par exemple: const user = await this.usersService.findById(payload.sub);
-      return this.jwtService.sign(
-        { email: payload.email, sub: payload.sub, role: payload.role },
-        { expiresIn: "1h", secret: process.env.JWT_SECRET || "DEFAULT_SECRET" }
-      );
-    } catch (err) {
-      throw new UnauthorizedException("Invalid refresh token");
+      return await this.usersService.findAll();
+    } catch (error) {
+      console.error("❌ Error retrieving users:", error);
+      throw new InternalServerErrorException("Error retrieving users list.");
     }
   }
 }

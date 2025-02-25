@@ -19,7 +19,6 @@ import * as couchbase from "couchbase";
 import * as fs from "fs";
 // HTTP
 import { HttpService } from "@nestjs/axios";
-import { Role } from "../roles/roles.enum";
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
@@ -82,7 +81,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const productsBucketName = process.env.BUCKET_NAME;
       if (!productsBucketName) {
         throw new Error(
-          "❌ BUCKET_NAME is not defined in environment variables in database.service.ts"
+          "❌ BUCKET_NAME is not defined in environment variables in database.service.ts",
         );
       }
       this.productsBucket = this.cluster.bucket(productsBucketName);
@@ -92,7 +91,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const usersBucketName = process.env.USER_BUCKET_NAME;
       if (!usersBucketName) {
         throw new Error(
-          "❌ USER_BUCKET_NAME is not defined in environment variables in database.service.ts"
+          "❌ USER_BUCKET_NAME is not defined in environment variables in database.service.ts",
         );
       }
       this.usersBucket = this.cluster.bucket(usersBucketName);
@@ -102,7 +101,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const categBucketName = process.env.CATEGORY_BUCKET_NAME;
       if (!categBucketName) {
         throw new Error(
-          "❌ CATEGORY_BUCKET_NAME is not defined in environment variables in database.service.ts"
+          "❌ CATEGORY_BUCKET_NAME is not defined in environment variables in database.service.ts",
         );
       }
       this.categBucket = this.cluster.bucket(categBucketName);
@@ -112,7 +111,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const brandBucketName = process.env.BRAND_BUCKET_NAME;
       if (!brandBucketName) {
         throw new Error(
-          "❌ BRAND_BUCKET_NAME is not defined in environment variables in database.service.ts"
+          "❌ BRAND_BUCKET_NAME is not defined in environment variables in database.service.ts",
         );
       }
       this.brandBucket = this.cluster.bucket(brandBucketName);
@@ -279,7 +278,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Combine prefix and match queries
       const combinedQuery = couchbase.SearchQuery.disjuncts(
         prefixQuery,
-        matchQuery
+        matchQuery,
       );
 
       const searchRes = await this.cluster.searchQuery(
@@ -291,7 +290,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
             style: couchbase.HighlightStyle.HTML,
             fields: ["name", "description", "category", "tags"],
           },
-        }
+        },
       );
 
       return searchRes.rows;
@@ -354,10 +353,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       // API call to fetch the list of European countries
       const response = await this.httpService.axiosRef.get(
-        "https://restcountries.com/v3.1/region/europe"
+        "https://restcountries.com/v3.1/region/europe",
       );
       const europeanCountries = response.data.map(
-        (country) => country.name.common
+        (country) => country.name.common,
       );
 
       // Dynamically construct the N1QL query
@@ -396,7 +395,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       console.log(
         `🔹 Executing N1QL query: ${query} with params:`,
-        queryParams
+        queryParams,
       );
 
       // Execute the query in Couchbase
@@ -407,10 +406,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error(
         "❌ Error retrieving alternative products (database.service):",
-        error
+        error,
       );
       throw new InternalServerErrorException(
-        "Error retrieving alternative products (database.service)"
+        "Error retrieving alternative products (database.service)",
       );
     }
   }
@@ -464,7 +463,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async addUser(
     username: string,
     email: string,
-    password: string
+    password: string,
   ): Promise<any> {
     try {
       // Check if the users bucket is initialized
@@ -484,7 +483,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         username: username,
         email: email,
         password: password,
-        role: Role.USER, // Default user role
+        role: this._role.User, // Default user role
         createdAt: new Date().toISOString(), // Adding createdAt timestamp
         updatedAt: new Date().toISOString(), // Adding updatedAt timestamp
       };
@@ -508,7 +507,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error occurred while adding the user:", error);
       throw new InternalServerErrorException(
-        "Error occurred while adding the user."
+        "Error occurred while adding the user.",
       );
     }
   }
@@ -548,7 +547,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error retrieving category names:", error);
       throw new InternalServerErrorException(
-        "Error retrieving category names."
+        "Error retrieving category names.",
       );
     }
   }
@@ -635,31 +634,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   /**
    * @brief Retrieves products based on provided filters and/or similarity to a selected product.
    *
-   * This function constructs a dynamic N1QL query to fetch products that either match the provided filters
-   * (such as category, country, and price range) or are similar to a selected product (based on category, tags, and price range).
-   * If both a product ID and filters are provided, the function searches for products that match both conditions.
-   *
-   * ---------------------
-   * Logic summary:
-   * - With `productId`: Searches for products similar to the selected product according to:
-   *   - Category
-   *   - Tags
-   *   - Similar price range (±20%)
-   * - Without `productId`: Searches according to the directly provided filters (category, country, price).
-   * - Combined: If both `productId` and filters are provided, products must satisfy both similarity and filter conditions.
-   * ---------------------
-   *
-   * @param filters An object containing the filters to apply to the product search. Possible fields:
-   *   - `category` (string): Category to filter products by.
-   *   - `country` (string): Country of origin to filter products by.
-   *   - `minPrice` (number): Minimum price for filtering.
-   *   - `maxPrice` (number): Maximum price for filtering.
-   *   - `productId` (string, optional): ID of a selected product for similarity-based search.
-   *
-   * @returns {Promise<any[]>} A promise resolving to an array of products matching the applied filters and/or similarity criteria.
-   *
-   * @throws {InternalServerErrorException} If an error occurs during the query construction or execution.
-   *
    * @details
    * This function dynamically constructs a N1QL query to fetch products that either:
    * - Match the provided filters (e.g., category, country, price range, brand), OR
@@ -704,7 +678,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // ---------------------
       if (filters.productId) {
         console.log(
-          `🔎 Searching for products similar to: ${filters.productId}`
+          `🔎 Searching for products similar to: ${filters.productId}`,
         );
 
         const selectedProduct = await this.getProductById(filters.productId);
@@ -722,14 +696,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         // Match products with the same category
         if (selectedProduct.category) {
           subSimilarityConditions.push(
-            `category = '${selectedProduct.category}'`
+            `category = '${selectedProduct.category}'`,
           );
         }
 
         // Match products with at least one similar tag
         if (selectedProduct.tags?.length) {
           subSimilarityConditions.push(
-            `ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`
+            `ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`,
           );
         }
 
@@ -738,7 +712,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           const minPrice = selectedProduct.price * 0.8;
           const maxPrice = selectedProduct.price * 1.2;
           subSimilarityConditions.push(
-            `price BETWEEN ${minPrice} AND ${maxPrice}`
+            `price BETWEEN ${minPrice} AND ${maxPrice}`,
           );
         }
 
@@ -746,10 +720,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         if (selectedProduct.FK_Brands) {
           console.log(
             "🔎 Using brand from selected product:",
-            selectedProduct.FK_Brands
+            selectedProduct.FK_Brands,
           );
           subSimilarityConditions.push(
-            `FK_Brands = '${selectedProduct.FK_Brands}'`
+            `FK_Brands = '${selectedProduct.FK_Brands}'`,
           );
         }
 
@@ -764,7 +738,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           similarToFiltersConditions.push(`origin = '${filters.country}'`);
         if (filters.minPrice && filters.maxPrice) {
           similarToFiltersConditions.push(
-            `price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`
+            `price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`,
           );
         } else if (filters.minPrice) {
           similarToFiltersConditions.push(`price >= ${filters.minPrice}`);
@@ -785,7 +759,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
         console.log(
           "✅ similarToFiltersConditions:\n",
-          similarToFiltersConditions
+          similarToFiltersConditions,
         );
 
         // ---------------------
@@ -826,14 +800,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           similarToFiltersConditions.push(`origin = '${filters.country}'`);
         if (filters.minPrice && filters.maxPrice) {
           similarToFiltersConditions.push(
-            `price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`
+            `price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`,
           );
         }
 
         // Add brand filter with subquery
         if (filters.brand) {
           console.log(
-            `🔎 Adding brand filter with subquery for brand: ${filters.brand}`
+            `🔎 Adding brand filter with subquery for brand: ${filters.brand}`,
           );
 
           const brandSubquery = `
@@ -861,7 +835,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       if (queryWithJoin) {
         console.log(
-          `🔹 Executing combined similarity and filters query: ${queryWithJoin}`
+          `🔹 Executing combined similarity and filters query: ${queryWithJoin}`,
         );
         const resultCombined = await this.cluster.query(queryWithJoin);
         combinedResults = resultCombined.rows.map((row) => row[bucketName]);
@@ -871,8 +845,30 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error retrieving filtered products:", error);
       throw new InternalServerErrorException(
-        "An error occurred while retrieving the filtered products."
+        "An error occurred while retrieving the filtered products.",
       );
+    }
+  }
+
+  /**
+   * @brief Retrieves all users from the database.
+   * @details Executes a N1QL query to fetch all users from the users bucket.
+   *
+   * @returns {Promise<any[]>} Array of user objects.
+   * @throws {InternalServerErrorException} If an error occurs during retrieval.
+   */
+  async getAllUsers(): Promise<any[]> {
+    try {
+      if (!this.usersBucket) {
+        throw new Error("❌ Users bucket is not initialized.");
+      }
+
+      const query = `SELECT META(u).id, u.* FROM \`${this.usersBucket.name}\`._default._default u`;
+      const result = await this.cluster.query(query);
+      return result.rows;
+    } catch (error) {
+      console.error("❌ Error retrieving all users:", error);
+      throw new InternalServerErrorException("Error retrieving users list.");
     }
   }
 }

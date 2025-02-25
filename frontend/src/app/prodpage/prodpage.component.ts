@@ -10,7 +10,7 @@ import { UnsplashService } from '../../services/unsplash.service';
   standalone: true,
   imports: [NavbarComponent, CommonModule],
   templateUrl: './prodpage.component.html',
-  styleUrls: ['./prodpage.component.css']  // Correction: "styleUrls" (au pluriel)
+  styleUrls: ['./prodpage.component.css'], // Correction: "styleUrls" (au pluriel)
 })
 export class ProdpageComponent implements OnInit {
   productId: string = '';
@@ -26,12 +26,12 @@ export class ProdpageComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       this.productId = params.get('id') || '';
       if (this.productId) {
         this.fetchProductDetails();
       } else {
-        this.errorMessage = "Aucun produit trouvé.";
+        this.errorMessage = 'Aucun produit trouvé.';
       }
     });
   }
@@ -55,12 +55,15 @@ export class ProdpageComponent implements OnInit {
                 }
               },
               error: (error) => {
-                console.error("Erreur lors de la récupération d'image depuis Unsplash :", error);
-              }
+                console.error(
+                  "Erreur lors de la récupération d'image depuis Unsplash :",
+                  error
+                );
+              },
             });
           }
         } else {
-          this.errorMessage = "Produit introuvable.";
+          this.errorMessage = 'Produit introuvable.';
         }
       },
       error: () => {
@@ -68,7 +71,7 @@ export class ProdpageComponent implements OnInit {
       },
       complete: () => {
         this.isLoading = false;
-      }
+      },
     });
   }
 

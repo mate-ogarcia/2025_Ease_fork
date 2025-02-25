@@ -13,6 +13,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { UsersModule } from "../users/users.module";
 import { PassportModule } from "@nestjs/passport";
 import { JwtStrategy } from "./jwt.strategy";
+import { RolesGuard } from "./guards/roles.guard";
 import * as dotenv from "dotenv";
 
 dotenv.config(); // Load environment variables
@@ -30,7 +31,14 @@ dotenv.config(); // Load environment variables
       signOptions: { expiresIn: "1h" },
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    {
+      provide: "APP_GUARD",
+      useClass: RolesGuard,
+    },
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

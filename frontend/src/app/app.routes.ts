@@ -6,6 +6,8 @@ export const routes: Routes = [
     path: 'products-alternative/:id',
     loadComponent: () =>
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'User'] },
   },
   {
     path: 'home',
@@ -20,12 +22,20 @@ export const routes: Routes = [
   {
     path: 'user-profile',
     loadComponent: () =>
-      import('./userprofile/userprofile.component').then((m) => m.UserprofileComponent),
+      import('./userprofile/userprofile.component').then(
+        (m) => m.UserprofileComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'User'] },
   },
   {
     path: 'add-product',
     loadComponent: () =>
-      import('./addproduct/addproduct.component').then((m) => m.AddproductComponent),
+      import('./addproduct/addproduct.component').then(
+        (m) => m.AddproductComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'User'] },
   },
   {
     path: 'searched-prod',
@@ -33,7 +43,7 @@ export const routes: Routes = [
       import('./searched-prod/searched-prod.component').then(
         (m) => m.SearchedProdComponent
       ),
-  },  
+  },
   {
     path: 'login',
     loadComponent: () =>
@@ -46,7 +56,8 @@ export const routes: Routes = [
   },
   {
     path: 'product-page/:id',
-    loadComponent: () => import('./prodpage/prodpage.component').then(m => m.ProdpageComponent)
+    loadComponent: () =>
+      import('./prodpage/prodpage.component').then((m) => m.ProdpageComponent),
   },
   {
     path: '',

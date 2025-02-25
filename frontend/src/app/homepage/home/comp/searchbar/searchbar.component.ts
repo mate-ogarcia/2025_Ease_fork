@@ -1,10 +1,10 @@
 /**
  * @file searchbar.component.ts
  * @brief Implements a search bar with real-time search, result caching, and filtering capabilities.
- * @details This component provides a search bar with real-time search capabilities, efficient caching of results,
- * and product selection functionalities. It uses RxJS to debounce user input, manages cached search results to improve
+ * @details This component provides a search bar with real-time search capabilities, efficient caching of results, 
+ * and product selection functionalities. It uses RxJS to debounce user input, manages cached search results to improve 
  * performance, and includes filtering options to refine search queries by country, department, category, and price.
- *
+ * 
  * @component SearchbarComponent
  */
 
@@ -12,29 +12,12 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subject, of } from 'rxjs';
-import {
-  debounceTime,
-  distinctUntilChanged,
-  switchMap,
-  tap,
-  filter,
-} from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, tap, filter } from 'rxjs/operators';
 import { Router, RouterLink } from '@angular/router';
 // API
 import { ApiService } from '../../../../../services/api.service';
 import { ApiEuropeanCountries } from '../../../../../services/europeanCountries/api.europeanCountries';
-<<<<<<< HEAD
-import { AuthService } from '../../../../../services/auth/auth.service';
-/**
- * @class SearchbarComponent
- * @description
- * The SearchbarComponent is responsible for managing search input, fetching search results,
- * and handling the product selection process. It includes search query caching, debouncing,
- * and the ability to apply filters to refine search results.
- */
-=======
 
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
 @Component({
   selector: 'app-searchbar',
   standalone: true,
@@ -43,54 +26,32 @@ import { AuthService } from '../../../../../services/auth/auth.service';
   styleUrls: ['./searchbar.component.css']
 })
 export class SearchbarComponent implements OnInit {
-  searchQuery: string = '';         // The current search query entered by the user.
-  searchResults: any[] = [];        // The list of suggestions to display (limited to 5).
-  fullSearchResults: any[] = [];    // The complete list of results from the API.
-  noResultsMessage: string = '';    // Message to display if no results are found.
-  selectedProduct: string = '';     // The ID of the selected product.
-  isFilterPanelOpen: boolean = false; // Indicates if the filter panel is open.
+  searchQuery: string = ''; // The current search query entered by the user.
+  searchResults: any[] = []; // The list of suggestions to display (limited to 5).
+  fullSearchResults: any[] = []; // The complete list of results from the API.
+  noResultsMessage: string = ''; // Message to display if no results are found.
+  selectedProduct: string = ''; // The ID of the selected product.
+  isFilterPanelOpen: boolean = false; ///< Indicates if the filter panel is open.
   // filters
-<<<<<<< HEAD
-  countries: string[] = []; // Initialize with an empty promise
+  countries: string[] = [];
   selectedCountry: string = ''; // Store the selected country
   selectedDepartment: string = ''; // Store the department input by the user
   categoryFilter: boolean = false; // State of the category filter.
   selectedCategory: string = '';
-  categories: any[] = []; // Contains all the categories name
-  brandFilter: boolean = false; // State of the brand filter
+  categories: any[] = [];   // Contains all the categories name
+  brandFilter: boolean = false // State of the brand filter
   selectedBrand: string = '';
-  brands: any[] = []; // Contains all the brands
+  brands: any[] = [] // Contains all the brands
   // Price filter
   priceFilter: boolean = false; // State of the third filter.
-  minPrice: number = 0; // Min price selected by the user
-  maxPrice: number = 5000; // Max price selected by the user
-  // Save the filters
-  appliedFilters: any = {};
-  // Range boundaries for price filter
-  minPriceRange: number = 0; // Min value for the price range
-  maxPriceRange: number = 5000; // Max value for the price range
-  stepPrice: number = 10; // Step for the price increment in the slider
-=======
-  countries: string[] = [];
-  selectedCountry: string = '';     // Store the selected country
-  selectedDepartment: string = '';  // Store the department input by the user
-  categoryFilter: boolean = false;  // State of the category filter.
-  selectedCategory: string = '';
-  categories: any[] = [];           // Contains all the categories name
-  brandFilter: boolean = false      // State of the brand filter
-  selectedBrand: string = '';
-  brands: any[] = []                // Contains all the brands
-  // Price filter
-  priceFilter: boolean = false;     // State of the third filter.
-  minPrice: number = 0;             // Min price selected by the user
-  maxPrice: number = 5000;          // Max price selected by the user
+  minPrice: number = 0;          // Min price selected by the user
+  maxPrice: number = 5000;       // Max price selected by the user
   // Save the filters
   appliedFilters: any = {};
   // Range boundaries for price filter
   minPriceRange: number = 0;
   maxPriceRange: number = 5000;
   stepPrice: number = 10;
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
   // Research & cache
   private _searchSubject = new Subject<string>(); // Subject to manage search input and trigger search requests.
   private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results for efficient reuse.
@@ -105,8 +66,7 @@ export class SearchbarComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private apiCountries: ApiEuropeanCountries,
-    private router: Router,
-    public authService: AuthService
+    private router: Router
   ) {
     this._searchSubject
       .pipe(
@@ -117,47 +77,22 @@ export class SearchbarComponent implements OnInit {
           const trimmedQuery = query.trim();
           const cachedData = this._cache.get(trimmedQuery);
 
-<<<<<<< HEAD
-          if (
-            cachedData &&
-            Date.now() - cachedData.timestamp < this.CACHE_DURATION
-          ) {
-            // If results are cached and not expired, use them directly.
-            this.searchResults = cachedData.data.map((result: any) => ({
-=======
           if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_DURATION) {
             const fullResults = cachedData.data.map((result: any) => ({
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
               id: result.id,
               name: result.fields?.name || 'Unknown name',
-              description:
-                result.fields?.description || 'No description available',
+              description: result.fields?.description || 'No description available',
             }));
-<<<<<<< HEAD
-            this.noResultsMessage = this.searchResults.length
-              ? ''
-              : 'No product found.';
-            return of(null); // Skip API call and return cached data.
-=======
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5);  // Limit to 5 suggestions for display
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
             return of(null);
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
           }
 
           return this.apiService.sendSearchData({ search: trimmedQuery }).pipe(
             tap((response) => {
               if (response && Array.isArray(response)) {
-<<<<<<< HEAD
-                // Cache the new results if the response is valid.
-                this._cache.set(trimmedQuery, {
-                  data: [...response],
-                  timestamp: Date.now(),
-                });
-=======
                 this._cache.set(trimmedQuery, { data: [...response], timestamp: Date.now() });
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
               }
             })
           );
@@ -168,21 +103,14 @@ export class SearchbarComponent implements OnInit {
           if (response) {
             const fullResults = response.length
               ? response.map((result: any) => ({
-                  id: result.id,
-                  name: result.fields?.name || 'Unknown name',
-                  description:
-                    result.fields?.description || 'No description available',
-                }))
+                id: result.id,
+                name: result.fields?.name || 'Unknown name',
+                description: result.fields?.description || 'No description available',
+              }))
               : [];
-<<<<<<< HEAD
-            this.noResultsMessage = this.searchResults.length
-              ? ''
-              : 'No product found.';
-=======
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5);
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
           }
         },
         error: (error) => console.error('❌ Error during search:', error),
@@ -194,22 +122,19 @@ export class SearchbarComponent implements OnInit {
    */
   ngOnInit(): void {
     // Get all the european countries
-    this.apiCountries
-      .fetchEuropeanCountries()
-      .then(() => {
-        this.countries = this.apiCountries.europeanCountries.sort();
-      })
-      .catch((error) => console.error('❌ Error fetching countries:', error));
+    this.apiCountries.fetchEuropeanCountries().then(() => {
+      this.countries = this.apiCountries.europeanCountries.sort();
+    }).catch((error) => console.error('❌ Error fetching countries:', error));
 
     // Get all the category in the DB
     this.apiService.getAllCategories().subscribe({
-      next: (categories) => (this.categories = categories.sort()),
+      next: (categories) => this.categories = categories.sort(),
       error: (error) => console.error('❌ Error fetching categories:', error),
     });
 
     // Get all the brands on the DB
     this.apiService.getAllBrands().subscribe({
-      next: (brands) => (this.brands = brands.sort()),
+      next: (brands) => this.brands = brands.sort(),
       error: (error) => console.error('❌ Error fetching brands:', error),
     });
   }
@@ -246,16 +171,6 @@ export class SearchbarComponent implements OnInit {
    * @param event The keyboard event.
    */
   onEnter(event: any) {
-<<<<<<< HEAD
-    if (
-      this.searchQuery.trim() !== '' &&
-      this.selectedProduct &&
-      event.key === 'Enter'
-    ) {
-      this.searchWithFilters(true); // Produit sélectionné inclus
-    } else if (!this.selectedProduct) {
-      console.warn('⚠️ No products selected for similar search.');
-=======
     event as KeyboardEvent;
     this.toggleFilterPanel();
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
@@ -271,7 +186,6 @@ export class SearchbarComponent implements OnInit {
           this.searchWithoutFilters();
         }
       }
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
     }
   }
 
@@ -286,10 +200,7 @@ export class SearchbarComponent implements OnInit {
 
   /**
    * @brief Selects a product from the search suggestions.
-<<<<<<< HEAD
-=======
    * After selection, the suggestions are hidden.
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
    * @param product The product selected from suggestions.
    */
   selectProduct(product: any) {
@@ -340,20 +251,13 @@ export class SearchbarComponent implements OnInit {
     const filters = {
       country: this.selectedCountry || null,
       department: this.selectedDepartment || null,
-      category:
-        this.categoryFilter && this.selectedCategory
-          ? this.selectedCategory
-          : null,
+      category: this.categoryFilter && this.selectedCategory ? this.selectedCategory : null,
       brand: this.brandFilter ? this.selectedBrand : null,
-      price: this.priceFilter
-        ? { min: this.minPrice, max: this.maxPrice }
-        : null,
+      price: this.priceFilter ? { min: this.minPrice, max: this.maxPrice } : null,
     };
 
     this.appliedFilters = Object.fromEntries(
-      Object.entries(filters).filter(
-        ([_, value]) => value !== null && value !== ''
-      )
+      Object.entries(filters).filter(([_, value]) => value !== null && value !== '')
     );
     // Once filters are applied close the panel
     this.toggleFilterPanel();
@@ -374,19 +278,12 @@ export class SearchbarComponent implements OnInit {
     };
 
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
-<<<<<<< HEAD
-      next: (response) =>
-        this.router.navigate(['/searched-prod'], {
-          state: { resultsArray: response },
-        }),
-=======
       next: (response) => {
         // Allow the reload the page
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
         });
       },
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
       error: (error) => console.error('❌ Search error:', error),
     });
   }
@@ -404,12 +301,6 @@ export class SearchbarComponent implements OnInit {
     }
 
     this.apiService.postProductsWithFilters(this.appliedFilters).subscribe({
-<<<<<<< HEAD
-      next: (response) =>
-        this.router.navigate(['/searched-prod'], {
-          state: { resultsArray: response },
-        }),
-=======
       next: (response) => {
         // Allow the reload the page
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
@@ -417,8 +308,8 @@ export class SearchbarComponent implements OnInit {
         });
         console.log("response :", response);
       },
->>>>>>> ca948cac661ab08b8593ca9b4e9d8fa7678b5c2e
       error: (error) => console.error('❌ Search error:', error),
     });
   }
+
 }

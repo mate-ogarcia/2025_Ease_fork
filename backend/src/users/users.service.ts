@@ -15,7 +15,7 @@ import { DatabaseService } from "../database/database.service";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly databaseService: DatabaseService) { }
+  constructor(private readonly databaseService: DatabaseService) {}
 
   /**
    * @brief Searches for a user by email.
@@ -51,11 +51,31 @@ export class UsersService {
    */
   async createUser(user: any) {
     try {
-      const result = await this.databaseService.addUser(user.username, user.email, user.password);
+      const result = await this.databaseService.addUser(
+        user.username,
+        user.email,
+        user.password,
+      );
       return result;
     } catch (error) {
       console.error("❌ Error creating user:", error);
       throw new InternalServerErrorException("Error during registration.");
+    }
+  }
+
+  /**
+   * @brief Retrieves all users from the database.
+   * @details This method queries the database to get a list of all registered users.
+   *
+   * @returns {Promise<any[]>} Array of user objects.
+   * @throws {InternalServerErrorException} If an error occurs during retrieval.
+   */
+  async findAll(): Promise<any[]> {
+    try {
+      return await this.databaseService.getAllUsers();
+    } catch (error) {
+      console.error("❌ Error retrieving all users:", error);
+      throw new InternalServerErrorException("Error retrieving users list.");
     }
   }
 }
