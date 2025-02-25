@@ -31,24 +31,30 @@ export class SearchbarComponent implements OnInit {
   fullSearchResults: any[] = []; // The complete list of results from the API.
   noResultsMessage: string = ''; // Message to display if no results are found.
   selectedProduct: string = ''; // The ID of the selected product.
-  isFilterPanelOpen: boolean = false; ///< Indicates if the filter panel is open.
+  
+  // Dropdown for filters (renamed for cohérence with the new design)
+  filterDropdownOpen: boolean = false; ///< Indicates if the filter dropdown is open.
+  
   // filters
   countries: string[] = [];
   selectedCountry: string = ''; // Store the selected country
   selectedDepartment: string = ''; // Store the department input by the user
-  categoryFilter: boolean = false; // State of the second filter.
+  categoryFilter: boolean = false; // State of the category filter.
   selectedCategory: string = '';
-  categories: any[] = [];   // Contains all the categories name
+  categories: any[] = [];   // Contains all the category names
+  
   // Price filter
-  priceFilter: boolean = false; // State of the third filter.
+  priceFilter: boolean = false; // State of the price filter.
   minPrice: number = 0;          // Min price selected by the user
   maxPrice: number = 5000;       // Max price selected by the user
-  // Save the filters
-  appliedFilters: any = {};
   // Range boundaries for price filter
   minPriceRange: number = 0;     
   maxPriceRange: number = 5000;  
   stepPrice: number = 10;        
+  
+  // Save the filters
+  appliedFilters: any = {};
+  
   // Research & cache
   private _searchSubject = new Subject<string>(); // Subject to manage search input and trigger search requests.
   private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results for efficient reuse.
@@ -199,11 +205,11 @@ export class SearchbarComponent implements OnInit {
   // ======================== FILTER FUNCTIONS
 
   /**
-   * @function toggleFilterPanel
-   * @description Toggles the visibility of the filter panel.
+   * @function toggleFilterDropdown
+   * @description Toggles the visibility of the filter dropdown.
    */
-  toggleFilterPanel() {
-    this.isFilterPanelOpen = !this.isFilterPanelOpen;
+  toggleFilterDropdown() {
+    this.filterDropdownOpen = !this.filterDropdownOpen;
   }
 
   /**

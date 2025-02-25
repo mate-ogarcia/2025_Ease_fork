@@ -12,6 +12,7 @@ import { UnsplashService } from '../../../../services/unsplash.service'; // ajus
 })
 export class DisplayResultsComponent implements OnInit {
   resultsArray: any[] = [];
+  viewMode: 'list' | 'grid' = 'list'; // mode par défaut
 
   constructor(
     private router: Router, 
@@ -28,12 +29,10 @@ export class DisplayResultsComponent implements OnInit {
         this.unsplashService.searchPhotos(product.name).subscribe(response => {
           console.log('Unsplash response for', product.name, response);
           if (response.results && response.results.length > 0) {
-            // Tente d'utiliser l'URL raw avec des paramètres
             let finalUrl = '';
             if (response.results[0].urls.raw) {
               finalUrl = `${response.results[0].urls.raw}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
             } else if (response.results[0].urls.small) {
-              // Utilise l'URL small en fallback
               finalUrl = response.results[0].urls.small;
             }
             product.imageUrl = finalUrl;
@@ -45,6 +44,10 @@ export class DisplayResultsComponent implements OnInit {
         });
       }
     });
+  }
+
+  setViewMode(mode: 'list' | 'grid'): void {
+    this.viewMode = mode;
   }
 
   goToProduct(product: any) {
@@ -61,6 +64,6 @@ export class DisplayResultsComponent implements OnInit {
   }
 
   trackByProduct(index: number, product: any): any {
-    return product.id; // Assurez-vous que chaque produit possède un identifiant unique
+    return product.id;
   }
 }

@@ -1,8 +1,19 @@
 <div class="container">
+  <!-- Bouton pour changer de mode -->
+  <div class="grid-btn">
+    <button [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')">
+      <i class="fa-solid fa-list"></i>
+    </button>
+    <button [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')">
+      <i class="fa-solid fa-grip"></i>
+    </button>
+  </div>
+    
+  
   <div class="result-container" *ngIf="resultsArray.length > 0; else noResults">
-    <h2>🔎 Produits similaires trouvés :</h2>
     <div class="item-container">
-      <ul class="items-list">
+      <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
+      <ul class="items-list" [ngClass]="viewMode">
         <li class="item" 
             *ngFor="let product of resultsArray; trackBy: trackByProduct" 
             (click)="goToProduct(product)"

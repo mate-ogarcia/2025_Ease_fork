@@ -1,4 +1,5 @@
-  .container{
+/* Conteneur principal de la searchbar */
+.container {
   width: 100%;
   height: 100%;
   display: flex;
@@ -7,37 +8,29 @@
   gap: 10px;
 }
 
+/* Style principal de la zone de recherche */
 .search-container {
   position: relative;
-  width: 70%;
-  height: 100%;
+  width: 100%;
   background: white;
   border-radius: 40px;
-  z-index: 10;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
+  padding: 5px 10px;
 }
 
-.search-container.has-suggestions {
-  border-radius: 20px 20px 0 0;
-}
-
-.search-container.has-suggestions input {
-  border-radius: 20px 20px 0 0;
-}
-
+/* Champ de saisie */
 .search-container input {
   border: none;
   outline: none;
   flex: 1;
-  width: 100%;
-  height: 100%;
   font-size: 16px;
   padding: 15px;
   border-radius: 25px;
 }
 
+/* Bouton d'effacement de la recherche */
 .search-btn {
   background: none;
   border: none;
@@ -47,39 +40,37 @@
   margin-left: 8px;
 }
 
-.filter-btn, .add-btn {
+/* Boutons filtre et ajout */
+.filter-btn,
+.add-btn {
   border: none;
   border-left: 1px solid rgb(64, 60, 60);
   margin-left: 10px;
   color: black;
   background-color: transparent;
   padding: 6px 12px;
-  width: auto;
-  display: flex;
-  align-items: center; /* Centrer l'icône verticalement */
-  justify-content: center;
-  height: 65%; /* Assurez-vous qu'il prend la hauteur de son parent */
   cursor: pointer;
 }
+
 .add-btn {
   border-left: none;
   margin-left: 0;
   padding-left: 5px;
 }
 
+/* Zone de suggestions */
 .suggestions {
   width: 100%;
   background: white;
   border-top: 1px solid #ddd;
-  max-height: 200px;
   overflow-y: auto;
   border-radius: 0 0 20px 20px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none;
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 9;
+  z-index: 900;
+  display: none;
   max-height: 20vh;
 }
 
@@ -92,86 +83,81 @@
   margin: 0;
   padding: 0;
 }
-
+.has-suggestions{
+  border-radius: 25px 25px 0 0;
+}
+.has-suggestions input {
+  border-radius: 25px 25px 0 0;
+}
 .suggestions ul li {
   padding: 10px 15px;
   cursor: pointer;
   transition: background 0.2s;
+  color: black;
+  text-align: left;
 }
 
 .suggestions ul li:hover {
   background: #f4f4f4;
 }
 
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.3);
-  border-radius: 10px;
-  transition: background 0.3s ease-in-out;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.5);
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 100, 100, 0.3) rgba(0, 0, 0, 0.05);
-}
-
-/* Panneau latéral des filtres */
-.filter-panel {
-  position: fixed;
-  right: -300px;
-  top: 0;
-  width: 300px;
-  height: 100%;
-  background: white;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-  padding: 20px;
-  transition: right 0.3s ease-in-out;
-  z-index: 100;
-}
-
-.filter-panel.open {
+/* Dropdown des filtres intégré à la searchbar */
+.filter-dropdown {
+  position: absolute;
+  top: 110%;
   right: 0;
-}
-
-.filter-panel h3 {
-  margin-top: 0;
-}
-
-.close-btn {
-  background: red;
-  color: white;
-  padding: 6px;
-  border-radius: 50%;
-  float: right;
-  cursor: pointer;
-}
-
-.filter-panel label {
-  display: block;
-  margin: 10px 0;
-}
-
-.filter-panel button {
-  background: #007bff;
-  color: white;
-  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  cursor: pointer;
+  padding: 15px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1100;
+  min-width: 300px;
+}
+
+/* Titre du dropdown des filtres */
+.filter-dropdown-menu h3 {
+  margin-top: 0;
+  font-size: 1.2em;
+  color: #333;
+  text-align: center;
+}
+
+/* Labels et champs de formulaire du dropdown */
+.filter-dropdown-menu label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.filter-dropdown-menu select,
+.filter-dropdown-menu input {
   width: 100%;
+  padding: 6px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Boutons d'action dans le dropdown des filtres */
+.filter-dropdown-menu button {
+  width: 100%;
+  padding: 10px;
   margin-top: 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.filter-dropdown-menu button:first-of-type {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.filter-dropdown-menu button:last-of-type {
+  background-color: #6c757d;
+  color: #fff;
+  margin-top: 5px;
 }
