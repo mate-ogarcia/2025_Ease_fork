@@ -123,12 +123,15 @@ export class AuthComponent implements AfterViewInit {
    * 
    * @param {any} form - The submitted form object containing user inputs.
    */
-  async onSubmit(form: any): Promise<void> { 
+  async onSubmit(form: any): Promise<void> {
     if (!form.valid) {
       this.errorMessage = 'Please fill in all fields correctly.';
       return;
-    }   
-    
+    }
+
+    // Hash the password before sending it to the server
+    const hashedPassword = await bcrypt.hash(this.password, 10);
+
     // If the user wants to log in
     if (this.isLoginMode) {
       this.authService.login(this.username, this.password).subscribe({
@@ -139,16 +142,14 @@ export class AuthComponent implements AfterViewInit {
         },
         error: (err) => {
           console.log("Login error:", err);
-          window.alert('Something\'s gone wrong : Username or Password incorrect');
-
+          window.alert('Username or Password incorrect');
           this.errorMessage = 'Invalid email or password.';
         },
       });
     }
-  // If the user wants to create an account
-  if (!this.isLoginMode) {
-    // Hash the password before sending it to the server
-      const hashedPassword = await bcrypt.hash(this.password, 10);
+
+    // If the user wants to create an account
+    if (!this.isLoginMode) {
 
       // Call register with the hashed password
       this.authService.register(this.username, this.email, hashedPassword).subscribe({
