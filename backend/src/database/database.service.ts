@@ -589,215 +589,202 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // ======================== SEARCH FUNCTIONS (ALTERNATIVE PRODUCTS, NOT THE SUGGESTIONS)
+  // =========== UTILITY FUNCTIONS
   /**
-   * @brief Retrieves products based on provided filters and/or similarity to a selected product.
+   * @brief Builds a SQL WHERE clause from an array of conditions.
    * 
    * @details
-   * This function dynamically constructs a N1QL query to fetch products that either:
-   * - Match the provided filters (e.g., category, country, price range, brand), OR
-   * - Are similar to a selected product (based on category, tags, price range, and brand).
+   * Takes an array of condition strings and joins them with `AND`.  
+   * Returns an empty string if no conditions are provided.
    * 
-   * ### Query Logic:
-   * - **With `productId`:** Searches for products similar to the selected product using:
-   *   - Category match
-   *   - Shared tags
-   *   - Price range within ±20% of the selected product's price
-   *   - Same brand association (via `FK_Brands`)
-   * - **Without `productId`:** Filters products directly based on provided filters.
-   * - **Combined case:** If both `productId` and filters are provided, products must satisfy either similarity conditions or provided filters.
-   * 
-   * @param filters An object containing search filters. Possible fields:
-   * - `category` (string): Category to filter products by.
-   * - `country` (string): Country of origin to filter products by.
-   * - `minPrice` (number): Minimum price for filtering.
-   * - `maxPrice` (number): Maximum price for filtering.
-   * - `brand` (string, optional): Brand to filter products by.
-   * - `productId` (string, optional): ID of a selected product to find similar products.
-   * 
-   * @returns {Promise<any[]>} An array of products matching the filters and/or similarity criteria.
-   * 
-   * @throws {InternalServerErrorException} Thrown if there is an error during query construction or execution.
+   * @param conditions An array of condition strings (e.g., `"price >= $minPrice"`).
+   * @returns {string} A formatted SQL condition string or an empty string if no conditions are given.
+   * @example
+   * buildConditions(["price >= $minPrice", "category = $category"])
+   * // Returns: "(price >= $minPrice AND category = $category)"
    */
-  async getProductsWithFilters(filters: any): Promise<any[]> {
+  buildConditions(conditions: string[]): string {
+    return conditions.length ? `(${conditions.join(" AND ")})` : "";
+  }
+
+  /**
+   * @brief Builds similarity-based conditions using attributes of a selected product.
+   *
+   * @details
+   * Fetches a product by its ID and constructs conditions to find similar products.  
+   * Similarity criteria include:
+   * - Category match  
+   * - Shared tags  
+   * - Price within ±20% of the selected product’s price  
+   * - Same brand (FK_Brands)
+   *
+   * @param productId The ID of the selected product for similarity comparison.
+   * @returns {Promise<string>} A string containing similarity conditions or an empty string if no product is found.
+   * @throws {Error} If the product is not found or the query fails.
+   */
+  async buildSimilarityConditions(this: any, productId: string): Promise<string> {
+    if (!productId) return "";
+
+    const selectedProduct = await this.getProductById(productId);
+    if (!selectedProduct) throw new Error(`❌ Product with ID ${productId} not found.`);
+
+    const conditions: string[] = [];
+    if (selectedProduct.category) conditions.push(`category = $category`);
+    if (selectedProduct.tags?.length) conditions.push(`ANY tag IN tags SATISFIES tag IN $tags END`);
+    if (selectedProduct.price) conditions.push(`price BETWEEN $minPrice AND $maxPrice`);
+    if (selectedProduct.FK_Brands) conditions.push(`FK_Brands = $brandFK`);
+
+    return this.buildConditions(conditions);
+  }
+
+  /**
+   * @brief Builds filter-based conditions based on user-provided criteria.
+   *
+   * @details
+   * Constructs query conditions using user filters for:
+   * - Category
+   * - Country of origin
+   * - Price range
+   * - Brand (via subquery to resolve foreign key reference)
+   * 
+   * If a brand is provided without a product ID, it performs a subquery to find the corresponding `FK_Brands`.
+   *
+   * @param filters The filters object containing user-provided criteria.
+   * @param brandBucketName Name of the Couchbase bucket containing brand documents.
+   * @returns {Promise<string>} A string containing filter conditions.
+   */
+  async buildFilterConditions(this: any, filters: any, brandBucketName: string): Promise<string> {
+    const conditions: string[] = [];
+
+    if (filters.category) conditions.push(`category = $filterCategory`);
+    if (filters.country) conditions.push(`origin = $filterCountry`);
+    if (filters.minPrice && filters.maxPrice) {
+      conditions.push(`price BETWEEN $filterMinPrice AND $filterMaxPrice`);
+    } else if (filters.minPrice) {
+      conditions.push(`price >= $filterMinPrice`);
+    } else if (filters.maxPrice) {
+      conditions.push(`price <= $filterMaxPrice`);
+    }
+
+    if (filters.brand && !filters.productId) {
+      console.log(`🔎 Checking brand FK for brand: ${filters.brand}`);
+      const brandResult = await this.getProductsByBrand(filters.brand);
+      const brandFK = brandResult?.[0]?.brandName;
+
+      if (brandFK) {
+        const brandSubquery = `(SELECT RAW META(b).id FROM \`${brandBucketName}\` b WHERE b.name = $filterBrandName LIMIT 1)`;
+        console.log('brandSubquery:\n', brandSubquery);
+        conditions.push(`FK_Brands IN ${brandSubquery}`);
+      } else {
+        console.warn(`⚠️ No FK_Brands found for brand: ${filters.brand}`);
+      }
+    }
+    return this.buildConditions(conditions);
+  }
+
+  /**
+   * @brief Builds the final SQL query based on similarity and filter conditions.
+   *
+   * @details
+   * Combines similarity and filter conditions into a single WHERE clause.  
+   * - `/searched-prod`: Combines conditions with `AND` for stricter matching.  
+   * - `/home`: Combines conditions with `OR` for broader matching.  
+   * 
+   * @param similarityClause The similarity conditions string.
+   * @param filtersClause The filter conditions string.
+   * @param currentRoute The current route determining the logical operator to use.
+   * @param bucketName Name of the Couchbase bucket containing product documents.
+   * @returns {string} A full N1QL query string.
+   * @throws {Error} If the route is unrecognized.
+   */
+  buildQuery(similarityClause: string, filtersClause: string, currentRoute: string, bucketName: string): string {
+    if (!similarityClause && !filtersClause) return "";
+
+    let whereClause = "";
+    if (currentRoute === "/searched-prod") {
+      whereClause = [similarityClause, filtersClause].filter(Boolean).join(" AND ");
+    } else if (currentRoute === "/home") {
+      whereClause = [similarityClause, filtersClause].filter(Boolean).join(" OR ");
+    } else {
+      throw new Error(`❌ Unknown route: ${currentRoute}`);
+    }
+
+    return `SELECT * FROM \`${bucketName}\` WHERE ${whereClause}`;
+  }
+
+  // =========== MAIN FUNCTION
+  /**
+   * @brief Retrieves products based on filters and/or similarity to a selected product.
+   *
+   * @details
+   * Main function that:
+   * - Builds similarity conditions if a product ID is provided.
+   * - Builds filter conditions based on user inputs.
+   * - Combines conditions depending on the current route:
+   *   - `/searched-prod`: Products must satisfy both conditions (`AND`).
+   *   - `/home`: Products satisfying either condition are returned (`OR`).
+   * - Executes the final query and returns matching products.
+   * 
+   * Handles subqueries for brand foreign keys (FK_Brands)  
+   * Filters include category, price range, country, and brand
+   *
+   * @param filters An object containing:
+   *   - `category` (string): Product category to filter.
+   *   - `country` (string): Country of origin.
+   *   - `minPrice` (number): Minimum price.
+   *   - `maxPrice` (number): Maximum price.
+   *   - `brand` (string): Brand name.
+   *   - `productId` (string): Product ID for similarity search.
+   *   - `currentRoute` (string): Route context (`/home` or `/searched-prod`).
+   * @returns {Promise<any[]>} An array of matching product objects.
+   * @throws {Error} If query construction or execution fails.
+   */
+  async getProductsWithFilters(this: any, filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
     const brandBucketName = this.brandBucket.name;
-    const currentRoute = filters.currentRoute;
+    const { currentRoute, productId } = filters;
 
+    if (!Object.keys(filters).length) {
+      throw new Error("❌ Filters are empty");
+    }
+
+    // Step 1 : Construction of similarity conditions (if productId is supplied)
+    const similarityClause = productId ? await this.buildSimilarityConditions.call(this, productId) : "";
+
+    // Step 2 : Construction of filter-based conditions (including brand subquery)
+    const filtersClause = await this.buildFilterConditions.call(this, filters, brandBucketName);
+
+    // Step 3 : Building the final query based on the route
+    const queryWithJoin = this.buildQuery(similarityClause, filtersClause, currentRoute, bucketName);
+
+    if (!queryWithJoin) return [];
+
+    // Step 4 : Preparation of linked parameters
+    const selectedProduct = productId ? await this.getProductById(productId) : null;
+    const parameters = {
+      category: selectedProduct?.category,
+      tags: selectedProduct?.tags || [],
+      minPrice: selectedProduct?.price ? selectedProduct.price * 0.8 : undefined,
+      maxPrice: selectedProduct?.price ? selectedProduct.price * 1.2 : undefined,
+      brandFK: selectedProduct?.FK_Brands,
+      filterCategory: filters.category,
+      filterCountry: filters.country,
+      filterMinPrice: filters.minPrice,
+      filterMaxPrice: filters.maxPrice,
+      filterBrandName: filters.brand,
+    };
+
+    // Step 5 : Query execution and results management
     try {
-      if (Object.keys(filters).length === 0) {
-        throw new Error("❌ Filters are empty");
-      }
-
-      const similarToFiltersConditions: string[] = [];
-      let queryWithJoin = "";
-
-      // ---------------------
-      // Part 1: Similarity search based on a selected product (if productId is provided)
-      // ---------------------
-      if (filters.productId) {
-        console.log(`🔎 Searching for products similar to: ${filters.productId}`);
-
-        const selectedProduct = await this.getProductById(filters.productId);
-        if (!selectedProduct) {
-          throw new Error(`❌ Product with ID ${filters.productId} not found.`);
-        }
-
-        console.log(`🔹 Selected product:`, selectedProduct);
-
-        // ---------------------
-        // Similarity criteria based on the selected product's attributes
-        // ---------------------
-        const subSimilarityConditions: string[] = [];
-
-        // Match products with the same category
-        if (selectedProduct.category) {
-          subSimilarityConditions.push(`category = '${selectedProduct.category}'`);
-        }
-
-        // Match products with at least one similar tag
-        if (selectedProduct.tags?.length) {
-          subSimilarityConditions.push(`ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`);
-        }
-
-        // Match products within ±20% price range of the selected product
-        if (selectedProduct.price) {
-          const minPrice = selectedProduct.price * 0.8;
-          const maxPrice = selectedProduct.price * 1.2;
-          subSimilarityConditions.push(`price BETWEEN ${minPrice} AND ${maxPrice}`);
-        }
-
-        // Add brand filter directly if product has a FK_Brands
-        if (selectedProduct.FK_Brands) {
-          console.log("🔎 Using brand from selected product:", selectedProduct.FK_Brands);
-          subSimilarityConditions.push(`FK_Brands = '${selectedProduct.FK_Brands}'`);
-        }
-
-        console.log("✅ subSimilarityConditions:\n", subSimilarityConditions);
-
-        // ---------------------
-        // Part 2: Search based on directly provided filters
-        // ---------------------
-        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
-        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
-        if (filters.minPrice && filters.maxPrice) {
-          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
-        } else if (filters.minPrice) {
-          similarToFiltersConditions.push(`price >= ${filters.minPrice}`);
-        } else if (filters.maxPrice) {
-          similarToFiltersConditions.push(`price <= ${filters.maxPrice}`);
-        }
-
-        // If brand is provided (without a selected product), use getProductsByBrand to fetch FK_Brands
-        if (filters.brand && !filters.productId) {
-          const brandResult = await this.getProductsByBrand(filters.brand);
-          if (brandResult?.length) {
-            const brandFK = brandResult[0].FK_Brands; // Assumes getProductsByBrand returns FK_Brands
-            if (brandFK) {
-              similarToFiltersConditions.push(`FK_Brands = '${brandFK}'`);
-            }
-          }
-        }
-
-        console.log("✅ similarToFiltersConditions:\n", similarToFiltersConditions);
-
-        // ---------------------
-        // Build a query based on currentRoute :
-        // If the user is on the /home page, the function returns filters OR similar selected products.
-        // If the user is on the /search-prod page, the function returns the filters AND the selected products.
-        // ---------------------
-        const similarityClause = subSimilarityConditions.length > 0 ? `(${subSimilarityConditions.join(" AND ")})` : "";
-        const filtersClause = similarToFiltersConditions.length > 0 ? `(${similarToFiltersConditions.join(" AND ")})` : "";
-        // Searched-prod
-        if (currentRoute === '/searched-prod') {
-          console.log("currentRoute :", currentRoute);
-          if (similarityClause && filtersClause) {
-            queryWithJoin = `
-              SELECT * FROM \`${bucketName}\`
-              WHERE ${similarityClause} AND ${filtersClause}
-            `;
-          } else if (similarityClause) {
-            queryWithJoin = `
-              SELECT * FROM \`${bucketName}\`
-              WHERE ${similarityClause}
-            `;
-          } else if (filtersClause) {
-            queryWithJoin = `
-              SELECT * FROM \`${bucketName}\`
-              WHERE ${filtersClause}
-            `;
-          }
-          // home
-        } else if (currentRoute === '/home') {
-          if (similarityClause && filtersClause) {
-            queryWithJoin = `
-              SELECT * FROM \`${bucketName}\`
-              WHERE ${similarityClause} OR ${filtersClause}
-            `;
-          } else if (similarityClause) {
-            queryWithJoin = `
-              SELECT * FROM \`${bucketName}\`
-              WHERE ${similarityClause}
-            `;
-          } else if (filtersClause) {
-            queryWithJoin = `
-              SELECT * FROM \`${bucketName}\`
-              WHERE ${filtersClause}
-            `;
-          }
-        }
-        // Other route
-        else {
-          throw new Error(`❌ Unknown route: ${currentRoute}`);
-        }
-
-      }
-      else {
-        // ---------------------
-        // No productId provided: Apply only the provided filters
-        // ---------------------
-        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
-        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
-        if (filters.minPrice && filters.maxPrice) {
-          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
-        }
-
-        // Add brand filter with subquery
-        if (filters.brand) {
-          console.log(`🔎 Adding brand filter with subquery for brand: ${filters.brand}`);
-
-          const brandSubquery = `
-            (SELECT RAW META(b).id FROM \`${brandBucketName}\` b WHERE b.name = '${filters.brand}' LIMIT 1)
-          `;
-
-          similarToFiltersConditions.push(`FK_Brands IN ${brandSubquery}`); // /!\ brandSubquery returns an array
-        }
-
-        // ---------------------
-        // building the final request
-        // ---------------------
-        if (similarToFiltersConditions.length > 0) {
-          queryWithJoin = `
-            SELECT * FROM \`${bucketName}\`
-            WHERE ${similarToFiltersConditions.join(" OR ")}
-          `;
-        }
-      }
-
-      // ---------------------
-      // Execute the constructed query
-      // ---------------------
-      let combinedResults: any[] = [];
-
-      if (queryWithJoin) {
-        console.log(`🔹 Executing combined similarity and filters query: ${queryWithJoin}`);
-        const resultCombined = await this.cluster.query(queryWithJoin);
-        combinedResults = resultCombined.rows.map(row => row[bucketName]);
-      }
-      console.log(`📦 Total combined products: ${combinedResults.length}`);
-      return combinedResults;
+      console.log(`🔹 Executing query: ${queryWithJoin}`);
+      const result = await this.cluster.query(queryWithJoin, { parameters });
+      console.log(`📦 Total products found: ${result.rows.length}`);
+      return result.rows.map(row => row[bucketName]);
     } catch (error) {
-      console.error("❌ Error retrieving filtered products:", error);
-      throw new InternalServerErrorException("An error occurred while retrieving the filtered products.");
+      console.error("❌ Error executing query:", error);
+      throw new Error("An error occurred while retrieving the filtered products.");
     }
   }
+
 }

@@ -311,12 +311,17 @@ export class SearchbarComponent implements OnInit {
     this.applyFilters();
     console.log("W/out Filters launched");
 
+    const filtersToSend = {
+      ...this.appliedFilters,
+      currentRoute: this.router.url,
+    };
+
     if (!Object.keys(this.appliedFilters).length) {
       console.warn('⚠️ No filters applied.');
       return;
     }
 
-    this.apiService.postProductsWithFilters(this.appliedFilters).subscribe({
+    this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
         // Allow the reload the page
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
