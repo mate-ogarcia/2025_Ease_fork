@@ -125,10 +125,7 @@ export class SearchbarComponent implements OnInit {
    * @brief Lifecycle hook that initializes the component.
    */
   ngOnInit(): void {
-
     const currentRoute = this.router.url;  // Get the active route
-    console.log("current route:", currentRoute);
-
 
     // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
@@ -225,6 +222,57 @@ export class SearchbarComponent implements OnInit {
     this.searchResults = []; // Hide suggestions after selection.
   }
 
+  /**
+ * @brief Searches with applied filters and navigates to results page.
+ * @param includeSelectedProduct Indicates if the selected product should be included.
+ */
+  searchWithProductSelected(includeSelectedProduct: boolean = false) {
+    this.applyFilters(); // Apply filters before the research
+
+    const filtersToSend = {
+      ...this.appliedFilters,
+      productId: includeSelectedProduct ? this.selectedProduct : null, // Include the selected product if asked
+      currentRoute: this.router.url,
+    };
+
+    this.apiService.postProductsWithFilters(filtersToSend).subscribe({
+      next: (response) => {
+        // Allow the reload the page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
+        });
+      },
+      error: (error) => console.error('❌ Search error:', error),
+    });
+  }
+
+  /**
+   * @brief Searches without including a selected product.
+   */
+  searchWithoutProductSelected() {
+    this.applyFilters();
+
+    const filtersToSend = {
+      ...this.appliedFilters,
+      currentRoute: this.router.url,
+    };
+
+    if (!Object.keys(this.appliedFilters).length) {
+      console.warn('⚠️ No filters applied.');
+      return;
+    }
+
+    this.apiService.postProductsWithFilters(filtersToSend).subscribe({
+      next: (response) => {
+        // Allow the reload the page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
+        });
+      },
+      error: (error) => console.error('❌ Search error:', error),
+    });
+  }
+
   // ======================== FILTER FUNCTIONS
 
   /**
@@ -277,60 +325,4 @@ export class SearchbarComponent implements OnInit {
     // Once filters are applied close the panel
     this.toggleFilterPanel();
   }
-
-  /**
-   * @brief Searches with applied filters and navigates to results page.
-   * @param includeSelectedProduct Indicates if the selected product should be included.
-   */
-  searchWithProductSelected(includeSelectedProduct: boolean = false) {
-    this.applyFilters(); // Apply filters before the research
-
-    console.log("W/Filters launched");
-
-    const filtersToSend = {
-      ...this.appliedFilters,
-      productId: includeSelectedProduct ? this.selectedProduct : null, // Include the selected product if asked
-      currentRoute: this.router.url,
-    };
-
-    this.apiService.postProductsWithFilters(filtersToSend).subscribe({
-      next: (response) => {
-        // Allow the reload the page
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
-        });
-      },
-      error: (error) => console.error('❌ Search error:', error),
-    });
-  }
-
-  /**
-   * @brief Searches without including a selected product.
-   */
-  searchWithoutProductSelected() {
-    this.applyFilters();
-    console.log("W/out Filters launched");
-
-    const filtersToSend = {
-      ...this.appliedFilters,
-      currentRoute: this.router.url,
-    };
-
-    if (!Object.keys(this.appliedFilters).length) {
-      console.warn('⚠️ No filters applied.');
-      return;
-    }
-
-    this.apiService.postProductsWithFilters(filtersToSend).subscribe({
-      next: (response) => {
-        // Allow the reload the page
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
-        });
-        console.log("response :", response);
-      },
-      error: (error) => console.error('❌ Search error:', error),
-    });
-  }
-
 }
