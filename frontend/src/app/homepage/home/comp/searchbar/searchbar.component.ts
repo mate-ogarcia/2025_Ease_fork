@@ -125,8 +125,6 @@ export class SearchbarComponent implements OnInit {
    * @brief Lifecycle hook that initializes the component.
    */
   ngOnInit(): void {
-    const currentRoute = this.router.url;  // Get the active route
-
     // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
       this.countries = this.apiCountries.europeanCountries.sort();

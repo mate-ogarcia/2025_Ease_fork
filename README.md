@@ -59,14 +59,19 @@ console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
 
     As far as production mode is concerned, you don't need to install anything as you'll be accessing the deployed database, just make sure that in your `.env.production` all your variables are correct.
 
-2. for the development mode :
+2. for development mode :
 
-    As far as development mode is concerned, you need to install couchbase, create your server, bucket and index.
+    For development mode, you need to install couchbase, create your server, bucket and index.
 
-    - for installing couchbase locally, go to this url : `https://www.couchbase.com/downloads/?family=couchbase-server` and install the couchbase serve community (the free one).
-    - One it's installed, connect yourself, follow the steps and create a server (the server isn't that important in itself but make sur you memorize your login codes).
-    - Create a user(make sur this is a admin user an write down the login id, they're really importants).
-    - Create all the buckets necessary, you'll need to make sur the name of the bucket you've juste create correspond well to the ones in your `.env.development`
+    - To install couchbase locally, go to this url: `https://www.couchbase.com/downloads/?family=couchbase-server` and install the couchbase serve community (the free one).
+    - Once installed, log in, follow the steps and create a server (the server itself isn't very important, but make sure you remember your access codes).
+    - Create a user (make sure it's an admin user, and note the login ID - it's very important).
+    - Create all the buckets you need, making sure that the names of the buckets you've just created match those of your `.env.development`.
+    - Create your index on your bucket products
+
+    #### Note:
+
+    Make sur all your variables in your `.env.development` match those in your couchbase database, including the bucket's name and index's name.
 
 ## Starting the Project
 
