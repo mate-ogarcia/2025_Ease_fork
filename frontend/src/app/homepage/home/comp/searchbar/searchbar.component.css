@@ -38,6 +38,24 @@
   border-radius: 25px;
 }
 
+.no-results-message {
+  position: absolute;
+  right: 120px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.no-results-message::before {
+  content: "🔍";
+  font-style: normal;
+}
+
 .search-btn {
   background: none;
   border: none;

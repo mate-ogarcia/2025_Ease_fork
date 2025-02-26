@@ -4,8 +4,11 @@
  * @details This component provides a search bar with real-time search capabilities, efficient caching of results, 
  * and product selection functionalities. It uses RxJS to debounce user input, manages cached search results to improve 
  * performance, and includes filtering options to refine search queries by country, department, category, and price.
+ * It has been modified to handle API errors gracefully and prevent UI crashes.
  * 
- * @component SearchbarComponent
+ * @author Original Author
+ * @date Original Date
+ * @modified 2023-XX-XX
  */
 
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
@@ -17,13 +20,14 @@ import { Router, RouterLink } from '@angular/router';
 // API
 import { ApiService } from '../../../../../services/api.service';
 import { ApiEuropeanCountries } from '../../../../../services/europeanCountries/api.europeanCountries';
+import { AuthService } from '../../../../../services/auth/auth.service';
 
 @Component({
   selector: 'app-searchbar',
   standalone: true,
   imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './searchbar.component.html',
-  styleUrls: ['./searchbar.component.css']
+  styleUrls: ['./searchbar.component.css'],
 })
 export class SearchbarComponent implements OnInit {
   searchQuery: string = ''; // The current search query entered by the user.
@@ -56,6 +60,7 @@ export class SearchbarComponent implements OnInit {
   private _searchSubject = new Subject<string>(); // Subject to manage search input and trigger search requests.
   private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results for efficient reuse.
   private CACHE_DURATION = 5 * 60 * 1000; // Cache expiration time (5 minutes).
+  isAuthenticated: boolean = false;
 
   @Output() searchExecuted = new EventEmitter<void>(); // Event to notify when a search is completed.
 
@@ -66,7 +71,8 @@ export class SearchbarComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private apiCountries: ApiEuropeanCountries,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this._searchSubject
       .pipe(
@@ -85,7 +91,7 @@ export class SearchbarComponent implements OnInit {
             }));
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5);  // Limit to 5 suggestions for display
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length ? '' : 'No product found';
             return of(null);
           }
 
@@ -110,7 +116,7 @@ export class SearchbarComponent implements OnInit {
               : [];
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5);
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length ? '' : 'No product found';
           }
         },
         error: (error) => console.error('❌ Error during search:', error),
@@ -118,9 +124,16 @@ export class SearchbarComponent implements OnInit {
   }
 
   /**
-   * @brief Lifecycle hook that initializes the component.
+   * @function ngOnInit
+   * @description Lifecycle hook that initializes the component
+   * @details Fetches authentication status, countries, categories, and brands
    */
   ngOnInit(): void {
+    // Vérifier l'état d'authentification
+    this.authService.isAuthenticated().subscribe(
+      auth => this.isAuthenticated = auth
+    );
+
     // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
       this.countries = this.apiCountries.europeanCountries.sort();
@@ -128,14 +141,40 @@ export class SearchbarComponent implements OnInit {
 
     // Get all the category in the DB
     this.apiService.getAllCategories().subscribe({
-      next: (categories) => this.categories = categories.sort(),
-      error: (error) => console.error('❌ Error fetching categories:', error),
+      next: (categories) => {
+        console.log('✅ Categories received:', categories);
+        // Verify if categories is an array and contains data
+        if (Array.isArray(categories) && categories.length > 0) {
+          // Extract the name of each category if needed
+          this.categories = categories.map(cat => cat.name || cat).filter(Boolean).sort();
+        } else {
+          console.log('⚠️ No categories found or invalid format');
+          this.categories = []; // Initialize with empty array
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error fetching categories:', error);
+        this.categories = []; // Initialize with empty array on error
+      },
     });
 
     // Get all the brands on the DB
     this.apiService.getAllBrands().subscribe({
-      next: (brands) => this.brands = brands.sort(),
-      error: (error) => console.error('❌ Error fetching brands:', error),
+      next: (brands) => {
+        console.log('✅ Brands received:', brands);
+        // Verify if brands is an array and contains data
+        if (Array.isArray(brands) && brands.length > 0) {
+          // Extract the name of each brand if needed
+          this.brands = brands.map(brand => brand.name || brand).filter(Boolean).sort();
+        } else {
+          console.log('⚠️ No brands found or invalid format');
+          this.brands = []; // Initialize with empty array
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error fetching brands:', error);
+        this.brands = []; // Initialize with empty array on error
+      },
     });
   }
 
@@ -175,12 +214,14 @@ export class SearchbarComponent implements OnInit {
     this.toggleFilterPanel();
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
       if (this.selectedProduct) {
-        console.log("selected :", this.selectedProduct);
+        console.log('selected :', this.selectedProduct);
         this.searchWithFilters(true); // Use the selected product in search
       } else {
         // If no product selected, navigate using the full search results
         if (this.fullSearchResults.length > 0) {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: this.fullSearchResults } });
+          this.router.navigate(['/searched-prod'], {
+            state: { resultsArray: this.fullSearchResults },
+          });
         } else {
           // Fallback: if no full results available, perform a search without filters
           this.searchWithoutFilters();
@@ -270,7 +311,7 @@ export class SearchbarComponent implements OnInit {
   searchWithFilters(includeSelectedProduct: boolean = false) {
     this.applyFilters(); // Apply filters before the research
 
-    console.log("W/Filters launched");
+    console.log('W/Filters launched');
 
     const filtersToSend = {
       ...this.appliedFilters,
@@ -280,9 +321,13 @@ export class SearchbarComponent implements OnInit {
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
         // Allow the reload the page
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
-        });
+        this.router
+          .navigateByUrl('/', { skipLocationChange: true })
+          .then(() => {
+            this.router.navigate(['/searched-prod'], {
+              state: { resultsArray: response },
+            });
+          });
       },
       error: (error) => console.error('❌ Search error:', error),
     });
@@ -293,7 +338,7 @@ export class SearchbarComponent implements OnInit {
    */
   searchWithoutFilters() {
     this.applyFilters();
-    console.log("W/Filters launched");
+    console.log('W/Filters launched');
 
     if (!Object.keys(this.appliedFilters).length) {
       console.warn('⚠️ No filters applied.');
@@ -303,10 +348,14 @@ export class SearchbarComponent implements OnInit {
     this.apiService.postProductsWithFilters(this.appliedFilters).subscribe({
       next: (response) => {
         // Allow the reload the page
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
-        });
-        console.log("response :", response);
+        this.router
+          .navigateByUrl('/', { skipLocationChange: true })
+          .then(() => {
+            this.router.navigate(['/searched-prod'], {
+              state: { resultsArray: response },
+            });
+          });
+        console.log('response :', response);
       },
       error: (error) => console.error('❌ Search error:', error),
     });

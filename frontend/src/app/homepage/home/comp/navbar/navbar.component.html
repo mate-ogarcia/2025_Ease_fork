@@ -10,13 +10,20 @@
 
       <li class="user">
         <div class="log-container">
-          <ng-container class="log-info" *ngIf="isAuthenticated; else loginTemplate">
+          <ng-container *ngIf="isAuthenticated; else loginTemplate">
             <!--Image de profil qui ouvre le menu déroulant -->
             <img class="userprofile" src="rhinoceros.png" alt="Profile" (click)="toggleDropdown()">
             <!-- Menu déroulant -->
-            <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
-              <span routerLink="/user-profile" class="profile-btn">Profile</span>            
-              <span (click)="logout()" class="logout-btn">Log out</span>
+            <div [class.show]="showDropdown || isMobile" class="dropdown-menu">
+              <span routerLink="/user-profile" class="profile-btn">Profile</span>
+              <span *ngIf="userRole === 'Admin'" routerLink="/admin" class="admin-btn">
+                <i class="fas fa-user-shield"></i>
+                Dashboard Admin
+              </span>
+              <span (click)="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Log out
+              </span>
             </div>
           </ng-container>
 

@@ -3,6 +3,11 @@
   <img class="wave" [src]="isDarkMode ? 'wavedark.png' : 'wave.png'" />
   <img class="wavetop" [src]="isDarkMode ? 'wavetopdark.png' : 'wavetop.png'" />
 
+  <button [routerLink]="['/home']" class="back-btn">
+    <i class="fas fa-arrow-left"></i>
+    Retour
+  </button>
+
   <div class="container">
     <div class="login-content">
       <div class="header-form">
@@ -27,14 +32,25 @@
         </button>
       </div>
       <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
-        <!-- Champ Username Login -->
+        <!-- Champ Email Login -->
         <div class="input-container name" *ngIf="isLoginMode">
           <div class="icon-log">
-            <i class="fas fa-user"></i>
+            <i class="fas fa-envelope"></i>
           </div>
           <div class="data">
-            <h5>Username</h5>
-            <input #usernameInput type="text" class="input-log" name="usernameLogin" [(ngModel)]="username">
+            <h5>Email</h5>
+            <input 
+              #emailInput 
+              type="email" 
+              class="input-log" 
+              name="emailLogin" 
+              [(ngModel)]="email"
+              (blur)="onFieldTouched('email')"
+            >
+            <div class="error-wrapper" *ngIf="emailFieldTouched && emailError">
+              <i class="fas fa-exclamation-circle"></i>
+              <span class="error-message">{{ emailError }}</span>
+            </div>
           </div>
         </div>
 
@@ -51,7 +67,12 @@
               class="input-log"
               name="username"
               [(ngModel)]="username"
+              (blur)="onFieldTouched('username')"
             />
+            <div class="error-wrapper" *ngIf="usernameFieldTouched && usernameError">
+              <i class="fas fa-exclamation-circle"></i>
+              <span class="error-message">{{ usernameError }}</span>
+            </div>
           </div>
         </div>
 
@@ -68,7 +89,12 @@
               class="input-log"
               name="email"
               [(ngModel)]="email"
+              (blur)="onFieldTouched('email')"
             />
+            <div class="error-wrapper" *ngIf="emailFieldTouched && emailError">
+              <i class="fas fa-exclamation-circle"></i>
+              <span class="error-message">{{ emailError }}</span>
+            </div>
           </div>
         </div>
         <!-- Champ Password avec icône d'œil -->
@@ -84,7 +110,12 @@
               class="input-log"
               name="password"
               [(ngModel)]="password"
+              (blur)="onFieldTouched('password')"
             />
+            <div class="error-wrapper" *ngIf="passwordFieldTouched && passwordError">
+              <i class="fas fa-exclamation-circle"></i>
+              <span class="error-message">{{ passwordError }}</span>
+            </div>
             <span class="eye-icon" (click)="togglePasswordVisibility()">
               <i
                 class="fas eyes"
@@ -93,6 +124,12 @@
               ></i>
             </span>
           </div>
+        </div>
+
+        <!-- Message d'erreur général -->
+        <div class="error-container" *ngIf="errorMessage">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span class="error-message">{{ errorMessage }}</span>
         </div>
 
         <a href="#" *ngIf="isLoginMode">Forgot Password?</a>
@@ -105,5 +142,7 @@
     </div>
   </div>
 
-  <button class="dark-mode-btn" (click)="toggleDarkMode()">🌙</button>
+  <button class="dark-mode-btn" (click)="toggleDarkMode()">
+    {{ isDarkMode ? '☀' : '🌙' }}
+  </button>
 </body>

@@ -9,6 +9,7 @@
 // Use of .env
 import * as dotenv from "dotenv";
 import * as path from "path";
+import * as cookieParser from "cookie-parser";
 
 // Load the right .env
 const envFile = path.resolve(
@@ -53,6 +54,10 @@ async function bootstrap() {
 
   // Load NestJS application with global logger
   const app = await NestFactory.create(AppModule, { logger });
+
+  // Add cookie-parser middleware
+  app.use(cookieParser());
+
   // Retrieves necessary services from the application context.
   const databaseService = app.get(DatabaseService);
 
@@ -69,13 +74,15 @@ async function bootstrap() {
     logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
   }
 
-  /**
-   * Configures CORS to allow requests from the Angular frontend.
-   */
+  // Configuration CORS sécurisée
   app.enableCors({
-    origin: process.env.URL_FRONTEND,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type, Authorization",
+    origin: ["http://localhost:4200"], // URL de votre frontend Angular
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Accept", "Authorization"],
+    exposedHeaders: ["*"],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   /**

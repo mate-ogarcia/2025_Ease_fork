@@ -9,7 +9,7 @@
 
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { AuthService } from '../../services/auth/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as bcrypt from 'bcryptjs';
@@ -19,7 +19,7 @@ import * as bcrypt from 'bcryptjs';
   standalone: true,
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css'],
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   providers: []
 })
 export class AuthComponent implements AfterViewInit {
@@ -30,6 +30,14 @@ export class AuthComponent implements AfterViewInit {
   username: string = '';
   email: string = '';
   password: string = '';
+
+  usernameFieldTouched: boolean = false;
+  emailFieldTouched: boolean = false;
+  passwordFieldTouched: boolean = false;
+
+  usernameError: string = '';
+  emailError: string = '';
+  passwordError: string = '';
   errorMessage: string = '';
 
   constructor(
@@ -62,12 +70,7 @@ export class AuthComponent implements AfterViewInit {
   setLoginMode(isLogin: boolean): void {
     if (this.isLoginMode !== isLogin) {
       this.isLoginMode = isLogin;
-
-      // Reset fields to prevent input lag on mode switch
-      this.email = '';
-      this.password = '';
-      this.username = '';
-
+      this.resetForm();
       setTimeout(() => this.setupFocusBlurListeners(), 10);
     }
   }
@@ -79,6 +82,7 @@ export class AuthComponent implements AfterViewInit {
    */
   toggleDarkMode(): void {
     this.isDarkMode = !this.isDarkMode;
+    localStorage.setItem('darkMode', this.isDarkMode.toString());
   }
 
   /**
@@ -124,49 +128,196 @@ export class AuthComponent implements AfterViewInit {
    * @param {any} form - The submitted form object containing user inputs.
    */
   async onSubmit(form: any): Promise<void> {
-    if (!form.valid) {
-      this.errorMessage = 'Please fill in all fields correctly.';
-      return;
-    }
+    // Réinitialiser les messages d'erreur
+    this.resetErrors();
 
-    // Hash the password before sending it to the server
-    const hashedPassword = await bcrypt.hash(this.password, 10);
-
-    // If the user wants to log in
     if (this.isLoginMode) {
-      this.authService.login(this.username, this.password).subscribe({
+      // Mode connexion
+      if (!this.validateEmail() || !this.validatePassword()) {
+        return;
+      }
+
+      this.authService.login(this.email, this.password).subscribe({
         next: (response) => {
-          console.log("Server response:", response);
-          window.alert("Connect successfully");
+          console.log("Login successful:", response);
           this.router.navigate(['/home']);
         },
         error: (err) => {
-          console.log("Login error:", err);
-          window.alert('Username or Password incorrect');
-          this.errorMessage = 'Invalid email or password.';
+          console.error("Login error:", err);
+          switch (err.status) {
+            case 401:
+              this.errorMessage = 'Email ou mot de passe incorrect';
+              break;
+            case 403:
+              this.errorMessage = 'Compte non vérifié';
+              break;
+            default:
+              this.errorMessage = 'Une erreur est survenue lors de la connexion';
+          }
         },
       });
-    }
+    } else {
+      // Mode inscription
+      if (!this.validateUsername() || !this.validateEmail() || !this.validatePassword()) {
+        return;
+      }
 
-    // If the user wants to create an account
-    if (!this.isLoginMode) {
-
-      // Call register with the hashed password
-      this.authService.register(this.username, this.email, hashedPassword).subscribe({
+      this.authService.register(this.username, this.email, this.password).subscribe({
         next: (response) => {
-          console.log("Server response:", response);
-          window.alert("Register successfully");
-          // Navigate to the login page
+          console.log("Registration successful:", response);
           this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
             this.router.navigate(['/login']);
           });
         },
         error: (err) => {
-          console.log("Register error:", err);
-          window.alert('Something\'s gone wrong : please try again');
-          this.errorMessage = 'Invalid email or password.';
+          console.error("Registration error:", err);
+          switch (err.status) {
+            case 409:
+              this.errorMessage = 'Cet email est déjà utilisé';
+              break;
+            case 400:
+              this.errorMessage = 'Les données fournies sont invalides';
+              break;
+            default:
+              this.errorMessage = 'Une erreur est survenue lors de l\'inscription';
+          }
         },
       });
-    };
+    }
+  }
+
+  /**
+   * @brief Navigue vers la page d'accueil
+   */
+  goToHome(): void {
+    this.router.navigate(['/home']);
+  }
+
+  /**
+   * @brief Initialise le composant
+   * 
+   * Cette méthode est appelée après la construction du composant.
+   * Elle restaure les préférences utilisateur (mode sombre) et
+   * configure les validateurs de formulaire.
+   */
+  ngOnInit(): void {
+    // Restaurer le mode sombre depuis le localStorage
+    const savedMode = localStorage.getItem('darkMode');
+    this.isDarkMode = savedMode === 'true';
+    
+    // Initialiser les validateurs
+    this.setupValidators();
+  }
+
+  /**
+   * @brief Configure les validateurs de formulaire
+   * 
+   * Cette méthode met en place les validateurs pour chaque champ
+   * et leurs messages d'erreur associés.
+   */
+  private setupValidators(): void {
+    // Réinitialiser les erreurs quand le mode change
+    this.resetErrors();
+  }
+
+  /**
+   * @brief Réinitialise tous les messages d'erreur
+   */
+  private resetErrors(): void {
+    this.usernameError = '';
+    this.emailError = '';
+    this.passwordError = '';
+    this.errorMessage = '';
+  }
+
+  /**
+   * @brief Valide le champ username
+   * @returns {boolean} true si le champ est valide
+   */
+  validateUsername(): boolean {
+    if (!this.username) {
+      this.usernameError = 'Le nom d\'utilisateur est requis';
+      return false;
+    }
+    if (this.username.length < 3) {
+      this.usernameError = 'Le nom d\'utilisateur doit contenir au moins 3 caractères';
+      return false;
+    }
+    this.usernameError = '';
+    return true;
+  }
+
+  /**
+   * @brief Valide le champ email
+   * @returns {boolean} true si le champ est valide
+   */
+  validateEmail(): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!this.email) {
+      this.emailError = 'L\'email est requis';
+      return false;
+    }
+    if (!emailRegex.test(this.email)) {
+      this.emailError = 'L\'email n\'est pas valide';
+      return false;
+    }
+    this.emailError = '';
+    return true;
+  }
+
+  /**
+   * @brief Valide le champ password
+   * @returns {boolean} true si le champ est valide
+   */
+  validatePassword(): boolean {
+    if (!this.password) {
+      this.passwordError = 'Le mot de passe est requis';
+      return false;
+    }
+    if (this.password.length < 6) {
+      this.passwordError = 'Le mot de passe doit contenir au moins 6 caractères';
+      return false;
+    }
+    this.passwordError = '';
+    return true;
+  }
+
+  /**
+   * @brief Réinitialise le formulaire et les états de validation
+   */
+  private resetForm(): void {
+    // Réinitialiser les champs
+    this.username = '';
+    this.email = '';
+    this.password = '';
+
+    // Réinitialiser les états de validation
+    this.usernameFieldTouched = false;
+    this.emailFieldTouched = false;
+    this.passwordFieldTouched = false;
+
+    // Réinitialiser les erreurs
+    this.resetErrors();
+  }
+
+  /**
+   * @brief Marque un champ comme touché et lance sa validation
+   * @param {string} field - Le nom du champ à marquer comme touché
+   */
+  onFieldTouched(field: string): void {
+    switch (field) {
+      case 'username':
+        this.usernameFieldTouched = true;
+        this.validateUsername();
+        break;
+      case 'email':
+        this.emailFieldTouched = true;
+        this.validateEmail();
+        break;
+      case 'password':
+        this.passwordFieldTouched = true;
+        this.validatePassword();
+        break;
+    }
   }
 }

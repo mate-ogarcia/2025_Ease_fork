@@ -15,6 +15,8 @@ import {
 import { UsersService } from "../users/users.service";
 import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
+import { UserRole } from "./enums/role.enum";
+import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
 export class AuthService {
@@ -23,69 +25,102 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  /**
-   * @brief Logs in a user and generates a JWT token.
-   * @details This method verifies user credentials, compares the password using bcrypt,
-   * and generates an access token and a refresh token upon successful authentication.
-   *
-   * @param {string} email - The email of the user.
-   * @param {string} password - The user's password.
-   * @returns {Promise<{ access_token: string, refresh_token: string }>} An object containing the JWT tokens.
-   * @throws {UnauthorizedException} If the user is not found or the password is incorrect.
-   */
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  async validateUser(email: string, password: string): Promise<any> {
+    console.log("🔍 Validation de l'utilisateur:", email);
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      console.warn("⚠️ Utilisateur non trouvé");
+      throw new UnauthorizedException("Utilisateur non trouvé");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      console.warn("⚠️ Mot de passe invalide");
+      throw new UnauthorizedException("Mot de passe invalide");
+    }
+
+    console.log("✅ Utilisateur validé avec rôle:", user.role);
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  async login(loginDto: LoginDto) {
     try {
-      // Retrieve the user from the database
-      const user = await this.usersService.findByEmail(email);
+      const user = await this.validateUser(loginDto.email, loginDto.password);
+      console.log("🔑 Création du token pour l'utilisateur:", user.email);
 
-      // Protection against Timing-Attacks (Always compare a hash)
-      const fakeHash =
-        "$2b$10$WQm0wXEnoTb5PfKMZfGtvuG5lTqly5K/9uQ1yQVuxX48vG/UzL2Z6"; // Fake hash to prevent user enumeration
-      const passwordToCompare = user ? user.password : fakeHash;
+      const payload = {
+        email: user.email,
+        sub: user.id,
+        role: user.role,
+      };
 
-      // Password verification
-      const passwordMatch = await bcrypt.compare(password, passwordToCompare);
-      if (!passwordMatch) {
-        throw new UnauthorizedException("Invalid email or password.");
-      }
+      const access_token = this.jwtService.sign(payload);
+      console.log("✅ Token généré avec succès");
 
-      // Generate JWT token
-      const payload = { email: user.email, sub: user.id, role: user.role };
       return {
-        access_token: this.jwtService.sign(payload, { expiresIn: "1h" }),
-        refresh_token: this.jwtService.sign(payload, { expiresIn: "7d" }),
+        access_token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          username: user.username,
+        },
       };
     } catch (error) {
-      console.error("❌ Error during authentication:", error);
-      throw new UnauthorizedException("Invalid email or password.");
+      console.error("❌ Erreur lors de la connexion:", error.message);
+      throw new UnauthorizedException(error.message);
     }
   }
 
-  /**
-   * @brief Registers a new user with a securely hashed password.
-   * @details This method first checks if the user already exists.
-   * If not, it hashes the password with bcrypt and stores the user in the database.
-   *
-   * @param {string} email - The email of the new user.
-   * @param {string} password - The user's password.
-   * @returns {Promise<any>} The created user object.
-   * @throws {UnauthorizedException} If the user is already registered.
-   * @throws {InternalServerErrorException} If an error occurs during user creation.
-   */
   async register(
     username: string,
     email: string,
     password: string,
-  ): Promise<any> {
+    role: UserRole = UserRole.USER,
+  ) {
+    console.log("📝 Enregistrement d'un nouvel utilisateur:", {
+      username,
+      email,
+      role,
+    });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     try {
-      // Create the user in the database
-      return this.usersService.createUser({ username, email, password });
+      const user = await this.usersService.createUser({
+        username,
+        email,
+        password: hashedPassword,
+        role,
+      });
+
+      console.log("✅ Utilisateur créé avec succès:", {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
+      return {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
     } catch (error) {
-      console.error("❌ Error registering user:", error);
-      throw new InternalServerErrorException("Error during registration.");
+      console.error("❌ Erreur lors de la création de l'utilisateur:", error);
+      throw new InternalServerErrorException(
+        "Erreur lors de la création de l'utilisateur",
+      );
     }
   }
 

@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿/**
  * @file database.service.ts
  * @brief Service for handling database operations in Couchbase.
  *
@@ -15,32 +15,39 @@ import {
   OnModuleDestroy,
   InternalServerErrorException,
 } from "@nestjs/common";
-import * as couchbase from "couchbase";
+import {
+  Bucket,
+  Cluster,
+  Collection,
+  connect,
+  SearchQuery,
+  HighlightStyle,
+} from "couchbase";
 import * as fs from "fs";
 // HTTP
 import { HttpService } from "@nestjs/axios";
+import { UserRole } from "../auth/enums/role.enum";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
-  private cluster: couchbase.Cluster;
+  private cluster: Cluster;
   // Buckets
-  private productsBucket: couchbase.Bucket;
-  private usersBucket: couchbase.Bucket;
-  private categBucket: couchbase.Bucket;
-  private brandBucket: couchbase.Bucket;
+  private productsBucket: Bucket;
+  private usersBucket: Bucket;
+  private categBucket: Bucket;
+  private brandBucket: Bucket;
   // Collections
-  private productsCollection: couchbase.Collection;
-  private usersCollection: couchbase.Collection;
-  private categCollection: couchbase.Collection;
-  private brandCollection: couchbase.Collection;
+  private productsCollection: Collection;
+  private usersCollection: Collection;
+  private categCollection: Collection;
+  private brandCollection: Collection;
 
-  // User role
-  private _role = {
-    Admin: "Admin",
-    User: "User",
-  };
-
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) {
+    this.initializeConnections();
+  }
 
   // ======================== DATABASE INIT AND CONNECTION
   /**
@@ -67,15 +74,19 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       if (!certPath) {
         throw new Error("❌ SSL_CERT_PATH is not set in environment variables");
       }
-      const cert = fs.readFileSync(certPath);
+      // Vérifier que le certificat existe
+      fs.readFileSync(certPath);
       console.log("🔹 SSL Certificate loaded.");
 
       console.log("🔹 Connecting to Couchbase Capella...");
-      this.cluster = await couchbase.connect(process.env.DB_HOST, {
-        username: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        configProfile: "wanDevelopment", // Required for WAN connections
-      });
+      this.cluster = await connect(
+        process.env.DB_HOST || "couchbase://localhost",
+        {
+          username: process.env.DB_USER || "Administrator",
+          password: process.env.DB_PASSWORD || "password",
+          configProfile: "wanDevelopment", // Required for WAN connections
+        },
+      );
 
       // Connect to the products bucket
       const productsBucketName = process.env.BUCKET_NAME;
@@ -142,7 +153,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @returns {couchbase.Bucket} The initialized products bucket.
    * @throws {Error} If the products bucket is not initialized.
    */
-  getProductsBucket(): couchbase.Bucket {
+  getProductsBucket(): Bucket {
     if (!this.productsBucket) {
       throw new Error("❌ Couchbase bucket is not initialized yet.");
     }
@@ -158,7 +169,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @returns {couchbase.Bucket} The initialized users bucket.
    * @throws {Error} If the users bucket is not initialized.
    */
-  getUsersBucket(): couchbase.Bucket {
+  getUsersBucket(): Bucket {
     if (!this.usersBucket) {
       throw new Error("❌ Couchbase bucket is not initialized yet.");
     }
@@ -174,7 +185,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @returns {couchbase.Bucket} The initialized category bucket.
    * @throws {Error} If the category bucket is not initialized.
    */
-  getCategBucket(): couchbase.Bucket {
+  getCategBucket(): Bucket {
     if (!this.categBucket) {
       throw new Error("❌ Couchbase bucket is not initialized yet.");
     }
@@ -190,7 +201,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @returns {couchbase.Bucket} The initialized brand bucket.
    * @throws {Error} If the brand bucket is not initialized.
    */
-  getBrandBucket(): couchbase.Bucket {
+  getBrandBucket(): Bucket {
     if (!this.brandBucket) {
       throw new Error("❌ Couchbase bucket is not initialized yet.");
     }
@@ -200,7 +211,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   /**
    * Returns the products collection.
    */
-  getProductsCollection(): couchbase.Collection {
+  getProductsCollection(): Collection {
     if (!this.productsCollection) {
       throw new Error("Products collection is not initialized.");
     }
@@ -210,7 +221,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   /**
    * Returns the users collection.
    */
-  getUsersCollection(): couchbase.Collection {
+  getUsersCollection(): Collection {
     if (!this.usersCollection) {
       throw new Error("Users collection is not initialized.");
     }
@@ -220,7 +231,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   /**
    * Returns the category collection.
    */
-  getCategCollection(): couchbase.Collection {
+  getCategCollection(): Collection {
     if (!this.categCollection) {
       throw new Error("Users collection is not initialized.");
     }
@@ -230,7 +241,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   /**
    * Returns the brand collection.
    */
-  getBrandCollection(): couchbase.Collection {
+  getBrandCollection(): Collection {
     if (!this.brandCollection) {
       throw new Error("Brand collection is not initialized.");
     }
@@ -272,14 +283,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     searchQuery = searchQuery.toLowerCase(); // Normalize the query
 
     try {
-      const prefixQuery = couchbase.SearchQuery.prefix(searchQuery); // Prefix search
-      const matchQuery = couchbase.SearchQuery.match(searchQuery); // Natural language search
+      const prefixQuery = SearchQuery.prefix(searchQuery); // Prefix search
+      const matchQuery = SearchQuery.match(searchQuery); // Natural language search
 
       // Combine prefix and match queries
-      const combinedQuery = couchbase.SearchQuery.disjuncts(
-        prefixQuery,
-        matchQuery,
-      );
+      const combinedQuery = SearchQuery.disjuncts(prefixQuery, matchQuery);
 
       const searchRes = await this.cluster.searchQuery(
         _indexName,
@@ -287,7 +295,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         {
           fields: ["name", "description", "category", "tags"],
           highlight: {
-            style: couchbase.HighlightStyle.HTML,
+            style: HighlightStyle.HTML,
             fields: ["name", "description", "category", "tags"],
           },
         },
@@ -429,7 +437,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       }
 
       // Building an N1QL query
-      const query = `SELECT META(u).id, u.* FROM \`${this.usersBucket.name}\`._default._default u WHERE u.email = $email`;
+      const query = `
+        SELECT META(u).id as id, u.*
+        FROM \`${this.usersBucket.name}\`._default._default u 
+        WHERE u.email = $email
+      `;
 
       // Executing query with secured settings
       const result = await this.cluster.query(query, { parameters: { email } });
@@ -439,7 +451,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         return null;
       }
 
-      return result.rows[0]; // return the found user
+      // Return the user data with the bucket name as key and include the document ID
+      const userData = result.rows[0];
+      return {
+        [this.usersBucket.name]: {
+          id: userData.id,
+          ...userData,
+        },
+      };
     } catch (error) {
       console.error("❌ Error retrieving user by email:", error);
       throw new InternalServerErrorException("Error retrieving user by email.");
@@ -455,6 +474,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @param username The username of the new user.
    * @param email The email of the new user, used as the unique identifier.
    * @param password The password of the new user, stored as plain text (must be hashed before actual usage).
+   * @param role The role of the new user.
    *
    * @returns A Promise that resolves to the result of the insertion query, or null if the user already exists.
    *
@@ -464,6 +484,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     username: string,
     email: string,
     password: string,
+    role?: UserRole,
   ): Promise<any> {
     try {
       // Check if the users bucket is initialized
@@ -483,10 +504,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         username: username,
         email: email,
         password: password,
-        role: this._role.User, // Default user role
-        createdAt: new Date().toISOString(), // Adding createdAt timestamp
-        updatedAt: new Date().toISOString(), // Adding updatedAt timestamp
+        role: role || UserRole.USER, // Use provided role or default to User
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
+
+      // Log the new user object
+      console.log("👤 New user being created:", {
+        ...newUser,
+        password: "****",
+      });
 
       // Generate a unique identifier for the user document
       const userId = `user::${email}`; // Unique ID based on the email
@@ -513,85 +540,102 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @brief Retrieves all category names from the Couchbase database.
+   * @function getAllCategName
+   * @description Retrieves all category names from the Couchbase database
+   * @details This function executes a N1QL query to fetch all category names.
+   * It includes enhanced error handling and logging to diagnose connection issues.
    *
-   * @returns {Promise<any[]>} - A promise that resolves with an array of category names.
-   * @throws {InternalServerErrorException} If an error occurs during retrieval.
+   * @returns {Promise<any[]>} A promise that resolves with an array of category names or empty array on error
    */
   async getAllCategName(): Promise<any[]> {
     try {
-      // Check if the categories bucket is initialized
-      if (!this.categBucket) {
-        throw new Error("❌ Categories bucket is not initialized.");
+      console.log("🔍 Attempting to retrieve all category names...");
+
+      if (!this.cluster) {
+        console.log("⚠️ Cluster not initialized, attempting to reconnect...");
+        await this.initializeConnections();
+
+        if (!this.cluster) {
+          console.error("❌ Failed to initialize cluster connection");
+          throw new Error("Failed to initialize cluster connection");
+        }
       }
 
-      // Build the N1QL query to retrieve category names
       const query = `
-      SELECT c.name
-      FROM \`${this.categBucket.name}\`._default._default c
-    `;
+        SELECT DISTINCT c.name
+        FROM ease._default.categorie c
+        ORDER BY c.name`;
 
-      // Execute the query
+      console.log("🔍 Executing query:", query);
+
       const result = await this.cluster.query(query);
+      console.log(
+        `✅ Categories retrieved successfully: ${result.rows.length} categories found`,
+      );
 
-      // If no categories are found
-      if (result.rows.length === 0) {
-        console.warn("⚠️ No categories found.");
+      // Return empty array if no results
+      if (!result.rows || result.rows.length === 0) {
+        console.log("⚠️ No categories found, returning empty array");
         return [];
       }
 
-      // Extract the category names from the result
-      const categoryNames = result.rows.map((row: any) => row.name);
-
-      return categoryNames; // Return the list of category names
+      return result.rows;
     } catch (error) {
-      console.error("❌ Error retrieving category names:", error);
-      throw new InternalServerErrorException(
-        "Error retrieving category names.",
-      );
+      console.error("❌ Error retrieving categories:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+
+      // Return empty array on error to avoid blocking the UI
+      return [];
     }
   }
 
   /**
-   * @brief Retrieves all brand names from the database.
+   * @function getAllBrandName
+   * @description Retrieves all brand names from the Couchbase database
+   * @details This function executes a N1QL query to fetch all brand names.
+   * It includes enhanced error handling and logging to diagnose connection issues.
    *
-   * This function executes a N1QL query to fetch all brand names from the specified Couchbase bucket.
-   * It checks the initialization of the brand bucket before executing the query and handles potential errors.
-   * If no brands are found, an empty array is returned.
-   *
-   * @returns {Promise<any[]>} A promise resolving to an array of brand names.
-   *
-   * @throws {InternalServerErrorException} If the brand bucket is not initialized or if an error occurs during query execution.
+   * @returns {Promise<any[]>} A promise that resolves with an array of brand names or empty array on error
    */
   async getAllBrandName(): Promise<any[]> {
-    const brandBucketName = this.brandBucket.name;
     try {
-      // Verify if the brand bucket is initialized
-      if (!this.brandBucket) {
-        throw new Error("❌ Brand bucket is not initialized.");
+      console.log("🔍 Attempting to retrieve all brand names...");
+
+      if (!this.cluster) {
+        console.log("⚠️ Cluster not initialized, attempting to reconnect...");
+        await this.initializeConnections();
+
+        if (!this.cluster) {
+          console.error("❌ Failed to initialize cluster connection");
+          throw new Error("Failed to initialize cluster connection");
+        }
       }
 
-      // Construct the N1QL query to retrieve brand names
       const query = `
-      SELECT b.name
-      FROM \`${brandBucketName}\`._default._default b
-    `;
+        SELECT DISTINCT b.name
+        FROM ease._default.brand b
+        ORDER BY b.name`;
 
-      // Execute the query
+      console.log("🔍 Executing query:", query);
+
       const result = await this.cluster.query(query);
+      console.log(
+        `✅ Brands retrieved successfully: ${result.rows.length} brands found`,
+      );
 
-      // Handle the case where no brands are found
-      if (result.rows.length === 0) {
-        console.warn("⚠️ No brand names found.");
+      // Return empty array if no results
+      if (!result.rows || result.rows.length === 0) {
+        console.log("⚠️ No brands found, returning empty array");
         return [];
       }
 
-      // Extract and return the brand names from the query result
-      const brandNames = result.rows.map((row: any) => row.name);
-      return brandNames;
+      return result.rows;
     } catch (error) {
-      console.error("❌ Error retrieving brand names:", error);
-      throw new InternalServerErrorException("Error retrieving brand names.");
+      console.error("❌ Error retrieving brands:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+
+      // Return empty array on error to avoid blocking the UI
+      return [];
     }
   }
 
@@ -669,7 +713,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         throw new Error("❌ Filters are empty");
       }
 
-      const similarToProductConditions: string[] = [];
       const similarToFiltersConditions: string[] = [];
       let queryWithJoin = "";
 
@@ -859,16 +902,92 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getAllUsers(): Promise<any[]> {
     try {
-      if (!this.usersBucket) {
-        throw new Error("❌ Users bucket is not initialized.");
+      if (!this.cluster) {
+        throw new Error("❌ Cluster not initialized");
       }
 
-      const query = `SELECT META(u).id, u.* FROM \`${this.usersBucket.name}\`._default._default u`;
+      console.log("🔍 Récupération de tous les utilisateurs...");
+      console.log("📦 Bucket name:", process.env.USER_BUCKET_NAME);
+
+      const query = `
+        SELECT u.*, META(u).id as docId
+        FROM \`${process.env.USER_BUCKET_NAME}\`._default._default u
+        WHERE META(u).id LIKE 'user::%'
+      `;
+
+      console.log("🔍 Exécution de la requête:", query);
+
       const result = await this.cluster.query(query);
-      return result.rows;
+
+      if (!result || !result.rows) {
+        console.warn("⚠️ Aucun résultat retourné par la requête");
+        return [];
+      }
+
+      const users = result.rows.map((user) => ({
+        id: user.docId,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }));
+
+      console.log(`✅ ${users.length} utilisateurs trouvés`);
+      console.log(
+        "👥 Premier utilisateur (exemple):",
+        users[0] || "Aucun utilisateur",
+      );
+
+      return users;
     } catch (error) {
-      console.error("❌ Error retrieving all users:", error);
-      throw new InternalServerErrorException("Error retrieving users list.");
+      console.error(
+        "❌ Erreur lors de la récupération des utilisateurs:",
+        error,
+      );
+      throw new InternalServerErrorException(
+        "Erreur lors de la récupération de la liste des utilisateurs",
+      );
+    }
+  }
+
+  async updateUserRole(id: string, role: UserRole): Promise<any> {
+    try {
+      if (!this.cluster) {
+        throw new Error("Cluster not initialized");
+      }
+
+      const query = `
+        UPDATE \`${process.env.USER_BUCKET_NAME}\`
+        SET role = $role
+        WHERE META().id = $id
+        RETURNING META().id as id, email, username, role, createdAt, updatedAt;
+      `;
+
+      const result = await this.cluster.query(query, {
+        parameters: { id, role },
+      });
+      return result.rows[0];
+    } catch (error) {
+      console.error("❌ Error updating user role in database:", error);
+      throw error;
+    }
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      if (!this.usersCollection) {
+        throw new Error("Collection not initialized");
+      }
+
+      await this.usersCollection.remove(id);
+      return true;
+    } catch (error) {
+      if (error.message.includes("document not found")) {
+        return false;
+      }
+      console.error("❌ Error deleting user from database:", error);
+      throw error;
     }
   }
 }

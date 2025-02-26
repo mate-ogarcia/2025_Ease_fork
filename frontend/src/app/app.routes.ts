@@ -3,6 +3,25 @@ import { AuthGuard } from '../services/auth/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'admin-init',
+    loadComponent: () =>
+      import('./admin/admin-init/admin-init.component').then((m) => m.AdminInitComponent),
+  },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./admin/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin'] },
+  },
+  {
+    path: 'admin/users',
+    loadComponent: () =>
+      import('./admin/user-management/user-management.component').then((m) => m.UserManagementComponent),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin'] },
+  },
+  {
     path: 'products-alternative/:id',
     loadComponent: () =>
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),

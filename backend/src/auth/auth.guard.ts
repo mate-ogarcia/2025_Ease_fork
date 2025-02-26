@@ -2,7 +2,7 @@
  * @file auth.guard.ts
  * @brief Guard for protecting routes using JWT authentication.
  *
- * This guard checks the validity of the JWT token provided in the request header
+ * This guard checks the validity of the JWT token provided in the cookies
  * and verifies the user's existence in the database before granting access.
  */
 
@@ -24,7 +24,7 @@ export class JwtAuthGuard implements CanActivate {
 
   /**
    * @brief Determines whether the request can proceed.
-   * @details This method verifies the presence and validity of the JWT token.
+   * @details This method verifies the presence and validity of the JWT token in cookies.
    * If valid, it checks whether the user exists in the database.
    *
    * @param context The execution context of the request.
@@ -34,7 +34,7 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       const request = context.switchToHttp().getRequest();
-      const token = request.headers.authorization?.split(" ")[1];
+      const token = request.cookies?.accessToken;
 
       if (!token) throw new UnauthorizedException("Token is missing");
 
@@ -45,8 +45,8 @@ export class JwtAuthGuard implements CanActivate {
 
       request.user = user;
       return true;
-    } catch {
-      throw new UnauthorizedException("Access denied, invalid token");
+    } catch (error) {
+      throw new UnauthorizedException("Access denied: " + error.message);
     }
   }
 }

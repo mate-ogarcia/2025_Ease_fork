@@ -98,6 +98,7 @@ form {
   padding: 5px 0;
   border-bottom: 2px solid #d9d9d9;
   transition: 0.4s;
+  margin-bottom: 35px; /* Espace pour le message d'erreur */
 }
 
 .icon-log {
@@ -341,4 +342,134 @@ a:hover {
   .wavetop {
     height: 60%;
   }
+}
+
+/* Bouton de retour */
+.back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  background-color: #38d39f;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.back-btn i {
+  font-size: 18px;
+}
+
+.back-btn:hover {
+  background-color: #2e9b7f;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.dark-mode .back-btn {
+  background-color: #2e9b7f;
+  color: white;
+}
+
+.dark-mode .back-btn:hover {
+  background-color: #38d39f;
+}
+
+/* Position du header-form */
+.header-form {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-form img {
+  max-width: 100px;
+  height: auto;
+}
+
+/* Styles des messages d'erreur */
+.error-wrapper {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-wrapper i {
+  color: #ff4444;
+  font-size: 0.9rem;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.error-container {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: rgba(255, 68, 68, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.error-container i {
+  color: #ff4444;
+  font-size: 1rem;
+}
+
+.error-container .error-message {
+  color: #ff4444;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Mode sombre */
+.dark-mode .error-wrapper i,
+.dark-mode .error-message {
+  color: #ff6b6b;
+}
+
+.dark-mode .error-container {
+  background-color: rgba(255, 107, 107, 0.15);
+}
+
+.dark-mode .error-container i,
+.dark-mode .error-container .error-message {
+  color: #ff6b6b;
+}
+
+/* Ajustement des conteneurs pour les messages d'erreur */
+.input-container {
+  margin-bottom: 35px;
 }

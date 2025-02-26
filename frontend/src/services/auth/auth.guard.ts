@@ -9,7 +9,7 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { AuthService } from './auth.service';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -25,22 +25,25 @@ export class AuthGuard implements CanActivate {
    * @returns {Observable<boolean>} An observable that emits `true` if the user is authenticated and has the required role, otherwise `false` with redirection.
    */
   canActivate(route: ActivatedRouteSnapshot): Observable<boolean> {
-    return this.authService.isAuthenticated().pipe(
-      map(authenticated => {
-        if (!authenticated) {
-          this.router.navigate(['/login'], {
-            queryParams: { returnUrl: route.url.join('/') }
-          });
+    return this.authService.getUserRole().pipe(
+      tap(role => console.log('🔒 Rôle actuel:', role)),
+      map(role => {
+        if (!role) {
+          console.log('❌ Pas de rôle, redirection vers login');
+          this.router.navigate(['/login']);
           return false;
         }
 
-        // Vérification des rôles si spécifiés dans les données de route
         const requiredRoles = route.data['roles'] as Array<string>;
-        if (requiredRoles && !this.authService.hasRole(requiredRoles)) {
-          this.router.navigate(['/']); // Redirection vers la page d'accueil si pas le bon rôle
+        console.log('🎯 Rôles requis:', requiredRoles);
+        
+        if (requiredRoles && !requiredRoles.includes(role)) {
+          console.log('❌ Rôle insuffisant, redirection vers accueil');
+          this.router.navigate(['/']);
           return false;
         }
 
+        console.log('✅ Accès autorisé');
         return true;
       })
     );

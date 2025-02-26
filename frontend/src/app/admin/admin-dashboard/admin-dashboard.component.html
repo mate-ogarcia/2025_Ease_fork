@@ -1,0 +1,91 @@
+<div class="admin-dashboard">
+  <header class="dashboard-header">
+    <h1>Dashboard Administrateur</h1>
+    <div class="user-info">
+      <i class="fas fa-user-shield"></i>
+      <span>Admin</span>
+    </div>
+  </header>
+
+  <!-- Message d'erreur -->
+  <div class="error-message" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Indicateur de chargement -->
+  <div class="loading-indicator" *ngIf="isLoading">
+    <i class="fas fa-spinner fa-spin"></i>
+    Chargement des données...
+  </div>
+
+  <div class="dashboard-content" *ngIf="!isLoading">
+    <div class="stats-grid">
+      <!-- Cartes statistiques -->
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Utilisateurs</h3>
+          <p class="stat-number">{{ userCount }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-shopping-bag"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Produits</h3>
+          <p class="stat-number">0</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-tags"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Catégories</h3>
+          <p class="stat-number">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="admin-btn" routerLink="/admin/users">
+        <i class="fas fa-user-plus"></i>
+        Gérer les utilisateurs
+      </button>
+      <button class="admin-btn" routerLink="/add-product">
+        <i class="fas fa-plus-circle"></i>
+        Ajouter un produit
+      </button>
+      <button class="admin-btn">
+        <i class="fas fa-cog"></i>
+        Paramètres
+      </button>
+    </div>
+
+    <!-- Tableau des dernières activités -->
+    <div class="recent-activity">
+      <h2>Activités récentes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Utilisateur</th>
+            <th>Action</th>
+            <th>Détails</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="4" class="no-data">Aucune activité récente</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div> 

@@ -7,9 +7,18 @@
  * It interacts with the AuthService to perform authentication operations.
  */
 
-import { Controller, Post, Body, UseGuards, Get, Req } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Req,
+  Res,
+} from "@nestjs/common";
+import { Response } from "express";
 import { AuthService } from "./auth.service";
-import { JwtAuthGuard } from "./auth.guard";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { RegisterDto, LoginDto } from "./dto/auth.dto";
 import { Roles } from "./decorators/roles.decorator";
 import { UserRole } from "./enums/role.enum";
@@ -41,15 +50,27 @@ export class AuthController {
    * Upon successful authentication, it generates an access token and a refresh token.
    *
    * @param {LoginDto} body - The request body containing user credentials.
-   * @returns {Promise<{ access_token: string, refresh_token: string }>}
-   * An object containing an access token and a refresh token.
+   * @returns {Promise<{ access_token: string, refresh_token: string, user: any }>}
+   * An object containing an access token, a refresh token, and the authenticated user.
    * @throws {UnauthorizedException} If the credentials are invalid.
    */
   @Post("login")
   async login(
     @Body() body: LoginDto,
-  ): Promise<{ access_token: string; refresh_token: string }> {
-    return this.authService.login(body.email, body.password);
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<any> {
+    console.log("📝 Tentative de connexion pour:", body.email);
+    const result = await this.authService.login(body);
+    console.log("✅ Connexion réussie, configuration du cookie");
+
+    response.cookie("accessToken", result.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 24 heures
+    });
+
+    return result;
   }
 
   /**
@@ -66,6 +87,12 @@ export class AuthController {
   @Get("profile")
   async getProfile(@Req() req): Promise<any> {
     return req.user;
+  }
+
+  @Post("logout")
+  async logout(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie("accessToken");
+    return { message: "Déconnexion réussie" };
   }
 
   /**

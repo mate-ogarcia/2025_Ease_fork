@@ -8,17 +8,15 @@
       (input)="onInputChange($event)"
     />
 
+    <!-- Message if no results found -->
+    <div *ngIf="noResultsMessage" class="no-results-message">
+      <p>No product found</p>
+    </div>
+
     <button type="button" class="search-btn" (click)="clearSearch()">✖</button>
     <button type="button" class="filter-btn" (click)="toggleFilterPanel()"><i class="fa-solid fa-filter"></i></button>
-    <button type="button" class="add-btn" routerLink="/add-product"><i class="fa-solid fa-square-plus"></i></button>
+    <button type="button" class="add-btn" *ngIf="isAuthenticated" routerLink="/add-product"><i class="fa-solid fa-square-plus"></i></button>
       
-    <button type="button" class="filter-btn" (click)="toggleFilterPanel()">
-      <i class="fa-solid fa-filter"></i>
-    </button>
-    <button type="button" class="add-btn" routerLink="/add-product">
-      <i class="fa-solid fa-square-plus"></i>
-    </button>
-
     <!-- Display search results -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
       <ul>
@@ -29,11 +27,6 @@
           {{ result.name }} - {{ result.description }}
         </li>
       </ul>
-    </div>
-
-    <!-- Message if no results found -->
-    <div *ngIf="noResultsMessage" class="no-results-message">
-      <p>{{ noResultsMessage }}</p>
     </div>
   </div>
 </div>

@@ -6,7 +6,12 @@
  * pour accéder à une route protégée.
  */
 
-import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { UserRole } from "../enums/role.enum";
 import { ROLES_KEY } from "../decorators/roles.decorator";
@@ -21,11 +26,45 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    if (!requiredRoles) {
-      return true; // Si aucun rôle n'est requis, accès autorisé
+    console.log("🔒 Rôles requis:", requiredRoles);
+
+    if (!requiredRoles || requiredRoles.length === 0) {
+      console.log("✅ Aucun rôle requis");
+      return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.role === role);
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    console.log("👤 Utilisateur de la requête:", {
+      id: user?.id,
+      email: user?.email,
+      role: user?.role,
+    });
+
+    if (!user) {
+      console.error("❌ Aucun utilisateur trouvé dans la requête");
+      throw new UnauthorizedException("Utilisateur non authentifié");
+    }
+
+    if (!user.role) {
+      console.error("❌ Utilisateur sans rôle défini");
+      throw new UnauthorizedException("Rôle utilisateur non défini");
+    }
+
+    const hasRequiredRole = requiredRoles.includes(user.role);
+    console.log(`${hasRequiredRole ? "✅" : "❌"} Vérification du rôle:`, {
+      userRole: user.role,
+      requiredRoles,
+      hasAccess: hasRequiredRole,
+    });
+
+    if (!hasRequiredRole) {
+      throw new UnauthorizedException(
+        `Accès refusé. Rôle requis: ${requiredRoles.join(", ")}`,
+      );
+    }
+
+    return true;
   }
 }

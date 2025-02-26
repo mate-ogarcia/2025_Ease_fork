@@ -7,6 +7,7 @@ import { DatabaseModule } from "./database/database.module";
 import { DataModule } from "./data/data.module";
 import { AuthModule } from "./auth/auth.module";
 import { ProductsModule } from "./products/products.module";
+import { AdminModule } from "./admin/admin.module";
 // Utilisation du .env
 import { ConfigModule } from "@nestjs/config";
 import * as Joi from "joi";
@@ -15,6 +16,8 @@ import { ThrottlerModule } from "@nestjs/throttler";
 // Suivre requete HTTP
 import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
+import { APP_GUARD } from "@nestjs/core";
+import { RolesGuard } from "./auth/guards/roles.guard";
 
 @Module({
   imports: [
@@ -22,6 +25,7 @@ import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
     DataModule,
     RequestHandlerModule,
     AuthModule,
+    AdminModule,
     ProductsModule,
     // Charger les variables d'environnement et valider avec Joi
     ConfigModule.forRoot({
@@ -43,7 +47,13 @@ import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
   ],
   // Import des modules distant uniquement
   controllers: [AppController],
-  providers: [AppService], // Import des services de app
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ], // Import des services de app
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

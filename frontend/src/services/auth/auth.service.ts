@@ -10,44 +10,81 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
+import { map, tap, catchError, finalize, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { JwtHelperService } from '@auth0/angular-jwt';
+// Cookies
+import { CookieService } from 'ngx-cookie-service';
+
+interface AuthState {
+  isAuthenticated: boolean;
+  role: string | null;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private _authBackendUrl = environment.authBackendUrl;
-  private authStatus = new BehaviorSubject<boolean>(this.hasToken());
-  private userRole = new BehaviorSubject<string | null>(
-    this.getUserRoleFromToken()
-  );
+  private authState = new BehaviorSubject<AuthState>({
+    isAuthenticated: false,
+    role: null
+  });
   private jwtHelper = new JwtHelperService();
 
-  constructor(private http: HttpClient, private router: Router) {}
-
-  /**
-   * @brief Checks if a token is stored in local storage.
-   *
-   * @returns {boolean} `true` if a token is present, otherwise `false`.
-   */
-  private hasToken(): boolean {
-    return !!localStorage.getItem('token');
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private cookieService: CookieService
+  ) {
+    // Vérifier l'état initial
+    this.checkAuthState();
   }
 
-  private getUserRoleFromToken(): string | null {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decodedToken = this.jwtHelper.decodeToken(token);
-        return decodedToken.role;
-      } catch {
-        return null;
-      }
+  private checkAuthState(): void {
+    const hasAccessToken = this.cookieService.check('accessToken');
+    if (hasAccessToken) {
+      // Si on a un token, on essaie de récupérer le profil
+      this.refreshAuthState().subscribe({
+        error: (error) => {
+          console.error('Error checking auth state:', error);
+          // En cas d'erreur, on ne réinitialise PAS l'état
+          // On laisse l'utilisateur connecté et on réessaiera plus tard
+        }
+      });
+    } else {
+      this.updateAuthState(false, null);
     }
-    return null;
+  }
+
+  private refreshAuthState(): Observable<any> {
+    return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
+      .pipe(
+        tap(response => {
+          console.log('Profile response:', response);
+          if (response && response.role) {
+            this.updateAuthState(true, response.role);
+          }
+        }),
+        catchError(error => {
+          console.error('Error refreshing auth state:', error);
+          // Ne pas mettre à jour l'état en cas d'erreur
+          return throwError(() => error);
+        })
+      );
+  }
+
+  private updateAuthState(isAuthenticated: boolean, role: string | null): void {
+    console.log('Updating auth state:', { isAuthenticated, role });
+    // Ne mettre à jour l'état que si les valeurs changent réellement
+    if (this.authState.value.isAuthenticated !== isAuthenticated || 
+        this.authState.value.role !== role) {
+      this.authState.next({
+        isAuthenticated,
+        role
+      });
+    }
   }
 
   /**
@@ -80,31 +117,30 @@ export class AuthService {
    */
   login(email: string, password: string): Observable<any> {
     return this.http
-      .post(`${this._authBackendUrl}/login`, { email, password })
+      .post(`${this._authBackendUrl}/login`, { email, password }, { withCredentials: true })
       .pipe(
-        map((response: any) => {
-          localStorage.setItem('token', response.access_token);
-          const decodedToken = this.jwtHelper.decodeToken(
-            response.access_token
-          );
-          this.userRole.next(decodedToken.role);
-          this.authStatus.next(true);
-          return response;
+        tap((response: any) => {
+          const decodedToken = this.jwtHelper.decodeToken(response.access_token);
+          this.updateAuthState(true, decodedToken.role);
         })
       );
   }
 
-  /**
-   * @brief Logs out the current user.
-   *
-   * This method removes the authentication token from local storage, updates
-   * the authentication status, and redirects the user to the login page.
-   */
-  logout(): void {
-    localStorage.removeItem('token');
-    this.authStatus.next(false);
-    this.userRole.next(null);
-    this.router.navigate(['/login']);
+  logout(): Observable<any> {
+    // Mettre à jour l'état immédiatement
+    this.updateAuthState(false, null);
+
+    // Supprimer les cookies
+    this.cookieService.delete('accessToken', '/');
+    this.cookieService.delete('refreshToken', '/');
+
+    return this.http
+      .post(`${this._authBackendUrl}/logout`, {}, { withCredentials: true })
+      .pipe(
+        finalize(() => {
+          this.router.navigate(['/login']);
+        })
+      );
   }
 
   /**
@@ -115,7 +151,14 @@ export class AuthService {
    * @returns {Observable<boolean>} An observable emitting `true` if authenticated, otherwise `false`.
    */
   isAuthenticated(): Observable<boolean> {
-    return this.authStatus.asObservable();
+    return this.authState.pipe(
+      map(state => state.isAuthenticated),
+      distinctUntilChanged()
+    );
+  }
+
+  getAuthStatus(): Observable<boolean> {
+    return this.isAuthenticated();
   }
 
   /**
@@ -123,7 +166,10 @@ export class AuthService {
    * @returns {Observable<string | null>} The user's role or null if not authenticated
    */
   getUserRole(): Observable<string | null> {
-    return this.userRole.asObservable();
+    return this.authState.pipe(
+      map(state => state.role),
+      distinctUntilChanged()
+    );
   }
 
   /**
@@ -132,7 +178,7 @@ export class AuthService {
    * @returns {boolean} True if the user has any of the specified roles
    */
   hasRole(roles: string[]): boolean {
-    const currentRole = this.userRole.value;
+    const currentRole = this.authState.value.role;
     return currentRole !== null && roles.includes(currentRole);
   }
 }

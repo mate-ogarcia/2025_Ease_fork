@@ -1,7 +1,9 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../../services/auth/auth.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -10,40 +12,80 @@ import { AuthService } from '../../../../../services/auth/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule, RouterLink],
 })
-export class NavbarComponent implements OnInit {
-  menuOpen = false;
-  isAuthenticated = false;
-  showDropdown = false; // Gère le menu sur desktop
-  isMobile = false; // ✅ Détecte si on est en mode responsive
+export class NavbarComponent implements OnInit, OnDestroy {
+  isAuthenticated: boolean = false;
+  userRole: string | null = null;
+  showDropdown: boolean = false;
+  isMobile: boolean = false;
+  menuOpen: boolean = false;
+  private destroy$ = new Subject<void>();
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) {
+    // S'abonner aux changements d'état d'authentification
+    this.authService.getAuthStatus()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => {
+        console.log('Auth status changed:', status);
+        this.isAuthenticated = status;
+      });
 
-  ngOnInit() {
-    this.authService.isAuthenticated().subscribe((status) => {
-      this.isAuthenticated = status;
-    });
-
-    this.checkScreenSize(); // Vérifie la taille au chargement
+    // S'abonner aux changements de rôle
+    this.authService.getUserRole()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(role => {
+        console.log('Role changed:', role);
+        this.userRole = role;
+      });
   }
 
-  toggleMenu() {
-    this.menuOpen = !this.menuOpen;
+  ngOnInit(): void {
+    // Gérer la vue mobile
+    this.checkIfMobile();
+    window.addEventListener('resize', () => this.checkIfMobile());
   }
 
-  toggleDropdown() {
-    if (!this.isMobile) {
-      this.showDropdown = !this.showDropdown;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    document.removeEventListener('click', this.closeDropdown);
+    window.removeEventListener('resize', () => this.checkIfMobile());
+  }
+
+  toggleDropdown(): void {
+    this.showDropdown = !this.showDropdown;
+    // Fermer le menu au clic en dehors
+    if (this.showDropdown) {
+      setTimeout(() => {
+        document.addEventListener('click', this.closeDropdown);
+      });
     }
   }
 
-  logout() {
-    this.authService.logout();
-    this.showDropdown = false;
+  private closeDropdown = (event: MouseEvent) => {
+    const dropdownElement = document.querySelector('.dropdown-menu');
+    const profileImage = document.querySelector('.userprofile');
+    
+    if (dropdownElement && profileImage && 
+        !dropdownElement.contains(event.target as Node) && 
+        !profileImage.contains(event.target as Node)) {
+      this.showDropdown = false;
+      document.removeEventListener('click', this.closeDropdown);
+    }
   }
 
-  // ✅ Vérifie la taille de l'écran et met à jour isMobile
-  @HostListener('window:resize', ['$event'])
-  checkScreenSize() {
+  toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  logout(): void {
+    this.showDropdown = false;
+    this.authService.logout().subscribe();
+  }
+
+  private checkIfMobile(): void {
     this.isMobile = window.innerWidth <= 768;
+    if (!this.isMobile) {
+      this.menuOpen = false;
+    }
   }
 }
