@@ -1,0 +1,44 @@
+name: Sync Fork with Upstream
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # Exécute la tâche toutes les 6 heures
+  workflow_dispatch: # Permet de lancer la mise à jour manuellement
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Add Upstream Repository
+        run: |
+          git remote add upstream https://github.com/CapgePau-Uppa/2025_Ease.git
+          git fetch upstream
+
+      - name: Preserve .github directory
+        run: |
+          mv .github /tmp/.github_backup || true
+
+      - name: Force Sync with Upstream
+        run: |
+          git checkout main
+          git reset --hard upstream/main
+
+      - name: Restore .github directory
+        run: |
+          mv /tmp/.github_backup .github || true
+
+      - name: Configure Git Identity
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Push changes to Fork
+        run: |
+          git add .
+          git commit -m "Sync with upstream while preserving .github"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/mate-ogarcia/2025_Ease_fork.git main --force
