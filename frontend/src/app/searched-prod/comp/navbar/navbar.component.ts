@@ -14,27 +14,27 @@ import { SearchbarComponent } from '../../../homepage/home/comp/searchbar/search
 export class NavbarComponent implements OnInit {
   menuOpen = false;
   isAuthenticated = false;
-  showDropdown = false; // Gère le menu sur desktop (affiché sur clic de la photo)
-  isMobile = false; // Détecte si on est en mode responsive
-  showNavDropdown = false;
+  showDropdown = false; // Gère le menu sur desktop
+  isMobile = false; // ✅ Détecte si on est en mode responsive
 
   constructor(private authService: AuthService, private router: Router) { }
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.authService.isAuthenticated().subscribe((status) => {
       this.isAuthenticated = status;
     });
+
+    this.checkScreenSize(); // Vérifie la taille au chargement
   }
 
-  toggleMenu(): void {
+  toggleMenu() {
     this.menuOpen = !this.menuOpen;
   }
 
-  toggleDropdown(): void {
-    this.showDropdown = !this.showDropdown;
-  }
-  toggleNavDropdown() {
-    this.showNavDropdown = !this.showNavDropdown;
+  toggleDropdown() {
+    if (!this.isMobile) {
+      this.showDropdown = !this.showDropdown;
+    }
   }
 
 
@@ -43,4 +43,9 @@ export class NavbarComponent implements OnInit {
     this.showDropdown = false;
   }
 
+  // ✅ Vérifie la taille de l'écran et met à jour isMobile
+  @HostListener('window:resize', ['$event'])
+  checkScreenSize() {
+    this.isMobile = window.innerWidth <= 850;
+  }
 }

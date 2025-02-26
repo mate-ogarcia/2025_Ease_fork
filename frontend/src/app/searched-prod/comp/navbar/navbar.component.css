@@ -1,134 +1,84 @@
-/* Styles de base de la navbar */
+/* Styles de base */
+
 .navbar {
   font-family: "Montserrat", serif;
+  font-optical-sizing: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  backdrop-filter: blur(1.5rem);
+  padding: 10px;
   background: transparent;
+  height: 60px;
   border-radius: 40px;
   width: 100%;
-  height: 80px;
   color: #f9f9f9;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  position: relative;
 }
-
+.app-searchbar{
+  width: 50%;
+  padding-left: 20px;
+}
 /* Logo */
 .logo {
   display: flex;
+  justify-content: center;
   align-items: center;
   height: 40px;
-  border-right: 1px solid #f9f9f9;
+  font-size: 1.5em;
+  border-right: 1px solid #f9f9f9 ;
   padding-right: 12px;
+  font-weight: bold;
   cursor: pointer;
 }
-
-picture {
-  height: 100%;
+picture{
+  height: 40px;
 }
-
 .easelogo {
   height: 100%;
   border-radius: 45px;
 }
 
-/* Zone centrale regroupant la searchbar et le menu dropdown */
-.nav-center {
-  flex: 1;
+/* Menu */
+.navbar ul {
+  list-style: none;
   display: flex;
-  padding-left: 25px;
   align-items: center;
-  width: 100%;
-  gap: 20px;
-}
-
-.app-searchbar {
-  width: 60%;
-  height: 100%;
-}
-
-/* Dropdown navigation (Menu à côté de la searchbar) */
-.nav-dropdown {
-  position: relative;
-}
-
-.nav-dropdown-toggle {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 5px 10px;
-}
-
-.nav-dropdown-menu {
-  position: absolute;
-  top: 110%;
-  left: 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  min-width: 150px;
-  padding: 10px;
-  display: none;
-  flex-direction: column;
+  flex: 1; 
   gap: 10px;
-  z-index: 1000;
-}
-
-.nav-dropdown-menu.active {
-  display: flex;
-}
-
-.nav-dropdown-menu a {
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  padding: 8px 0;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.nav-dropdown-menu a:hover {
-  background-color: #f4f4f4;
-}
-
-/* Dropdown utilisateur (Desktop) */
-.user-dropdown a,
-.user-dropdown .profile-btn {
-  display: block;
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  padding: 8px 0;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.user-dropdown a:hover,
-.user-dropdown .profile-btn:hover {
-  background-color: #f4f4f4;
-}
-
-.user-dropdown hr {
-  border: none;
-  border-top: 1px solid #ddd;
+  padding-left: 20px;
   margin: 0;
+  text-align: center;
+  color: #f9f9f9;
+
 }
 
-/* Partie utilisateur (Desktop) */
+.navbar ul li {
+  display: inline-block;
+  height: fit-content;
+}
+
+.nav-btn {
+  text-decoration: none;
+  color: #f9f9f9;
+  font-weight: 500;
+  border-radius: 40px;
+  padding: 10px 15px;
+  transition: all 0.3s ease-in-out;  
+  cursor: pointer;
+}
+
+.nav-btn:hover {
+  color: #2d2b27;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease-in-out;
+}
+
+/* User Profile */
 .user {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 40px;
   margin-left: auto;
-}
-.navigation-container{
-  display: none;
 }
 .log-container {
   display: flex;
@@ -138,23 +88,48 @@ picture {
   gap: 10px;
   margin-left: auto;
 }
-
-.login-btn {
+.login-btn{
   background-color: #011f20;
   color: white;
-  padding: 8px 12px;
-  border-radius: 30px;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
 }
-
 .userprofile {
   height: 100%;
   cursor: pointer;
   border-radius: 50%;
 }
 
+/* Menu burger pour mobiles */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  z-index: 10000;
+}
+/* Position et style du menu déroulant */
+.dropdown-menu {
+  position: absolute;
+  right: 10px;
+  top: 70px;
+  gap: 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.profile-btn {
+  padding: 10px 15px;
+  border-bottom: 1px solid #778081;
+  color: black;
+  cursor: pointer;
+}
+/* Style du bouton logout dans le menu */
 .logout-btn {
   background-color: red;
   color: white;
@@ -172,37 +147,96 @@ picture {
   background-color: darkred;
 }
 
-/* Dropdown utilisateur (Desktop) */
-.user-dropdown {
-  position: absolute;
-  top: 110%;
-  right: 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  min-width: 200px;
-  padding: 15px;
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 1000;
+
+
+.menu-toggle span {
+  width: 25px;
+  height: 3px;
+  background: #f9f9f9;
+  margin: 4px 0;
+  transition: 0.3s;
 }
 
-/* Affichage du dropdown lorsque la classe active est présente */
-.user-dropdown.active {
-  display: flex;
-}
+/* Responsive */
+@media (max-width: 850px) {
+  .navbar {
+      flex-direction: row;
+  }
+  .app-searchbar{
+    width: 100%;
+    padding: 0 20px;
+    border-left: 1px solid #f9f9f9;
+  }
+  .navbar ul {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      position: absolute;
+      top: 60px;
+      right: 0px;
+      background: white;
+      color: #2d2b27;
+      width: 150px;
+      padding: 10px;
+      border-radius: 5px;
+  }
 
-@media screen and (max-width: 900px) {
-  .app-searchbar {
-    width: 90%;
+  .navbar ul.active {
+    
+    display: flex;
   }
-  
-  .nav-center {
-    padding-left: 10px;
+  .nav-btn{
+    color: black;
   }
-  .nav-dropdown-toggle{
+  .login-btn{
+    color: white;
+  }
+  .menu-toggle {
+      display: flex;
+  }
+  .user{
+    margin-left: 0; 
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+  }
+  .logo {
+    border-right: none;
+  }
+  .log-container {
+    position: relative; /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: fit-content;
+    gap: 10px;
+    margin-left: auto;
+    flex-direction: column;
+  }
+  .userprofile{
     display: none;
   }
+  
+  .profile-btn{
+    width: 85%;
+    border-top: 1px solid #778081;
+  }
+  .dropdown-menu {
+    position: relative;
+    display: flex !important; /* Toujours visible */
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-weight: 500;
+    border: none;
+    top: auto;
+    right: auto;
+    width: 100%;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: none;
+    padding: 0;
+  }
+  
 }

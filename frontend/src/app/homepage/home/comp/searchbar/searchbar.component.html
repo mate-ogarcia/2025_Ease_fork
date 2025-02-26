@@ -42,45 +42,32 @@
     <div class="filter-dropdown" *ngIf="filterDropdownOpen">
       <div class="filter-dropdown-menu">
         <h3>Filtres</h3>
-
-        <!-- Localisation Filter -->
-        <label>
-          <select [(ngModel)]="selectedCountry" (change)="onCountryChange()">
-            <option value="">Sélectionnez un pays européen</option>
+        <!-- Filtre Pays -->
+        <div class="filter-group">
+          <label for="country-select">Pays européen</label>
+          <select id="country-select" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
+            <option value="">Sélectionnez un pays</option>
             <option *ngFor="let country of countries" [value]="country">
               {{ country }}
             </option>
           </select>
-        </label>
-
-        <!-- Optional department filter (only visible when a country is selected) -->
-        <div *ngIf="selectedCountry">
-          <label>
-            Département:
-            <input
-              type="text"
-              [(ngModel)]="selectedDepartment"
-              placeholder="Entrez un département"
-            />
-          </label>
         </div>
 
-        <!-- Category Filter -->
-        <label>
-          <input type="checkbox" [(ngModel)]="categoryFilter" /> Catégorie
-        </label>
+        <!-- Filtre Département (si un pays est sélectionné) -->
+        <div class="filter-group" *ngIf="selectedCountry">
+          <label for="department-input">Département</label>
+          <input id="department-input" type="text" [(ngModel)]="selectedDepartment" placeholder="Entrez un département" />
+        </div>
 
-        <!-- Display filters is category is selected -->
-        <div *ngIf="categoryFilter">
-          <!-- Category Filter -->
-          <label>
-            <select [(ngModel)]="selectedCategory">
-              <option value="">Sélectionnez une catégorie</option>
-              <option *ngFor="let category of categories" [value]="category">
-                {{ category }}
-              </option>
-            </select>
-          </label>
+        <!-- Filtre Catégorie -->
+        <div class="filter-group">
+          <label for="category-select">Catégorie</label>
+          <select id="category-select" [(ngModel)]="selectedCategory">
+            <option value="">Sélectionnez une catégorie</option>
+            <option *ngFor="let category of categories" [value]="category">
+              {{ category }}
+            </option>
+          </select>
         </div>
 
         <!-- Brand Filter  TODO -->
