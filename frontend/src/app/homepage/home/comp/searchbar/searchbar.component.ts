@@ -40,10 +40,8 @@ export class SearchbarComponent implements OnInit {
   countries: string[] = [];
   selectedCountry: string = '';     // Store the selected country
   selectedDepartment: string = '';  // Store the department input by the user
-  categoryFilter: boolean = false;  // State of the category filter.
   selectedCategory: string = '';
   categories: any[] = [];           // Contains all the categories name
-  brandFilter: boolean = false      // State of the brand filter
   selectedBrand: string = '';
   brands: any[] = []                // Contains all the brands
   // Price filter
@@ -131,12 +129,11 @@ export class SearchbarComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     // TODO : DELETE AFTER
     console.log('test');
-    console.log('test');
-    (await this.apiOFF.getProductInfo('Nutella')).subscribe(
-      (data) => console.log('Résultat:', data),
-      (error) => console.error('Erreur:', error)
-    );
-    
+    // (await this.apiOFF.getProductInfo('Nutella')).subscribe(
+    //   (data) => console.log('Résultat:', data),
+    //   (error) => console.error('Erreur:', error)
+    // );
+
 
     // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
@@ -325,13 +322,14 @@ export class SearchbarComponent implements OnInit {
     const filters = {
       country: this.selectedCountry || null,
       department: this.selectedDepartment || null,
-      category: this.categoryFilter && this.selectedCategory ? this.selectedCategory : null,
-      brand: this.brandFilter ? this.selectedBrand : null,
-      price: this.priceFilter ? { min: this.minPrice, max: this.maxPrice } : null,
+      category: this.selectedCategory || null,
+      brand: this.selectedBrand || null,
+      price: { min: this.minPrice, max: this.maxPrice },
     };
 
     this.appliedFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, value]) => value !== null && value !== '')
     );
   }
+
 }

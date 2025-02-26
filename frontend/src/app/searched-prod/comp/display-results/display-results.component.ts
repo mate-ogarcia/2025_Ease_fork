@@ -21,7 +21,6 @@ export class DisplayResultsComponent implements OnInit {
 
   ngOnInit(): void {
     this.resultsArray = history.state.resultsArray || [];
-    console.log('🔹 Results received: (display-results.ts)', this.resultsArray);
 
     // Pour chaque produit, lancer une recherche d'image
     this.resultsArray.forEach(product => {
@@ -47,7 +46,6 @@ export class DisplayResultsComponent implements OnInit {
             console.error(`Erreur lors de la recherche d'image pour ${product.name}:`, err);
           },
           complete: () => {
-            console.log(`Recherche d'image terminée pour ${product.name}`);
           }
         });
 
