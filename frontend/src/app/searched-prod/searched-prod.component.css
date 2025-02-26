@@ -15,13 +15,13 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: 100vh; 
+    height: 100%; 
     padding: 10px;
     background-color: #023436;
-    overflow-x: hidden;  
 }
 .app-navbar, .app-display-results{
     width: 100%;
+
 }
 .app-navbar{
     z-index: 1000000;

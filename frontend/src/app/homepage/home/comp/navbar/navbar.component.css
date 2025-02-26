@@ -6,8 +6,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px  10px 10px 15px;
-  backdrop-filter: blur(1.5rem); 
+  padding: 10px;
+  height: 60px;
   background: transparent;
   border-radius: 40px;
   width: 100%;

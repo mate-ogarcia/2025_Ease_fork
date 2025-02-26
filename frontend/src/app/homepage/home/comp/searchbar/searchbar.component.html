@@ -35,90 +35,71 @@
       <div class="filter-dropdown-menu">
         <h3>Filtres</h3>
         <!-- Filtre Pays -->
-        <label>
-          Pays européen
-          <select [(ngModel)]="selectedCountry" (change)="onCountryChange()">
+        <div class="filter-group">
+          <label for="country-select">Pays européen</label>
+          <select id="country-select" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
             <option value="">Sélectionnez un pays</option>
             <option *ngFor="let country of countries" [value]="country">
               {{ country }}
             </option>
           </select>
-        </label>
+        </div>
+
         <!-- Filtre Département (si un pays est sélectionné) -->
-        <div *ngIf="selectedCountry">
-          <label>
-            Département
-            <input type="text" [(ngModel)]="selectedDepartment" placeholder="Entrez un département" />
-          </label>
+        <div class="filter-group" *ngIf="selectedCountry">
+          <label for="department-input">Département</label>
+          <input id="department-input" type="text" [(ngModel)]="selectedDepartment" placeholder="Entrez un département" />
         </div>
+
         <!-- Filtre Catégorie -->
-        <label>
-          <input type="checkbox" [(ngModel)]="categoryFilter" /> Catégorie
-        </label>
-        <div *ngIf="categoryFilter">
-          <label>
-            Catégorie
-            <select [(ngModel)]="selectedCategory">
-              <option value="">Sélectionnez une catégorie</option>
-              <option *ngFor="let category of categories" [value]="category">
-                {{ category }}
-              </option>
-            </select>
-          </label>
+        <div class="filter-group">
+          <label for="category-select">Catégorie</label>
+          <select id="category-select" [(ngModel)]="selectedCategory">
+            <option value="">Sélectionnez une catégorie</option>
+            <option *ngFor="let category of categories" [value]="category">
+              {{ category }}
+            </option>
+          </select>
         </div>
+
         <!-- Filtre Prix -->
-        <label>
-          <input type="checkbox" [(ngModel)]="priceFilter" /> Prix
-        </label>
-        <div *ngIf="priceFilter">
-          <label>
-            Prix min
-            <input
-              type="range"
-              [(ngModel)]="minPrice"
-              [min]="minPriceRange"
-              [max]="maxPriceRange"
-              [step]="stepPrice"
-              (input)="updateMinPrice()"
-            />
-            <span>{{ minPrice }} €</span>
-          </label>
-          <label>
-            Prix max
-            <input
-              type="range"
-              [(ngModel)]="maxPrice"
-              [min]="minPriceRange"
-              [max]="maxPriceRange"
-              [step]="stepPrice"
-              (input)="updateMaxPrice()"
-            />
-            <span>{{ maxPrice }} €</span>
-          </label>
-          <label>
-            Entrez le prix minimum
-            <input
-              type="number"
-              [(ngModel)]="minPrice"
-              [min]="minPriceRange"
-              [max]="maxPriceRange"
-              (input)="updateMinPrice()"
-            />
-          </label>
-          <label>
-            Entrez le prix maximum
-            <input
-              type="number"
-              [(ngModel)]="maxPrice"
-              [min]="minPriceRange"
-              [max]="maxPriceRange"
-              (input)="updateMaxPrice()"
-            />
-          </label>
+        <div class="filter-group">
+          <label>Prix</label>
+          <div class="price-filters">
+            <div class="price-filter">
+              <label for="min-price-range">Min</label>
+              <input id="min-price-range" type="range" [(ngModel)]="minPrice"
+                     [min]="minPriceRange" [max]="maxPriceRange" [step]="stepPrice"
+                     (input)="updateMinPrice()" />
+              <span>{{ minPrice }} €</span>
+            </div>
+            <div class="price-filter">
+              <label for="max-price-range">Max</label>
+              <input id="max-price-range" type="range" [(ngModel)]="maxPrice"
+                     [min]="minPriceRange" [max]="maxPriceRange" [step]="stepPrice"
+                     (input)="updateMaxPrice()" />
+              <span>{{ maxPrice }} €</span>
+            </div>
+          </div>
+          <div class="price-inputs">
+            <div class="price-input">
+              <label for="min-price-number">Prix min</label>
+              <input id="min-price-number" type="number" [(ngModel)]="minPrice"
+                     [min]="minPriceRange" [max]="maxPriceRange" (input)="updateMinPrice()" />
+            </div>
+            <div class="price-input">
+              <label for="max-price-number">Prix max</label>
+              <input id="max-price-number" type="number" [(ngModel)]="maxPrice"
+                     [min]="minPriceRange" [max]="maxPriceRange" (input)="updateMaxPrice()" />
+            </div>
+          </div>
         </div>
+
         <!-- Boutons d'action sur les filtres -->
-        <button (click)="applyFilters()">Appliquer</button>
-        <button (click)="searchWithoutFilters()">Chercher sans filtres</button>
+        <div class="filter-buttons">
+          <button (click)="applyFilters()">Appliquer</button>
+          <button (click)="searchWithoutFilters()">Chercher sans filtres</button>
+        </div>
       </div>
     </div>
   </div>
