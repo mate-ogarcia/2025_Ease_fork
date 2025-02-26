@@ -11,7 +11,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Subject, of } from 'rxjs';
+import { Subject, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, tap, filter } from 'rxjs/operators';
 import { Router, RouterLink } from '@angular/router';
 // API
@@ -33,6 +33,7 @@ export class SearchbarComponent implements OnInit {
   fullSearchResults: any[] = [];    // The complete list of results from the API.
   noResultsMessage: string = '';    // Message to display if no results are found.
   selectedProduct: string = '';     // The ID of the selected product.
+  wholeSelectedProduct: any; // The whole product
   isFilterPanelOpen: boolean = false; // Indicates if the filter panel is open.
   // Display the add-product button or not
   canAddProduct: boolean = false;   // Default: user cannot add product
@@ -65,7 +66,35 @@ export class SearchbarComponent implements OnInit {
 
   /**
    * @constructor
-   * Initializes the search functionality with debounced input handling and caching of results.
+   * @brief Initializes the search functionality with debounced input handling, caching, and multi-source integration.
+   *
+   * @details
+   * This constructor sets up the search logic using RxJS observables to:
+   * - Handle debounced user input (200ms delay for better performance).
+   * - Cache search results to avoid unnecessary API calls.
+   * - Fetch data from two different sources simultaneously:
+   *    1. Internal API (`apiService`)
+   *    2. External Open Food Facts API (`apiOFF`)
+   * - Merge and display a combination of results from both sources.
+   * - Cache results with a validity duration defined by `CACHE_DURATION`.
+   *
+   * **Search Flow:**  
+   * 1. User enters a query → Debounced and filtered.  
+   * 2. If results are cached and valid → Use cached data.  
+   * 3. Otherwise, make parallel requests to both APIs using `forkJoin`.  
+   * 4. Merge the results and cache them.  
+   * 5. Display the first 5 suggestions in the UI.  
+   *
+   * **Performance Optimizations:**  
+   * - Debounce time increased to 200ms for improved responsiveness.  
+   * - Cache usage reduces unnecessary API calls.  
+   * - Requests are handled in parallel for faster response times.
+   *
+   * @param apiService Internal API service for product data retrieval.
+   * @param apiCountries API for retrieving European countries.
+   * @param router Angular router for navigation.
+   * @param usersService Service for handling user information.
+   * @param apiOFF Service to interact with the Open Food Facts API.
    */
   constructor(
     private apiService: ApiService,
@@ -76,13 +105,14 @@ export class SearchbarComponent implements OnInit {
   ) {
     this._searchSubject
       .pipe(
-        debounceTime(50),
-        distinctUntilChanged(),
-        filter((query) => query.trim() !== ''),
+        debounceTime(200),        // Debounces input to reduce API calls.
+        distinctUntilChanged(),   // Prevents repeated queries with the same value.
+        filter((query) => query.trim() !== ''), // Ignores empty queries.
         switchMap((query) => {
           const trimmedQuery = query.trim();
           const cachedData = this._cache.get(trimmedQuery);
 
+          // Use cached data if valid
           if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_DURATION) {
             const fullResults = cachedData.data.map((result: any) => ({
               id: result.id,
@@ -90,32 +120,59 @@ export class SearchbarComponent implements OnInit {
               description: result.fields?.description || 'No description available',
             }));
             this.fullSearchResults = fullResults;
-            this.searchResults = fullResults.slice(0, 5);  // Limit to 5 suggestions for display
+            this.searchResults = fullResults.slice(0, 5); // Show top 5 suggestions.
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
-            return of(null);
+            return of(null); // Skip API calls.
           }
 
-          return this.apiService.sendSearchData({ search: trimmedQuery }).pipe(
-            tap((response) => {
-              if (response && Array.isArray(response)) {
-                this._cache.set(trimmedQuery, { data: [...response], timestamp: Date.now() });
+          // Launch parallel requests: Internal API + Open Food Facts
+          return forkJoin({
+            internalResults: this.apiService.sendSearchData({ search: trimmedQuery }),
+            offResults: this.apiOFF.getProductInfo(trimmedQuery),
+          }).pipe(
+            tap(({ internalResults, offResults }) => {
+              const combinedResults = [
+                ...(internalResults || []),
+                ...(offResults?.products || []), // Include Open Food Facts products.
+              ];
+
+              if (combinedResults.length) {
+                this._cache.set(trimmedQuery, { data: [...combinedResults], timestamp: Date.now() });
               }
             })
           );
         })
       )
       .subscribe({
+        /**
+         * @brief Processes the results from both APIs and merges them.
+         *
+         * @param response Object containing results from internal and external APIs.
+         * @returns {void}
+         */
         next: (response: any) => {
           if (response) {
-            const fullResults = response.length
-              ? response.map((result: any) => ({
+            const internalResults = response.internalResults || [];
+            const offResults = response.offResults?.products || [];
+
+            // Merge results with a source identifier
+            const combinedResults = [
+              ...internalResults.map((result: any) => ({
                 id: result.id,
                 name: result.fields?.name || 'Unknown name',
                 description: result.fields?.description || 'No description available',
-              }))
-              : [];
-            this.fullSearchResults = fullResults;
-            this.searchResults = fullResults.slice(0, 5);
+                source: 'Internal',
+              })),
+              ...offResults.map((product: any) => ({
+                id: product.code,
+                name: product.product_name || 'Unknown product',
+                description: product.generic_name || 'No description available',
+                source: 'OpenFoodFacts',
+              })),
+            ];
+
+            this.fullSearchResults = combinedResults;
+            this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
           }
         },
@@ -127,14 +184,6 @@ export class SearchbarComponent implements OnInit {
    * @brief Lifecycle hook that initializes the component.
    */
   async ngOnInit(): Promise<void> {
-    // TODO : DELETE AFTER
-    console.log('test');
-    // (await this.apiOFF.getProductInfo('Nutella')).subscribe(
-    //   (data) => console.log('Résultat:', data),
-    //   (error) => console.error('Erreur:', error)
-    // );
-
-
     // Get all the european countries
     this.apiCountries.fetchEuropeanCountries().then(() => {
       this.countries = this.apiCountries.europeanCountries.sort();
@@ -154,11 +203,9 @@ export class SearchbarComponent implements OnInit {
 
     // Get the cookie's info
     const userRole = this.usersService.getUserRole();
-    console.log("🔑 User Role from Cookie:", userRole);
     // Check if the role allows you to add a product
     this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
   }
-
 
   /**
  * @function toggleFilterDropdown
@@ -203,19 +250,17 @@ export class SearchbarComponent implements OnInit {
     event as KeyboardEvent;
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
       if (this.selectedProduct) {
-        console.log("selected :", this.selectedProduct);
-        this.searchWithProductSelected(true); // Use the selected product in search
+        this.search(true);    // Search including the selected product
       } else {
-        // If no product selected, navigate using the full search results
         if (this.fullSearchResults.length > 0) {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: this.fullSearchResults } });
         } else {
-          // Fallback: if no full results available, perform a search without filters
-          this.searchWithoutProductSelected();
+          this.search(false); // Search without including the selected product
         }
       }
     }
   }
+
 
   /**
    * @brief Clears the search query and results.
@@ -234,53 +279,49 @@ export class SearchbarComponent implements OnInit {
   selectProduct(product: any) {
     this.searchQuery = product.name;
     this.selectedProduct = product.id;
+    this.wholeSelectedProduct = product;
     this.noResultsMessage = '';
     this.searchResults = []; // Hide suggestions after selection.
   }
 
   /**
- * @brief Searches with applied filters and navigates to results page.
- * @param includeSelectedProduct Indicates if the selected product should be included.
- */
-  searchWithProductSelected(includeSelectedProduct: boolean = false) {
-    this.applyFilters(); // Apply filters before the research
-
-    const filtersToSend = {
-      ...this.appliedFilters,
-      productId: includeSelectedProduct ? this.selectedProduct : null, // Include the selected product if asked
-      currentRoute: this.router.url,
-    };
-
-    this.apiService.postProductsWithFilters(filtersToSend).subscribe({
-      next: (response) => {
-        // Allow the reload the page
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
-        });
-      },
-      error: (error) => console.error('❌ Search error:', error),
-    });
-  }
-
-  /**
-   * @brief Searches without including a selected product.
+   * @brief Executes a product search with applied filters and navigates to the results page.
+   * 
+   * @details
+   * This method applies the selected filters and sends them to the API to retrieve matching products.  
+   * It handles two cases:
+   * - **With a selected product:** Searches for products similar to the selected one.
+   * - **Without a selected product:** Searches based solely on the applied filters.
+   *  
+   * @param includeSelectedProduct (boolean) Indicates whether the selected product should be included in the search criteria.  
+   *        - `true`: Includes the selected product for similarity-based search.  
+   *        - `false`: Searches using only the applied filters. (default: `false`)  
+   * 
+   * @returns {void} This function does not return anything but navigates to the results page upon completion.
    */
-  searchWithoutProductSelected() {
-    this.applyFilters();
+  // TODO
+  search(includeSelectedProduct: boolean = false): void {
+    this.applyFilters(); // Apply filters before performing the search.
 
-    const filtersToSend = {
-      ...this.appliedFilters,
-      currentRoute: this.router.url,
-    };
-
-    if (!Object.keys(this.appliedFilters).length) {
+    // Warn if no filters or selected product is present
+    if (!includeSelectedProduct && !Object.keys(this.appliedFilters).length) {
       console.warn('⚠️ No filters applied.');
       return;
     }
 
+    const filtersToSend = {
+      ...this.appliedFilters, // Include all applied filters
+      productId: includeSelectedProduct ? this.selectedProduct : null, // Include selected product ID if required
+      productSource: this.wholeSelectedProduct.source,
+      currentRoute: this.router.url, // Pass the current route for backend context
+    };
+
+    console.log('filters:', filtersToSend);
+
+    // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
-        // Allow the reload the page
+        // Navigate to results page with the response
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
         });
@@ -331,5 +372,4 @@ export class SearchbarComponent implements OnInit {
       Object.entries(filters).filter(([_, value]) => value !== null && value !== '')
     );
   }
-
 }
