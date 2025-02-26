@@ -21,8 +21,6 @@
     align-items: center;
     width: 100%;
     height: fit-content; 
-    padding: 10px;
-    gap: 20px;
     background-color: #023436;  
 }
 
@@ -31,6 +29,7 @@
  */
 .app-navbar{
     width: 100%;
+
 }
 
 
@@ -47,6 +46,7 @@
     height: 100%;
     gap: 20px;
     padding: 25px;
+    border-top: 1px solid #fafafa;
 }
 
 /**
