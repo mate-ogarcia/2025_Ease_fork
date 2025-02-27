@@ -88,6 +88,7 @@ export class OpenFoodFactsService {
    * 
    * @throws {HttpException} If no criteria are provided or the API request fails.
   */
+  // TODO: change the logic to get more alternative
   async searchSimilarProducts(
     criteria: { productName?: string; brand?: string; category?: string, tags?: string[] },
     page: number = 1,

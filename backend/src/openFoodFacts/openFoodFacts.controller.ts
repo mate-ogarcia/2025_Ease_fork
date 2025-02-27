@@ -12,9 +12,11 @@
  */
 
 import {
+  Body,
     Controller,
     Get,
     Param,
+    Post,
     Query,
 } from "@nestjs/common";
 import { OpenFoodFactsService } from "./openFoodFacts.service";
@@ -65,12 +67,22 @@ export class OpenFoodFactsController {
       return await this.openFoodFactsService.searchProductsByName(name, pageNumber);
     }
 
+    // TODO
     @Get('getbyId/:productId')
     async getProductById(
       @Param('productId') productId: string,
-      @Query('page') page: string,
     ) {
-      // TODO
       return await this.openFoodFactsService.getProductByCode(productId);
     }
+
+    // TODO
+    @Post('alternativeProducts')
+    async getAlternativeProducts(@Body() product: any, @Query('page') page: string) {
+      const pageNumber = page ? parseInt(page, 10) : 1;
+      console.log('🔹 Received product for alternatives:', product);
+    
+      return await this.openFoodFactsService.searchSimilarProducts(product, pageNumber);
+    }
+    
+    
 }

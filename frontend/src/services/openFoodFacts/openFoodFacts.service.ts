@@ -26,6 +26,11 @@ export class ApiOpenFoodFacts {
         return this.http.get<any[]>(`${this._offUrl}/getbyId/${productId}`);
     }
 
+    postOpenFoodFactsAlternativeProducts(formattedProduct: any): Observable<any[]> {
+        return this.http.post<any[]>(`${this._offUrl}/alternativeProducts`, formattedProduct);
+      }
+      
+
     /**
      * @brief Formats Open Food Facts product data to match our internal structure.
      * @param product The raw product data from Open Food Facts.

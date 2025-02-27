@@ -4,7 +4,7 @@
       <ul class="items-list">
         <li class="item" tabindex="0" [attr.aria-label]="'Voir le produit ' + productDetails.name">
           <div class="img-container">
-            <img class="product-image" [src]="productDetails.imageUrl || 'assets/placeholder.jpg'" alt="{{ productDetails.name }}">
+            <img class="product-image" [src]="productDetails.image || 'assets/placeholder.jpg'" alt="{{ productDetails.name }}">
           </div>
           <div class="product-details">
             <div class="title-info">

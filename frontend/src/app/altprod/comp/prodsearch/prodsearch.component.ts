@@ -27,8 +27,7 @@ interface Product {
   ecoscore: string;
   origin: string;
   manufacturing_places: string;
-  image?: string;
-  imageUrl?: string;
+  image: string;
   source: 'Internal' | 'OpenFoodFacts';
 }
 
@@ -73,9 +72,6 @@ export class ProdsearchComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
       const productSource = params.get('source') || 'Internal'; // Default source
-
-      console.log(`🔹 Product ID: ${this.productId}`);
-      console.log(`🌍 Product Source: ${productSource}`);
 
       if (this.productId) {
         productSource === "Internal"
@@ -142,7 +138,9 @@ export class ProdsearchComponent implements OnInit {
       next: (response) => {
         if (response.results?.length) {
           const rawUrl = response.results[0].urls.raw;
-          this.productDetails!.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+          if (this.productDetails!.image === null) {
+            this.productDetails!.image = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+          }
         } else {
           console.log(`🚫 No image found for ${productName}`);
         }
