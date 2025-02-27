@@ -1,45 +1,92 @@
-<div [class.dark-mode]="isDarkMode" class="container">
-    <!-- Bouton pour basculer entre le mode sombre et clair -->
-
-    <div class="add-product-container">
-        <div class="details-product-container">
-            <div class="left-container">
-                <h2>Description</h2>
-                <section class="general-info">
-                    <label for="product-name">Nom du Produit</label>
-                    <input id="product-name" type="text" placeholder="Nom du produit ...">
-
-                    <label for="description">Description</label>
-                    <textarea id="description" rows="4" placeholder="Faites une courte description du produit ..."></textarea>
-                </section>
-                <h2>Détails</h2>
-                <section class="details">
-                    <label for="base-price">Prix de Base</label>
-                    <input id="base-price" type="text" value="10€">
-
-                    <label for="origin">Origine</label>
-                    <select id="origin-type">
-                        <option>Select Origin ...</option>
-                    </select>
-
-                    
-                    <label for="tags">Tags</label>
-                    <select id="tags">
-                        <option>Select Add ...</option>
-                    </select>
-                </section>
-                
-                <section class="submit-btn">
-                    <button class="submit">Soumettre</button>
-                </section>  
-            </div>
-            <div class="right-container">
-                <label for="category">Catégorie</label>
-                <select id="category">
-                    <option>Select Category ...</option>
-                </select>
-            </div>
+<div class="add-product-container">
+    <!-- Contenu principal -->
+    <div class="content">
+      <!-- Colonne de gauche -->
+      <div class="left-column">
+        <!-- Statut -->
+        <div class="card">
+          <h2>Status</h2>
+          <select [(ngModel)]="product.status">
+            <option value="add-product">Add-product</option>
+            <option value="edit-product">Edit-product</option>
+          </select>
         </div>
+  
+        <!-- Product Details -->
+        <div class="card">
+          <h2>Product Details</h2>
+          <label for="category">Category</label>
+          <select id="category" [(ngModel)]="product.category">
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+  
+          <label for="brand">Brand</label>
+          <select id="brand" [(ngModel)]="product.brand">
+            <option *ngFor="let b of brands" [value]="b">{{ b }}</option>
+          </select>
+  
+          <label for="sku">Bar Code</label>
+          <input id="sku" type="text" [(ngModel)]="product.barcode" />
+  
+          <!-- Tags -->
+          <label for="tags">Tags</label>
+          <input 
+            id="tags"
+            type="text"
+            placeholder="Type a tag and press Enter"
+            [(ngModel)]="tagInput"
+            (keydown)="addTag($event)" />
+          <div class="tags-container">
+            <span class="tag" *ngFor="let tag of product.tags">
+              {{ tag }} <button type="button" (click)="removeTag(tag)">x</button>
+            </span>
+          </div>
+  
+          <label for="origin">Origin</label>
+          <select id="origin" [(ngModel)]="product.origin">
+            <option *ngFor="let o of origins" [value]="o">{{ o }}</option>
+          </select>
+        </div>
+      </div>
+  
+      <!-- Colonne de droite -->
+      <div class="right-column">
+        <!-- Contenu de l'onglet General -->
+        <div class="tab-content">
+          <div class="card">
+            <h2>General</h2>
+            <label for="productName">Product Name</label>
+            <input 
+              id="productName" 
+              placeholder="Enter product name ..." 
+              type="text" 
+              [(ngModel)]="product.name" />
+  
+            <label for="description">Description</label>
+            <textarea 
+              id="description" 
+              placeholder="Write a description ..." 
+              rows="4" 
+              [(ngModel)]="product.description">
+            </textarea>
+  
+            <p class="note">
+              If you require regarding your size, please check the chart or contact our Customer Service for the best visibility.
+            </p>
+          </div>
+  
+          <div class="card">
+            <h2>Pricing</h2>
+            <label for="price">Price</label>
+            <input id="price" type="number" [(ngModel)]="product.price" />
+          </div>
+        </div>
+  
+        <div class="actions">
+          <button class="btn btn-cancel" (click)="onCancel()"><strong>Cancel</strong></button>
+          <button class="btn btn-save" (click)="onSave()"><strong>Submit</strong></button>
+        </div>
+      </div>
     </div>
-    <button class="dark-mode-btn" (click)="toggleDarkMode()">🌙</button>
-</div>
+  </div>
+  
