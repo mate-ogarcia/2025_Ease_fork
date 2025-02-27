@@ -69,9 +69,11 @@ console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
     - Create all the buckets you need, making sure that the names of the buckets you've just created match those of your `.env.development`.
     - Create your index on your bucket products
 
-    #### Note:
+  #### Note:
 
-    Make sur all your variables in your `.env.development` match those in your couchbase database, including the bucket's name and index's name.
+  - Make sur all your variables in your `.env.development` match those in your couchbase database, including the bucket's name and index's name. 
+  - For development mode, the `DB_HOST` of the `.env` must be the IP of the machine hosting couchbase (if you're local then you must put your IP).
+  - /!\ If you can't connect to the database, check that you don't have a VPN. CouchBase prevents connection if you have one, so use a private connection such as your connection share or a personal Wifi.
 
 ## Starting the Project
 

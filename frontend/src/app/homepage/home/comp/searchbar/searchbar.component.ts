@@ -16,9 +16,10 @@ import { debounceTime, distinctUntilChanged, switchMap, tap, filter } from 'rxjs
 import { Router, RouterLink } from '@angular/router';
 // API
 import { ApiService } from '../../../../../services/api.service';
-import { ApiEuropeanCountries } from '../../../../../services/europeanCountries/api.europeanCountries';
 import { UsersService } from '../../../../../services/users/users.service';
 import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
+// Cache API
+import { DataCacheService } from '../../../../../services/cache/data-cache.service';
 
 @Component({
   selector: 'app-searchbar',
@@ -98,10 +99,10 @@ export class SearchbarComponent implements OnInit {
    */
   constructor(
     private apiService: ApiService,
-    private apiCountries: ApiEuropeanCountries,
     private router: Router,
     private usersService: UsersService,
     private apiOFF: ApiOpenFoodFacts,
+    private dataCacheService: DataCacheService,
   ) {
     this._searchSubject
       .pipe(
@@ -184,21 +185,20 @@ export class SearchbarComponent implements OnInit {
    * @brief Lifecycle hook that initializes the component.
    */
   async ngOnInit(): Promise<void> {
-    // Get all the european countries
-    this.apiCountries.fetchEuropeanCountries().then(() => {
-      this.countries = this.apiCountries.europeanCountries.sort();
-    }).catch((error) => console.error('❌ Error fetching countries:', error));
 
-    // Get all the category in the DB
-    this.apiService.getAllCategories().subscribe({
-      next: (categories) => this.categories = categories.sort(),
-      error: (error) => console.error('❌ Error fetching categories:', error),
+    // Retrieve countries from cache
+    this.dataCacheService.getCountries().subscribe(countries => {
+      this.countries = countries;
     });
 
-    // Get all the brands on the DB
-    this.apiService.getAllBrands().subscribe({
-      next: (brands) => this.brands = brands.sort(),
-      error: (error) => console.error('❌ Error fetching brands:', error),
+    // Retrieve categories from cache
+    this.dataCacheService.getCategories().subscribe(categories => {
+      this.categories = categories;
+    });
+
+    // Retrieve brands from cache
+    this.dataCacheService.getBrands().subscribe(brands => {
+      this.brands = brands;
     });
 
     // Get the cookie's info
@@ -261,7 +261,6 @@ export class SearchbarComponent implements OnInit {
     }
   }
 
-
   /**
    * @brief Clears the search query and results.
    */
@@ -299,7 +298,6 @@ export class SearchbarComponent implements OnInit {
    * 
    * @returns {void} This function does not return anything but navigates to the results page upon completion.
    */
-  // TODO
   search(includeSelectedProduct: boolean = false): void {
     this.applyFilters(); // Apply filters before performing the search.
 
@@ -312,11 +310,9 @@ export class SearchbarComponent implements OnInit {
     const filtersToSend = {
       ...this.appliedFilters, // Include all applied filters
       productId: includeSelectedProduct ? this.selectedProduct : null, // Include selected product ID if required
-      productSource: this.wholeSelectedProduct.source,
+      productSource: this.wholeSelectedProduct ? this.wholeSelectedProduct.source : null, // If no id means only the filters
       currentRoute: this.router.url, // Pass the current route for backend context
     };
-
-    console.log('filters:', filtersToSend);
 
     // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
