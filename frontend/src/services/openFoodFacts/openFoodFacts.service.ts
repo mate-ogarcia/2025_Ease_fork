@@ -20,4 +20,9 @@ export class ApiOpenFoodFacts {
     getProductInfo(name: string): Observable<any> {
         return this.http.get<any[]>(`${this._offUrl}/search/${name}`);
     }
+
+    // TODO
+    getOpenFoodFactsProductById(productId: string): Observable<any> {
+        return this.http.get<any[]>(`${this._offUrl}/getbyId/${productId}`);
+    }
 }

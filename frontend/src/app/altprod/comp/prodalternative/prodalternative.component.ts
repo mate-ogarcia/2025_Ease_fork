@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../../services/api.service';
-import { UnsplashService } from '../../../../services/unsplash.service'; // ajuste le chemin selon ta structure
+import { UnsplashService } from '../../../../services/unsplash.service'; 
 
 @Component({
   selector: 'app-prodalternative',
@@ -16,6 +16,8 @@ import { UnsplashService } from '../../../../services/unsplash.service'; // ajus
   templateUrl: './prodalternative.component.html',
   styleUrls: ['./prodalternative.component.css']
 })
+
+// TODO : Add api alternatives
 export class ProdalternativeComponent implements OnInit {
   productId: string = '';
   productDetails: any[] = [];
@@ -38,14 +40,16 @@ export class ProdalternativeComponent implements OnInit {
    * @brief Lifecycle hook executed when the component is initialized.
    */
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      this.productId = params.get('id') || '';
-      console.log("🔹 Product ID received: (prodAlt)", this.productId);
-
-      if (this.productId) {
-        this.fetchAlternativeProducts(this.productId);
-      }
+    this.route.params.subscribe(params => {
+      const productId = params['id'];
+      const productSource = params['source'];
+      console.log('prodalternative.component.ts');
+      console.log("🔹 Product ID:", productId);
+      console.log("🌍 Product Source:", productSource);
     });
+    // if (this.productId) {
+    //   this.fetchAlternativeProducts(this.productId);
+    // }
   }
 
   /**
@@ -55,40 +59,45 @@ export class ProdalternativeComponent implements OnInit {
   fetchAlternativeProducts(productId: string) {
     this.isLoading = true;
     this.errorMessage = '';
-
-    this.apiService.getAlternativeProducts(productId).subscribe({
-      next: (data) => {
+  
+    const observer = {
+      next: (data: any) => {
         this.productDetails = data;
         console.log("Alternative products received: (prodAlt)", this.productDetails);
-
-        // Pour chaque produit, lancer la recherche d'image depuis Unsplash
+  
+        // Fetch images for each product
         this.productDetails.forEach(product => {
           if (product && product.name) {
-            this.unsplashService.searchPhotos(product.name).subscribe(response => {
-              if (response.results && response.results.length > 0) {
-                // Utilisation de l'URL raw pour forcer une taille uniforme via les paramètres
-                // Ici, on demande une image de 300x300 pixels, recadrée si nécessaire
-                const rawUrl = response.results[0].urls.raw;
-                product.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
-              } else {
-                console.log(`Aucune image trouvée pour ${product.name}`);
+            this.unsplashService.searchPhotos(product.name).subscribe({
+              next: (response) => {
+                if (response.results && response.results.length > 0) {
+                  // Use the raw URL with formatting parameters for consistency
+                  const rawUrl = response.results[0].urls.raw;
+                  product.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+                } else {
+                  console.log(`No image found for ${product.name}`);
+                }
+              },
+              error: (error) => {
+                console.error("Error retrieving image from Unsplash:", error);
               }
-            }, error => {
-              console.error("Erreur lors de la récupération d'image depuis Unsplash :", error);
             });
           }
         });
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error("❌ Error retrieving alternative products:", error);
-        this.errorMessage = "Impossible de récupérer les produits alternatifs.";
+        this.errorMessage = "Unable to fetch alternative products.";
       },
       complete: () => {
         this.isLoading = false;
       }
-    });
+    };
+  
+    // Use observer object in subscribe()
+    this.apiService.getAlternativeProducts(productId).subscribe(observer);
   }
-
+  
   /**
    * @brief Returns a CSS class based on the product rating.
    * @param rating The rating value of the product.

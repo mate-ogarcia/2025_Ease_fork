@@ -3,7 +3,7 @@ import { AuthGuard } from '../services/auth/auth.guard';
 
 export const routes: Routes = [
   {
-    path: 'products-alternative/:id',
+    path: 'products-alternative/:id/:source',
     loadComponent: () =>
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),
   },

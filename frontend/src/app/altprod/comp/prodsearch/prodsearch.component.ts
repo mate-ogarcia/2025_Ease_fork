@@ -13,8 +13,9 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 // API service
 import { ApiService } from '../../../../services/api.service';
-import { UnsplashService } from '../../../../services/unsplash.service'; // ajuste le chemin selon ta structure
+import { UnsplashService } from '../../../../services/unsplash.service';
 import { ApiEuropeanCountries } from '../../../../services/europeanCountries/api.europeanCountries';
+import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 
 @Component({
   selector: 'app-prodsearch',
@@ -39,12 +40,13 @@ export class ProdsearchComponent implements OnInit {
    * @param unsplashService Service for fetching images from Unsplash.
    */
   constructor(
-    private route: ActivatedRoute, 
-    private apiService: ApiService, 
-    private apicountries: ApiEuropeanCountries, 
+    private route: ActivatedRoute,
+    private apiService: ApiService,
+    private apicountries: ApiEuropeanCountries,
     private http: HttpClient,
-    private unsplashService: UnsplashService
-  ) {}
+    private unsplashService: UnsplashService,
+    private apiOpenFoodFacts: ApiOpenFoodFacts, 
+  ) { }
 
   /**
    * @brief Lifecycle hook that runs on component initialization.
@@ -53,45 +55,101 @@ export class ProdsearchComponent implements OnInit {
    * loads the list of European countries, and retrieves an image from Unsplash.
    */
   ngOnInit() {
-    // Appel de la méthode pour charger les pays européens
+    // Charger la liste des pays européens
     this.apicountries.fetchEuropeanCountries();
 
     this.route.paramMap.subscribe(params => {
+      // 🔹 Correction : Utiliser get() pour extraire les paramètres
       this.productId = params.get('id') || '';
-      console.log("🔹 Product ID received: (prodSearch)", this.productId);
+      const productSource = params.get('source') || 'Internal'; // Valeur par défaut
 
+      console.log('prodsearch.ts');
+      console.log("🔹 Product ID:", this.productId);
+      console.log("🌍 Product Source:", productSource);
+
+      // Vérifier la source du produit et récupérer les données
       if (this.productId) {
-        this.apiService.getProductById(this.productId).subscribe({
-          next: (data) => {
-            this.productDetails = data;
-            console.log("✅ Product retrieved: (prodSearch)", this.productDetails);
-            // Vérifie si l'origine est européenne afin d'appliquer le style correspondant
-            this.isEuropean = this.apicountries.checkIfEuropean(this.productDetails.origin);
-
-            // Récupération d'une image depuis Unsplash basée sur le nom du produit
-            if (this.productDetails && this.productDetails.name) {
-              this.unsplashService.searchPhotos(this.productDetails.name).subscribe({
-                next: (response) => {
-                  if (response.results && response.results.length > 0) {
-                    // Utilisation de l'URL raw pour forcer une taille uniforme via les paramètres
-                    // Ici, on demande une image de 300x300 pixels, recadrée si nécessaire
-                    const rawUrl = response.results[0].urls.raw;
-                    this.productDetails.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
-                  } else {
-                    console.log(`Aucune image trouvée pour ${this.productDetails.name}`);
-                  }
-                },
-                error: (error) => {
-                  console.error("❌ Erreur lors de la récupération d'image depuis Unsplash :", error);
-                }
-              });
-            }
-          },
-          error: (error) => console.error("❌ Error retrieving product:", error)
-        });
+        if (productSource === "Internal") {
+          this.fetchInternalProduct(this.productId);
+        } else {
+          this.fetchExternalProduct(this.productId, productSource);
+        }
       }
     });
   }
+
+  /**
+   * @brief Récupère un produit interne depuis notre API.
+   * @param productId L'ID du produit interne.
+   */
+  fetchInternalProduct(productId: string) {
+    this.apiService.getProductById(productId).subscribe({
+      next: (data) => {
+        this.handleProductData(data);
+      },
+      error: (error) => console.error("❌ Error retrieving product:", error)
+    });
+  }
+
+  /**
+   * @brief Récupère un produit depuis une API externe en fonction de sa source.
+   * @param productId L'ID du produit.
+   * @param productSource La source de l'API (ex: OpenFoodFacts, SomeOtherAPI, etc.).
+   */
+  fetchExternalProduct(productId: string, productSource: string) {
+    switch (productSource) {
+      case "OpenFoodFacts":
+        this.apiOpenFoodFacts.getOpenFoodFactsProductById(productId).subscribe({
+          next: (data) => this.handleProductData(data),
+          error: (error) => console.error("❌ Error retrieving product from OpenFoodFacts:", error)
+        });
+        break;
+
+      default:
+        console.warn(`⚠️ Unknown external API source: ${productSource}`);
+        break;
+    }
+  }
+
+
+
+  /**
+ * @brief Gère les données du produit récupéré.
+ * @param product Le produit récupéré depuis l'API.
+ */
+  handleProductData(product: any) {
+    this.productDetails = product;
+    console.log("✅ Product retrieved:", this.productDetails);
+
+    // Vérifie si l'origine est européenne
+    this.isEuropean = this.apicountries.checkIfEuropean(this.productDetails.origin);
+
+    // Charger une image depuis Unsplash
+    this.loadProductImage(this.productDetails.name);
+  }
+
+  /**
+  * @brief Charge une image du produit depuis Unsplash.
+  * @param productName Le nom du produit.
+  */
+  loadProductImage(productName: string) {
+    if (!productName) return;
+
+    this.unsplashService.searchPhotos(productName).subscribe({
+      next: (response) => {
+        if (response.results && response.results.length > 0) {
+          const rawUrl = response.results[0].urls.raw;
+          this.productDetails.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+        } else {
+          console.log(`Aucune image trouvée pour ${productName}`);
+        }
+      },
+      error: (error) => {
+        console.error("❌ Erreur lors de la récupération d'image Unsplash :", error);
+      }
+    });
+  }
+
 
   /**
    * @brief Returns the CSS class based on the product rating.

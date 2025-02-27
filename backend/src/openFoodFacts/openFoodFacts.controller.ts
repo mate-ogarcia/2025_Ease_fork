@@ -64,4 +64,14 @@ export class OpenFoodFactsController {
       const pageNumber = page ? parseInt(page, 10) : 1;
       return await this.openFoodFactsService.searchProductsByName(name, pageNumber);
     }
+
+    @Get('search/:productId')
+    async getProductById(
+      @Param('productId') productId: string,
+      @Query('page') page: string,
+    ) {
+      // TODO
+      const pageNumber = page ? parseInt(page, 10) : 1;
+      // return await this.openFoodFactsService.searchProductsByName(name, pageNumber);
+    }
 }
