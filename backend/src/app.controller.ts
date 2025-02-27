@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -6,19 +6,6 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
   ) {}
-
-  /**
-   * @brief A simple function that returns a "Hello World!" message for testing the `/` route.
-   * 
-   * This method handles GET requests at the root endpoint `/`.
-   * It returns a simple greeting message for testing purposes.
-   * 
-   * @returns {string} A "Hello World!" message.
-   */
-  @Get() // Route: http://localhost:3000/
-  getHello(): string {
-    return this.appService.getHello();
-  }
 
   /**
    * @brief Retrieves and transforms data from the Couchbase database through the AppService.

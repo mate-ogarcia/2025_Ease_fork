@@ -1,16 +1,13 @@
 import { Injectable } from "@nestjs/common";
+// API
 import { DatabaseService } from "./database/database.service";
 
 @Injectable()
 export class AppService {
-  constructor(private readonly dbService: DatabaseService) {}
-
-  /**
-   * Fonction qui renvoie un message "Hello World!" (test des routes)
-   */
-  getHello(): string {
-    return "Hello World!";
-  }
+  
+  constructor (
+    private dbService: DatabaseService
+  ) {}
 
   /**
    * Retrieves raw data from the Couchbase database and applies a transformation.

@@ -10,6 +10,7 @@
 # Local files
 /delDeps.bat
 /noteRU.txt
+/.vscode
 
 #node_modules
 node_modules

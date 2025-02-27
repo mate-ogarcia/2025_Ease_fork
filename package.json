@@ -2,7 +2,7 @@
     "name": "projet_tutore",
     "version": "1.0.0",
     "scripts": {
-        "start:front": "cd ./frontend && ng serve",
+        "start:front": "cd ./frontend && npm start",
         "start:backProd": "cd ./backend && npm run start:prod",
         "start:backDev": "cd ./backend && npm run start:dev",
         "start:prod": "concurrently -k \"npm run start:front\" \"npm run start:backProd\"",
