@@ -14,9 +14,18 @@ import {
 import { DatabaseService } from "../database/database.service";
 import { UserRole } from "../auth/enums/role.enum";
 
+/**
+ * @brief Service responsible for user management operations.
+ * @details This service provides methods for creating, retrieving, updating, and deleting users.
+ * It interacts with the DatabaseService to perform database operations.
+ */
 @Injectable()
 export class UsersService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  /**
+   * @brief Constructor for UsersService.
+   * @param {DatabaseService} databaseService - Service for handling database operations.
+   */
+  constructor(private readonly databaseService: DatabaseService) { }
 
   /**
    * @brief Searches for a user by email.
@@ -99,9 +108,13 @@ export class UsersService {
 
   /**
    * @brief Updates a user's role.
+   * @details This method changes the role of a specified user in the database.
+   *
    * @param {string} id - The ID of the user to update.
    * @param {UserRole} role - The new role to assign.
    * @returns {Promise<any>} The updated user object.
+   * @throws {NotFoundException} If the user with the specified ID is not found.
+   * @throws {InternalServerErrorException} If an error occurs during the update.
    */
   async updateRole(id: string, role: UserRole): Promise<any> {
     try {
@@ -118,8 +131,12 @@ export class UsersService {
 
   /**
    * @brief Deletes a user from the database.
+   * @details This method removes a user with the specified ID from the database.
+   *
    * @param {string} id - The ID of the user to delete.
    * @returns {Promise<void>}
+   * @throws {NotFoundException} If the user with the specified ID is not found.
+   * @throws {InternalServerErrorException} If an error occurs during deletion.
    */
   async delete(id: string): Promise<void> {
     try {

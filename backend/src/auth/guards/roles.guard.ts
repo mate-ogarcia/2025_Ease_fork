@@ -1,9 +1,14 @@
 /**
  * @file roles.guard.ts
- * @brief Guard pour la vérification des rôles.
+ * @brief Main guard for role verification.
  *
- * Ce guard vérifie si l'utilisateur possède les rôles requis
- * pour accéder à une route protégée.
+ * This guard checks if the user has the required roles
+ * to access a protected route. It is more flexible than AdminGuard
+ * as it can verify any role defined in UserRole.
+ * 
+ * NOTE: This guard is the main guard for role verification and should be used
+ * instead of admin.guard.ts located in the parent directory. To restrict access
+ * to administrators, use @Roles(UserRole.ADMIN) with this guard.
  */
 
 import {
@@ -18,42 +23,54 @@ import { ROLES_KEY } from "../decorators/roles.decorator";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  /**
+   * @brief Constructor for RolesGuard.
+   * @param {Reflector} reflector - NestJS Reflector for retrieving metadata.
+   */
+  constructor(private reflector: Reflector) { }
 
+  /**
+   * @brief Determines if the request can proceed based on user roles.
+   * @details Checks if the authenticated user has at least one of the required roles.
+   *
+   * @param {ExecutionContext} context - The execution context of the request.
+   * @returns {boolean} Whether the user has the required role.
+   * @throws {UnauthorizedException} If the user is not authenticated or lacks the required role.
+   */
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    console.log("🔒 Rôles requis:", requiredRoles);
+    console.log("🔒 Required roles:", requiredRoles);
 
     if (!requiredRoles || requiredRoles.length === 0) {
-      console.log("✅ Aucun rôle requis");
+      console.log("✅ No roles required");
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    console.log("👤 Utilisateur de la requête:", {
+    console.log("👤 Request user:", {
       id: user?.id,
       email: user?.email,
       role: user?.role,
     });
 
     if (!user) {
-      console.error("❌ Aucun utilisateur trouvé dans la requête");
-      throw new UnauthorizedException("Utilisateur non authentifié");
+      console.error("❌ No user found in request");
+      throw new UnauthorizedException("User not authenticated");
     }
 
     if (!user.role) {
-      console.error("❌ Utilisateur sans rôle défini");
-      throw new UnauthorizedException("Rôle utilisateur non défini");
+      console.error("❌ User without defined role");
+      throw new UnauthorizedException("User role not defined");
     }
 
     const hasRequiredRole = requiredRoles.includes(user.role);
-    console.log(`${hasRequiredRole ? "✅" : "❌"} Vérification du rôle:`, {
+    console.log(`${hasRequiredRole ? "✅" : "❌"} Role verification:`, {
       userRole: user.role,
       requiredRoles,
       hasAccess: hasRequiredRole,
@@ -61,7 +78,7 @@ export class RolesGuard implements CanActivate {
 
     if (!hasRequiredRole) {
       throw new UnauthorizedException(
-        `Accès refusé. Rôle requis: ${requiredRoles.join(", ")}`,
+        `Access denied. Required role: ${requiredRoles.join(", ")}`,
       );
     }
 

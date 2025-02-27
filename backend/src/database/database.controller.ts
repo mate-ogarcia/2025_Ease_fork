@@ -20,16 +20,24 @@ import {
 import { DatabaseService } from "./database.service";
 // import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard"; // Temporarily commented out
 
+/**
+ * @brief Controller for database-related endpoints.
+ * @details This controller provides endpoints for retrieving data from the database.
+ * Authentication has been temporarily disabled to allow public access.
+ */
 @Controller("database")
 // @UseGuards(JwtAuthGuard) // Temporarily commented out to allow access without authentication
 export class DatabaseController {
-  constructor(private readonly databaseService: DatabaseService) {}
+  /**
+   * @brief Constructor for DatabaseController.
+   * @param {DatabaseService} databaseService - Service for handling database operations.
+   */
+  constructor(private readonly databaseService: DatabaseService) { }
 
   /**
-   * @function getAllCategName
-   * @description
-   * This endpoint retrieves all category names from the database by calling the `getAllCategName` method of the `DatabaseService`.
-   * It returns the list of category names or an empty array in case of failure.
+   * @brief Retrieves all category names from the database.
+   * @details This endpoint fetches all category names by calling the DatabaseService.
+   * It handles errors gracefully by returning an empty array instead of throwing exceptions.
    *
    * @route GET /database/categName
    * @returns {Promise<any[]>} A promise that resolves to an array of category names.
@@ -53,10 +61,9 @@ export class DatabaseController {
   }
 
   /**
-   * @function getAllBrandName
-   * @description
-   * This endpoint retrieves all brand names from the database by calling the `getAllBrandName` method of the `DatabaseService`.
-   * It returns the list of brand names or an empty array in case of failure.
+   * @brief Retrieves all brand names from the database.
+   * @details This endpoint fetches all brand names by calling the DatabaseService.
+   * It handles errors gracefully by returning an empty array instead of throwing exceptions.
    *
    * @route GET /database/brandName
    * @returns {Promise<any[]>} A promise that resolves to an array of brand names.

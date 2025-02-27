@@ -3,7 +3,7 @@
  * @brief Controller for administrative operations
  * @details This controller handles administrative operations such as user management.
  * It has been modified to improve error handling and provide better logging.
- * Authentication guards have been temporarily disabled for testing purposes.
+ * Authentication guards have been enabled to secure administrative routes.
  *
  * @author Original Author
  * @date Original Date
@@ -20,29 +20,41 @@ import {
   Patch,
   Delete,
   Param,
-  // UseGuards, // Temporarily commented out
+  UseGuards,
 } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
-// import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard"; // Temporarily commented out
-// import { RolesGuard } from "../auth/guards/roles.guard"; // Temporarily commented out
-// import { Roles } from "../auth/decorators/roles.decorator"; // Temporarily commented out
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { UsersService } from "../users/users.service";
 import { UserRole } from "../auth/enums/role.enum";
 
+/**
+ * @brief Controller for administrative operations.
+ * @details This controller is protected by JwtAuthGuard and RolesGuard,
+ * ensuring that only authenticated users with the Admin role can access these endpoints.
+ */
 @Controller("admin")
-// @UseGuards(JwtAuthGuard, RolesGuard) // Temporarily commented out for testing
-// @Roles(UserRole.ADMIN) // Temporarily commented out for testing
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 export class AdminController {
+  /**
+   * @brief Constructor for AdminController.
+   * @param {AuthService} authService - Service for handling authentication operations.
+   * @param {UsersService} usersService - Service for handling user operations.
+   */
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
-  ) {}
+  ) { }
 
   /**
-   * @function initializeAdmin
-   * @description Creates the initial admin user for the application
-   * @param {Object} createAdminDto - Object containing email and password for the admin
-   * @returns {Promise<Object>} Response with the created admin details
+   * @brief Creates the initial admin user for the application.
+   * @details This endpoint initializes the first administrator account with the provided credentials.
+   *
+   * @param {Object} createAdminDto - Object containing email and password for the admin.
+   * @returns {Promise<Object>} Response with the created admin details.
+   * @throws {HttpException} If there is an error during admin initialization.
    */
   @Post("initialize")
   async initializeAdmin(
@@ -60,7 +72,7 @@ export class AdminController {
       console.log("👑 Admin initialized with role:", UserRole.ADMIN);
 
       return {
-        message: "Administrateur initialisé avec succès",
+        message: "Administrator initialized successfully",
         admin: {
           id: admin.id,
           username: admin.username,
@@ -70,20 +82,21 @@ export class AdminController {
       };
     } catch (error) {
       console.error(
-        "❌ Erreur lors de l'initialisation de l'administrateur:",
+        "❌ Error during administrator initialization:",
         error,
       );
       throw new HttpException(
-        "Erreur lors de l'initialisation de l'administrateur",
+        "Error during administrator initialization",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   /**
-   * @function getAllUsers
-   * @description Retrieves all users from the database
-   * @returns {Promise<Array>} Array of user objects or empty array on error
+   * @brief Retrieves all users from the database.
+   * @details This endpoint fetches all registered users from the database.
+   *
+   * @returns {Promise<Array>} Array of user objects or empty array on error.
    */
   @Get("users")
   async getAllUsers() {
@@ -99,11 +112,13 @@ export class AdminController {
   }
 
   /**
-   * @function updateUserRole
-   * @description Updates a user's role
-   * @param {string} id - The ID of the user to update
-   * @param {UserRole} role - The new role to assign
-   * @returns {Promise<Object>} The updated user object
+   * @brief Updates a user's role.
+   * @details This endpoint changes the role of a specified user.
+   *
+   * @param {string} id - The ID of the user to update.
+   * @param {UserRole} role - The new role to assign.
+   * @returns {Promise<Object>} The updated user object.
+   * @throws {HttpException} If there is an error during role update.
    */
   @Patch("users/:id/role")
   async updateUserRole(@Param("id") id: string, @Body("role") role: UserRole) {
@@ -112,17 +127,19 @@ export class AdminController {
     } catch (error) {
       console.error("❌ Error updating user role:", error);
       throw new HttpException(
-        "Erreur lors de la mise à jour du rôle",
+        "Error updating user role",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   /**
-   * @function deleteUser
-   * @description Deletes a user from the database
-   * @param {string} id - The ID of the user to delete
-   * @returns {Promise<Object>} Success message
+   * @brief Deletes a user from the database.
+   * @details This endpoint removes a specified user from the database.
+   *
+   * @param {string} id - The ID of the user to delete.
+   * @returns {Promise<Object>} Success message.
+   * @throws {HttpException} If there is an error during user deletion.
    */
   @Delete("users/:id")
   async deleteUser(@Param("id") id: string) {
@@ -131,7 +148,7 @@ export class AdminController {
     } catch (error) {
       console.error("❌ Error deleting user:", error);
       throw new HttpException(
-        "Erreur lors de la suppression de l'utilisateur",
+        "Error deleting user",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

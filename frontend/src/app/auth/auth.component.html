@@ -14,20 +14,10 @@
         <img src="ours.png" />
       </div>
       <div class="switch-container">
-        <button
-          type="button"
-          class="switch-button"
-          [class.active]="isLoginMode"
-          (click)="setLoginMode(true)"
-        >
+        <button type="button" class="switch-button" [class.active]="isLoginMode" (click)="setLoginMode(true)">
           Login
         </button>
-        <button
-          type="button"
-          class="switch-button"
-          [class.active]="!isLoginMode"
-          (click)="setLoginMode(false)"
-        >
+        <button type="button" class="switch-button" [class.active]="!isLoginMode" (click)="setLoginMode(false)">
           Register
         </button>
       </div>
@@ -39,14 +29,8 @@
           </div>
           <div class="data">
             <h5>Email</h5>
-            <input 
-              #emailInput 
-              type="email" 
-              class="input-log" 
-              name="emailLogin" 
-              [(ngModel)]="email"
-              (blur)="onFieldTouched('email')"
-            >
+            <input #emailInput type="email" class="input-log" name="emailLogin" [(ngModel)]="email"
+              (blur)="onFieldTouched('email')">
             <div class="error-wrapper" *ngIf="emailFieldTouched && emailError">
               <i class="fas fa-exclamation-circle"></i>
               <span class="error-message">{{ emailError }}</span>
@@ -61,14 +45,8 @@
           </div>
           <div class="data">
             <h5>Username</h5>
-            <input
-              #usernameInput
-              type="text"
-              class="input-log"
-              name="username"
-              [(ngModel)]="username"
-              (blur)="onFieldTouched('username')"
-            />
+            <input #usernameInput type="text" class="input-log" name="username" [(ngModel)]="username"
+              (blur)="onFieldTouched('username')" />
             <div class="error-wrapper" *ngIf="usernameFieldTouched && usernameError">
               <i class="fas fa-exclamation-circle"></i>
               <span class="error-message">{{ usernameError }}</span>
@@ -83,14 +61,8 @@
           </div>
           <div class="data">
             <h5>Email</h5>
-            <input
-              #emailInput
-              type="email"
-              class="input-log"
-              name="email"
-              [(ngModel)]="email"
-              (blur)="onFieldTouched('email')"
-            />
+            <input #emailInput type="email" class="input-log" name="email" [(ngModel)]="email"
+              (blur)="onFieldTouched('email')" />
             <div class="error-wrapper" *ngIf="emailFieldTouched && emailError">
               <i class="fas fa-exclamation-circle"></i>
               <span class="error-message">{{ emailError }}</span>
@@ -104,24 +76,14 @@
           </div>
           <div class="data">
             <h5>Password</h5>
-            <input
-              #passwordInput
-              [attr.type]="showPassword ? 'text' : 'password'"
-              class="input-log"
-              name="password"
-              [(ngModel)]="password"
-              (blur)="onFieldTouched('password')"
-            />
+            <input #passwordInput [attr.type]="showPassword ? 'text' : 'password'" class="input-log" name="password"
+              [(ngModel)]="password" (blur)="onFieldTouched('password')" />
             <div class="error-wrapper" *ngIf="passwordFieldTouched && passwordError">
               <i class="fas fa-exclamation-circle"></i>
               <span class="error-message">{{ passwordError }}</span>
             </div>
             <span class="eye-icon" (click)="togglePasswordVisibility()">
-              <i
-                class="fas eyes"
-                [class.fa-eye]="showPassword"
-                [class.fa-eye-slash]="!showPassword"
-              ></i>
+              <i class="fas eyes" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
             </span>
           </div>
         </div>
@@ -133,11 +95,7 @@
         </div>
 
         <a href="#" *ngIf="isLoginMode">Forgot Password?</a>
-        <input
-          type="submit"
-          class="btn"
-          [value]="isLoginMode ? 'Login' : 'Register'"
-        />
+        <input type="submit" class="btn" [value]="isLoginMode ? 'Login' : 'Register'" />
       </form>
     </div>
   </div>

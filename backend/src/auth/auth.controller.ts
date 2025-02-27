@@ -22,15 +22,23 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { RegisterDto, LoginDto } from "./dto/auth.dto";
 import { Roles } from "./decorators/roles.decorator";
 import { UserRole } from "./enums/role.enum";
+import { RolesGuard } from "./guards/roles.guard";
 
+/**
+ * @brief Controller for authentication-related endpoints.
+ */
 @Controller("auth")
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  /**
+   * @brief Constructor for AuthController.
+   * @param {AuthService} authService - Service for handling authentication operations.
+   */
+  constructor(private authService: AuthService) { }
 
   /**
    * @brief Registers a new user.
    *
-   * This endpoint allows a user to create an account by providing an email, an username and password.
+   * This endpoint allows a user to create an account by providing an email, a username and password.
    * The password is securely hashed before being stored in the database.
    *
    * @param {RegisterDto} body - The request body containing user credentials.
@@ -50,8 +58,8 @@ export class AuthController {
    * Upon successful authentication, it generates an access token and a refresh token.
    *
    * @param {LoginDto} body - The request body containing user credentials.
-   * @returns {Promise<{ access_token: string, refresh_token: string, user: any }>}
-   * An object containing an access token, a refresh token, and the authenticated user.
+   * @param {Response} response - Express response object for setting cookies.
+   * @returns {Promise<any>} An object containing an access token and the authenticated user.
    * @throws {UnauthorizedException} If the credentials are invalid.
    */
   @Post("login")
@@ -59,15 +67,15 @@ export class AuthController {
     @Body() body: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<any> {
-    console.log("📝 Tentative de connexion pour:", body.email);
+    console.log("📝 Login attempt for:", body.email);
     const result = await this.authService.login(body);
-    console.log("✅ Connexion réussie, configuration du cookie");
+    console.log("✅ Login successful, setting cookie");
 
     response.cookie("accessToken", result.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000, // 24 heures
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
     return result;
@@ -89,10 +97,16 @@ export class AuthController {
     return req.user;
   }
 
+  /**
+   * @brief Logs out a user by clearing their authentication cookie.
+   *
+   * @param {Response} response - Express response object for clearing cookies.
+   * @returns {Promise<{message: string}>} Success message.
+   */
   @Post("logout")
   async logout(@Res({ passthrough: true }) response: Response) {
     response.clearCookie("accessToken");
-    return { message: "Déconnexion réussie" };
+    return { message: "Logout successful" };
   }
 
   /**
@@ -100,11 +114,10 @@ export class AuthController {
    *
    * This endpoint is protected and requires both JWT authentication and Admin role.
    *
-   * @param {Request} req - The request object containing user details.
    * @returns {Promise<any>} List of all users in the system.
    * @throws {UnauthorizedException} If the user is not authenticated or not an admin.
    */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get("users")
   async getAllUsers(): Promise<any> {

@@ -1,10 +1,21 @@
 ﻿/**
  * @file auth.service.ts
- * @brief Service for handling user authentication.
- *
- * This service manages user authentication, including login, registration,
- * logout, and authentication status tracking. It interacts with the backend API
- * and manages authentication tokens in local storage.
+ * @brief Authentication service for user management and access control
+ * @details This service manages the complete authentication lifecycle, including:
+ * - User registration and account creation
+ * - Login and session management
+ * - Token-based authentication with JWT
+ * - Role-based access control
+ * - Secure logout and session termination
+ * - Authentication state persistence with cookies
+ * 
+ * The service interacts with the backend API for authentication operations
+ * and maintains the authentication state throughout the application.
+ * 
+ * @author Original Author
+ * @date Original Date
+ * @modified 2023-XX-XX
+ * @version 1.3.0
  */
 
 import { Injectable } from '@angular/core';
@@ -17,40 +28,90 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 // Cookies
 import { CookieService } from 'ngx-cookie-service';
 
+/**
+ * @interface AuthState
+ * @description Represents the authentication state of the application
+ * 
+ * This interface defines the structure of the authentication state
+ * that is maintained and broadcast throughout the application.
+ */
 interface AuthState {
+  /** @property {boolean} isAuthenticated - Whether the user is currently authenticated */
   isAuthenticated: boolean;
+
+  /** @property {string | null} role - The role of the authenticated user, or null if not authenticated */
   role: string | null;
 }
 
+/**
+ * @class AuthService
+ * @description Service that manages authentication and user sessions
+ * 
+ * This service provides methods for user authentication, registration,
+ * session management, and role-based access control. It maintains the
+ * authentication state and broadcasts changes to subscribers.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  /**
+   * @property {string} _authBackendUrl - The base URL for authentication API endpoints
+   * @private
+   */
   private _authBackendUrl = environment.authBackendUrl;
+
+  /**
+   * @property {BehaviorSubject<AuthState>} authState - Subject that broadcasts authentication state changes
+   * @private
+   */
   private authState = new BehaviorSubject<AuthState>({
     isAuthenticated: false,
     role: null
   });
+
+  /**
+   * @property {JwtHelperService} jwtHelper - Service for JWT token operations
+   * @private
+   */
   private jwtHelper = new JwtHelperService();
 
+  /**
+   * @constructor
+   * @description Initializes the AuthService and checks the initial authentication state
+   * 
+   * @param {HttpClient} http - The Angular HttpClient for making HTTP requests
+   * @param {Router} router - The Angular Router for navigation
+   * @param {CookieService} cookieService - Service for managing browser cookies
+   */
   constructor(
     private http: HttpClient,
     private router: Router,
     private cookieService: CookieService
   ) {
-    // Vérifier l'état initial
+    // Check initial authentication state on service initialization
     this.checkAuthState();
   }
 
+  /**
+   * @method checkAuthState
+   * @description Verifies the current authentication state based on stored tokens
+   * 
+   * This method checks if an access token exists in cookies and, if so,
+   * attempts to refresh the authentication state by fetching the user profile.
+   * If no token exists, it updates the state to unauthenticated.
+   * 
+   * @private
+   */
   private checkAuthState(): void {
     const hasAccessToken = this.cookieService.check('accessToken');
     if (hasAccessToken) {
-      // Si on a un token, on essaie de récupérer le profil
+      // If we have a token, try to get the user profile
       this.refreshAuthState().subscribe({
         error: (error) => {
           console.error('Error checking auth state:', error);
-          // En cas d'erreur, on ne réinitialise PAS l'état
-          // On laisse l'utilisateur connecté et on réessaiera plus tard
+          // In case of error, we DO NOT reset the state
+          // We keep the user logged in and will try again later
         }
       });
     } else {
@@ -58,6 +119,17 @@ export class AuthService {
     }
   }
 
+  /**
+   * @method refreshAuthState
+   * @description Refreshes the authentication state by fetching the user profile
+   * 
+   * This method makes an API call to get the current user's profile and
+   * updates the authentication state based on the response. It includes
+   * error handling to prevent disrupting the user experience.
+   * 
+   * @returns {Observable<any>} An observable of the profile API response
+   * @private
+   */
   private refreshAuthState(): Observable<any> {
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
@@ -69,17 +141,28 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('Error refreshing auth state:', error);
-          // Ne pas mettre à jour l'état en cas d'erreur
+          // Don't update state in case of error
           return throwError(() => error);
         })
       );
   }
 
+  /**
+   * @method updateAuthState
+   * @description Updates the authentication state and broadcasts changes
+   * 
+   * This method updates the authentication state only if the values have
+   * actually changed, preventing unnecessary broadcasts to subscribers.
+   * 
+   * @param {boolean} isAuthenticated - Whether the user is authenticated
+   * @param {string | null} role - The user's role, or null if not authenticated
+   * @private
+   */
   private updateAuthState(isAuthenticated: boolean, role: string | null): void {
     console.log('Updating auth state:', { isAuthenticated, role });
-    // Ne mettre à jour l'état que si les valeurs changent réellement
-    if (this.authState.value.isAuthenticated !== isAuthenticated || 
-        this.authState.value.role !== role) {
+    // Only update state if values actually change
+    if (this.authState.value.isAuthenticated !== isAuthenticated ||
+      this.authState.value.role !== role) {
       this.authState.next({
         isAuthenticated,
         role
@@ -88,14 +171,17 @@ export class AuthService {
   }
 
   /**
-   * @brief Registers a new user.
+   * @method register
+   * @description Registers a new user in the system
+   * 
+   * This method sends a registration request to the backend with the user's
+   * information. Upon successful registration, the user can then log in.
    *
-   * Sends a registration request to the backend with the user's email and password.
-   *
-   * @param {string} username - The username.
-   * @param {string} email - The email address of the user.
-   * @param {string} password - The user's password.
-   * @returns {Observable<any>} The API response.
+   * @param {string} username - The username for the new account
+   * @param {string} email - The email address for the new account
+   * @param {string} password - The password for the new account
+   * @returns {Observable<any>} An observable of the registration API response
+   * @public
    */
   register(username: string, email: string, password: string): Observable<any> {
     return this.http.post(`${this._authBackendUrl}/register`, {
@@ -106,14 +192,17 @@ export class AuthService {
   }
 
   /**
-   * @brief Logs in a user and stores the authentication token.
+   * @method login
+   * @description Authenticates a user and establishes a session
+   * 
+   * This method sends login credentials to the backend, retrieves a JWT token
+   * upon successful authentication, stores it in cookies, and updates the
+   * authentication state. The token is stored securely with HTTP-only cookies.
    *
-   * This method sends login credentials to the backend, retrieves a JWT token upon
-   * successful authentication, stores it in local storage, and updates the authentication status.
-   *
-   * @param {string} email - The email address of the user.
-   * @param {string} password - The user's password.
-   * @returns {Observable<any>} An observable containing the API response with the access token.
+   * @param {string} email - The email address of the user
+   * @param {string} password - The user's password
+   * @returns {Observable<any>} An observable of the login API response
+   * @public
    */
   login(email: string, password: string): Observable<any> {
     return this.http
@@ -126,11 +215,24 @@ export class AuthService {
       );
   }
 
+  /**
+   * @method logout
+   * @description Terminates the user session and clears authentication data
+   * 
+   * This method logs out the user by:
+   * 1. Immediately updating the authentication state to unauthenticated
+   * 2. Removing authentication cookies
+   * 3. Sending a logout request to the backend
+   * 4. Redirecting to the login page
+   *
+   * @returns {Observable<any>} An observable of the logout API response
+   * @public
+   */
   logout(): Observable<any> {
-    // Mettre à jour l'état immédiatement
+    // Update state immediately
     this.updateAuthState(false, null);
 
-    // Supprimer les cookies
+    // Remove cookies
     this.cookieService.delete('accessToken', '/');
     this.cookieService.delete('refreshToken', '/');
 
@@ -144,11 +246,15 @@ export class AuthService {
   }
 
   /**
-   * @brief Checks if the user is authenticated.
+   * @method isAuthenticated
+   * @description Provides an observable of the current authentication status
+   * 
+   * This method returns an observable that emits the current authentication
+   * status and continues to emit when the status changes. It filters out
+   * duplicate emissions to prevent unnecessary updates.
    *
-   * Returns an observable that emits the current authentication status.
-   *
-   * @returns {Observable<boolean>} An observable emitting `true` if authenticated, otherwise `false`.
+   * @returns {Observable<boolean>} An observable emitting true if authenticated, false otherwise
+   * @public
    */
   isAuthenticated(): Observable<boolean> {
     return this.authState.pipe(
@@ -157,13 +263,30 @@ export class AuthService {
     );
   }
 
+  /**
+   * @method getAuthStatus
+   * @description Alias for isAuthenticated method
+   * 
+   * This method provides backward compatibility with older code that
+   * may use getAuthStatus instead of isAuthenticated.
+   *
+   * @returns {Observable<boolean>} An observable of the authentication status
+   * @public
+   */
   getAuthStatus(): Observable<boolean> {
     return this.isAuthenticated();
   }
 
   /**
-   * @brief Gets the current user's role
-   * @returns {Observable<string | null>} The user's role or null if not authenticated
+   * @method getUserRole
+   * @description Provides an observable of the current user's role
+   * 
+   * This method returns an observable that emits the current user's role
+   * and continues to emit when the role changes. It filters out duplicate
+   * emissions to prevent unnecessary updates.
+   *
+   * @returns {Observable<string | null>} An observable of the user's role, or null if not authenticated
+   * @public
    */
   getUserRole(): Observable<string | null> {
     return this.authState.pipe(
@@ -173,9 +296,15 @@ export class AuthService {
   }
 
   /**
-   * @brief Checks if the current user has a specific role
-   * @param {string[]} roles - The roles to check
-   * @returns {boolean} True if the user has any of the specified roles
+   * @method hasRole
+   * @description Checks if the current user has any of the specified roles
+   * 
+   * This method synchronously checks if the current user's role matches
+   * any of the roles provided in the input array.
+   *
+   * @param {string[]} roles - Array of roles to check against
+   * @returns {boolean} True if the user has any of the specified roles, false otherwise
+   * @public
    */
   hasRole(roles: string[]): boolean {
     const currentRole = this.authState.value.role;

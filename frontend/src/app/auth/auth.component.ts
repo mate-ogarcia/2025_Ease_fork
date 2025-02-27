@@ -204,7 +204,7 @@ export class AuthComponent implements AfterViewInit {
     // Restaurer le mode sombre depuis le localStorage
     const savedMode = localStorage.getItem('darkMode');
     this.isDarkMode = savedMode === 'true';
-    
+
     // Initialiser les validateurs
     this.setupValidators();
   }

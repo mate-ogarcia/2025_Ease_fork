@@ -48,4 +48,4 @@ dotenv.config(); // Load environment variables
   controllers: [AuthController],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
-export class AuthModule {}
+export class AuthModule { }

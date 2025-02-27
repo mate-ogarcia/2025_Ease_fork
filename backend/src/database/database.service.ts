@@ -31,6 +31,11 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
+/**
+ * @brief Service responsible for database operations.
+ * @details This service manages connections to Couchbase buckets and provides methods
+ * for interacting with the database, including CRUD operations and search functionality.
+ */
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private cluster: Cluster;
@@ -45,6 +50,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private categCollection: Collection;
   private brandCollection: Collection;
 
+  /**
+   * @brief Constructor for DatabaseService.
+   * @param {HttpService} httpService - Service for making HTTP requests.
+   */
   constructor(private readonly httpService: HttpService) {
     this.initializeConnections();
   }
@@ -209,7 +218,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Returns the products collection.
+   * @brief Retrieves the products collection.
+   * @details This method returns the initialized Couchbase collection for products.
+   *
+   * @returns {couchbase.Collection} The initialized products collection.
+   * @throws {Error} If the products collection is not initialized.
    */
   getProductsCollection(): Collection {
     if (!this.productsCollection) {
@@ -219,7 +232,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Returns the users collection.
+   * @brief Retrieves the users collection.
+   * @details This method returns the initialized Couchbase collection for users.
+   *
+   * @returns {couchbase.Collection} The initialized users collection.
+   * @throws {Error} If the users collection is not initialized.
    */
   getUsersCollection(): Collection {
     if (!this.usersCollection) {
@@ -229,17 +246,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Returns the category collection.
+   * @brief Retrieves the category collection.
+   * @details This method returns the initialized Couchbase collection for categories.
+   *
+   * @returns {couchbase.Collection} The initialized category collection.
+   * @throws {Error} If the category collection is not initialized.
    */
   getCategCollection(): Collection {
     if (!this.categCollection) {
-      throw new Error("Users collection is not initialized.");
+      throw new Error("Category collection is not initialized.");
     }
     return this.categCollection;
   }
 
   /**
-   * Returns the brand collection.
+   * @brief Retrieves the brand collection.
+   * @details This method returns the initialized Couchbase collection for brands.
+   *
+   * @returns {couchbase.Collection} The initialized brand collection.
+   * @throws {Error} If the brand collection is not initialized.
    */
   getBrandCollection(): Collection {
     if (!this.brandCollection) {
