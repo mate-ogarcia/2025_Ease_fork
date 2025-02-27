@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
+import { HistoryComponent } from './history/history.component';
 
 @Component({
   selector: 'app-usercomp',
-  imports: [CommonModule],
+  imports: [CommonModule, HistoryComponent],
   templateUrl: './usercomp.component.html',
   styleUrl: './usercomp.component.css'
 })

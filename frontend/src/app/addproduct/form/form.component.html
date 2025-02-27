@@ -28,18 +28,18 @@
           <label for="sku">Bar Code</label>
           <input id="sku" type="text" [(ngModel)]="product.barcode" />
   
-          <!-- Tags -->
+          <!-- Tags affichés sous forme d'étiquettes intégrées dans l'input -->
           <label for="tags">Tags</label>
-          <input 
-            id="tags"
-            type="text"
-            placeholder="Type a tag and press Enter"
-            [(ngModel)]="tagInput"
-            (keydown)="addTag($event)" />
-          <div class="tags-container">
+          <div class="tags-input-container">
             <span class="tag" *ngFor="let tag of product.tags">
               {{ tag }} <button type="button" (click)="removeTag(tag)">x</button>
             </span>
+            <input 
+              id="tags"
+              type="text"
+              placeholder="Type a tag and press Enter"
+              [(ngModel)]="tagInput"
+              (keydown)="addTag($event)" />
           </div>
   
           <label for="origin">Origin</label>
@@ -56,19 +56,10 @@
           <div class="card">
             <h2>General</h2>
             <label for="productName">Product Name</label>
-            <input 
-              id="productName" 
-              placeholder="Enter product name ..." 
-              type="text" 
-              [(ngModel)]="product.name" />
+            <input id="productName" placeholder="Enter product name ..." type="text" [(ngModel)]="product.name" />
   
             <label for="description">Description</label>
-            <textarea 
-              id="description" 
-              placeholder="Write a description ..." 
-              rows="4" 
-              [(ngModel)]="product.description">
-            </textarea>
+            <textarea id="description" placeholder="Write a description ..." rows="4" [(ngModel)]="product.description"></textarea>
   
             <p class="note">
               If you require regarding your size, please check the chart or contact our Customer Service for the best visibility.

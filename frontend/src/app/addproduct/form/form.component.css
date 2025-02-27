@@ -33,6 +33,9 @@
   .actions button {
     margin-left: 8px;
   }
+  .status{
+    margin-top: 10px;
+  }
   
   /* Boutons génériques */
   .btn {
@@ -95,9 +98,11 @@
     border: 1px solid #ddd;
     border-radius: 25px;
     padding: 16px;
+    gap: 10px;
   }
   
   .card h2 {
+    border-bottom: 1px solid #666;
     margin-top: 0;
   }
   
