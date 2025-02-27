@@ -1,151 +1,185 @@
 /* Conteneur global */
 .add-product-container {
-    width: 100%;
-    margin: 0 auto;
-    padding: 10px 30px;
-    font-family: 'Geologica', sans-serif;
-    color: #333;
-    border-top: 1px solid #f9f9f9;
+  width: 100%;
+  margin: 0 auto;
+  padding: 10px 30px;
+  font-family: 'Geologica', sans-serif;
+  color: #333;
+  border-top: 1px solid #f9f9f9;
+}
 
-  }
-  
-  /* En-tête (titre + boutons) */
-  .header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  
-  .title {
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 20px;
-    border-radius: 20px;
-    color: #333;
-    margin: 0;
-    width: 100%;
-  }
-  
-  .actions button {
-    margin-left: 8px;
-  }
-  .status{
-    margin-top: 10px;
-  }
-  
-  /* Boutons génériques */
-  .btn {
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .btn-cancel {
-    background-color: #ccc;
-    border-radius: 20px;
-    transition: all 0.3s ease-in-out;
+/* En-tête (titre + boutons) */
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+}
 
-  }
-  .btn-save{
-    background-color: #0f5e08;
-    border-radius: 20px;
-    transition: all 0.3s ease-in-out;
-    color: #c7c6c6;
-  }
-  .btn-cancel:hover {
-    transition: all 0.3s ease-in-out;
-    background-color: rgb(155, 6, 6);
-    color: #f9f9f9;
-  }
-  .btn-save:hover {
-    transition: all 0.3s ease-in-out;
-    background-color: #118f06;
-    color: #f9f9f9;
-  }
- 
-  .actions{
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    padding: 15px;
-  }
-  /* Layout principal : deux colonnes */
-  .content {
-    display: flex;
-    gap: 16px;
-  }
-  
-  .left-column {
-    width: 30%;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .right-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Cartes de contenu */
-  .card {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 25px;
-    padding: 16px;
-    gap: 10px;
-  }
-  
-  .card h2 {
-    border-bottom: 1px solid #666;
-    margin-top: 0;
-  }
-  
-  
-  /* Labels et champs de formulaire */
-  label {
-    display: block;
-    margin: 8px 0 4px;
-    font-weight: 600;
-  }
-  
-  input[type="text"],
-  input[type="number"],
-  textarea,
-  select {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px;
-    margin-bottom: 8px;
-    border-radius: 15px;
-    border: 1px solid #ccc;
-  }
-  
-  /* Note / petit texte */
-  .note {
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 8px;
-  }
-  
-  /* Onglets */
-  .tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  
-  /* Contenu des onglets */
-  .tab-content {
-    margin-bottom: 16px;
-    gap: 15px;
-    display: flex;
-    flex-direction: column;
+.title {
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: 20px;
+  color: #333;
+  margin: 0;
+  width: 100%;
+}
 
-  }
-  
+.actions button {
+  margin-left: 8px;
+}
+
+.status {
+  margin-top: 10px;
+}
+
+/* Boutons génériques */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background-color: #ccc;
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-save {
+  background-color: #0f5e08;
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  color: #c7c6c6;
+}
+
+.btn-cancel:hover {
+  transition: all 0.3s ease-in-out;
+  background-color: rgb(155, 6, 6);
+  color: #f9f9f9;
+}
+
+.btn-save:hover {
+  transition: all 0.3s ease-in-out;
+  background-color: #118f06;
+  color: #f9f9f9;
+}
+
+.actions {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px;
+}
+
+/* Layout principal : deux colonnes */
+.content {
+  display: flex;
+  gap: 16px;
+}
+
+.left-column {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cartes de contenu */
+.card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  padding: 16px;
+  gap: 10px;
+}
+
+.card h2 {
+  border-bottom: 1px solid #666;
+  margin-top: 0;
+}
+
+/* Labels et champs de formulaire */
+label {
+  display: block;
+  margin: 8px 0 4px;
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 15px;
+  border: 1px solid #ccc;
+}
+
+/* Note / petit texte */
+.note {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 8px;
+}
+
+/* Onglets */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* Contenu des onglets */
+.tab-content {
+  margin-bottom: 16px;
+  gap: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Styles pour l'input de tags sous forme d'étiquettes */
+.tags-input-container {
+  display: flex;
+  flex-wrap: wrap; /* Permet aux tags de se répartir sur plusieurs lignes */
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+.tags-input-container input {
+  flex: 1;
+  margin: 0;
+  min-width: 120px;
+  border: none;
+  outline: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e0e0e0;
+  border-radius: 25px;
+  padding: 2px 10px;
+}
+
+.tag button {
+  background: none;
+  border: none;
+  margin-left: 4px;
+  cursor: pointer;
+}

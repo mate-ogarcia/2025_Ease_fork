@@ -34,16 +34,19 @@ export class FormComponent {
   tagInput: string = '';
 
   // Ajoute un tag lors du pressage de la touche Enter
-  addTag(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      event.preventDefault(); // Empêche la soumission du formulaire par défaut
-      const trimmedTag = this.tagInput.trim();
-      if (trimmedTag && !this.product.tags.includes(trimmedTag)) {
-        this.product.tags.push(trimmedTag);
-      }
-      this.tagInput = ''; // Réinitialise l'entrée
+addTag(event: KeyboardEvent): void {
+  if (event.key === 'Enter') {
+    event.preventDefault(); // Empêche la soumission du formulaire par défaut
+    const trimmedTag = this.tagInput.trim();
+    if ( trimmedTag && !this.product.tags.includes(trimmedTag) && this.product.tags.length < 10) {
+      this.product.tags.push(trimmedTag);
     }
+    else{
+      window.alert('Tag already exists or you have reached the maximum number of tags allowed');
+    }
+    this.tagInput = ''; // Réinitialise l'entrée
   }
+}
 
   // Supprime un tag de la liste
   removeTag(tag: string): void {
