@@ -89,15 +89,15 @@ export class OpenFoodFactsService {
    * @throws {HttpException} If no criteria are provided or the API request fails.
   */
   async searchSimilarProducts(
-    criteria: { productName?: string; brand?: string; category?: string },
+    criteria: { productName?: string; brand?: string; category?: string, tags?: string[] },
     page: number = 1,
     pageSize: number = 20
   ): Promise<any[]> {
     try {
-      const { productName, brand, category } = criteria;
+      const { productName, brand, category, tags } = criteria;
 
       // Build the search query from provided criteria
-      const searchTerms = [productName, brand, category].filter(Boolean).join(' ');
+      const searchTerms = [productName, brand, category, ...(tags || [])].filter(Boolean).join(' ');
 
       if (!searchTerms) {
         throw new HttpException("No search criteria provided.", HttpStatus.BAD_REQUEST);

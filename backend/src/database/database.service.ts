@@ -603,17 +603,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @brief Builds a SQL WHERE clause from an array of conditions.
    * 
    * @details
-   * Takes an array of condition strings and joins them with `AND`.  
+   * Takes an array of condition strings and joins them with `OR`.  
    * Returns an empty string if no conditions are provided.
    * 
    * @param conditions An array of condition strings (e.g., `"price >= $minPrice"`).
    * @returns {string} A formatted SQL condition string or an empty string if no conditions are given.
-   * @example
-   * buildConditions(["price >= $minPrice", "category = $category"])
-   * // Returns: "(price >= $minPrice AND category = $category)"
    */
   buildConditions(conditions: string[]): string {
-    return conditions.length ? `(${conditions.join(" AND ")})` : "";
+    return conditions.length ? `(${conditions.join(" OR ")})` : "";
   }
 
   /**
@@ -647,6 +644,35 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * @brief Builds similarity conditions for an external product search.
+   * 
+   * Constructs a SQL-like condition string for filtering products based on 
+   * attributes such as name, brand, category, and tags. This method is used 
+   * when searching for similar products to an external product (e.g., from an API).
+   * 
+   * @param filters An object containing the filtering criteria:
+   *   - `name` (string, optional): Product name.
+   *   - `brand` (string, optional): Product brand.
+   *   - `category` (string, optional): Product category.
+   *   - `tags` (array, optional): List of tags associated with the product.
+   * 
+   * @returns {string} A dynamically constructed SQL-like condition string.
+   * 
+   * @note Uses parameterized placeholders (e.g., `$filterName`, `$filterBrand`) 
+   * to prevent SQL injection when used in queries.
+   */
+  buildSimilarityConditionsFromExternalProduct(filters: any): string {
+    const conditions: string[] = [];
+
+    if (filters.name) conditions.push(`name = $filterName`);
+    if (filters.brand) conditions.push(`brand = $filterBrand`);
+    if (filters.category) conditions.push(`category = $filterCategory`);
+    if (filters.tags?.length) conditions.push(`ANY tag IN tags SATISFIES tag IN $filterTags END`);
+
+    return this.buildConditions(conditions);
+  }
+
+  /**
    * @brief Builds filter-based conditions based on user-provided criteria.
    *
    * @details
@@ -673,6 +699,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       conditions.push(`price >= $filterMinPrice`);
     } else if (filters.maxPrice) {
       conditions.push(`price <= $filterMaxPrice`);
+    }
+    if (filters.tags?.length) {
+      conditions.push(`ANY tag IN tags SATISFIES tag IN $filterTags END`);
     }
 
     if (filters.brand && !filters.productId) {
@@ -709,6 +738,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   buildQuery(similarityClause: string, filtersClause: string, currentRoute: string, bucketName: string): string {
     if (!similarityClause && !filtersClause) return "";
 
+    console.log('similarityClause:', similarityClause);
+    console.log('filtersClause:', filtersClause);
+
     let whereClause = "";
     if (currentRoute === "/searched-prod") {
       whereClause = [similarityClause, filtersClause].filter(Boolean).join(" AND ");
@@ -726,53 +758,67 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @brief Retrieves products based on filters and/or similarity to a selected product.
    *
    * @details
-   * Main function that:
-   * - Builds similarity conditions if a product ID is provided.
-   * - Builds filter conditions based on user inputs.
-   * - Combines conditions depending on the current route:
-   *   - `/searched-prod`: Products must satisfy both conditions (`AND`).
+   * This function:
+   * - Builds **similarity conditions** if a `productId` is provided.
+   * - Builds **filter conditions** based on user inputs.
+   * - **Combines conditions dynamically** based on the current route:
+   *   - `/searched-prod`: Products must satisfy both similarity and filter conditions (`AND`).
    *   - `/home`: Products satisfying either condition are returned (`OR`).
-   * - Executes the final query and returns matching products.
-   * 
-   * Handles subqueries for brand foreign keys (FK_Brands)  
-   * Filters include category, price range, country, and brand
+   * - **Handles brand foreign keys (FK_Brands) with subqueries**.
+   * - **Supports filtering by category, price range, country, brand, and tags**.
    *
-   * @param filters An object containing:
-   *   - `category` (string): Product category to filter.
-   *   - `country` (string): Country of origin.
-   *   - `minPrice` (number): Minimum price.
-   *   - `maxPrice` (number): Maximum price.
-   *   - `brand` (string): Brand name.
-   *   - `productId` (string): Product ID for similarity search.
-   *   - `currentRoute` (string): Route context (`/home` or `/searched-prod`).
-   * @returns {Promise<any[]>} An array of matching product objects.
-   * @throws {Error} If query construction or execution fails.
+   * @param filters An object containing search criteria:
+   *   - `category` (string, optional): Filters products by category.
+   *   - `country` (string, optional): Filters products by country of origin.
+   *   - `minPrice` (number, optional): Sets the minimum price range.
+   *   - `maxPrice` (number, optional): Sets the maximum price range.
+   *   - `brand` (string, optional): Filters by brand name.
+   *   - `tags` (array<string>, optional): Filters products containing specified tags.
+   *   - `name` (string, optional): Searches for a product by name.
+   *   - `productId` (string, optional): If provided, finds similar products.
+   *   - `productSource` (string, optional): Specifies whether the product comes from an external API (`OpenFoodFacts`) or internal database (`Internal`).
+   *   - `currentRoute` (string, required): Identifies the route context (`/home` or `/searched-prod`).
+   *
+   * @returns {Promise<any[]>} A promise resolving to an array of products matching the applied filters and/or similarity criteria.
+   *
+   * @throws {Error} If an error occurs during query construction or execution.
+   *
+   * @note
+   * - If `productId` is provided and `productSource` is `Internal`, the function performs a **similarity search** in the database.
+   * - If `productId` is provided and `productSource` is `OpenFoodFacts`, the function only applies **filter-based conditions**.
+   * - Uses **parameterized placeholders** (e.g., `$filterCategory`, `$filterMinPrice`) to prevent SQL injection.
    */
   async getProductsWithFilters(this: any, filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
     const brandBucketName = this.brandBucket.name;
-    const { currentRoute, productId } = filters;
+    const { currentRoute, productId, productSource } = filters;
 
     if (!Object.keys(filters).length) {
       throw new Error("❌ Filters are empty");
     }
 
-    // Step 1 : Construction of similarity conditions (if productId is supplied)
-    const similarityClause = productId ? await this.buildSimilarityConditions.call(this, productId) : "";
+    // Step 1: Build similarity conditions if productId is provided
+    // Avoid similarity search if the product comes from an external API
+    const similarityClause = (productId && productSource === "Internal")
+      ? await this.buildSimilarityConditions.call(this, productId)
+      : this.buildSimilarityConditionsFromExternalProduct(filters);
 
-    // Step 2 : Construction of filter-based conditions (including brand subquery)
+    // Step 2: Build filter-based conditions, including brand subqueries
     const filtersClause = await this.buildFilterConditions.call(this, filters, brandBucketName);
 
-    // Step 3 : Building the final query based on the route
+    // Step 3: Build the final query depending on the current route
     const queryWithJoin = this.buildQuery(similarityClause, filtersClause, currentRoute, bucketName);
 
     if (!queryWithJoin) return [];
 
-    // Step 4 : Preparation of linked parameters
-    const selectedProduct = productId ? await this.getProductById(productId) : null;
+    // Step 4: Prepare parameters for query execution
+    const selectedProduct = (productId && productSource === "Internal")
+      ? await this.getProductById(productId)
+      : null;
+
     const parameters = {
       category: selectedProduct?.category,
-      tags: selectedProduct?.tags || [],
+      tags: selectedProduct?.tags.map(tag => tag.toLowerCase()) || [],
       minPrice: selectedProduct?.price ? selectedProduct.price * 0.8 : undefined,
       maxPrice: selectedProduct?.price ? selectedProduct.price * 1.2 : undefined,
       brandFK: selectedProduct?.FK_Brands,
@@ -781,9 +827,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       filterMinPrice: filters.minPrice,
       filterMaxPrice: filters.maxPrice,
       filterBrandName: filters.brand,
+      filterName: filters.name,
+      filterBrand: filters.brand,
+      filterTags: filters.tags || [],
     };
 
-    // Step 5 : Query execution and results management
+    // Step 5: Execute query and return results
     try {
       console.log(`🔹 Executing query: ${queryWithJoin}`);
       const result = await this.cluster.query(queryWithJoin, { parameters });
@@ -794,5 +843,4 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error("An error occurred while retrieving the filtered products.");
     }
   }
-
 }

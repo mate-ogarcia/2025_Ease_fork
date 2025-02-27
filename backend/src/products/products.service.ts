@@ -147,14 +147,17 @@ export class ProductsService implements OnModuleInit {
                 throw new NotFoundException(`Product not found for ID ${productId}`);
             }
 
-            console.log("🔎 Reference product:", referenceProduct);
+            console.log("🔎 Reference product:", referenceProduct.name);
 
             // Build common search criteria
             const searchCriteria = {
+                productId: referenceProduct.code || referenceProduct.productId || null,
                 productName: referenceProduct.product_name || referenceProduct.name,
                 brand: referenceProduct.brand || referenceProduct.brands || null,
                 category: referenceProduct.category || referenceProduct.categories,
+                tags: referenceProduct.tags || referenceProduct._keywords || null,
                 currentRoute: currentRoute,
+                productSource: productSource,
             };
 
             let internalAlternatives: any[] = [];
@@ -186,6 +189,12 @@ export class ProductsService implements OnModuleInit {
         }
     }
 
+ /**
+  * TODO
+  * Some bugs :
+  * Add the tags research in OFF
+  */
+
     /**
      * @brief Retrieves the reference product from either the internal database or an external API.
      * 
@@ -216,12 +225,16 @@ export class ProductsService implements OnModuleInit {
      * @returns {Promise<any[]>} Array of products found in the internal database.
      */
     private async getInternalAlternatives(criteria: any): Promise<any[]> {
+        console.log('GetInternalAlternatives');
         try {
             const filters = {
+                productId: criteria.productId,
                 name: criteria.productName,
                 brand: criteria.brand,
                 category: criteria.category,
+                tags: criteria.tags || [],
                 currentRoute: criteria.currentRoute,
+                productSource: criteria.productSource,
             };
             console.log("🏠 Internal search with criteria:", filters);
             const results = await this.databaseService.getProductsWithFilters(filters);
@@ -266,6 +279,7 @@ export class ProductsService implements OnModuleInit {
                 productName: criteria.productName,
                 brand: criteria.brand,
                 category: criteria.category,
+                tags: criteria.tags || [],
             });
 
             return results.map(product => ({
@@ -273,6 +287,7 @@ export class ProductsService implements OnModuleInit {
                 name: product.product_name || 'Unknown name',
                 brand: product.brands || 'Unknown brand',
                 category: product.categories || 'Unknown category',
+                tags: product._keywords || 'Unknown tags',
                 ecoscore: product.ecoscore_grade || 'Unavailable',
                 country: product.origin || 'Unavailable',
                 manufacturing_places: product.manufacturing_places || 'Unavailable',
