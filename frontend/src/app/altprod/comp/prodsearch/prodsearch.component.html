@@ -15,8 +15,8 @@
                 Origin: <b>{{ productDetails.origin || 'Inconnue' }}</b>
               </div>
               <div class="rating">
-                <span *ngIf="productDetails.rating; else notRated" class="rating-badge">
-                  {{ productDetails.rating }}/5
+                <span *ngIf="productDetails.ecoscore; else notRated" class="rating-badge">
+                  Eco-score: {{ productDetails.ecoscore }}
                 </span>
                 <ng-template #notRated>
                   <span>Non noté</span>

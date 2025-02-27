@@ -10,25 +10,40 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-// API service
+// API services
 import { ApiService } from '../../../../services/api.service';
 import { UnsplashService } from '../../../../services/unsplash.service';
 import { ApiEuropeanCountries } from '../../../../services/europeanCountries/api.europeanCountries';
 import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 
+/** Interface for product details */
+interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  description: string;
+  category: string;
+  tags: string[];
+  ecoscore: string;
+  origin: string;
+  manufacturing_places: string;
+  image?: string;
+  imageUrl?: string;
+  source: 'Internal' | 'OpenFoodFacts';
+}
+
 @Component({
   selector: 'app-prodsearch',
   imports: [CommonModule],
   templateUrl: './prodsearch.component.html',
-  styleUrls: ['./prodsearch.component.css']  // Correction: "styleUrls" (au pluriel)
+  styleUrls: ['./prodsearch.component.css'],
 })
 export class ProdsearchComponent implements OnInit {
   /** @brief Product ID retrieved from the route parameters. */
   productId: string = '';
 
   /** @brief Stores the product details fetched from the API. */
-  productDetails: any = null;
+  productDetails: Product | null = null;
   isEuropean: boolean = false;
 
   /**
@@ -36,16 +51,14 @@ export class ProdsearchComponent implements OnInit {
    * @param route ActivatedRoute for retrieving route parameters.
    * @param apiService Service for fetching product details.
    * @param apicountries Service for fetching product origin.
-   * @param http HttpClient for making API requests.
    * @param unsplashService Service for fetching images from Unsplash.
    */
   constructor(
     private route: ActivatedRoute,
     private apiService: ApiService,
     private apicountries: ApiEuropeanCountries,
-    private http: HttpClient,
     private unsplashService: UnsplashService,
-    private apiOpenFoodFacts: ApiOpenFoodFacts, 
+    private apiOpenFoodFacts: ApiOpenFoodFacts,
   ) { }
 
   /**
@@ -55,53 +68,45 @@ export class ProdsearchComponent implements OnInit {
    * loads the list of European countries, and retrieves an image from Unsplash.
    */
   ngOnInit() {
-    // Charger la liste des pays européens
-    this.apicountries.fetchEuropeanCountries();
+    this.apicountries.fetchEuropeanCountries(); // Load the European countries list
 
     this.route.paramMap.subscribe(params => {
-      // 🔹 Correction : Utiliser get() pour extraire les paramètres
       this.productId = params.get('id') || '';
-      const productSource = params.get('source') || 'Internal'; // Valeur par défaut
+      const productSource = params.get('source') || 'Internal'; // Default source
 
-      console.log('prodsearch.ts');
-      console.log("🔹 Product ID:", this.productId);
-      console.log("🌍 Product Source:", productSource);
+      console.log(`🔹 Product ID: ${this.productId}`);
+      console.log(`🌍 Product Source: ${productSource}`);
 
-      // Vérifier la source du produit et récupérer les données
       if (this.productId) {
-        if (productSource === "Internal") {
-          this.fetchInternalProduct(this.productId);
-        } else {
-          this.fetchExternalProduct(this.productId, productSource);
-        }
+        productSource === "Internal"
+          ? this.fetchInternalProduct(this.productId)
+          : this.fetchExternalProduct(this.productId, productSource);
       }
     });
   }
 
   /**
-   * @brief Récupère un produit interne depuis notre API.
-   * @param productId L'ID du produit interne.
+   * @brief Fetches an internal product from our API.
+   * @param productId The ID of the internal product.
    */
   fetchInternalProduct(productId: string) {
     this.apiService.getProductById(productId).subscribe({
-      next: (data) => {
-        this.handleProductData(data);
-      },
-      error: (error) => console.error("❌ Error retrieving product:", error)
+      next: (data) => this.handleProductData(data),
+      error: (error) => console.error("❌ Error retrieving internal product:", error)
     });
   }
 
   /**
-   * @brief Récupère un produit depuis une API externe en fonction de sa source.
-   * @param productId L'ID du produit.
-   * @param productSource La source de l'API (ex: OpenFoodFacts, SomeOtherAPI, etc.).
+   * @brief Fetches an external product based on its source.
+   * @param productId The product ID.
+   * @param productSource The API source (e.g., OpenFoodFacts).
    */
   fetchExternalProduct(productId: string, productSource: string) {
     switch (productSource) {
       case "OpenFoodFacts":
         this.apiOpenFoodFacts.getOpenFoodFactsProductById(productId).subscribe({
-          next: (data) => this.handleProductData(data),
-          error: (error) => console.error("❌ Error retrieving product from OpenFoodFacts:", error)
+          next: (data) => this.handleProductData(this.apiOpenFoodFacts.formatOpenFoodFactsProduct(data)),
+          error: (error) => console.error(`❌ Error retrieving product from ${productSource}:`, error),
         });
         break;
 
@@ -111,45 +116,40 @@ export class ProdsearchComponent implements OnInit {
     }
   }
 
-
-
   /**
- * @brief Gère les données du produit récupéré.
- * @param product Le produit récupéré depuis l'API.
- */
-  handleProductData(product: any) {
+   * @brief Handles product data received from the API.
+   * @param product The fetched product details.
+   */
+  handleProductData(product: Product) {
     this.productDetails = product;
     console.log("✅ Product retrieved:", this.productDetails);
 
-    // Vérifie si l'origine est européenne
+    // Check if the origin is European
     this.isEuropean = this.apicountries.checkIfEuropean(this.productDetails.origin);
 
-    // Charger une image depuis Unsplash
+    // Load product image from Unsplash
     this.loadProductImage(this.productDetails.name);
   }
 
   /**
-  * @brief Charge une image du produit depuis Unsplash.
-  * @param productName Le nom du produit.
-  */
+   * @brief Fetches a product image from Unsplash.
+   * @param productName The name of the product.
+   */
   loadProductImage(productName: string) {
     if (!productName) return;
 
     this.unsplashService.searchPhotos(productName).subscribe({
       next: (response) => {
-        if (response.results && response.results.length > 0) {
+        if (response.results?.length) {
           const rawUrl = response.results[0].urls.raw;
-          this.productDetails.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+          this.productDetails!.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
         } else {
-          console.log(`Aucune image trouvée pour ${productName}`);
+          console.log(`🚫 No image found for ${productName}`);
         }
       },
-      error: (error) => {
-        console.error("❌ Erreur lors de la récupération d'image Unsplash :", error);
-      }
+      error: (error) => console.error("❌ Error retrieving image from Unsplash:", error),
     });
   }
-
 
   /**
    * @brief Returns the CSS class based on the product rating.
@@ -157,12 +157,6 @@ export class ProdsearchComponent implements OnInit {
    * @return The corresponding CSS class name ('high', 'medium', or 'low').
    */
   getRatingClass(rating: number): string {
-    if (rating >= 4) {
-      return 'high';
-    } else if (rating === 3) {
-      return 'medium';
-    } else {
-      return 'low';
-    }
+    return rating >= 4 ? 'high' : rating === 3 ? 'medium' : 'low';
   }
 }

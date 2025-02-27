@@ -65,13 +65,12 @@ export class OpenFoodFactsController {
       return await this.openFoodFactsService.searchProductsByName(name, pageNumber);
     }
 
-    @Get('search/:productId')
+    @Get('getbyId/:productId')
     async getProductById(
       @Param('productId') productId: string,
       @Query('page') page: string,
     ) {
       // TODO
-      const pageNumber = page ? parseInt(page, 10) : 1;
-      // return await this.openFoodFactsService.searchProductsByName(name, pageNumber);
+      return await this.openFoodFactsService.getProductByCode(productId);
     }
 }
