@@ -13,6 +13,8 @@ import { Router } from '@angular/router';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+// Cookies
+import { CookieService } from 'ngx-cookie-service';
 
 @Injectable({
   providedIn: 'root',
@@ -21,7 +23,11 @@ export class AuthService {
   private _authBackendUrl = environment.authBackendUrl;
   private authStatus = new BehaviorSubject<boolean>(this.hasToken());
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private cookieService: CookieService,
+  ) { }
 
   /**
    * @brief Checks if a token is stored in local storage.
@@ -43,7 +49,7 @@ export class AuthService {
    * @returns {Observable<any>} The API response.
    */
   register(username: string, email: string, password: string): Observable<any> {
-    return this.http.post(`${this._authBackendUrl}/register`, {username, email, password });
+    return this.http.post(`${this._authBackendUrl}/register`, { username, email, password });
   }
 
   /**
@@ -59,7 +65,9 @@ export class AuthService {
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this._authBackendUrl}/login`, { email, password }).pipe(
       map((response: any) => {
-        localStorage.setItem('token', response.access_token);
+        // Store the token and some user's informations into the cookies
+        this.cookieService.set('access_token', response.access_token, { expires: 1, secure: true, sameSite: 'Strict' });
+        // Redirection to the home page
         this.authStatus.next(true);
         return response;
       })
@@ -73,7 +81,9 @@ export class AuthService {
    * the authentication status, and redirects the user to the login page.
    */
   logout(): void {
-    localStorage.removeItem('token');
+    // Delete the cookies
+    this.cookieService.deleteAll();
+    // Redirection to the login page
     this.authStatus.next(false);
     this.router.navigate(['/login']);
   }

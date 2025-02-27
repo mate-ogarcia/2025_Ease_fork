@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavbarComponent } from '../homepage/home/comp/navbar/navbar.component';
+import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
 import { FormComponent} from './form/form.component';
 
 @Component({

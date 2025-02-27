@@ -7,8 +7,6 @@ export class RequestHandlerController {
 
   @Post('search')
   async handleProductSearch(@Body() body: { search: string }) {
-    console.log('Received search query:', body.search);
-
     // Call requestHandler.service to process the search
     const results = await this.requestHandlerService.processSearch(body.search); 
     // Return the search results as a JSON response to the frontend

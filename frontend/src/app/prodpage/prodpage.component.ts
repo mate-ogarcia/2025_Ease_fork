@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
-import { NavbarComponent } from '../homepage/home/comp/navbar/navbar.component';
+import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
 import { UnsplashService } from '../../services/unsplash.service';
 
 @Component({
@@ -76,6 +76,6 @@ export class ProdpageComponent implements OnInit {
     this.selectedTab = tab;
   }
   trackByProduct(index: number, product: any): any {
-    return product.id; // Assurez-vous que chaque produit possède un identifiant unique
+    return product.id; 
   }
 }

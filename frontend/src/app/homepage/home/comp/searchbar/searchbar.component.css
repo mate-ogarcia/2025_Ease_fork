@@ -1,4 +1,5 @@
-  .container{
+/* Conteneur principal de la searchbar */
+.container {
   width: 100%;
   height: 100%;
   display: flex;
@@ -7,37 +8,31 @@
   gap: 10px;
 }
 
+/* Zone de recherche principale */
 .search-container {
   position: relative;
-  width: 70%;
-  height: 100%;
-  background: white;
+  width: 100%;
+  height: 50px;
+  background: #ffffff;
   border-radius: 40px;
-  z-index: 10;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
+  padding: 5px 10px;
 }
 
-.search-container.has-suggestions {
-  border-radius: 20px 20px 0 0;
-}
-
-.search-container.has-suggestions input {
-  border-radius: 20px 20px 0 0;
-}
-
+/* Champ de saisie */
 .search-container input {
   border: none;
   outline: none;
-  flex: 1;
   width: 100%;
-  height: 100%;
   font-size: 16px;
   padding: 15px;
   border-radius: 25px;
+  background-color: transparent;
 }
 
+/* Bouton d'effacement */
 .search-btn {
   background: none;
   border: none;
@@ -46,40 +41,40 @@
   color: #13172e;
   margin-left: 8px;
 }
-
-.filter-btn, .add-btn {
+.fa-solid{
+  font-size: 15px;
+}
+/* Boutons Filtre et Ajout */
+.filter-btn,
+.add-btn {
   border: none;
   border-left: 1px solid rgb(64, 60, 60);
   margin-left: 10px;
   color: black;
   background-color: transparent;
   padding: 6px 12px;
-  width: auto;
-  display: flex;
-  align-items: center; /* Centrer l'icône verticalement */
-  justify-content: center;
-  height: 65%; /* Assurez-vous qu'il prend la hauteur de son parent */
   cursor: pointer;
 }
+
 .add-btn {
   border-left: none;
   margin-left: 0;
   padding-left: 5px;
 }
 
+/* Zone de suggestions */
 .suggestions {
   width: 100%;
   background: white;
   border-top: 1px solid #ddd;
-  max-height: 200px;
   overflow-y: auto;
   border-radius: 0 0 20px 20px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none;
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 9;
+  z-index: 900;
+  display: none;
   max-height: 20vh;
 }
 
@@ -93,85 +88,156 @@
   padding: 0;
 }
 
+.has-suggestions {
+  border-radius: 25px 25px 0 0;
+}
+
+.has-suggestions input {
+  border-radius: 25px 25px 0 0;
+}
+
 .suggestions ul li {
   padding: 10px 15px;
   cursor: pointer;
   transition: background 0.2s;
+  color: black;
+  text-align: left;
 }
 
 .suggestions ul li:hover {
   background: #f4f4f4;
 }
 
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.3);
-  border-radius: 10px;
-  transition: background 0.3s ease-in-out;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.5);
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 100, 100, 0.3) rgba(0, 0, 0, 0.05);
-}
-
-/* Panneau latéral des filtres */
-.filter-panel {
-  position: fixed;
-  right: -300px;
-  top: 0;
-  width: 300px;
-  height: 100%;
-  background: white;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-  padding: 20px;
-  transition: right 0.3s ease-in-out;
-  z-index: 100;
-}
-
-.filter-panel.open {
+/* Dropdown des filtres intégré à la searchbar */
+.filter-dropdown {
+  position: absolute;
+  top: 110%;
   right: 0;
+  background: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
+  z-index: 1100;
+  min-width: 320px;
 }
 
-.filter-panel h3 {
+.filter-dropdown-menu h3 {
   margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+  color: #333;
+  text-align: center;
 }
 
-.close-btn {
-  background: red;
-  color: white;
-  padding: 6px;
-  border-radius: 50%;
-  float: right;
-  cursor: pointer;
+.filter-group {
+  margin-bottom: 15px;
 }
 
-.filter-panel label {
+.filter-group label {
   display: block;
-  margin: 10px 0;
+  margin-bottom: 5px;
+  font-size: 0.95em;
+  color: #555;
 }
 
-.filter-panel button {
-  background: #007bff;
-  color: white;
-  padding: 8px 12px;
+.filter-group select,
+.filter-group input[type="text"],
+.filter-group input[type="number"] {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 0.95em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: border-color 0.3s;
+}
+
+.filter-group select:focus,
+.filter-group input[type="text"]:focus,
+.filter-group input[type="number"]:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+/* Filtres de Prix avec curseurs */
+.price-filters {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.price-filter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.price-filter label {
+  margin-bottom: 5px;
+  font-size: 0.85em;
+  color: #555;
+}
+
+.price-filter input[type="range"] {
+  width: 100%;
+}
+
+.price-filter span {
+  font-size: 0.85em;
+  color: #333;
+  margin-top: 5px;
+}
+
+/* Champs de saisie pour le prix */
+.price-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.price-input {
+  flex: 1;
+}
+
+.price-input label {
+  font-size: 0.85em;
+  color: #555;
+  margin-bottom: 5px;
+  display: block;
+}
+
+/* Boutons d'action sur les filtres */
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.filter-buttons button {
+  flex: 1;
+  padding: 10px;
+  font-size: 1em;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
+  transition: background 0.3s;
+}
+
+.filter-buttons button:first-child {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.filter-buttons button:first-child:hover {
+  background-color: #0056b3;
+}
+
+.filter-buttons button:last-child {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.filter-buttons button:last-child:hover {
+  background-color: #545b62;
 }

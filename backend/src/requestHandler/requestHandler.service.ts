@@ -18,17 +18,10 @@ export class RequestHandler {
       console.log("Search query is empty.");
       return; // Early return if search query is empty
     }
-    console.log("Processing search for:", searchQuery);
 
     try {
       // Call the searchQuery method from the database service
       const searchResults = await this.databaseService.searchQuery(searchQuery);
-
-      // Log or return the search results as needed
-      console.log(
-        "Search results (requestHandler.service.ts): ",
-        searchResults
-      );
 
       // Return the search results to the controller
       return searchResults;

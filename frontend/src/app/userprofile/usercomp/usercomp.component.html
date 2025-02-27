@@ -7,7 +7,9 @@
         <p class="location">Pau, France</p>
         <div class="profile-actions">
           <button class="edit-profile-btn">Edit Profile</button>
-          <button class="more-options">...</button>
+          <div class="more-btn">
+            <i class="fa-solid fa-ellipsis"></i>
+          </div>
         </div>
       </div>
     </div>
@@ -23,14 +25,10 @@
     <!-- Contenu des onglets -->
     <div class="content-section">
       <!-- Onglet Historique -->
-      <div *ngIf="activeTab === 'Historique'">
+      <div class="history" *ngIf="activeTab === 'Historique'">
         <h3>Historique</h3>
         <p>Voici votre historique d'activités.</p>
-        <ul class="history-list">
-          <li>Action 1 - 12 février 2024</li>
-          <li>Action 2 - 10 février 2024</li>
-          <li>Action 3 - 5 février 2024</li>
-        </ul>
+        <app-history class="app-history"></app-history>
       </div>
   
       <!-- Onglet Favoris -->

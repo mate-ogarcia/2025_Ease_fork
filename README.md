@@ -5,6 +5,7 @@
 This project aims to create a website where you can search for non-European brands and receive alternative European brands. This can help promote European brands and encourage local consumption, which can have beneficial effects on the environment.
 
 ### Features
+
 On our website, you can:
 
 - Search for a brand/category or products and receive alternative European brands/products similar to those you've searched for,
@@ -20,6 +21,7 @@ Before starting, ensure you have the following installed on your system:
 - **Node.js** (latest LTS version recommended)
 - **Angular CLI** (for the frontend)
 - **Git** (to clone the repository)
+- **CouchBase** (if you want to run the project in development mode)
 
 ### Installation Steps
 
@@ -32,18 +34,15 @@ cd <2025_Ease>
 
 #### Install Dependencies
 
-Navigate to both the frontend and backend directories and install the required dependencies:
+Navigate to the root of your directory and install the required dependencies:
 
 ```sh
-cd frontend
-npm install
-cd ../backend
-npm install
+npm run install:all
 ```
 
 #### Import the Environment File
 
-Place the `.env.production` file at the project root (place your .env file where the `.env.sample` file is). If necessary, you may need to modify this part of the `\2025_Ease\backend\src\main.ts` file to adapt it to your .env file: 
+Place the `.env.production` file at the project root (place your .env file where the `.env.sample` file is). If necessary, you may need to modify this part of the `\2025_Ease\backend\src\main.ts` file to adapt it to your .env file:
 
 ```sh
 // Load the right .env
@@ -55,29 +54,66 @@ dotenv.config({ path: envFile });
 console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
 ```
 
-### Start the Frontend
+#### Couchbase
+1. for the production mode :
 
-Run the following command inside the frontend directory:
+    As far as production mode is concerned, you don't need to install anything as you'll be accessing the deployed database, just make sure that in your `.env.production` all your variables are correct.
 
-```sh
-ng serve
-```
+2. for development mode :
 
-This will start the Angular application.
+    For development mode, you need to install couchbase, create your server, bucket and index.
 
-### Start the Backend
+    - To install couchbase locally, go to this url: `https://www.couchbase.com/downloads/?family=couchbase-server` and install the couchbase serve community (the free one).
+    - Once installed, log in, follow the steps and create a server (the server itself isn't very important, but make sure you remember your access codes).
+    - Create a user (make sure it's an admin user, and note the login ID - it's very important).
+    - Create all the buckets you need, making sure that the names of the buckets you've just created match those of your `.env.development`.
+    - Create your index on your bucket products
 
-Run the following command inside the backend directory:
+    #### Note:
+
+    Make sur all your variables in your `.env.development` match those in your couchbase database, including the bucket's name and index's name.
+
+## Starting the Project
+
+You have several options for launching the project, depending on your needs and workflow.
+
+### Option 1: Launch the Entire Project via the Global package.json
+
+This method allows you to start both the frontend and the backend from a single terminal. To do this, navigate to the root directory of the project and run:
 
 ```sh
 npm run start:prod
 ```
 
-This will launch the backend server in production mode, if you want to launch it in development mode you have to run the following command:
+### Option 2: Launch the Frontend and Backend in Separate Terminals
 
-```sh
-npm run start:dev
-```
+This approach is especially suitable for development mode and offers greater flexibility.
+
+1. Starting the Frontend
+
+    Open a terminal, navigate to the frontend folder, and run:
+
+    ```sh
+    ng serve
+    ```
+
+2. Starting the Backend
+
+    Open another terminal, navigate to the backend folder, and choose one of the following commands:
+
+    To start in development mode:
+    ```sh
+    npm run start:dev
+    ```
+
+    To start in production mode:
+      ```sh
+      npm run start:prod
+      ```
+
+    #### Note:
+    You can launch the project components either via the global `package.json` or by using the specific scripts in the frontend and backend folders, depending on which method suits you best.
+    In this case, you may need to take a look at each `package.json` to find out which script to run according to your needs (in the `package.json` files, look for the `scripts` section).
 
 ### Additional Notes
 

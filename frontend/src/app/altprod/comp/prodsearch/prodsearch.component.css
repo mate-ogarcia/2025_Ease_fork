@@ -1,66 +1,92 @@
 /* === Main Container === */
 .container {
+  
   width: 100%;
-  height: 80vh;
+  height: fit-content;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #E3F0CE;
-  justify-content: center;
+  background-color: transparent;
+  padding: 10px;
   border-radius: 40px;
-  padding: 20px;
-  gap: 10px;
-  border: 3px solid #36de1c;
+  scroll-behavior: smooth;
   box-sizing: border-box;
-  /* overflow-y: auto; */ /* Retiré pour éviter les décalages */
+  overflow-y: auto;
+}
+.sticky-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* Permet à l'élément de rester visible par-dessus d'autres contenus */
 }
 
-/* === Container for product items === */
-.prod-container {
+/* === Style appliqué si le produit n'est pas européen === */
+.container.container.non-european .item{
+  border: 3px solid red;
+}
+.container.non-european .product-details .origin b{
+  color: red;
+}
+/* === Result Container === */
+.result-container {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
-  gap: 25px;
   width: 100%;
-  height: 100%;
-  box-sizing: border-box;
 }
 
-/* === Product details layout === */
-.product-details {
+/* === Item Container === */
+.item-container {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end; /* Texte toujours en bas */
-  gap: 10px;
   width: 100%;
-  height: 50%;
-  min-height: 20%;
+  padding: 15px;
+  background-color: transparent;
   box-sizing: border-box;
 }
 
-/* === Image Container (Fixed Square) === */
-.img-container {
-  width:auto;
-  height: 50%;
-  aspect-ratio: 1 / 1;
+/* === Items List === */
+.items-list {
+  width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  list-style: none;
+  gap: 10px;
+  background-color: transparent;
+  box-sizing: border-box;
+}
+
+/* === Individual Item === */
+.item {
+  display: flex;
+  flex-direction: row;
+  background-color: #f9ebde;
+  border: 3px solid rgb(19, 224, 67);
+  gap: 10px;
+  padding: 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-sizing: border-box;
+  max-height: 250px;
   overflow: hidden;
-  box-sizing: border-box;
 }
 
-/* Optionnel: wrapper si nécessaire */
-.wrapper {
-  width: 100%;
-  height: 100%;
+.item:hover {
+  transform: scale(1.01);
+}
+
+/* === Image Container (Fixed Size) === */
+.img-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 150px;
+  height: 150px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-/* === Product Image: Fill Container as a Square === */
+/* === Product Image === */
 .product-image {
   width: 100%;
   height: 100%;
@@ -68,63 +94,59 @@
   object-fit: cover;
 }
 
-/* === Product Rating Alignment === */
-.product-rating {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* === Styling for non-European products === */
-.non-european {
-  border: 3px solid red;
-  width: 100%;
-  height: 80vh;
+/* === Product Details === */
+.product-details {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  background-color: #EDB4B4;
-  justify-content: center;
-  border-radius: 40px;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-/* === Layout for product information === */
-.product-info {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 10px;
   width: 100%;
-  box-sizing: border-box;
+  justify-content: space-between;
 }
 
-/* === Styling for product name === */
+/* === Title Info === */
+.title-info {
+  margin-bottom: 10px;
+}
+
+/* === Product Name === */
 .product-name {
   font-weight: 900;
   font-size: clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
 }
 
-/* === Layout for origin information === */
-.origin {
+/* === Other Info Section === */
+.other-info {
   display: flex;
   flex-direction: row;
-  width: 100%;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* === Responsive styling for smaller screens === */
-@media (max-width: 600px) {
-  .container {
-    height: auto;
-    padding: 10px;
+/* === Origin Styling === */
+.origin {
+  font-size: 0.9rem;
+
+}
+.origin b{
+  color: #11ca14;
+}
+/* === Rating Styling === */
+.rating {
+  font-size: 0.9rem;
+}
+
+/* === Responsive Design === */
+@media screen and (max-width: 768px) {
+  .item {
+    flex-direction: column;
+    max-height: none;
   }
   .img-container {
-    max-width: 150px;
-    aspect-ratio: 1 / 1;
+    width: 100%;
+    height: auto;
   }
-  .product-details {
-    min-height: auto;
+  .product-image {
+    width: 100%;
+    height: auto;
   }
 }
-  

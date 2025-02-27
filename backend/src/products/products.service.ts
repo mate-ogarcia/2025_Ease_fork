@@ -10,11 +10,16 @@
  */
 
 import { Injectable, OnModuleInit, NotFoundException, InternalServerErrorException } from "@nestjs/common";
+// Service
 import { DatabaseService } from "../database/database.service";
+import { OpenFoodFactsService } from "src/openFoodFacts/openFoodFacts.service";
 
 @Injectable()
 export class ProductsService implements OnModuleInit {
-    constructor(private readonly databaseService: DatabaseService) { }
+    constructor(
+        private databaseService: DatabaseService,
+        private openFoodFactsService: OpenFoodFactsService,
+    ) { }
 
     /**
      * @brief Called when the module is initialized.
@@ -111,29 +116,188 @@ export class ProductsService implements OnModuleInit {
         }
     }
 
+    // ========================== IN PROGRESS
+    // TODO :
     /**
-     * @brief Retrieves filtered products based on the provided filters.
+     * @brief Retrieves the source product and finds alternatives based on business logic.
      * 
-     * This method accepts a filter criteria object and calls the `getProductsWithFilters` method 
-     * from the `databaseService` to fetch products that match the provided filters. If an error 
-     * occurs during the retrieval process, an `InternalServerErrorException` is thrown.
+     * **Logic Summary:**  
+     * - If the product comes from an external API → Find alternatives in both the internal database and the external API.  
+     * - If the product comes from the internal database → Find alternatives in the internal database and external APIs.  
      * 
-     * @param filters The filter criteria used to retrieve products. It can include parameters like 
-     * category, price range, and other relevant attributes.
-     * 
-     * @returns {Promise<any[]>} A promise that resolves to an array of products matching the filters.
-     * 
-     * @throws {InternalServerErrorException} If there is an error retrieving the filtered products 
-     * from the database, an exception will be thrown with an error message.
+     * @param filters Object containing the following properties:
+     *   - `productId` (string): The ID of the selected product (required).
+     *   - `productSource` (string): The source of the product ("Internal", "OpenFoodFacts", etc.).
+     *   - `currentRoute` (string): The current route to define the search logic ("searched-prod", "home", etc.).
+     * @returns {Promise<any[]>} An array of alternative products.
+     * @throws {NotFoundException} If the product ID is missing or the product is not found.
+     * @throws {InternalServerErrorException} If an error occurs during the search.
      */
-    async getFilteredProducts(filters: any) {
-        console.log("filters from products.Service:", filters);
+    async getFilteredProducts(filters: any): Promise<any[]> {
+        const { productId, productSource, currentRoute } = filters;
+
+        if (!productId) {
+            throw new NotFoundException("Product ID is required.");
+        }
+
         try {
-            return await this.databaseService.getProductsWithFilters(filters);
+            // Step 1: Retrieve the reference product
+            const referenceProduct = await this.getReferenceProduct(productId, productSource);
+            if (!referenceProduct) {
+                throw new NotFoundException(`Product not found for ID ${productId}`);
+            }
+
+            console.log("🔎 Reference product:", referenceProduct.name);
+
+            // Build common search criteria
+            const searchCriteria = {
+                productId: referenceProduct.code || referenceProduct.productId || null,
+                productName: referenceProduct.product_name || referenceProduct.name,
+                brand: referenceProduct.brand || referenceProduct.brands || null,
+                category: referenceProduct.category || referenceProduct.categories,
+                tags: referenceProduct.tags || referenceProduct._keywords || null,
+                currentRoute: currentRoute,
+                productSource: productSource,
+            };
+
+            let internalAlternatives: any[] = [];
+            let externalAlternatives: any[] = [];
+
+            // Step 2: Search alternatives based on the source
+            if (productSource === "Internal") {
+                console.log("🏠 Internal product: Searching similar products in DB + external APIs");
+                internalAlternatives = await this.getInternalAlternatives(searchCriteria);
+                externalAlternatives = await this.getExternalAlternatives(searchCriteria);
+
+            } else {
+                console.log("🌍 External product: Searching similar products in DB + external API");
+                internalAlternatives = await this.getInternalAlternatives(searchCriteria);
+
+                if (productSource === "OpenFoodFacts") {
+                    externalAlternatives = await this.getOFFAlternatives(searchCriteria);
+                }
+            }
+
+            // Step 3: Merge and return results
+            const combinedResults = [...internalAlternatives, ...externalAlternatives];
+            console.log(`📦 Total similar products found: ${combinedResults.length}`);
+            return combinedResults;
+
         } catch (error) {
-            console.error("❌ Error retrieving filtered products:", error);
-            throw new InternalServerErrorException("Error retrieving filtered products.");
+            console.error("❌ Error during alternative search:", error);
+            throw new InternalServerErrorException("An error occurred while searching for alternatives.");
         }
     }
 
+ /**
+  * TODO
+  * Some bugs :
+  * Add the tags research in OFF
+  */
+
+    /**
+     * @brief Retrieves the reference product from either the internal database or an external API.
+     * 
+     * @param productId The ID of the product to retrieve.
+     * @param productSource The source of the product ("Internal" or "OpenFoodFacts").
+     * @returns {Promise<any>} The retrieved product object.
+     * @throws {NotFoundException} If the product source is unsupported.
+     */
+    private async getReferenceProduct(productId: string, productSource: string): Promise<any> {
+        switch (productSource) {
+            case "Internal":
+                return await this.databaseService.getProductById(productId);
+            case "OpenFoodFacts":
+                return await this.openFoodFactsService.getProductByCode(productId);
+            default:
+                throw new NotFoundException(`Unsupported source: "${productSource}"`);
+        }
+    }
+
+    /**
+     * @brief Searches for alternative products in the internal database.
+     * 
+     * @param criteria Object containing:
+     *   - `productName` (string): Product name for matching.
+     *   - `brand` (string): Brand to filter by.
+     *   - `category` (string): Category for filtering.
+     *   - `currentRoute` (string): Route context affecting query logic.
+     * @returns {Promise<any[]>} Array of products found in the internal database.
+     */
+    private async getInternalAlternatives(criteria: any): Promise<any[]> {
+        console.log('GetInternalAlternatives');
+        try {
+            const filters = {
+                productId: criteria.productId,
+                name: criteria.productName,
+                brand: criteria.brand,
+                category: criteria.category,
+                tags: criteria.tags || [],
+                currentRoute: criteria.currentRoute,
+                productSource: criteria.productSource,
+            };
+            console.log("🏠 Internal search with criteria:", filters);
+            const results = await this.databaseService.getProductsWithFilters(filters);
+            return results.map(product => ({ ...product, source: "Internal" }));
+        } catch (error) {
+            console.error("❌ Error during internal product search:", error);
+            return [];
+        }
+    }
+
+    /**
+     * @brief Searches for alternative products across all available external APIs.
+     * 
+     * @param criteria Criteria for the search, including name, brand, and category.
+     * @returns {Promise<any[]>} Array of products found in external APIs.
+     */
+    // TODO: implements some logic to choose which API use
+    private async getExternalAlternatives(criteria: any): Promise<any[]> {
+        const externalPromises: Promise<any[]>[] = [
+            this.getOFFAlternatives(criteria), // Search in Open Food Facts
+            // Add other APIs here if needed
+        ];
+
+        const results = await Promise.all(externalPromises);
+        return results.flat();
+    }
+
+    /**
+     * @brief Searches for alternative products in Open Food Facts.
+     * 
+     * @param criteria Object containing:
+     *   - `productName` (string): Name of the product.
+     *   - `brand` (string): Product brand.
+     *   - `category` (string): Product category.
+     * @returns {Promise<any[]>} Array of alternative products from Open Food Facts.
+     */
+    private async getOFFAlternatives(criteria: any): Promise<any[]> {
+        try {
+            console.log("🌍 Searching via Open Food Facts with criteria:", criteria);
+
+            const results = await this.openFoodFactsService.searchSimilarProducts({
+                productName: criteria.productName,
+                brand: criteria.brand,
+                category: criteria.category,
+                tags: criteria.tags || [],
+            });
+
+            return results.map(product => ({
+                id: product.code,
+                name: product.product_name || 'Unknown name',
+                brand: product.brands || 'Unknown brand',
+                category: product.categories || 'Unknown category',
+                tags: product._keywords || 'Unknown tags',
+                ecoscore: product.ecoscore_grade || 'Unavailable',
+                country: product.origin || 'Unavailable',
+                manufacturing_places: product.manufacturing_places || 'Unavailable',
+                image: product.image_front_url || null,
+                source: "OpenFoodFacts",
+            }));
+
+        } catch (error) {
+            console.error("❌ Error during Open Food Facts search:", error);
+            return [];
+        }
+    }
 }

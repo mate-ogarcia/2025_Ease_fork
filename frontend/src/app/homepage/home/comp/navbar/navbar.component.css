@@ -6,9 +6,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px  10px 10px 15px;
-  backdrop-filter: blur(1.5rem); 
+  padding: 10px;
+  height: 60px;
   background: transparent;
+  backdrop-filter: blur(1.5rem);
   border-radius: 40px;
   width: 100%;
   color: #f9f9f9;
@@ -173,7 +174,7 @@
   }
 
   .navbar ul.active {
- 
+    
     display: flex;
   }
   .navbar ul li a {

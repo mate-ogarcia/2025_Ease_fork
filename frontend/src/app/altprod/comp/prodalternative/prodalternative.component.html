@@ -1,6 +1,6 @@
 <div class="container">
   <div class="result-container" *ngIf="productDetails && productDetails.length > 0; else noResults">
-    <h2>🔎 Produits similaires trouvés :</h2>
+    <h2>🔎 Produits similaires trouvés : 🔎</h2>
     <div class="item-container">
       <ul class="items-list">
         <li class="item"
@@ -9,7 +9,7 @@
             tabindex="0"
             [attr.aria-label]="'Voir le produit ' + product.name">
           <div class="img-container">
-            <img class="product-image" [src]="product.imageUrl || 'assets/placeholder.jpg'" alt="{{ product.name }}">
+            <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
           </div>
           <div class="product-details">
             <div class="title-info">

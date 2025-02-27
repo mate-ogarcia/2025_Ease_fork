@@ -16,9 +16,6 @@ export class ApiEuropeanCountries {
     // List of European countries fetched from the external API.
     private _europeanCountries: string[] = [];
 
-    // Flag indicating if the product is from a European country.
-    private _isEuropean: boolean = true;
-
     /**
      * @brief Constructor initializes the HTTP client for making API requests.
      * 

@@ -16,11 +16,12 @@
   gap: 20px;
   background-color: #023436;
 }
-.app-navbar, .app-searchbar{
+.app-navbar{
   width: 100%;
   z-index: 10000;
 }
 .app-searchbar{
+  width: 70%;
   height: 50px;
 }
 /* Gestion du titre */

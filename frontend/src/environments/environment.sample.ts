@@ -1,4 +1,3 @@
-//
 // This is an example of where you should place your .env files
 export const environment = {
     production: false,
