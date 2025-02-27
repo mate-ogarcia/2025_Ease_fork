@@ -9,6 +9,7 @@
   padding: 10px;
   height: 60px;
   background: transparent;
+  backdrop-filter: blur(1.5rem);
   border-radius: 40px;
   width: 100%;
   color: #f9f9f9;

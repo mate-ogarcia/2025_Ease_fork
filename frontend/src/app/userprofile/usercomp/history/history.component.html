@@ -1,0 +1,38 @@
+<div class="container">
+    <!-- Bouton pour changer de mode -->
+    <div class="grid-btn">
+      <button [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')">
+        <i class="fa-solid fa-list"></i>
+      </button>
+      <button [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')">
+        <i class="fa-solid fa-grip"></i>
+      </button>
+    </div>
+      
+    
+    <div class="result-container" *ngIf="resultsArray.length > 0; else noResults">
+      <div class="item-container">
+        <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
+        <ul class="items-list" [ngClass]="viewMode">
+          <li class="item" 
+              *ngFor="let product of resultsArray; trackBy: trackByProduct" 
+              (click)="goToProduct(product)"
+              tabindex="0" 
+              [attr.aria-label]="'Voir le produit ' + product.name">
+            <div class="img-container">
+              <img class="product-image" [src]="product.imageUrl || 'assets/placeholder.jpg'" alt="{{ product.name }}">
+            </div> 
+            <div class="product-details">
+              <p class="categ">{{ product.category }}</p>
+              <h3 class="product-name">{{ product.name }}</h3>
+              <p class="product-description"><strong>Description :</strong> {{ product.description }}</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  
+    <ng-template #noResults>
+      <p>Aucun produit trouvé avec ces critères.</p>
+    </ng-template>
+  </div>
