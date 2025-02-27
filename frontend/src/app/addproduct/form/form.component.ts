@@ -60,10 +60,27 @@ addTag(event: KeyboardEvent): void {
   }
 
   // Bouton "Cancel"
-  onCancel() {
-    console.log('Cancelled');
-    // Logique d'annulation (ex: réinitialiser le formulaire, revenir en arrière, etc.)
-  }
+  // Bouton "Cancel" : réinitialise tous les champs du formulaire
+onCancel() {
+  // Réinitialise l'objet product avec ses valeurs par défaut
+  this.product = {
+    name: '',
+    description: '',
+    status: 'add-product',
+    category: '',
+    brand: '',
+    barcode: '',
+    tags: [] as string[],
+    price: 0,
+    discountType: 'none',
+    origin: '',
+    vatAmount: 0
+  };
+  // Réinitialise également le champ de saisie de tag
+  this.tagInput = '';
+  console.log('Form reset');
+}
+
 
   isDarkMode: boolean = false;
   toggleDarkMode(): void {

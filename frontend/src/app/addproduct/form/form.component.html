@@ -9,6 +9,8 @@
           <select class="status" [(ngModel)]="product.status">
             <option value="add-product">Add-product</option>
             <option value="edit-product">Edit-product</option>
+            <option value="delete-product">Delete-product</option>
+
           </select>
         </div>
   
@@ -62,10 +64,10 @@
             <textarea id="description" placeholder="Write a description ..." rows="4" [(ngModel)]="product.description"></textarea>
   
             <p class="note">
-              If you require regarding your size, please check the chart or contact our Customer Service for the best visibility.
+              Please make sure to carefully review your spelling and grammar to ensure clear and professional communication.            
             </p>
           </div>
-  
+          
           <div class="card">
             <h2>Pricing</h2>
             <label for="price">Price</label>
