@@ -12,10 +12,13 @@
 import { Injectable, OnModuleInit, NotFoundException, InternalServerErrorException } from "@nestjs/common";
 // Service
 import { DatabaseService } from "../database/database.service";
-import { OpenFoodFactsService } from "src/openFoodFacts/openFoodFacts.service";
+import { OpenFoodFactsService } from "src/apiServices/openFoodFacts/openFoodFacts.service";
 
 @Injectable()
 export class ProductsService implements OnModuleInit {
+    // ========================================================================
+    // ======================== INITIALIZATION & CORE METHODS
+    // ========================================================================
     constructor(
         private databaseService: DatabaseService,
         private openFoodFactsService: OpenFoodFactsService,
@@ -28,6 +31,9 @@ export class ProductsService implements OnModuleInit {
         console.log("✅ ProductsService module initialized.");
     }
 
+    // ========================================================================
+    // ======================== PRODUCTS SELECTION & RETRIEVAL
+    // ========================================================================
     /**
      * @brief Selects a product based on its ID.
      */
@@ -47,6 +53,40 @@ export class ProductsService implements OnModuleInit {
         }
     }
 
+    /**
+     * @brief Retrieves a product by its ID.
+     */
+    async getProductById(productId: string) {
+        try {
+            console.log(`🔹 Attempting to retrieve product with ID: ${productId}`);
+            const product = await this.databaseService.getProductById(productId);
+
+            if (!product) {
+                throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
+            }
+
+            return product;
+        } catch (error) {
+            console.error("❌ Error retrieving product:", error);
+            throw new InternalServerErrorException("Error retrieving product.");
+        }
+    }
+
+    /**
+     * @brief Retrieves all products from the database.
+     */
+    async getAllProducts() {
+        try {
+            return await this.databaseService.getAllProductsData();
+        } catch (error) {
+            console.error("❌ Error retrieving all products:", error);
+            throw new InternalServerErrorException("Error retrieving all products.");
+        }
+    }
+
+    // ========================================================================
+    // ======================== ALTERNATIVE PRODUCT SEARCH
+    // ========================================================================
     /**
      * @brief Retrieves alternative European products based on the selected product's attributes.
      * 
@@ -86,39 +126,6 @@ export class ProductsService implements OnModuleInit {
     }
 
     /**
-     * @brief Retrieves a product by its ID.
-     */
-    async getProductById(productId: string) {
-        try {
-            console.log(`🔹 Attempting to retrieve product with ID: ${productId}`);
-            const product = await this.databaseService.getProductById(productId);
-
-            if (!product) {
-                throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
-            }
-
-            return product;
-        } catch (error) {
-            console.error("❌ Error retrieving product:", error);
-            throw new InternalServerErrorException("Error retrieving product.");
-        }
-    }
-
-    /**
-     * @brief Retrieves all products from the database.
-     */
-    async getAllProducts() {
-        try {
-            return await this.databaseService.getAllProductsData();
-        } catch (error) {
-            console.error("❌ Error retrieving all products:", error);
-            throw new InternalServerErrorException("Error retrieving all products.");
-        }
-    }
-
-    // ========================== IN PROGRESS
-    // TODO :
-    /**
      * @brief Retrieves the source product and finds alternatives based on business logic.
      * 
      * **Logic Summary:**  
@@ -137,12 +144,14 @@ export class ProductsService implements OnModuleInit {
         const { productId, productSource, currentRoute } = filters;
 
         if (!productId) {
-            throw new NotFoundException("Product ID is required.");
+            console.log("🔍 No product ID provided, searching based only on filters.");
+            return await this.getProductsByFilters(filters);
         }
 
         try {
             // Step 1: Retrieve the reference product
             const referenceProduct = await this.getReferenceProduct(productId, productSource);
+            // If there is no productId, this means that the user is searching using filters only.
             if (!referenceProduct) {
                 throw new NotFoundException(`Product not found for ID ${productId}`);
             }
@@ -189,12 +198,9 @@ export class ProductsService implements OnModuleInit {
         }
     }
 
- /**
-  * TODO
-  * Some bugs :
-  * Add the tags research in OFF
-  */
-
+    // ========================================================================
+    // ======================== INTERNAL & EXTERNAL SEARCH HELPERS
+    // ========================================================================
     /**
      * @brief Retrieves the reference product from either the internal database or an external API.
      * 
@@ -266,8 +272,7 @@ export class ProductsService implements OnModuleInit {
      * @brief Searches for alternative products in Open Food Facts.
      * 
      * @param criteria Object containing:
-     *   - `productName` (string): Name of the product.
-     *   - `brand` (string): Product brand.
+     *   - `productiD` (string): Id of the product.
      *   - `category` (string): Product category.
      * @returns {Promise<any[]>} Array of alternative products from Open Food Facts.
      */
@@ -276,10 +281,8 @@ export class ProductsService implements OnModuleInit {
             console.log("🌍 Searching via Open Food Facts with criteria:", criteria);
 
             const results = await this.openFoodFactsService.searchSimilarProducts({
-                productName: criteria.productName,
-                brand: criteria.brand,
+                productId: criteria.productId,
                 category: criteria.category,
-                tags: criteria.tags || [],
             });
 
             return results.map(product => ({
@@ -297,6 +300,43 @@ export class ProductsService implements OnModuleInit {
 
         } catch (error) {
             console.error("❌ Error during Open Food Facts search:", error);
+            return [];
+        }
+    }
+
+    // ========================================================================
+    // ======================== SEARCH BY FILTERS (WITHOUT A SPECIFIC PRODUCT)
+    // ========================================================================
+    /**
+     * @brief Retrieves products based solely on applied filters, without a reference product.
+     * 
+     * @details
+     * This function searches for products that match the given filter criteria without requiring
+     * a reference product ID. It performs the search in both the internal database and external APIs
+     * to provide a comprehensive set of results.
+     * 
+     * @param filters An object containing the applied filter criteria.
+     * @return {Promise<any[]>} A promise resolving to an array of filtered products.
+     * 
+     * @throws {Error} Logs an error if the search fails and returns an empty array.
+     */
+    private async getProductsByFilters(filters: any): Promise<any[]> {
+        try {
+            console.log("🔍 Searching products based on filters:", filters);
+
+            // Search only in the internal database
+            const internalResults = await this.databaseService.getProductsWithFilters(filters);
+
+            // Also search in external APIs if necessary
+            const externalResults = await this.getExternalAlternatives(filters);
+
+            // Merge results from both sources
+            const combinedResults = [...internalResults, ...externalResults];
+
+            console.log(`📦 Found ${combinedResults.length} products matching filters.`);
+            return combinedResults;
+        } catch (error) {
+            console.error("❌ Error during filtered product search:", error);
             return [];
         }
     }
