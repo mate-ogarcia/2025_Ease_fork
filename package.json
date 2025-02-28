@@ -1,23 +1,23 @@
 {
-    "name": "projet_tutore",
-    "version": "1.0.0",
-    "scripts": {
-        "start:front": "cd ./frontend && npm start",
-        "start:backProd": "cd ./backend && npm run start:prod",
-        "start:backDev": "cd ./backend && npm run start:dev",
-        "start:prod": "concurrently -k \"npm run start:front\" \"npm run start:backProd\"",
-        "start:dev": "concurrently -k \"npm run start:front\" \"npm run start:backDev\"",
-        "install:all": "npm install && cd ./frontend && npm install && cd ../backend && npm install",
-        "clean": "rm -rf node_modules frontend/node_modules backend/node_modules",
-        "reinstall": "npm run clean && npm run install:all",
-        "lint:front": "cd ./frontend && ng lint",
-        "lint:back": "cd ./backend && npm run lint",
-        "lint": "npm run lint:front && npm run lint:back"
-    },
-    "devDependencies": {
-        "concurrently": "^8.2.2"
-    },
-    "dependencies": {
-        "projet_tutore": "file:"
-    }
+  "name": "projet_tutore",
+  "version": "1.0.0",
+  "scripts": {
+    "start:front": "cd ./frontend && npm start",
+    "start:backProd": "cd ./backend && npm run start:prod",
+    "start:backDev": "cd ./backend && npm run start:dev",
+    "start:prod": "concurrently -k \"npm run start:front\" \"npm run start:backProd\"",
+    "start:dev": "concurrently -k \"npm run start:front\" \"npm run start:backDev\"",
+    "install:all": "npm install && cd ./frontend && npm install && cd ../backend && npm install",
+    "clean": "rm -rf node_modules frontend/node_modules backend/node_modules",
+    "reinstall": "npm run clean && npm run install:all",
+    "lint:front": "cd ./frontend && ng lint",
+    "lint:back": "cd ./backend && npm run lint",
+    "lint": "npm run lint:front && npm run lint:back"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "projet_tutore": "file:"
+  }
 }

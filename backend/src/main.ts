@@ -9,11 +9,12 @@
 // Use of .env
 import * as dotenv from "dotenv";
 import * as path from "path";
+import * as cookieParser from "cookie-parser";
 
 // Load the right .env
 const envFile = path.resolve(
   __dirname,
-  "../../.env." + (process.env.NODE_ENV || "development")
+  "../../.env." + (process.env.NODE_ENV || "development"),
 );
 dotenv.config({ path: envFile });
 console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
@@ -38,7 +39,7 @@ async function bootstrap() {
           winston.format.colorize(),
           winston.format.printf(({ timestamp, level, message }) => {
             return `[${timestamp}] ${level}: ${message}`;
-          })
+          }),
         ),
       }),
       new winston.transports.File({
@@ -53,6 +54,28 @@ async function bootstrap() {
 
   // Load NestJS application with global logger
   const app = await NestFactory.create(AppModule, { logger });
+
+  // Middleware pour parser les cookies
+  app.use(cookieParser());
+
+  // Middleware pour extraire le token JWT des cookies et l'ajouter à l'en-tête Authorization
+  app.use((req, res, next) => {
+    const token = req.cookies?.accessToken;
+    if (token) {
+      // Vérifier si l'en-tête Authorization existe déjà
+      if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
+        req.headers.authorization = `Bearer ${token}`;
+        console.log("🔄 Token extrait des cookies et ajouté à l'en-tête Authorization");
+        console.log("🔑 Token ajouté:", token.substring(0, 20) + "...");
+      } else {
+        console.log("ℹ️ En-tête Authorization déjà présent:", req.headers.authorization.substring(0, 20) + "...");
+      }
+    } else {
+      console.log("⚠️ Aucun token trouvé dans les cookies");
+    }
+    next();
+  });
+
   // Retrieves necessary services from the application context.
   const databaseService = app.get(DatabaseService);
 
@@ -63,19 +86,18 @@ async function bootstrap() {
     await databaseService.onModuleInit();
     logger.log(
       "info",
-      `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`
+      `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`,
     );
   } catch (error) {
     logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
   }
 
-  /**
-   * Configures CORS to allow requests from the Angular frontend.
-   */
+  // Configuration CORS avec support des credentials
   app.enableCors({
-    origin: process.env.URL_FRONTEND,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type, Authorization",
+    origin: true, // Permet toutes les origines ou spécifiez votre domaine frontend
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
   /**

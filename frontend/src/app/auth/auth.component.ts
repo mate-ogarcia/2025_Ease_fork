@@ -12,7 +12,6 @@ import { AuthService } from '../../services/auth/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import * as bcrypt from 'bcryptjs';
 
 @Component({
   selector: 'app-auth',
@@ -132,9 +131,6 @@ export class AuthComponent implements AfterViewInit {
       return;
     }
 
-    // Hash the password before sending it to the server
-    const hashedPassword = await bcrypt.hash(this.password, 10);
-
     // If the user wants to log in
     if (this.isLoginMode) {
       this.authService.login(this.username, this.password).subscribe({
@@ -154,7 +150,7 @@ export class AuthComponent implements AfterViewInit {
     // If the user wants to create an account
     if (!this.isLoginMode) {
       // Call register with the hashed password
-      this.authService.register(this.username, this.email, hashedPassword).subscribe({
+      this.authService.register(this.username, this.email, this.password).subscribe({
         next: (response) => {
           console.log("Server response:", response);
           window.alert("Register successfully");

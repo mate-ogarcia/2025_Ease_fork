@@ -29,7 +29,7 @@ export class ProdpageComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       this.productId = params.get('id') || '';
       this.productSource = params.get('source') || 'Internal'; // Valeur par défaut
 
@@ -74,7 +74,7 @@ export class ProdpageComponent implements OnInit {
           this.product = data;
           this.loadProductImage(this.product);
         } else {
-          this.errorMessage = "Produit introuvable.";
+          this.errorMessage = 'Produit introuvable.';
         }
       },
       error: () => {
@@ -82,7 +82,7 @@ export class ProdpageComponent implements OnInit {
       },
       complete: () => {
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -111,6 +111,7 @@ export class ProdpageComponent implements OnInit {
       }
     });
   }
+
 
   /**
    * @brief Récupère une image depuis Unsplash si le produit n'a pas d'image.

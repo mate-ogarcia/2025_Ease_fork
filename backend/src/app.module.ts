@@ -17,6 +17,9 @@ import { ThrottlerModule } from "@nestjs/throttler";
 // Suivre requete HTTP
 import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
+import { APP_GUARD } from "@nestjs/core";
+import { RolesGuard } from "./auth/guards/roles.guard";
+import { AdminModule } from "./admin/admin.module";
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
     DataModule,
     RequestHandlerModule,
     AuthModule,
+    AdminModule,
     ProductsModule,
     OpenFoodFactsModule,
     CountriesModule,
@@ -47,7 +51,13 @@ import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
   ],
   // Import des modules distant uniquement
   controllers: [AppController],
-  providers: [AppService], // Import des services de app
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ], // Import des services de app
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

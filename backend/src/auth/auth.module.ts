@@ -13,24 +13,39 @@ import { JwtModule } from "@nestjs/jwt";
 import { UsersModule } from "../users/users.module";
 import { PassportModule } from "@nestjs/passport";
 import { JwtStrategy } from "./jwt.strategy";
+import { RolesGuard } from "./guards/roles.guard";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { DatabaseModule } from "../database/database.module";
 import * as dotenv from "dotenv";
+import { APP_GUARD } from "@nestjs/core";
 
 dotenv.config(); // Load environment variables
 
 @Module({
   imports: [
     UsersModule,
-    PassportModule,
+    DatabaseModule,
+    PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.register({
       /**
        * @brief JWT configuration.
        * @details Uses a secret key from environment variables, with a fallback to a default value.
        */
       secret: process.env.JWT_SECRET || "DEFAULT_SECRET",
-      signOptions: { expiresIn: "1h" },
+      signOptions: { expiresIn: "1d" },
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RolesGuard,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
   controllers: [AuthController],
+  exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
-export class AuthModule {}
+export class AuthModule { }

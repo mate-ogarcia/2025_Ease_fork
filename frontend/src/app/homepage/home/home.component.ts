@@ -1,26 +1,7 @@
-/**
- * @file home.component.ts
- * @brief Main component for the home page of the application.
- *
- * @details
- * The `HomeComponent` manages the homepage visuals and user interface settings, including:
- * - Background animations (using Vanta.js with birds effect).
- * - Dark mode toggling.
- * - Settings panel visibility.
- * - User role retrieval from cookies.
- *
- * Key functionalities:
- * - Initializes a dynamic background with Vanta.js.
- * - Allows toggling dark mode for the application.
- * - Provides settings panel access.
- * - Reads and logs user role from the JWT stored in cookies.
- */
-
-import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef, OnInit } from '@angular/core';
-import * as VANTA from 'vanta/src/vanta.birds';  // Vanta.js birds animation
-import * as THREE from 'three';                  // Three.js for rendering 3D graphics
-
-// Components
+import { Component, AfterViewInit, OnDestroy, ElementRef } from '@angular/core';
+import * as VANTA from 'vanta/src/vanta.birds';
+import * as THREE from 'three';
+// Component
 import { SearchbarComponent } from './comp/searchbar/searchbar.component';
 import { NavbarComponent } from './comp/navbar/navbar.component';
 
@@ -43,22 +24,17 @@ import { NavbarComponent } from './comp/navbar/navbar.component';
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('vantaBackground', { static: true }) vantaRef!: ElementRef; // Reference to the Vanta background element
+  isVantaActive: boolean = true;
+  isDarkMode: boolean = false;
+  isSettingsOpen: boolean = false;
+  private vantaEffect: any;
+  private vantaContainer: HTMLElement | null = null;
 
-  isVantaActive: boolean = true;    // Determines whether the Vanta effect is active
-  isDarkMode: boolean = false;      // State for dark mode
-  isSettingsOpen: boolean = false;  // State for settings panel visibility
-
-  private vantaEffect: any;         // Instance of the Vanta.js effect
-
-  /**
-   * @brief Lifecycle hook called after the component's view is initialized.
-   * 
-   * @details
-   * Initializes the Vanta.js effect if `isVantaActive` is `true`.
-   */
   ngAfterViewInit(): void {
-    if (this.isVantaActive) {
+    // Accéder à l'élément directement via le DOM
+    this.vantaContainer = document.querySelector('.container');
+
+    if (this.isVantaActive && this.vantaContainer) {
       this.initVantaEffect();
     }
   }
@@ -71,7 +47,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
    */
   private initVantaEffect(): void {
     this.vantaEffect = (VANTA as any).default({
-      el: '.container',
+      el: this.vantaContainer,
       THREE: THREE,
       backgroundColor: 0x023436,
       color1: 0xff0000,

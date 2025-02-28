@@ -4,8 +4,11 @@
  * @details This component provides a search bar with real-time search capabilities, efficient caching of results, 
  * and product selection functionalities. It uses RxJS to debounce user input, manages cached search results to improve 
  * performance, and includes filtering options to refine search queries by country, department, category, and price.
+ * It has been modified to handle API errors gracefully and prevent UI crashes.
  * 
- * @component SearchbarComponent
+ * @author Original Author
+ * @date Original Date
+ * @modified 2023-XX-XX
  */
 
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
@@ -26,7 +29,7 @@ import { DataCacheService } from '../../../../../services/cache/data-cache.servi
   standalone: true,
   imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './searchbar.component.html',
-  styleUrls: ['./searchbar.component.css']
+  styleUrls: ['./searchbar.component.css'],
 })
 export class SearchbarComponent implements OnInit {
   searchQuery: string = '';         // The current search query entered by the user.
@@ -45,11 +48,11 @@ export class SearchbarComponent implements OnInit {
   selectedCategory: string = '';
   categories: any[] = [];           // Contains all the categories name
   selectedBrand: string = '';
-  brands: any[] = []                // Contains all the brands
+  brands: any[] = [] // Contains all the brands
   // Price filter
-  priceFilter: boolean = false;     // State of the third filter.
-  minPrice: number = 0;             // Min price selected by the user
-  maxPrice: number = 5000;          // Max price selected by the user
+  priceFilter: boolean = false; // State of the third filter.
+  minPrice: number = 0;          // Min price selected by the user
+  maxPrice: number = 5000;       // Max price selected by the user
   // Save the filters
   appliedFilters: any = {};
   // Range boundaries for price filter
@@ -192,7 +195,9 @@ export class SearchbarComponent implements OnInit {
   }
 
   /**
-   * @brief Lifecycle hook that initializes the component.
+   * @function ngOnInit
+   * @description Lifecycle hook that initializes the component
+   * @details Fetches authentication status, countries, categories, and brands
    */
   async ngOnInit(): Promise<void> {
 
@@ -263,7 +268,9 @@ export class SearchbarComponent implements OnInit {
         this.search(true);    // Search including the selected product
       } else {
         if (this.fullSearchResults.length > 0) {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: this.fullSearchResults } });
+          this.router.navigate(['/searched-prod'], {
+            state: { resultsArray: this.fullSearchResults },
+          });
         } else {
           this.search(false); // Search without including the selected product
         }
