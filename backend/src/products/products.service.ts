@@ -259,13 +259,17 @@ export class ProductsService implements OnModuleInit {
      */
     // TODO: implements some logic to choose which API use
     private async getExternalAlternatives(criteria: any): Promise<any[]> {
-        const externalPromises: Promise<any[]>[] = [
-            this.getOFFAlternatives(criteria), // Search in Open Food Facts
-            // Add other APIs here if needed
-        ];
+        const { category } = criteria;
+        console.log('criteria External :', criteria);
 
-        const results = await Promise.all(externalPromises);
-        return results.flat();
+        // TODO: To complete
+       switch (category) {
+        case 'Food':
+            console.log('openFoodFacts ExternalAlt');
+            return this.getOFFAlternatives(criteria);
+        default:
+            throw new NotFoundException(`Unsupported source: "${category}"`);
+       }
     }
 
     /**
@@ -281,8 +285,10 @@ export class ProductsService implements OnModuleInit {
             console.log("🌍 Searching via Open Food Facts with criteria:", criteria);
 
             const results = await this.openFoodFactsService.searchSimilarProducts({
-                productId: criteria.productId,
                 category: criteria.category,
+                productSource: criteria.productSource,
+                tags: criteria.tags,
+                productName: criteria.productName,
             });
 
             return results.map(product => ({
