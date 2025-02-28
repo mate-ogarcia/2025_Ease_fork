@@ -272,8 +272,7 @@ export class ProductsService implements OnModuleInit {
      * @brief Searches for alternative products in Open Food Facts.
      * 
      * @param criteria Object containing:
-     *   - `productName` (string): Name of the product.
-     *   - `brand` (string): Product brand.
+     *   - `productiD` (string): Id of the product.
      *   - `category` (string): Product category.
      * @returns {Promise<any[]>} Array of alternative products from Open Food Facts.
      */
@@ -282,10 +281,8 @@ export class ProductsService implements OnModuleInit {
             console.log("🌍 Searching via Open Food Facts with criteria:", criteria);
 
             const results = await this.openFoodFactsService.searchSimilarProducts({
-                productName: criteria.productName,
-                brand: criteria.brand,
+                productId: criteria.productId,
                 category: criteria.category,
-                tags: criteria.tags || [],
             });
 
             return results.map(product => ({
