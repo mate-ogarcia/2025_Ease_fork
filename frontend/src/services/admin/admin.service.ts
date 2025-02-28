@@ -116,9 +116,20 @@ export class AdminService {
     return this.http.get<User[]>(`${this.apiUrl}/users`, {
       withCredentials: true
     }).pipe(
-      tap(users => console.log(`✅ Retrieved ${users?.length || 0} users`)),
-      retry(3),
-      catchError(this.handleError)
+      tap(users => {
+        console.log(`✅ Retrieved ${users?.length || 0} users`);
+        if (users?.length > 0) {
+          console.log('👤 First user example:', users[0]);
+        } else {
+          console.log('⚠️ No users found');
+        }
+      }),
+      retry({ count: 2, delay: 1000 }), // Retry twice with 1 second delay
+      catchError(error => {
+        console.error('❌ Error fetching users:', error);
+        // Rethrow the error to be handled by the component
+        return throwError(() => new Error(`Failed to load users: ${error.message}`));
+      })
     );
   }
 

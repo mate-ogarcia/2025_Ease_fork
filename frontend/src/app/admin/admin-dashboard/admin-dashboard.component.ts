@@ -132,7 +132,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const loadingSteps = [
       { progress: 20, text: 'Vérification des autorisations...' },
       { progress: 40, text: 'Chargement des utilisateurs...' },
-      { progress: 70, text: 'Préparation du tableau de bord...' },
+      { progress: 60, text: 'Préparation du tableau de bord...' },
       { progress: 90, text: 'Finalisation...' }
     ];
 
@@ -205,23 +205,53 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
    * @public
    */
   loadUsers(silent: boolean = false): Observable<any> {
+    console.log('🔄 Starting to load users, silent mode:', silent);
+
     // Only show loading indicators if not in silent mode
     if (!silent) {
       this.isLoading = true;
       this.errorMessage = '';
+      this.loadingText = 'Chargement des utilisateurs...';
     }
 
     // Create a data loading pipeline with side effects and error handling
     return this.adminService.getAllUsers().pipe(
       // Use tap for side effects without affecting the stream
       tap(users => {
-        this.userCount = users?.length || 0;
-        console.log('Number of users:', this.userCount);
-        if (!silent) this.isLoading = false;
+        console.log('✅ Users loaded successfully in component');
+
+        // Vérifier si users est un tableau
+        if (Array.isArray(users)) {
+          this.userCount = users.length;
+          console.log('📊 Number of users:', this.userCount);
+
+          // Log du premier utilisateur pour débogage
+          if (users.length > 0) {
+            console.log('👤 First user example:', users[0]);
+          }
+        } else {
+          console.warn('⚠️ Users data is not an array:', users);
+          this.userCount = 0;
+        }
+
+        if (!silent) {
+          this.isLoading = false;
+          this.loadingText = 'Utilisateurs chargés avec succès!';
+        }
       }),
       // Handle any errors in the user loading process
       catchError(error => {
-        this.handleError('Unable to load users', error);
+        console.error('❌ Error loading users in component:', error);
+        const errorMsg = 'Impossible de charger les utilisateurs';
+        this.handleError(errorMsg, error);
+
+        // Return empty array to continue the stream
+        if (!silent) {
+          this.isLoading = false;
+          this.loadingText = 'Erreur lors du chargement des utilisateurs';
+        }
+
+        // Return empty array but still allow the dashboard to load
         return of([]);
       })
     );

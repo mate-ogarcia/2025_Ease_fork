@@ -55,8 +55,26 @@ async function bootstrap() {
   // Load NestJS application with global logger
   const app = await NestFactory.create(AppModule, { logger });
 
-  // Add cookie-parser middleware
+  // Middleware pour parser les cookies
   app.use(cookieParser());
+
+  // Middleware pour extraire le token JWT des cookies et l'ajouter à l'en-tête Authorization
+  app.use((req, res, next) => {
+    const token = req.cookies?.accessToken;
+    if (token) {
+      // Vérifier si l'en-tête Authorization existe déjà
+      if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
+        req.headers.authorization = `Bearer ${token}`;
+        console.log("🔄 Token extrait des cookies et ajouté à l'en-tête Authorization");
+        console.log("🔑 Token ajouté:", token.substring(0, 20) + "...");
+      } else {
+        console.log("ℹ️ En-tête Authorization déjà présent:", req.headers.authorization.substring(0, 20) + "...");
+      }
+    } else {
+      console.log("⚠️ Aucun token trouvé dans les cookies");
+    }
+    next();
+  });
 
   // Retrieves necessary services from the application context.
   const databaseService = app.get(DatabaseService);
@@ -74,15 +92,12 @@ async function bootstrap() {
     logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
   }
 
-  // Configuration CORS sécurisée
+  // Configuration CORS avec support des credentials
   app.enableCors({
-    origin: ["http://localhost:4200"], // URL de votre frontend Angular
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept", "Authorization"],
-    exposedHeaders: ["*"],
+    origin: true, // Permet toutes les origines ou spécifiez votre domaine frontend
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
   /**

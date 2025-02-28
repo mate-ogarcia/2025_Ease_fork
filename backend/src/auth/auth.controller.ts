@@ -71,13 +71,16 @@ export class AuthController {
     const result = await this.authService.login(body);
     console.log("✅ Login successful, setting cookie");
 
+    // Définir le cookie avec des options plus permissives pour le développement
     response.cookie("accessToken", result.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      path: "/",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
+    console.log("🍪 Cookie set with token:", result.access_token.substring(0, 15) + "...");
     return result;
   }
 

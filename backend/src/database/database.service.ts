@@ -566,13 +566,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @function getAllCategName
+   * @description Alias pour getAllCategoryName pour maintenir la compatibilité avec le contrôleur
+   * @returns {Promise<any[]>} A promise that resolves with an array of category names
+   */
+  async getAllCategName(): Promise<any[]> {
+    return this.getAllCategoryName();
+  }
+
+  /**
+   * @function getAllCategoryName
    * @description Retrieves all category names from the Couchbase database
    * @details This function executes a N1QL query to fetch all category names.
    * It includes enhanced error handling and logging to diagnose connection issues.
    *
    * @returns {Promise<any[]>} A promise that resolves with an array of category names or empty array on error
    */
-  async getAllCategName(): Promise<any[]> {
+  async getAllCategoryName(): Promise<any[]> {
     try {
       console.log("🔍 Attempting to retrieve all category names...");
 
@@ -586,9 +595,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
+      const categBucketName = process.env.CATEGORY_BUCKET_NAME;
+      if (!categBucketName) {
+        console.error("❌ CATEGORY_BUCKET_NAME not defined in environment variables");
+        throw new Error("CATEGORY_BUCKET_NAME not defined in environment variables");
+      }
+
       const query = `
         SELECT DISTINCT c.name
-        FROM ease._default.categorie c
+        FROM \`${categBucketName}\`._default._default c
         ORDER BY c.name`;
 
       console.log("🔍 Executing query:", query);
@@ -636,9 +651,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
+      const brandBucketName = process.env.BRAND_BUCKET_NAME;
+      if (!brandBucketName) {
+        console.error("❌ BRAND_BUCKET_NAME not defined in environment variables");
+        throw new Error("BRAND_BUCKET_NAME not defined in environment variables");
+      }
+
       const query = `
         SELECT DISTINCT b.name
-        FROM ease._default.brand b
+        FROM \`${brandBucketName}\`._default._default b
         ORDER BY b.name`;
 
       console.log("🔍 Executing query:", query);
@@ -919,59 +940,63 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @brief Retrieves all users from the database.
-   * @details Executes a N1QL query to fetch all users from the users bucket.
-   *
-   * @returns {Promise<any[]>} Array of user objects.
-   * @throws {InternalServerErrorException} If an error occurs during retrieval.
+   * @brief Récupère tous les utilisateurs de la base de données.
+   * @returns {Promise<any[]>} Tableau d'utilisateurs.
+   * @throws {InternalServerErrorException} En cas d'erreur.
    */
   async getAllUsers(): Promise<any[]> {
     try {
       if (!this.cluster) {
-        throw new Error("❌ Cluster not initialized");
+        console.error("❌ Cluster non initialisé");
+        throw new Error("Cluster non initialisé");
       }
 
-      console.log("🔍 Récupération de tous les utilisateurs...");
-      console.log("📦 Bucket name:", process.env.USER_BUCKET_NAME);
+      const bucketName = process.env.USER_BUCKET_NAME; // UsersBDD
+      console.log("🔍 Récupération des utilisateurs...");
 
+      // Requête modifiée pour récupérer uniquement les documents avec un champ 'role'
       const query = `
-        SELECT u.*, META(u).id as docId
-        FROM \`${process.env.USER_BUCKET_NAME}\`._default._default u
-        WHERE META(u).id LIKE 'user::%'
+        SELECT META(u).id as id, u.* 
+        FROM \`${bucketName}\`._default._default u
+        WHERE u.role IS NOT MISSING
       `;
 
-      console.log("🔍 Exécution de la requête:", query);
-
+      console.log("🔍 Exécution:", query);
       const result = await this.cluster.query(query);
 
-      if (!result || !result.rows) {
-        console.warn("⚠️ Aucun résultat retourné par la requête");
+      if (!result?.rows?.length) {
+        console.log("⚠️ Aucun utilisateur trouvé");
         return [];
       }
 
-      const users = result.rows.map((user) => ({
-        id: user.docId,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }));
+      console.log(`✅ ${result.rows.length} utilisateurs trouvés`);
+      if (result.rows.length > 0) {
+        console.log("👤 Structure du premier utilisateur:", JSON.stringify(result.rows[0], null, 2));
+      }
 
-      console.log(`✅ ${users.length} utilisateurs trouvés`);
-      console.log(
-        "👥 Premier utilisateur (exemple):",
-        users[0] || "Aucun utilisateur",
-      );
+      // Mapper les résultats pour assurer une structure cohérente
+      const users = result.rows.map((row) => {
+        return {
+          id: row.id || `unknown_${Math.random().toString(36).substring(7)}`,
+          email: row.email || 'unknown',
+          username: row.username || 'unknown',
+          role: row.role || 'user',
+          createdAt: row.createdAt || new Date().toISOString(),
+          updatedAt: row.updatedAt || new Date().toISOString()
+        };
+      });
+
+      console.log(`✅ ${users.length} utilisateurs traités`);
+      if (users.length > 0) {
+        console.log("👤 Premier utilisateur après traitement:", users[0]);
+      }
 
       return users;
+
     } catch (error) {
-      console.error(
-        "❌ Erreur lors de la récupération des utilisateurs:",
-        error,
-      );
+      console.error("❌ Erreur lors de la récupération des utilisateurs:", error);
       throw new InternalServerErrorException(
-        "Erreur lors de la récupération de la liste des utilisateurs",
+        `Erreur lors de la récupération des utilisateurs: ${error.message}`
       );
     }
   }

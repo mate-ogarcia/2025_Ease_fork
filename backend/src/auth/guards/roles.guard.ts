@@ -51,16 +51,23 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
+    console.log("🔍 Request headers:", request.headers);
+    console.log("🔍 Request cookies:", request.cookies);
+    console.log("🔍 Request path:", request.path);
+    console.log("🔍 Request method:", request.method);
+
     const user = request.user;
 
-    console.log("👤 Request user:", {
+    console.log("👤 Request user:", user ? {
       id: user?.id,
       email: user?.email,
       role: user?.role,
-    });
+    } : "No user found");
 
     if (!user) {
       console.error("❌ No user found in request");
+      console.error("❌ This may indicate that the JWT strategy did not attach the user to the request");
+      console.error("❌ Make sure the JWT guard is applied before the roles guard");
       throw new UnauthorizedException("User not authenticated");
     }
 

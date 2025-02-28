@@ -21,6 +21,7 @@ import {
   Delete,
   Param,
   UseGuards,
+  Req,
 } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -99,15 +100,36 @@ export class AdminController {
    * @returns {Promise<Array>} Array of user objects or empty array on error.
    */
   @Get("users")
-  async getAllUsers() {
+  async getAllUsers(@Req() req) {
     console.log("🔍 Getting all users from admin controller");
+    console.log("👤 Request user:", req.user ? {
+      id: req.user?.id,
+      email: req.user?.email,
+      role: req.user?.role,
+    } : "No user found");
+
     try {
+      console.log("🔍 Calling usersService.findAll()");
       const users = await this.usersService.findAll();
       console.log(`✅ Retrieved ${users.length} users successfully`);
+
+      // Log the first user for debugging
+      if (users.length > 0) {
+        console.log("👤 First user example:", JSON.stringify(users[0], null, 2));
+      } else {
+        console.log("⚠️ No users found in database");
+      }
+
       return users;
     } catch (error) {
       console.error("❌ Error retrieving users:", error);
-      return []; // Return empty array on error
+      console.error("Error stack:", error.stack);
+
+      // Return empty array but with a 500 status code to indicate error
+      throw new HttpException(
+        "Error retrieving users list",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 

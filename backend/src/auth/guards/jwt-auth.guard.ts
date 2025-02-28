@@ -31,44 +31,46 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-    console.log("🔒 JwtAuthGuard - Headers:", request.headers);
+    console.log("🔒 JwtAuthGuard - Path:", request.path);
+    console.log("🔒 JwtAuthGuard - Method:", request.method);
+    console.log("🔒 JwtAuthGuard - Headers:", JSON.stringify(request.headers));
     console.log("🔒 JwtAuthGuard - Cookies:", request.cookies);
 
-    const token = this.extractTokenFromRequest(request);
-
-    if (!token) {
-      console.error("❌ No token found in request");
+    // Vérifier si l'en-tête Authorization est présent
+    if (!request.headers.authorization) {
+      console.error("❌ No Authorization header found in request");
       throw new UnauthorizedException("Not authenticated");
     }
 
-    console.log("🔑 Token found in request");
-    return super.canActivate(context);
-  }
+    console.log("🔑 Authorization header found:", request.headers.authorization.substring(0, 20) + "...");
 
-  /**
-   * @brief Extracts the JWT token from the request.
-   * @details Checks for the token in cookies first, then in the Authorization header.
-   *
-   * @param {any} request - The HTTP request object.
-   * @returns {string | null} The extracted token or null if not found.
-   * @private
-   */
-  private extractTokenFromRequest(request: any): string | null {
-    // Check cookies first
-    if (request.cookies && request.cookies.accessToken) {
-      console.log("🍪 Token found in cookies");
-      return request.cookies.accessToken;
+    // Appeler la méthode parent pour valider le token et attacher l'utilisateur à la requête
+    const result = super.canActivate(context);
+
+    // Ajouter un log après l'activation pour vérifier si l'utilisateur est attaché à la requête
+    if (result instanceof Promise) {
+      return result.then(value => {
+        console.log("✅ JwtAuthGuard - canActivate successful (Promise)");
+        console.log("👤 User in request after canActivate:", request.user ? {
+          id: request.user.id,
+          email: request.user.email,
+          role: request.user.role
+        } : "No user found");
+        return value;
+      }).catch(err => {
+        console.error("❌ JwtAuthGuard - canActivate error (Promise):", err.message);
+        throw err;
+      });
+    } else if (result instanceof Observable) {
+      // Pour les observables, nous ne pouvons pas facilement ajouter des logs ici
+      // Les logs seront gérés dans handleRequest
+      console.log("ℹ️ JwtAuthGuard - canActivate returned Observable");
+      return result;
+    } else {
+      // Pour les résultats booléens
+      console.log("ℹ️ JwtAuthGuard - canActivate returned boolean:", result);
+      return result;
     }
-
-    // Then check Authorization header
-    const authHeader = request.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      console.log("🎯 Token found in Authorization header");
-      return authHeader.substring(7);
-    }
-
-    console.warn("⚠️ No token found");
-    return null;
   }
 
   /**
@@ -82,7 +84,11 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
    * @throws {UnauthorizedException} If authentication fails or no user is found.
    */
   handleRequest(err: any, user: any, info: any) {
-    console.log("👤 Processing JWT request:", { error: err, user, info });
+    console.log("👤 Processing JWT request:", {
+      error: err ? { message: err.message } : null,
+      userExists: !!user,
+      info: info ? { message: info.message } : null
+    });
 
     if (err || !user) {
       console.error(
@@ -94,6 +100,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
     console.log("✅ User authenticated:", {
       id: user.id,
+      email: user.email,
       role: user.role,
     });
     return user;
