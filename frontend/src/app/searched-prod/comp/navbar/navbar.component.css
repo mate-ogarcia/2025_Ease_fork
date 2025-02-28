@@ -56,19 +56,27 @@ picture{
 
 .nav-btn {
   text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
   color: #f9f9f9;
   font-weight: 500;
   border-radius: 40px;
   padding: 10px 15px;
   transition: all 0.3s ease-in-out;  
   cursor: pointer;
+  width: 160px;
 }
 
 .nav-btn:hover {
   color: #2d2b27;
   background-color: #f9f9f9;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease-in-out;
 }
+
 
 /* User Profile */
 .user {
@@ -156,7 +164,7 @@ picture{
 }
 
 /* Responsive */
-@media (max-width: 850px) {
+@media (max-width: 950px) {
   .navbar {
       flex-direction: row;
   }
@@ -174,7 +182,7 @@ picture{
       right: 0px;
       background: white;
       color: #2d2b27;
-      width: 150px;
+      width: fit-content;
       padding: 10px;
       border-radius: 5px;
   }

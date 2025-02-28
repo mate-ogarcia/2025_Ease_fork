@@ -18,6 +18,8 @@
         "concurrently": "^8.2.2"
     },
     "dependencies": {
+        "apexcharts": "^4.5.0",
+        "ng-apexcharts": "^1.15.0",
         "projet_tutore": "file:"
     }
 }

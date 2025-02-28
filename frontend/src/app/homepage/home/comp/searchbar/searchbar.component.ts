@@ -23,7 +23,7 @@ import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFood
 @Component({
   selector: 'app-searchbar',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterLink],
+  imports: [FormsModule, CommonModule],
   templateUrl: './searchbar.component.html',
   styleUrls: ['./searchbar.component.css']
 })
@@ -71,7 +71,6 @@ export class SearchbarComponent implements OnInit {
     private apiService: ApiService,
     private apiCountries: ApiEuropeanCountries,
     private router: Router,
-    private usersService: UsersService,
     private apiOFF: ApiOpenFoodFacts,
   ) {
     this._searchSubject
@@ -152,11 +151,6 @@ export class SearchbarComponent implements OnInit {
       error: (error) => console.error('❌ Error fetching brands:', error),
     });
 
-    // Get the cookie's info
-    const userRole = this.usersService.getUserRole();
-    console.log("🔑 User Role from Cookie:", userRole);
-    // Check if the role allows you to add a product
-    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
   }
 
 

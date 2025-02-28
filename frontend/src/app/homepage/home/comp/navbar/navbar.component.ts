@@ -2,6 +2,8 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../../services/auth/auth.service';
+import { UsersService } from '../../../../../services/users/users.service';
+
 
 @Component({
   selector: 'app-navbar',
@@ -14,17 +16,16 @@ export class NavbarComponent implements OnInit {
   menuOpen = false;
   isAuthenticated = false;
   showDropdown = false; // Gère le menu sur desktop
-  isMobile = false; // ✅ Détecte si on est en mode responsive
+  isMobile = false; // Détecte si on est en mode responsive
+  canAddProduct: boolean = false;   // Default: user cannot add product
 
-  constructor(private authService: AuthService, private router: Router) {}
 
-  ngOnInit() {
-    this.authService.isAuthenticated().subscribe((status) => {
-      this.isAuthenticated = status;
-    });
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    private usersService: UsersService,
 
-    this.checkScreenSize(); // Vérifie la taille au chargement
-  }
+  ) {}
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
@@ -45,5 +46,18 @@ export class NavbarComponent implements OnInit {
   @HostListener('window:resize', ['$event'])
   checkScreenSize() {
     this.isMobile = window.innerWidth <= 768;
+  }
+  async ngOnInit(): Promise<void> {
+    this.authService.isAuthenticated().subscribe((status) => {
+      this.isAuthenticated = status;
+    });
+
+    this.checkScreenSize(); // Vérifie la taille au chargement
+
+    // Get the cookie's info
+    const userRole = this.usersService.getUserRole();
+    console.log("🔑 User Role from Cookie:", userRole);
+    // Check if the role allows you to add a product
+    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
   }
 }

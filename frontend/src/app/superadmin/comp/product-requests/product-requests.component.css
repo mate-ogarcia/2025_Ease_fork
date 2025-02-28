@@ -1,0 +1,172 @@
+/* Container global pour la liste et les détails */
+.product-requests-container {
+    display: flex;
+    gap: 20px;
+  }
+  
+  /* Liste des demandes (colonne de gauche) */
+  .requests-list {
+    width: 300px;
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .request-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .request-card:hover,
+  .request-card.selected {
+    background: #007bff;
+    color: #fff;
+  }
+  
+  .request-card h4 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  
+  .request-card p {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+  }
+  
+  /* Détails de la demande (colonne de droite) */
+  .request-details {
+    flex: 1;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  
+  /* En-tête des détails */
+  .details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .details-header h3 {
+    margin: 0;
+  }
+  
+  /* Bouton d'édition dans l'en-tête */
+  .edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #007bff;
+    font-size: 1rem;
+    transition: opacity 0.2s;
+  }
+  
+  .edit-btn:hover {
+    opacity: 0.8;
+  }
+  
+  /* Contenu des détails */
+  .details-content {
+    margin-top: 20px;
+  }
+  
+  .detail-item {
+    margin-bottom: 10px;
+  }
+  
+  .detail-item label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .detail-item span {
+    display: block;
+  }
+  
+  .detail-item input,
+  .detail-item select,
+  .detail-item textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+  }
+  
+  .detail-item input:focus,
+  .detail-item select:focus,
+  .detail-item textarea:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+  
+.tags-input-container {
+  display: flex;
+  flex-wrap: wrap; /* Permet aux tags de se répartir sur plusieurs lignes */
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+.tags-input-container input {
+  flex: 1;
+  margin: 0;
+  min-width: 120px;
+  border: none;
+  outline: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e0e0e0;
+  border-radius: 25px;
+  padding: 5px 10px;
+}
+
+.tag button {
+  background: none;
+  border: none;
+  font-size: 15px;
+  margin-left: 4px;
+  cursor: pointer;
+}
+  /* Zone d'actions pour sauvegarder/annuler en mode édition */
+  .details-actions {
+    margin-top: 20px;
+    text-align: right;
+  }
+  
+  .details-actions button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.2s;
+  }
+  
+  .details-actions button.save-btn {
+    background: #28a745;
+    color: #fff;
+  }
+  
+  .details-actions button.cancel-btn {
+    background: #dc3545;
+    color: #fff;
+  }
+  

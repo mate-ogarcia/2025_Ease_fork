@@ -8,6 +8,11 @@ export const routes: Routes = [
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),
   },
   {
+    path: 'superadmin',
+    loadComponent: () =>
+      import('./superadmin/superadmin.component').then((m) => m.SuperadminComponent),
+  },
+  {
     path: 'home',
     loadComponent: () =>
       import('./homepage/home/home.component').then((m) => m.HomeComponent),
