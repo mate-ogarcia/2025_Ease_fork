@@ -58,16 +58,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   private async initializeConnections() {
     try {
-      console.log("🔹 Initializing Couchbase connections...");
-
       const certPath = process.env.SSL_CERT_PATH;
       if (!certPath) {
         throw new Error("❌ SSL_CERT_PATH is not set in environment variables");
       }
       const cert = fs.readFileSync(certPath);
-      console.log("🔹 SSL Certificate loaded.");
-
-      console.log("🔹 Connecting to Couchbase Capella...");
       this.cluster = await couchbase.connect(process.env.DB_HOST, {
         username: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
@@ -106,7 +101,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       this.brandBucket = this.cluster.bucket(brandBucketName);
       this.brandCollection = this.brandBucket.defaultCollection();
 
-      console.log("✅ Successfully connected to Couchbase Capella!");
     } catch (error) {
       console.error("❌ Connection error to Couchbase Capella:", error.message);
       throw new Error("Unable to connect to Couchbase Capella");
@@ -118,7 +112,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async onModuleDestroy() {
     await this.cluster?.close();
-    console.log("🔹 Couchbase connections closed.");
   }
 
   // ========================================================================
@@ -742,14 +735,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     console.log('filtersClause:', filtersClause);
 
     let whereClause = "";
-    if (currentRoute === "/searched-prod") {
-      whereClause = [similarityClause, filtersClause].filter(Boolean).join(" AND ");
-    } else if (currentRoute === "/home") {
-      whereClause = [similarityClause, filtersClause].filter(Boolean).join(" OR ");
-    } else {
-      throw new Error(`❌ Unknown route: ${currentRoute}`);
+    // If the route il /searched-prod then prioritize filters
+    switch (currentRoute) {
+      case '/searched-prod':
+        whereClause = [similarityClause, filtersClause].filter(Boolean).join(" AND ");
+        break;
+      default:
+        whereClause = [similarityClause, filtersClause].filter(Boolean).join(" OR ");
+        break
     }
-
     return `SELECT * FROM \`${bucketName}\` WHERE ${whereClause}`;
   }
 

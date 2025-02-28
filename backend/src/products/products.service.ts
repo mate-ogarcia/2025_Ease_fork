@@ -15,7 +15,7 @@ import { DatabaseService } from "../database/database.service";
 import { OpenFoodFactsService } from "src/apiServices/openFoodFacts/openFoodFacts.service";
 
 @Injectable()
-export class ProductsService implements OnModuleInit {
+export class ProductsService {
     // ========================================================================
     // ======================== INITIALIZATION & CORE METHODS
     // ========================================================================
@@ -23,13 +23,6 @@ export class ProductsService implements OnModuleInit {
         private databaseService: DatabaseService,
         private openFoodFactsService: OpenFoodFactsService,
     ) { }
-
-    /**
-     * @brief Called when the module is initialized.
-     */
-    async onModuleInit() {
-        console.log("✅ ProductsService module initialized.");
-    }
 
     // ========================================================================
     // ======================== PRODUCTS SELECTION & RETRIEVAL
@@ -39,7 +32,6 @@ export class ProductsService implements OnModuleInit {
      */
     async selectProduct(productId: string) {
         try {
-            console.log("🔹 Fetching product ID:", productId);
             const product = await this.databaseService.getProductById(productId);
 
             if (!product) {
@@ -58,7 +50,6 @@ export class ProductsService implements OnModuleInit {
      */
     async getProductById(productId: string) {
         try {
-            console.log(`🔹 Attempting to retrieve product with ID: ${productId}`);
             const product = await this.databaseService.getProductById(productId);
 
             if (!product) {
@@ -105,7 +96,7 @@ export class ProductsService implements OnModuleInit {
             if (!selectedProduct) {
                 throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
             }
-
+    
             // Extract search criteria from the selected product
             const searchCriteria = Object.fromEntries(
                 Object.entries({
@@ -115,15 +106,22 @@ export class ProductsService implements OnModuleInit {
                     brand: selectedProduct.brand
                 }).filter(([_, value]) => value !== null && value !== undefined)
             );
-
+    
             // Retrieve alternative products based on the extracted criteria
-            const alternatives = await this.databaseService.getAlternativeProducts(searchCriteria);
+            let alternatives = await this.databaseService.getAlternativeProducts(searchCriteria);
+    
+            // Add productSource field to each alternative
+            alternatives = alternatives.map(product => ({
+                ...product,
+                source: 'Internal'
+            }));
+    
             return alternatives;
         } catch (error) {
             console.error("❌ Error retrieving alternative products:", error);
             throw new InternalServerErrorException("Error retrieving alternative products.");
         }
-    }
+    }  
 
     /**
      * @brief Retrieves the source product and finds alternatives based on business logic.
@@ -144,7 +142,6 @@ export class ProductsService implements OnModuleInit {
         const { productId, productSource, currentRoute } = filters;
 
         if (!productId) {
-            console.log("🔍 No product ID provided, searching based only on filters.");
             return await this.getProductsByFilters(filters);
         }
 
@@ -155,8 +152,6 @@ export class ProductsService implements OnModuleInit {
             if (!referenceProduct) {
                 throw new NotFoundException(`Product not found for ID ${productId}`);
             }
-
-            console.log("🔎 Reference product:", referenceProduct.name);
 
             // Build common search criteria
             const searchCriteria = {
@@ -174,14 +169,11 @@ export class ProductsService implements OnModuleInit {
 
             // Step 2: Search alternatives based on the source
             if (productSource === "Internal") {
-                console.log("🏠 Internal product: Searching similar products in DB + external APIs");
                 internalAlternatives = await this.getInternalAlternatives(searchCriteria);
                 externalAlternatives = await this.getExternalAlternatives(searchCriteria);
 
             } else {
-                console.log("🌍 External product: Searching similar products in DB + external API");
                 internalAlternatives = await this.getInternalAlternatives(searchCriteria);
-
                 if (productSource === "OpenFoodFacts") {
                     externalAlternatives = await this.getOFFAlternatives(searchCriteria);
                 }
@@ -189,7 +181,6 @@ export class ProductsService implements OnModuleInit {
 
             // Step 3: Merge and return results
             const combinedResults = [...internalAlternatives, ...externalAlternatives];
-            console.log(`📦 Total similar products found: ${combinedResults.length}`);
             return combinedResults;
 
         } catch (error) {
@@ -257,15 +248,16 @@ export class ProductsService implements OnModuleInit {
      * @param criteria Criteria for the search, including name, brand, and category.
      * @returns {Promise<any[]>} Array of products found in external APIs.
      */
-    // TODO: implements some logic to choose which API use
     private async getExternalAlternatives(criteria: any): Promise<any[]> {
-        const externalPromises: Promise<any[]>[] = [
-            this.getOFFAlternatives(criteria), // Search in Open Food Facts
-            // Add other APIs here if needed
-        ];
+        const { category } = criteria;
 
-        const results = await Promise.all(externalPromises);
-        return results.flat();
+        // TODO: To complete
+       switch (category) {
+        case 'Food':
+            return this.getOFFAlternatives(criteria);
+        default:
+            console.warn('Others API are not yet available');
+            return Promise.resolve([]);       }
     }
 
     /**
@@ -281,8 +273,10 @@ export class ProductsService implements OnModuleInit {
             console.log("🌍 Searching via Open Food Facts with criteria:", criteria);
 
             const results = await this.openFoodFactsService.searchSimilarProducts({
-                productId: criteria.productId,
                 category: criteria.category,
+                productSource: criteria.productSource,
+                tags: criteria.tags,
+                productName: criteria.productName,
             });
 
             return results.map(product => ({

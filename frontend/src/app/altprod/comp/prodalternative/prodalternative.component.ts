@@ -10,6 +10,10 @@ import { ApiService } from '../../../../services/api.service';
 import { UnsplashService } from '../../../../services/unsplash.service';
 import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 
+/**
+ * @class ProdalternativeComponent
+ * @brief Component responsible for displaying alternative products based on the selected product.
+ */
 @Component({
   selector: 'app-prodalternative',
   standalone: true,
@@ -17,15 +21,21 @@ import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFac
   templateUrl: './prodalternative.component.html',
   styleUrls: ['./prodalternative.component.css']
 })
-
-
 export class ProdalternativeComponent implements OnInit {
-  productId: string = '';
-  productSource: string = '';
-  productDetails: any[] = [];
-  isLoading: boolean = false;
-  errorMessage: string = '';
+  productId: string = '';           // The ID of the selected product.
+  productSource: string = '';       // The source of the product (e.g., Internal, OpenFoodFacts).
+  productDetails: any[] = [];       // List of alternative products.
+  isLoading: boolean = false;       // Loading state flag.
+  errorMessage: string = '';        // Error message in case of failure.
 
+  /**
+   * @brief Constructor initializes dependencies.
+   * @param route ActivatedRoute to handle route parameters.
+   * @param router Router for navigation.
+   * @param apiService ApiService to fetch internal alternative products.
+   * @param unsplashService UnsplashService to fetch product images.
+   * @param apiOpenFoodFacts ApiOpenFoodFacts service to fetch external products.
+   */
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -34,21 +44,14 @@ export class ProdalternativeComponent implements OnInit {
     private apiOpenFoodFacts: ApiOpenFoodFacts
   ) { }
 
-  // Fonction trackBy pour améliorer les performances du *ngFor
-  trackByProduct(index: number, product: any): any {
-    return product.id;
-  }
-
   /**
    * @brief Lifecycle hook executed when the component is initialized.
+   * It retrieves the product ID and source from the route parameters.
    */
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this.productId = params.get('id') || '';
       this.productSource = params.get('source') || 'Internal'; // Default source
-
-      console.log(`🔹 Product ID: ${this.productId}`);
-      console.log(`🌍 Product Source: ${this.productSource}`);
 
       if (this.productId) {
         this.productSource === "Internal"
@@ -59,66 +62,54 @@ export class ProdalternativeComponent implements OnInit {
   }
 
   /**
-   * @brief Fetches an internal product and its alternatives.
-   * @param productId The ID of the product to fetch alternatives for.
+   * @brief trackBy function to improve *ngFor performance.
+   * @param index The index of the product in the list.
+   * @param product The product object.
+   * @return The unique identifier for tracking.
+   */
+  trackByProduct(index: number, product: any): any {
+    return product.id;
+  }
+
+  /**
+   * @brief Fetches internal product alternatives.
+   * @param productId The ID of the product.
    */
   fetchInternalProduct(productId: string) {
-    console.log("🏠 Fetching internal product alternatives...");
-
     this.isLoading = true;
     this.errorMessage = '';
-
     this.apiService.getAlternativeProducts(productId).subscribe(this.createObserver());
   }
 
   /**
-   * @brief Fetches an external product and retrieves its alternatives.
-   * @param productId The ID of the product.
+   * @brief Fetches external product and retrieves alternatives.
+   * @param productId The product ID.
    * @param productSource The external API source (e.g., OpenFoodFacts).
    */
   fetchExternalProduct(productId: string, productSource: string) {
-    console.log(`🌍 Fetching external product from ${productSource}...`);
-
     this.isLoading = true;
     this.errorMessage = '';
 
     switch (productSource) {
       case "OpenFoodFacts":
-        // Step 1: Get the searched product
         this.apiOpenFoodFacts.getOpenFoodFactsProductById(productId).subscribe({
           next: (data) => {
-            console.log('data:', data);
             if (!data) {
-              console.warn(`⚠️ No product data found for ID ${productId} from OpenFoodFacts`);
+              console.warn(`⚠️ No product data found for ID ${productId}`);
               this.isLoading = false;
               return;
             }
-
-            // Format the product
             const formattedProduct = this.apiOpenFoodFacts.formatOpenFoodFactsProduct(data);
-            console.log('formattedProduct:', formattedProduct);
-
-            // Search the alternative products
             this.apiOpenFoodFacts.postOpenFoodFactsAlternativeProducts(formattedProduct).subscribe({
               next: (alternatives) => {
-                
-
-                // Formatter chaque alternative avant de l'ajouter
                 const formattedAlternatives = alternatives.map((alt) =>
                   this.apiOpenFoodFacts.formatOpenFoodFactsProduct(alt)
                 );
-                console.log("✅ OpenFoodFacts alternatives retrieved:", formattedAlternatives);
-
-                this.productDetails = [...this.productDetails, ...formattedAlternatives]; // Ajouter les alternatives formatées
+                this.productDetails = [...this.productDetails, ...formattedAlternatives];
               },
-              error: (error) => {
-                console.error("❌ Error retrieving alternative products from OpenFoodFacts:", error);
-              },
-              complete: () => {
-                this.isLoading = false;
-              }
+              error: (error) => console.error("❌ Error retrieving alternative products:", error),
+              complete: () => this.isLoading = false
             });
-
           },
           error: (error) => {
             console.error("❌ Error retrieving product from OpenFoodFacts:", error);
@@ -136,31 +127,22 @@ export class ProdalternativeComponent implements OnInit {
   }
 
   /**
-   * @brief Creates an observer to handle API responses.
-   * @returns An observer object.
+   * @brief Creates an observer for API responses.
+   * @return Observer object handling success, error, and completion.
    */
   private createObserver() {
     return {
       next: (data: any) => {
         this.productDetails = data;
-        console.log("✅ Alternative products received:", this.productDetails);
-
-        // Fetch images for each product
         this.productDetails.forEach(product => {
-          if (product && product.name) {
+          if (product?.name) {
             this.unsplashService.searchPhotos(product.name).subscribe({
               next: (response) => {
-                if (response.results && response.results.length > 0) {
-                  // Use the raw URL with formatting parameters for consistency
-                  const rawUrl = response.results[0].urls.raw;
-                  product.imageUrl = `${rawUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
-                } else {
-                  console.log(`No image found for ${product.name}`);
+                if (response.results?.length > 0) {
+                  product.imageUrl = `${response.results[0].urls.raw}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
                 }
               },
-              error: (error) => {
-                console.error("Error retrieving image from Unsplash:", error);
-              }
+              error: (error) => console.error("Error retrieving image from Unsplash:", error)
             });
           }
         });
@@ -169,37 +151,26 @@ export class ProdalternativeComponent implements OnInit {
         console.error("❌ Error retrieving alternative products:", error);
         this.errorMessage = "Unable to fetch alternative products.";
       },
-      complete: () => {
-        this.isLoading = false;
-      }
+      complete: () => this.isLoading = false
     };
   }
 
   /**
-   * @brief Returns a CSS class based on the product rating.
-   * @param rating The rating value of the product.
-   * @return The corresponding CSS class name ('high', 'medium', or 'low').
+   * @brief Returns a CSS class based on product rating.
+   * @param rating The product rating.
+   * @return Corresponding CSS class name ('high', 'medium', 'low').
    */
   getRatingClass(rating: number): string {
-    if (rating >= 4) {
-      return 'high';
-    } else if (rating === 3) {
-      return 'medium';
-    } else {
-      return 'low';
-    }
+    return rating >= 4 ? 'high' : rating === 3 ? 'medium' : 'low';
   }
 
   /**
-   * @brief Redirects the user to the selected product's page.
+   * @brief Navigates to the selected product's page.
    * @param product The selected product object.
    */
   goToProduct(product: any) {
     if (product?.id) {
-      console.log("🔹 Redirecting to product:", product);
-      this.router.navigate([`/product-page/${product.id}`, { source: product.source }]).then(() => {
-        console.log(`✅ Successfully navigated to /product-page/${product.id}`);
-      }).catch(error => {
+      this.router.navigate([`/product-page/${product.id}/${product.source}`]).catch(error => {
         console.error("❌ Navigation error:", error);
       });
     } else {

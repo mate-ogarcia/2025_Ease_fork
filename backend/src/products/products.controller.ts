@@ -79,7 +79,6 @@ export class ProductsController {
     }
   }
 
-
   /**
    * @brief Handles the POST request to fetch products based on filters.
    * 

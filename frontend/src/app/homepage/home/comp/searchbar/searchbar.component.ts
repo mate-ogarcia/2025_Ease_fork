@@ -62,6 +62,9 @@ export class SearchbarComponent implements OnInit {
   private CACHE_DURATION = 5 * 60 * 1000; // Cache expiration time (5 minutes).
   // Dropdown for filters (renamed for cohérence with the new design)
   filterDropdownOpen: boolean = false; // Indicates if the filter dropdown is open.
+  // Wait time
+  isLoading: boolean = false; // Display a message while search is in progress
+
 
   @Output() searchExecuted = new EventEmitter<void>(); // Event to notify when a search is completed.
 
@@ -126,12 +129,15 @@ export class SearchbarComponent implements OnInit {
             return of(null); // Skip API calls.
           }
 
+          this.isLoading = true;
+
           // Launch parallel requests: Internal API + Open Food Facts
           return forkJoin({
             internalResults: this.apiService.sendSearchData({ search: trimmedQuery }),
             offResults: this.apiOFF.getProductInfo(trimmedQuery),
           }).pipe(
             tap(({ internalResults, offResults }) => {
+              this.isLoading = false;
               const combinedResults = [
                 ...(internalResults || []),
                 ...(offResults?.products || []), // Include Open Food Facts products.
@@ -152,6 +158,7 @@ export class SearchbarComponent implements OnInit {
          * @returns {void}
          */
         next: (response: any) => {
+          this.isLoading = false;
           if (response) {
             const internalResults = response.internalResults || [];
             const offResults = response.offResults?.products || [];
@@ -177,7 +184,10 @@ export class SearchbarComponent implements OnInit {
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
           }
         },
-        error: (error) => console.error('❌ Error during search:', error),
+        error: (error) => {
+          this.isLoading = false;
+          console.error('❌ Error during search:', error)
+        },
       });
   }
 
@@ -314,9 +324,11 @@ export class SearchbarComponent implements OnInit {
       currentRoute: this.router.url, // Pass the current route for backend context
     };
 
+    this.isLoading = true;
     // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
+        this.isLoading = false;
         // Navigate to results page with the response
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });

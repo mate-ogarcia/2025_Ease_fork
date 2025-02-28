@@ -45,7 +45,7 @@ export const routes: Routes = [
       import('./contact/contact.component').then((m) => m.ContactComponent),
   },
   {
-    path: 'product-page/:id',
+    path: 'product-page/:id/:source',
     loadComponent: () => import('./prodpage/prodpage.component').then(m => m.ProdpageComponent)
   },
   {
