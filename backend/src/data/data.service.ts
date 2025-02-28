@@ -16,7 +16,6 @@ export class DataService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async onApplicationBootstrap() {
-    console.log("Démarrage de l’importation des produits...");
     await this.insertProductsToDatabase();
   }
 
@@ -36,7 +35,6 @@ export class DataService {
       const fileData = fs.readFileSync(filePath, "utf-8");
       const products = JSON.parse(fileData);
 
-      console.log("Inserting products into Couchbase...");
       for (const product of products) {
         try {
           // Check if product already exists
@@ -54,7 +52,6 @@ export class DataService {
           console.error(`Error inserting product ${product.id}:`, error);
         }
       }
-      console.log("All products have been processed.");
     } catch (error) {
       console.error("Error reading or inserting products:", error.message);
     }
