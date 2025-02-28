@@ -1,19 +1,28 @@
 /**
  * @file display-results.component.ts
- * @brief Component responsible for displaying search results with product images.
- *
- * @details
- * This component retrieves search results from the router's navigation state, fetches corresponding product images
- * from the Unsplash API, and displays them in a formatted view. Clicking on a product navigates the user to its detail page.
- *
- * @component DisplayResultsComponent
+ * @brief Component for displaying product search results with optional images and view modes.
+ * 
+ * This component displays a list or grid of products with support for:
+ * - Loading product images from the Unsplash API if not already provided.
+ * - Switching between list and grid views.
+ * - Navigating to the product details page.
+ * 
  */
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { UnsplashService } from '../../../../services/unsplash.service'; // Adjust path as needed
+import { UnsplashService } from '../../../../services/unsplash.service';
 
+/**
+ * @class DisplayResultsComponent
+ * @brief Handles displaying search results with dynamic images and view mode toggling.
+ * 
+ * This component:
+ * - Loads product search results from the navigation state.
+ * - Fetches images from Unsplash for products lacking images.
+ * - Provides view toggling between list and grid displays.
+ */
 @Component({
   selector: 'app-display-results',
   standalone: true,
@@ -22,89 +31,88 @@ import { UnsplashService } from '../../../../services/unsplash.service'; // Adju
   styleUrls: ['./display-results.component.css'],
 })
 export class DisplayResultsComponent implements OnInit {
-  resultsArray: any[] = []; // Array containing the list of products to display.
+  /** Array of product results to display. */
+  resultsArray: any[] = [];
+
+  /** View mode state: 'list' (default) or 'grid'. */
+  viewMode: 'list' | 'grid' = 'list';
 
   /**
    * @constructor
-   * @param router Angular router used for navigation between components.
-   * @param unsplashService Service for fetching product images from Unsplash API.
+   * @param router Angular router for navigation.
+   * @param unsplashService Service for fetching images from Unsplash.
    */
   constructor(
     private router: Router,
     private unsplashService: UnsplashService
-  ) {}
+  ) { }
 
   /**
-   * @brief Lifecycle hook that initializes the component.
-   *
-   * @details
-   * - Retrieves `resultsArray` from the navigation state.
-   * - For each product, initiates an image search using the Unsplash API.
-   * - Adds a properly formatted image URL to each product for display purposes.
-   *
+   * @brief Initializes the component and loads product results.
+   * 
+   * - Retrieves the product array from the navigation state.
+   * - Fetches images from Unsplash for products without an existing image.
+   * 
    * @returns {void}
    */
   ngOnInit(): void {
     this.resultsArray = history.state.resultsArray || [];
-    console.log('🔹 Results received: (display-results.ts)', this.resultsArray);
 
-    // Fetch an image for each product
     this.resultsArray.forEach(product => {
-      if (product && product.name) {
-        this.unsplashService.searchPhotos(product.name).subscribe(response => {
-          if (response.results && response.results.length > 0) {
-            let finalUrl = '';
-
-            // Primary attempt: use high-quality raw URL with cropping parameters
-            if (response.results[0].urls.raw) {
-              finalUrl = `${response.results[0].urls.raw}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
-            } 
-            // Fallback: use the smaller version if raw is not available
-            else if (response.results[0].urls.small) {
-              finalUrl = response.results[0].urls.small;
+      // Search for images only if not already provided
+      if (!product?.image && product?.name) {
+        this.unsplashService.searchPhotos(product.name).subscribe({
+          next: (response) => {
+            if (response.results?.length > 0) {
+              const urls = response.results[0].urls;
+              product.image = urls.raw
+                ? `${urls.raw}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`
+                : urls.small ?? '';
+            } else {
+              console.warn(`🚫 No image found for ${product.name}`);
             }
-
-            product.imageUrl = finalUrl;
-          } else {
-            console.log(`🔎 No image found for ${product.name}`);
+          },
+          error: (err) => {
+            console.error(`❌ Error fetching image for ${product.name}:`, err);
           }
-        }, error => {
-          console.error("❌ Error fetching image from Unsplash:", error);
         });
       }
     });
   }
 
   /**
-   * @brief Navigates to the detailed view of the selected product.
-   *
-   * @param product The selected product object containing at least an `id` field.
-   * @returns {void}
+   * @brief Sets the display mode for the results view.
+   * 
+   * @param mode The desired view mode: 'list' or 'grid'.
+   */
+  setViewMode(mode: 'list' | 'grid'): void {
+    this.viewMode = mode;
+  }
+
+  /**
+   * @brief Navigates to the product detail page.
+   * 
+   * @param product The product object containing the product ID.
+   * @throws {Error} Logs a warning if the product ID is missing.
    */
   goToProduct(product: any): void {
     if (product?.id) {
-      console.log("🔹 Redirecting to product:", product);
-      this.router.navigate([`/products-alternative/${product.id}`]).then(() => {
-        console.log(`✅ Successfully navigated to /products-alternative/${product.id}`);
-      }).catch(error => {
-        console.error("❌ Navigation error:", error);
-      });
+      this.router.navigate([`/products-alternative/${product.id}/${product.source}`])
+        .then(() => console.log(`✅ Navigated to /products-alternative/${product.id}/${product.source}`))
+        .catch(error => console.error("❌ Navigation error:", error));
     } else {
       console.warn("⚠️ Invalid product or missing ID");
     }
   }
 
   /**
-   * @brief Provides a unique identifier for each product for Angular's trackBy function.
-   *
-   * @details
-   * This method helps Angular optimize DOM rendering by tracking products via their unique IDs.
-   *
-   * @param index The current index of the product in the results array.
-   * @param product The product object.
-   * @returns {any} The unique identifier of the product (product ID).
+   * @brief Tracks products by their ID to optimize rendering in ngFor.
+   * 
+   * @param index The current index of the item.
+   * @param product The product item from the list.
+   * @returns The unique product ID.
    */
   trackByProduct(index: number, product: any): any {
-    return product.id; // Ensure that each product has a unique identifier
+    return product.id;
   }
 }

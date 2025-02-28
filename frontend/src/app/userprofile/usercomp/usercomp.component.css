@@ -6,7 +6,9 @@
     font-family: "Montserrat", sans-serif;
     text-align: center;
   }
-  
+  .app-history{
+    width: 100%;
+  }
   /* Section du profil */
   .profile-header {
     display: flex;
@@ -49,22 +51,37 @@
   .edit-profile-btn {
     background-color: #f5f5f5;
     border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
+    padding: 20px 25px;
+    border-radius: 40px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+  .edit-profile-btn:hover{
+    background-color: #bab9b9;
+    color: black;
+    transition: all 0.3s ease;
   }
   
-  .more-options {
-    background: none;
-    border: none;
-    font-size: 20px;
+  .more-btn{
+    display: flex;  
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    padding: 20px;
+    font-weight: 700;
+
+    background-color: #7e7c7c;
     cursor: pointer;
   }
   
   /* Navigation du profil */
   .profile-nav {
     margin-top: 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    width: 100%;
+
   }
   
   .profile-nav ul {
@@ -73,7 +90,6 @@
     justify-content: center;
     gap: 15px;
     padding: 0;
-    border-bottom: 1px solid #ddd;
     padding-bottom: 10px;
   }
   
@@ -99,10 +115,13 @@
     display: flex;
     justify-content: center;
     margin-top: 20px;
+    width: 100%;
     flex-direction: column;
     align-items: center;
   }
-  
+  .history{
+    width: 100%; 
+  }
   /* Listes Historique et Favoris */
   .history-list,
   .favorites-list {

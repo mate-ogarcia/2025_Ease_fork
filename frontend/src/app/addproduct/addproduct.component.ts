@@ -15,11 +15,11 @@ export class AddproductComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Vérification supplémentaire des permissions
-    this.authService.getUserRole().subscribe(role => {
+    this.authService.getUserRole().subscribe((role: string | null) => {
       if (!role || !['Admin', 'User'].includes(role)) {
         this.router.navigate(['/']); // Redirection si pas le bon rôle
       }

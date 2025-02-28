@@ -29,7 +29,9 @@
           </div>
           <div class="data">
             <h5>Email</h5>
-            <input #emailInput type="email" class="input-log" name="emailLogin" [(ngModel)]="email"
+            <input id="usernameInput" type="text" class="input-log" name="usernameLogin" [(ngModel)]="username">
+            <h5>Email</h5>
+            <input id="emailInput" type="email" class="input-log" name="emailLogin" [(ngModel)]="email"
               (blur)="onFieldTouched('email')">
             <div class="error-wrapper" *ngIf="emailFieldTouched && emailError">
               <i class="fas fa-exclamation-circle"></i>
@@ -45,7 +47,7 @@
           </div>
           <div class="data">
             <h5>Username</h5>
-            <input #usernameInput type="text" class="input-log" name="username" [(ngModel)]="username"
+            <input id="usernameInput" type="text" class="input-log" name="username" [(ngModel)]="username"
               (blur)="onFieldTouched('username')" />
             <div class="error-wrapper" *ngIf="usernameFieldTouched && usernameError">
               <i class="fas fa-exclamation-circle"></i>
@@ -61,7 +63,7 @@
           </div>
           <div class="data">
             <h5>Email</h5>
-            <input #emailInput type="email" class="input-log" name="email" [(ngModel)]="email"
+            <input id="emailInput" type="email" class="input-log" name="email" [(ngModel)]="email"
               (blur)="onFieldTouched('email')" />
             <div class="error-wrapper" *ngIf="emailFieldTouched && emailError">
               <i class="fas fa-exclamation-circle"></i>
@@ -76,7 +78,7 @@
           </div>
           <div class="data">
             <h5>Password</h5>
-            <input #passwordInput [attr.type]="showPassword ? 'text' : 'password'" class="input-log" name="password"
+            <input id="passwordInput" [attr.type]="showPassword ? 'text' : 'password'" class="input-log" name="password"
               [(ngModel)]="password" (blur)="onFieldTouched('password')" />
             <div class="error-wrapper" *ngIf="passwordFieldTouched && passwordError">
               <i class="fas fa-exclamation-circle"></i>

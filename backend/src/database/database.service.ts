@@ -59,6 +59,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ======================== DATABASE INIT AND CONNECTION
+  // ========================================================================
+
   /**
    * @brief Initializes the Couchbase connection when the module starts.
    *
@@ -152,7 +154,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     console.log("🔹 Couchbase connections closed.");
   }
 
+  // ========================================================================
   // ======================== DATABASE GET BUCKETS AND COLLECTION
+  // ========================================================================
+
   /**
    * @brief Retrieves the Couchbase bucket instance for products.
    *
@@ -721,14 +726,19 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // ========================================================================
+  // ======================== SEARCH FUNCTIONS (ALTERNATIVE PRODUCTS, NOT THE SUGGESTIONS)
+  // ========================================================================
+
+  // =========== UTILITY FUNCTIONS
   /**
-   * @brief Retrieves products based on provided filters and/or similarity to a selected product.
-   *
+   * @brief Builds a SQL WHERE clause from an array of conditions.
+   * 
    * @details
    * This function dynamically constructs a N1QL query to fetch products that either:
    * - Match the provided filters (e.g., category, country, price range, brand), OR
    * - Are similar to a selected product (based on category, tags, price range, and brand).
-   *
+   * 
    * ### Query Logic:
    * - **With `productId`:** Searches for products similar to the selected product using:
    *   - Category match
@@ -737,7 +747,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    *   - Same brand association (via `FK_Brands`)
    * - **Without `productId`:** Filters products directly based on provided filters.
    * - **Combined case:** If both `productId` and filters are provided, products must satisfy either similarity conditions or provided filters.
-   *
+   * 
    * @param filters An object containing search filters. Possible fields:
    * - `category` (string): Category to filter products by.
    * - `country` (string): Country of origin to filter products by.
@@ -745,9 +755,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * - `maxPrice` (number): Maximum price for filtering.
    * - `brand` (string, optional): Brand to filter products by.
    * - `productId` (string, optional): ID of a selected product to find similar products.
-   *
+   * 
    * @returns {Promise<any[]>} An array of products matching the filters and/or similarity criteria.
-   *
+   * 
    * @throws {InternalServerErrorException} Thrown if there is an error during query construction or execution.
    */
   async getProductsWithFilters(filters: any): Promise<any[]> {
@@ -759,6 +769,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         throw new Error("❌ Filters are empty");
       }
 
+      const similarToProductConditions: string[] = [];
       const similarToFiltersConditions: string[] = [];
       let queryWithJoin = "";
 
@@ -766,9 +777,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Part 1: Similarity search based on a selected product (if productId is provided)
       // ---------------------
       if (filters.productId) {
-        console.log(
-          `🔎 Searching for products similar to: ${filters.productId}`,
-        );
+        console.log(`🔎 Searching for products similar to: ${filters.productId}`);
 
         const selectedProduct = await this.getProductById(filters.productId);
         if (!selectedProduct) {
@@ -784,36 +793,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
         // Match products with the same category
         if (selectedProduct.category) {
-          subSimilarityConditions.push(
-            `category = '${selectedProduct.category}'`,
-          );
+          subSimilarityConditions.push(`category = '${selectedProduct.category}'`);
         }
 
         // Match products with at least one similar tag
         if (selectedProduct.tags?.length) {
-          subSimilarityConditions.push(
-            `ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`,
-          );
+          subSimilarityConditions.push(`ANY tag IN tags SATISFIES tag IN ${JSON.stringify(selectedProduct.tags)} END`);
         }
 
         // Match products within ±20% price range of the selected product
         if (selectedProduct.price) {
           const minPrice = selectedProduct.price * 0.8;
           const maxPrice = selectedProduct.price * 1.2;
-          subSimilarityConditions.push(
-            `price BETWEEN ${minPrice} AND ${maxPrice}`,
-          );
+          subSimilarityConditions.push(`price BETWEEN ${minPrice} AND ${maxPrice}`);
         }
 
         // Add brand filter directly if product has a FK_Brands
         if (selectedProduct.FK_Brands) {
-          console.log(
-            "🔎 Using brand from selected product:",
-            selectedProduct.FK_Brands,
-          );
-          subSimilarityConditions.push(
-            `FK_Brands = '${selectedProduct.FK_Brands}'`,
-          );
+          console.log("🔎 Using brand from selected product:", selectedProduct.FK_Brands);
+          subSimilarityConditions.push(`FK_Brands = '${selectedProduct.FK_Brands}'`);
         }
 
         console.log("✅ subSimilarityConditions:\n", subSimilarityConditions);
@@ -821,14 +819,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         // ---------------------
         // Part 2: Search based on directly provided filters
         // ---------------------
-        if (filters.category)
-          similarToFiltersConditions.push(`category = '${filters.category}'`);
-        if (filters.country)
-          similarToFiltersConditions.push(`origin = '${filters.country}'`);
+        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
+        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
         if (filters.minPrice && filters.maxPrice) {
-          similarToFiltersConditions.push(
-            `price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`,
-          );
+          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
         } else if (filters.minPrice) {
           similarToFiltersConditions.push(`price >= ${filters.minPrice}`);
         } else if (filters.maxPrice) {
@@ -846,22 +840,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           }
         }
 
-        console.log(
-          "✅ similarToFiltersConditions:\n",
-          similarToFiltersConditions,
-        );
+        console.log("✅ similarToFiltersConditions:\n", similarToFiltersConditions);
 
         // ---------------------
         // Query construction combining similarity and filter conditions
         // ---------------------
-        const similarityClause =
-          subSimilarityConditions.length > 0
-            ? `(${subSimilarityConditions.join(" AND ")})`
-            : "";
-        const filtersClause =
-          similarToFiltersConditions.length > 0
-            ? `(${similarToFiltersConditions.join(" AND ")})`
-            : "";
+        const similarityClause = subSimilarityConditions.length > 0 ? `(${subSimilarityConditions.join(" AND ")})` : "";
+        const filtersClause = similarToFiltersConditions.length > 0 ? `(${similarToFiltersConditions.join(" AND ")})` : "";
 
         if (similarityClause && filtersClause) {
           queryWithJoin = `
@@ -879,25 +864,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
             WHERE ${filtersClause}
           `;
         }
-      } else {
+      }
+      else {
         // ---------------------
         // No productId provided: Apply only the provided filters
         // ---------------------
-        if (filters.category)
-          similarToFiltersConditions.push(`category = '${filters.category}'`);
-        if (filters.country)
-          similarToFiltersConditions.push(`origin = '${filters.country}'`);
+        if (filters.category) similarToFiltersConditions.push(`category = '${filters.category}'`);
+        if (filters.country) similarToFiltersConditions.push(`origin = '${filters.country}'`);
         if (filters.minPrice && filters.maxPrice) {
-          similarToFiltersConditions.push(
-            `price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`,
-          );
+          similarToFiltersConditions.push(`price BETWEEN ${filters.minPrice} AND ${filters.maxPrice}`);
         }
 
         // Add brand filter with subquery
         if (filters.brand) {
-          console.log(
-            `🔎 Adding brand filter with subquery for brand: ${filters.brand}`,
-          );
+          console.log(`🔎 Adding brand filter with subquery for brand: ${filters.brand}`);
 
           const brandSubquery = `
             (SELECT RAW META(b).id FROM \`${brandBucketName}\` b WHERE b.name = '${filters.brand}' LIMIT 1)
@@ -923,19 +903,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       let combinedResults: any[] = [];
 
       if (queryWithJoin) {
-        console.log(
-          `🔹 Executing combined similarity and filters query: ${queryWithJoin}`,
-        );
+        console.log(`🔹 Executing combined similarity and filters query: ${queryWithJoin}`);
         const resultCombined = await this.cluster.query(queryWithJoin);
-        combinedResults = resultCombined.rows.map((row) => row[bucketName]);
+        combinedResults = resultCombined.rows.map(row => row[bucketName]);
       }
       console.log(`📦 Total combined products: ${combinedResults.length}`);
       return combinedResults;
     } catch (error) {
       console.error("❌ Error retrieving filtered products:", error);
-      throw new InternalServerErrorException(
-        "An error occurred while retrieving the filtered products.",
-      );
+      throw new InternalServerErrorException("An error occurred while retrieving the filtered products.");
     }
   }
 

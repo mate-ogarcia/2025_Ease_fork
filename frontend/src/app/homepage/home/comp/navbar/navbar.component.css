@@ -7,6 +7,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px;
+  height: 60px;
+  background: transparent;
+  backdrop-filter: blur(1.5rem);
+  padding: 10px;
   height: 55px;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);

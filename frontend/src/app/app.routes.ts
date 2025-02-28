@@ -22,7 +22,7 @@ export const routes: Routes = [
     data: { roles: ['Admin'] },
   },
   {
-    path: 'products-alternative/:id',
+    path: 'products-alternative/:id/:source',
     loadComponent: () =>
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),
     canActivate: [AuthGuard],

@@ -7,7 +7,8 @@ import { DatabaseModule } from "./database/database.module";
 import { DataModule } from "./data/data.module";
 import { AuthModule } from "./auth/auth.module";
 import { ProductsModule } from "./products/products.module";
-import { AdminModule } from "./admin/admin.module";
+import { OpenFoodFactsModule } from "./apiServices/openFoodFacts/openFoodFacts.module";
+import { CountriesModule } from "./apiServices/countries/countries.module";
 // Utilisation du .env
 import { ConfigModule } from "@nestjs/config";
 import * as Joi from "joi";
@@ -18,6 +19,7 @@ import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
 import { APP_GUARD } from "@nestjs/core";
 import { RolesGuard } from "./auth/guards/roles.guard";
+import { AdminModule } from "./admin/admin.module";
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { RolesGuard } from "./auth/guards/roles.guard";
     AuthModule,
     AdminModule,
     ProductsModule,
+    OpenFoodFactsModule,
+    CountriesModule,
     // Charger les variables d'environnement et valider avec Joi
     ConfigModule.forRoot({
       isGlobal: true, // Rendre les variables disponibles dans tous les modules

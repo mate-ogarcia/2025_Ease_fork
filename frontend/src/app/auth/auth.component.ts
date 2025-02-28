@@ -7,7 +7,7 @@
  * and form submission handling.
  */
 
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef } from '@angular/core';
 import { AuthService } from '../../services/auth/auth.service';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -40,22 +40,22 @@ export class AuthComponent implements AfterViewInit {
   passwordError: string = '';
   errorMessage: string = '';
 
+  // Références aux éléments DOM
+  private usernameInput: HTMLInputElement | null = null;
+  private passwordInput: HTMLInputElement | null = null;
+  private emailInput: HTMLInputElement | null = null;
+
   constructor(
     private authService: AuthService,
     private router: Router,
   ) { }
 
-  @ViewChild('usernameInput', { static: false }) usernameInput!: ElementRef;
-  @ViewChild('passwordInput', { static: false }) passwordInput!: ElementRef;
-  @ViewChild('emailInput', { static: false }) emailInput!: ElementRef;
-
-  /**
-   * @brief Initializes event listeners after the view is rendered.
-   * 
-   * This method ensures input fields have appropriate styling
-   * for focus and blur events.
-   */
   ngAfterViewInit() {
+    // Accéder aux éléments directement via le DOM
+    this.usernameInput = document.querySelector('#usernameInput');
+    this.passwordInput = document.querySelector('#passwordInput');
+    this.emailInput = document.querySelector('#emailInput');
+
     this.setupFocusBlurListeners();
   }
 
@@ -92,9 +92,11 @@ export class AuthComponent implements AfterViewInit {
    * when focused and lose styling when blurred if left empty.
    */
   setupFocusBlurListeners() {
-    const inputs = [this.usernameInput?.nativeElement, this.passwordInput?.nativeElement, this.emailInput?.nativeElement].filter(Boolean);
+    const inputs = [this.usernameInput, this.passwordInput, this.emailInput].filter(Boolean);
 
     inputs.forEach(input => {
+      if (!input) return;
+
       const parentDiv = input.closest('.input-container');
 
       input.addEventListener('focus', () => {
