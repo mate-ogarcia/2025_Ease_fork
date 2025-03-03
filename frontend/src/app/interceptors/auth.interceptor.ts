@@ -7,7 +7,7 @@ import { throwError } from 'rxjs';
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = localStorage.getItem('access_token');
-  
+
   if (token) {
     req = req.clone({
       setHeaders: { Authorization: `Bearer ${token}` },
@@ -29,4 +29,4 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
       return throwError(() => error);
     })
   );
-}; 
+};  

@@ -16,14 +16,17 @@
   gap: 20px;
   background-color: #023436;
 }
-.app-navbar{
+
+.app-navbar {
   width: 100%;
   z-index: 10000;
 }
-.app-searchbar{
+
+.app-searchbar {
   width: 70%;
   height: 50px;
 }
+
 /* Gestion du titre */
 .title {
   display: flex;
@@ -31,8 +34,10 @@
   align-items: center;
   flex-direction: column;
   height: 50%;
-  width: 80%; /* Rend plus adaptable sur petits écrans */
-  max-width: 600px; /* Évite qu'il devienne trop large */
+  width: 80%;
+  /* Rend plus adaptable sur petits écrans */
+  max-width: 600px;
+  /* Évite qu'il devienne trop large */
   gap: 0;
   text-align: center;
   z-index: 1;
@@ -40,19 +45,24 @@
 
 /* Gestion du texte */
 h1 {
-  font-size: 3.6rem; /* Taille fixe pour que le texte reste identique */
+  font-size: 3.6rem;
+  /* Taille fixe pour que le texte reste identique */
   font-weight: 900;
   text-align: center;
   color: #2dd096;
   font-style: 800;
-  line-height: 1.2; /* Ajuste l'espacement entre les lignes */
-  word-wrap: break-word; /* Permet de couper le texte si nécessaire */
-  max-width: 800px; /* Évite que le texte s'étale trop */
+  line-height: 1.2;
+  /* Ajuste l'espacement entre les lignes */
+  word-wrap: break-word;
+  /* Permet de couper le texte si nécessaire */
+  max-width: 800px;
+  /* Évite que le texte s'étale trop */
   margin: 0 auto;
 }
 
 h5 {
-  font-size: 1.5rem; /* Taille plus petite pour le sous-titre */
+  font-size: 1.5rem;
+  /* Taille plus petite pour le sous-titre */
   text-align: center;
   color: #ffffff;
   max-width: 700px;
@@ -66,9 +76,10 @@ h5 {
 /* Réduction de la taille pour les écrans très petits */
 @media (max-width: 768px) {
   h1 {
-    font-size: 2.5em; /* Taille plus adaptée aux mobiles */
+    font-size: 2.5em;
+    /* Taille plus adaptée aux mobiles */
   }
-  
+
   h5 {
     font-size: 1.2em;
   }
@@ -79,11 +90,12 @@ h5 {
   h1 {
     font-size: 2em;
   }
-  
+
   h5 {
     font-size: 1em;
   }
 }
+
 /* Icône engrenage */
 .settings-icon {
   position: fixed;
@@ -101,11 +113,12 @@ h5 {
   cursor: pointer;
   transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 9999; /* Toujours au-dessus */
+  z-index: 9999;
+  /* Toujours au-dessus */
 }
 
 /* Animation rotation au survol */
-.settings-icon.open{
+.settings-icon.open {
   background-color: #1dd27b;
   transform: rotate(180deg);
 }
@@ -113,7 +126,8 @@ h5 {
 /* Menu des paramètres qui s'affiche sous l'engrenage */
 .settings-menu {
   position: fixed;
-  bottom: 75px; /* 🔥 Placé SOUS l'engrenage */
+  bottom: 75px;
+  /* 🔥 Placé SOUS l'engrenage */
   right: 23px;
   width: 50px;
   height: 120px;
@@ -121,7 +135,8 @@ h5 {
   align-items: center;
   justify-content: center;
   padding-bottom: 30px;
-  border-radius: 20px 20px 0 0 ; /* 🔥 Coins arrondis en bas */
+  border-radius: 20px 20px 0 0;
+  /* 🔥 Coins arrondis en bas */
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   opacity: 0;
@@ -130,7 +145,8 @@ h5 {
   flex-direction: column;
   gap: 10px;
   pointer-events: none;
-  z-index: 9998; /* Sous l'engrenage */
+  z-index: 9998;
+  /* Sous l'engrenage */
   transform: translateY(50px);
 
 }
@@ -138,7 +154,7 @@ h5 {
 /* Apparition fluide du menu */
 .settings-menu.open {
   opacity: 1;
-  transform: translateY(20px); 
+  transform: translateY(20px);
   pointer-events: all;
 }
 
@@ -192,14 +208,18 @@ h5 {
 
 /* Style général de la scrollbar */
 ::-webkit-scrollbar {
-  width: 6px; /* Largeur de la scrollbar */
-  height: 6px; /* Hauteur pour le scroll horizontal */
+  width: 6px;
+  /* Largeur de la scrollbar */
+  height: 6px;
+  /* Hauteur pour le scroll horizontal */
 }
 
 /* Style du "thumb" (la partie défilable) */
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.3); /* Couleur grise avec transparence */
-  border-radius: 10px; /* Arrondi */
+  background: rgba(100, 100, 100, 0.3);
+  /* Couleur grise avec transparence */
+  border-radius: 10px;
+  /* Arrondi */
   transition: background 0.3s ease-in-out;
 }
 
@@ -210,7 +230,8 @@ h5 {
 
 /* Couleur de fond de la scrollbar */
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05); /* Très léger gris */
+  background: rgba(0, 0, 0, 0.05);
+  /* Très léger gris */
   border-radius: 10px;
 }
 
@@ -219,4 +240,3 @@ h5 {
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 100, 100, 0.3) rgba(0, 0, 0, 0.05);
 }
-
