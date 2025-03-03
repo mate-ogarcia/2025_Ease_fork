@@ -45,7 +45,6 @@ export class AuthService {
    * @throws {UnauthorizedException} If the user is not found or the password is invalid.
    */
   async validateUser(email: string, password: string): Promise<any> {
-    console.log("🔍 Validating user:", email);
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
@@ -59,7 +58,6 @@ export class AuthService {
       throw new UnauthorizedException("Invalid password");
     }
 
-    console.log("✅ User validated with role:", user.role);
     return {
       id: user.id,
       email: user.email,
@@ -81,8 +79,6 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     try {
       const user = await this.validateUser(loginDto.email, loginDto.password);
-      console.log("🔑 Creating token for user:", user.email);
-
       const payload = {
         email: user.email,
         sub: user.id,
@@ -90,8 +86,6 @@ export class AuthService {
       };
 
       const access_token = this.jwtService.sign(payload);
-      console.log("✅ Token generated successfully");
-
       return {
         access_token,
         user: {

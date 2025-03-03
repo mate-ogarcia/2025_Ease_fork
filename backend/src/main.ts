@@ -6,12 +6,12 @@
  * configures database connections, and starts the server.
  */
 
-// Use of .env
+// Load environment variables
 import * as dotenv from "dotenv";
 import * as path from "path";
 import * as cookieParser from "cookie-parser";
 
-// Load the right .env
+// Load the appropriate .env file based on the environment
 const envFile = path.resolve(
   __dirname,
   "../../.env." + (process.env.NODE_ENV || "development"),
@@ -19,14 +19,21 @@ const envFile = path.resolve(
 dotenv.config({ path: envFile });
 console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
 
-// Other
+// Import NestJS core dependencies
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { DatabaseService } from "./database/database.service";
-// Global logger
+
+// Logging configuration
 import * as winston from "winston";
 import { WinstonModule } from "nest-winston";
 
+/**
+ * @brief Initializes and starts the NestJS application.
+ *
+ * This function sets up logging, enables CORS, initializes the database,
+ * and starts the application server.
+ */
 async function bootstrap() {
   /**
    * Configures the Winston logger for logging messages and errors.
@@ -52,31 +59,35 @@ async function bootstrap() {
     ],
   });
 
-  // Load NestJS application with global logger
+  // Create the NestJS application with the global logger
   const app = await NestFactory.create(AppModule, { logger });
 
-  // Middleware pour parser les cookies
+  // Middleware to parse cookies
   app.use(cookieParser());
 
-  // Middleware pour extraire le token JWT des cookies et l'ajouter à l'en-tête Authorization
+  /**
+   * Middleware to extract the JWT token from cookies and add it
+   * to the Authorization header if not already set.
+   */
   app.use((req, res, next) => {
     const token = req.cookies?.accessToken;
     if (token) {
-      // Vérifier si l'en-tête Authorization existe déjà
       if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
         req.headers.authorization = `Bearer ${token}`;
-        console.log("🔄 Token extrait des cookies et ajouté à l'en-tête Authorization");
-        console.log("🔑 Token ajouté:", token.substring(0, 20) + "...");
+        console.log("🔄 Token extracted from cookies and added to Authorization header");
+        console.log("🔑 Token added:", token.substring(0, 20) + "...");
       } else {
-        console.log("ℹ️ En-tête Authorization déjà présent:", req.headers.authorization.substring(0, 20) + "...");
+        console.log("ℹ️ Authorization header already present:", req.headers.authorization.substring(0, 20) + "...");
       }
     } else {
-      console.log("⚠️ Aucun token trouvé dans les cookies");
+      console.log("⚠️ No token found in cookies");
     }
     next();
   });
 
-  // Retrieves necessary services from the application context.
+  /**
+   * Retrieves necessary services from the application context.
+   */
   const databaseService = app.get(DatabaseService);
 
   try {
@@ -92,14 +103,17 @@ async function bootstrap() {
     logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
   }
 
-  // Configuration CORS avec support des credentials
+  /**
+   * Configures CORS settings with credential support.
+   */
+  // TODO configure the CORS: all requets are accepeted for now
   app.enableCors({
-    origin: true, // Permet toutes les origines ou spécifiez votre domaine frontend
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: true,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization',
+    allowedHeaders: "Content-Type, Accept, Authorization",
   });
-
+  
   /**
    * Starts the NestJS server on the configured port.
    */

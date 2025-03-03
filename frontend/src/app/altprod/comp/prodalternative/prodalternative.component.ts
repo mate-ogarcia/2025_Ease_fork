@@ -6,8 +6,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+// API
 import { ApiService } from '../../../../services/api.service';
-import { UnsplashService } from '../../../../services/unsplash.service';
+import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 
 /**
@@ -33,14 +34,14 @@ export class ProdalternativeComponent implements OnInit {
    * @param route ActivatedRoute to handle route parameters.
    * @param router Router for navigation.
    * @param apiService ApiService to fetch internal alternative products.
-   * @param unsplashService UnsplashService to fetch product images.
+   * @param apiUnsplash UnsplashService to fetch product images.
    * @param apiOpenFoodFacts ApiOpenFoodFacts service to fetch external products.
    */
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private apiService: ApiService,
-    private unsplashService: UnsplashService,
+    private apiUnsplash: APIUnsplash,
     private apiOpenFoodFacts: ApiOpenFoodFacts
   ) { }
 
@@ -136,13 +137,15 @@ export class ProdalternativeComponent implements OnInit {
         this.productDetails = data;
         this.productDetails.forEach(product => {
           if (product?.name) {
-            this.unsplashService.searchPhotos(product.name).subscribe({
+            this.apiUnsplash.searchPhotos(product.name).subscribe({
               next: (response) => {
-                if (response.results?.length > 0) {
-                  product.imageUrl = `${response.results[0].urls.raw}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`;
+                if (response.imageUrl) {
+                  product.image = response.imageUrl;
+                } else {
+                  console.warn(`🚫 No image found for ${product.name}`);
                 }
               },
-              error: (error) => console.error("Error retrieving image from Unsplash:", error)
+              error: (error) => console.error("❌ Error retrieving image from Unsplash API:", error),
             });
           }
         });
