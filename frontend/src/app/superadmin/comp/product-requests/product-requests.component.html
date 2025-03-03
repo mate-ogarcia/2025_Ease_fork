@@ -1,0 +1,93 @@
+<div class="product-requests-container">
+    <!-- Liste des demandes sous forme de cards (colonne de gauche) -->
+    <div class="requests-list">
+      <div class="request-card" 
+           *ngFor="let req of requests" 
+           (click)="selectRequest(req)" 
+           [ngClass]="{'selected': selectedRequest && selectedRequest.id === req.id}">
+        <h4>{{ req.productName }}</h4>
+        <p>{{ req.category }} - {{ req.brand }}</p>
+        <p>Status: {{ req.status }}</p>
+      </div>
+    </div>
+  
+    <!-- Détails de la demande sélectionnée (colonne de droite) -->
+    <div class="request-details" *ngIf="selectedRequest">
+      <div class="details-header">
+        <h3>{{ selectedRequest.productName }}</h3>
+        <button class="edit-btn" *ngIf="!selectedRequest.isEditing" (click)="editRequest()" title="Edit Request">
+          <i class="fas fa-pencil-alt"></i>
+        </button>
+      </div>
+      <div class="details-content">
+        <div class="detail-item">
+          <label>Category:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{ selectedRequest.category }}</span>
+          <input *ngIf="selectedRequest.isEditing" [(ngModel)]="selectedRequest.category" />
+        </div>
+        <div class="detail-item">
+          <label>Brand:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{ selectedRequest.brand }}</span>
+          <input *ngIf="selectedRequest.isEditing" [(ngModel)]="selectedRequest.brand" />
+        </div>
+        <div class="detail-item">
+          <label>Quantity:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{ selectedRequest.quantity }}</span>
+          <input type="number" *ngIf="selectedRequest.isEditing" [(ngModel)]="selectedRequest.quantity" />
+        </div>
+        <div class="detail-item">
+          <label>Status:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{ selectedRequest.status }}</span>
+          <select *ngIf="selectedRequest.isEditing" [(ngModel)]="selectedRequest.status">
+            <option value="En attente">En attente</option>
+            <option value="Validé">Validé</option>
+            <option value="Refusé">Refusé</option>
+          </select>
+        </div>
+        <div class="detail-item">
+          <label>Description:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{ selectedRequest.description }}</span>
+          <textarea *ngIf="selectedRequest.isEditing" [(ngModel)]="selectedRequest.description"></textarea>
+        </div>
+        <div class="detail-item">
+          <label for="tags">Tags:</label>
+          <!-- En mode lecture, affiche uniquement la liste des tags -->
+          <ng-container *ngIf="!selectedRequest.isEditing; else editTags">
+            <div class="tags-input-container">
+              <span class="tag" *ngFor="let tag of selectedRequest.tags">
+                {{ tag }}
+              </span>
+            </div>
+          </ng-container>
+          <!-- En mode édition, permet la suppression et l'ajout -->
+          <ng-template #editTags>
+            <div class="tags-input-container">
+              <span class="tag" *ngFor="let tag of selectedRequest.tags">
+                {{ tag }} <button type="button" (click)="removeTag(tag)">x</button>
+              </span>
+              <input 
+                id="tags"
+                type="text"
+                placeholder="Type a tag and press Enter"
+                [(ngModel)]="tagInput"
+                (keydown)="addTag($event)" />
+            </div>
+          </ng-template>
+        </div>
+        <div class="detail-item">
+          <label>Eco Score:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{ selectedRequest.ecoScore }}</span>
+          <input type="number" *ngIf="selectedRequest.isEditing" [(ngModel)]="selectedRequest.ecoScore" />
+        </div>
+      </div>
+      <div class="details-actions" *ngIf="selectedRequest.isEditing">
+        <button class="save-btn" (click)="saveRequest()" title="Save">
+          <i class="fas fa-check"></i> Save
+        </button>
+        <button class="cancel-btn" (click)="cancelEdit()" title="Cancel">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+  

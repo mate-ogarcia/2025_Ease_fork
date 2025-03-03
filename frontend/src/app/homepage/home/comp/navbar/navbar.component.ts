@@ -2,6 +2,8 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../../services/auth/auth.service';
+import { UsersService } from '../../../../../services/users/users.service';
+
 
 @Component({
   selector: 'app-navbar',
@@ -14,12 +16,18 @@ export class NavbarComponent implements OnInit {
   menuOpen = false;
   isAuthenticated = false;
   showDropdown = false; // Gère le menu sur desktop
-  isMobile = false; // ✅ Détecte si on est en mode responsive
+  isMobile = false; // Détecte si on est en mode responsive
   userRole: string | null = null; // Ajout de la propriété pour stocker le rôle
+  canAddProduct: boolean = false; // Default: user cannot add product
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private usersService: UsersService,
+  ) { }
 
-  ngOnInit() {
+  ngOnInit(): void {
+    // Vérifier si l'utilisateur est authentifié
     this.authService.isAuthenticated().subscribe((status) => {
       this.isAuthenticated = status;
     });
@@ -27,6 +35,8 @@ export class NavbarComponent implements OnInit {
     // Récupérer le rôle de l'utilisateur
     this.authService.getUserRole().subscribe((role) => {
       this.userRole = role;
+      // Vérifier si le rôle permet d'ajouter un produit
+      this.canAddProduct = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin';
     });
 
     this.checkScreenSize(); // Vérifie la taille au chargement
@@ -50,7 +60,7 @@ export class NavbarComponent implements OnInit {
     this.showDropdown = false;
   }
 
-  // ✅ Vérifie la taille de l'écran et met à jour isMobile
+  // Vérifie la taille de l'écran et met à jour isMobile
   @HostListener('window:resize', ['$event'])
   checkScreenSize() {
     this.isMobile = window.innerWidth <= 768;

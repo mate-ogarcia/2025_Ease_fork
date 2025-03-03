@@ -27,7 +27,7 @@ import { DataCacheService } from '../../../../../services/cache/data-cache.servi
 @Component({
   selector: 'app-searchbar',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterLink],
+  imports: [FormsModule, CommonModule],
   templateUrl: './searchbar.component.html',
   styleUrls: ['./searchbar.component.css'],
 })

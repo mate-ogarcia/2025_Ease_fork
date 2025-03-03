@@ -12,9 +12,7 @@
     <button class="filter-btn" title="Add Product" (click)="toggleFilterDropdown()">
       <i class="fa-solid fa-filter"></i>
     </button>
-    <button type="button" class="add-btn" routerLink="/add-product" *ngIf="canAddProduct">
-      <i class="fa-solid fa-square-plus"></i>
-    </button>
+
     <!-- Liste des suggestions -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
       <ul>

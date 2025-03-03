@@ -1,12 +1,29 @@
 <nav class="navbar">
   <div class="logo" routerLink="/home">
-    <img class="easelogo" src="vrailogo.png" alt="">
+    <img class="easelogo" src="vrailogo.png" alt="Logo">
   </div>
 
   <ul [class.active]="menuOpen">
-    <li><a routerLink="/home"><i class="fas fa-home"></i> Accueil</a></li>
-    <li><a routerLink="/category"><i class="fas fa-tags"></i> Catégories</a></li>
-    <li><a routerLink="/contact"><i class="fas fa-envelope"></i> Contact</a></li>
+    <li>
+      <a class="nav-btn" routerLink="/home">
+        <i class="fas fa-home"></i> Accueil
+      </a>
+    </li>
+    <li>
+      <a class="nav-btn" routerLink="/category">
+        <i class="fas fa-tags"></i> Catégories
+      </a>
+    </li>
+    <li>
+      <a class="nav-btn" routerLink="/add-product" *ngIf="canAddProduct">
+        <i class="fas fa-plus"></i> Add Product
+      </a>
+    </li>
+    <li>
+      <a class="nav-btn" routerLink="/contact">
+        <i class="fas fa-envelope"></i> Contact
+      </a>
+    </li>
 
     <li class="user">
       <div class="log-container">
@@ -24,7 +41,7 @@
         </ng-container>
 
         <ng-template #loginTemplate>
-          <a routerLink="/login" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+          <a class="nav-btn login-btn" routerLink="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
         </ng-template>
       </div>
     </li>

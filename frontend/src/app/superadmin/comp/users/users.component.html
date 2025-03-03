@@ -1,0 +1,56 @@
+<!-- Barre de recherche -->
+<div class="search-container">
+    <input
+    class="search-bar"
+      type="text"
+      placeholder="Search users..."
+      [(ngModel)]="searchTerm" />
+</div>
+  
+  <!-- Liste des cartes utilisateurs (filtrée) -->
+  <div class="user-cards">
+    <div class="user-card" *ngFor="let user of filteredUsers" [ngClass]="{'banned': user.role === 'Banned'}">
+      <div class="card-header">
+        <div class="user-info">
+          <div class="avatar-box">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="text">
+            <h3>{{ user.name }}</h3>
+            <p>{{ user.email }}</p>
+            <div class="edit-container">
+              <ng-container *ngIf="user.isEditing; else viewRole">
+                <select class="edit-selector" #roleSelect>
+                  <option value="Admin" [selected]="user.role === 'Admin'">Admin</option>
+                  <option value="User" [selected]="user.role === 'User'">User</option>
+                  <option value="Moderator" [selected]="user.role === 'Moderator'">Moderator</option>
+                  <option value="Banned" [selected]="user.role === 'Banned'">Banned</option>
+                </select>
+                <button class="icon-btn save-btn" (click)="saveRole(user, roleSelect.value)" title="Save">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="icon-btn cancel-btn" (click)="cancelEdit(user)" title="Cancel">
+                  <i class="fas fa-times"></i>
+                </button>
+              </ng-container>
+              <ng-template #viewRole>
+                <span>Role : {{ user.role }}</span>
+                <button class="icon-btn edit-btn" (click)="editRole(user)" title="Edit Role">
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button (click)="deleteUser(user)" title="Delete User">
+          <i class="fas fa-trash"></i> Supprimer
+        </button>
+        <button (click)="banUser(user)" title="Ban/Unban User">
+          <i class="fas fa-ban"></i> {{ user.role === 'Banned' ? 'Unban' : 'Bannir' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  
