@@ -36,6 +36,7 @@
     "@angular/cli": "^19.1.5",
     "@angular/compiler-cli": "^19.1.0",
     "@types/jasmine": "~5.1.0",
+    "@types/node": "^22.13.8",
     "@types/three": "^0.173.0",
     "esbuild": "^0.25.0",
     "jasmine-core": "~5.5.0",

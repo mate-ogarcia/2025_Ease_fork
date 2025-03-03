@@ -4,14 +4,9 @@
     <div *ngIf="isLoading" class="loading-message">
       🔄 Recherche en cours...
     </div>
-    
-    <input
-      type="text"
-      placeholder="Rechercher..."
-      [(ngModel)]="searchQuery"
-      (keydown.enter)="onEnter($event)"
-      (input)="onInputChange($event)"
-    />
+
+    <input type="text" placeholder="Rechercher..." [(ngModel)]="searchQuery" (keydown.enter)="onEnter($event)"
+      (input)="onInputChange($event)" />
 
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" title="Add Product" (click)="toggleFilterDropdown()">
@@ -119,5 +114,5 @@
         </div>
       </div>
     </div>
-  </div>  
+  </div>
 </div>

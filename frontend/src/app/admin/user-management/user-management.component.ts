@@ -22,7 +22,10 @@ export class UserManagementComponent implements OnInit {
   constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
-    this.loadUsers();
+    // Commenté pour éviter de charger les utilisateurs au démarrage
+    // this.loadUsers();
+    console.log('🔄 Chargement des utilisateurs désactivé dans UserManagementComponent');
+    this.isLoading = false;
   }
 
   loadUsers(): void {

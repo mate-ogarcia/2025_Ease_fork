@@ -9,7 +9,8 @@
 }
 
 .grid-btn button {
-  background-color: #ccc; /* Couleur par défaut */
+  background-color: #ccc;
+  /* Couleur par défaut */
   border: none;
   outline: none;
   padding: 10px;
@@ -20,7 +21,8 @@
 }
 
 .grid-btn button.active {
-  background-color: #3498db; /* Couleur pour le bouton actif */
+  background-color: #3498db;
+  /* Couleur pour le bouton actif */
   color: white;
 }
 
@@ -31,7 +33,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  
+
   border-radius: 15px;
   scroll-behavior: smooth;
 }
@@ -42,7 +44,7 @@
 }
 
 /* === Items Container === */
-.item-container {  
+.item-container {
   display: flex;
   width: 100%;
   height: auto;
@@ -69,7 +71,8 @@
   width: 100%;
   justify-content: center;
 }
-.items-list.grid .item{
+
+.items-list.grid .item {
   align-items: center;
 }
 
@@ -129,10 +132,12 @@
     flex-direction: column;
     max-height: none;
   }
+
   .img-container {
     width: 100%;
     height: auto;
   }
+
   .product-image {
     width: 100%;
     height: auto;

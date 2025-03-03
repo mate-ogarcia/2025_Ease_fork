@@ -110,8 +110,6 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  background-color: #011f20;
-  color: white;
   padding: 5px 10px;
   border-radius: 30px;
   transition: all 0.3s ease;

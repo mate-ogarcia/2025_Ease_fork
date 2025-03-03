@@ -171,7 +171,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Create a data loading pipeline with error handling
     const dataSub = timer(1000).pipe(
       // Switch to the user loading stream after the initial delay
-      switchMap(() => this.loadUsers(true)),
+      // Commenté pour éviter de charger les utilisateurs au démarrage
+      // switchMap(() => this.loadUsers(true)),
+      switchMap(() => {
+        console.log('🔄 Chargement des utilisateurs désactivé');
+        // Définir une valeur par défaut pour userCount
+        this.userCount = 0;
+        return of(null);
+      }),
       // Handle any errors in the data loading process
       catchError(error => {
         this.handleError('Erreur lors du chargement des données', error);

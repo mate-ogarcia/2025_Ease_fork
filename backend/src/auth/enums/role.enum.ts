@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file role.enum.ts
  * @brief Enumeration of available user roles.
  *

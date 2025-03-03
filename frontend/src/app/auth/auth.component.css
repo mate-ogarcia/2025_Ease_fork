@@ -90,6 +90,38 @@ form {
   width: 360px;
 }
 
+/* Animation pour la barre d'erreur */
+@keyframes errorPulse {
+  0% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scaleX(1.02);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes validGlow {
+  0% {
+    box-shadow: 0 0 0px rgba(56, 211, 159, 0);
+  }
+
+  50% {
+    box-shadow: 0 2px 4px rgba(56, 211, 159, 0.5);
+  }
+
+  100% {
+    box-shadow: 0 0 0px rgba(56, 211, 159, 0);
+  }
+}
+
 /* Conteneurs des champs */
 .input-container {
   position: relative;
@@ -97,10 +129,10 @@ form {
   grid-template-columns: 7% 93%;
   margin: 25px 0;
   padding: 5px 0;
-  border-bottom: 2px solid #d9d9d9;
-  transition: 0.4s;
+  border-bottom: 2px solid #38d39f;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
   margin-bottom: 35px;
-  /* Espace pour le message d'erreur */
+  animation: validGlow 3s infinite;
 }
 
 .icon-log {
@@ -163,7 +195,33 @@ h5 {
   width: 50%;
 }
 
+/* Styles pour les champs en erreur avec animation améliorée */
+.input-container.error-input {
+  border-bottom: 2px solid #ff4444;
+  animation: errorPulse 2s infinite;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 2px 5px rgba(255, 68, 68, 0.3);
+}
+
+.input-container.error-input:before,
+.input-container.error-input:after {
+  background-color: #ff4444;
+  transition: all 0.3s ease-in-out;
+}
+
+.input-container.error-input.focus:before,
+.input-container.error-input.focus:after {
+  width: 50%;
+  transition: all 0.5s ease-in-out;
+}
+
+/* Couleur de l'icône en focus */
 .input-container.focus>.icon-log i {
+  color: #38d39f;
+}
+
+/* Couleur de l'icône en focus et en erreur */
+.input-container.error-input.focus>.icon-log i {
   color: #38d39f;
 }
 
@@ -228,6 +286,8 @@ a:hover {
   margin: 1rem 0;
   cursor: pointer;
   transition: 0.5s;
+  letter-spacing: 1px;
+  font-weight: 600;
 }
 
 .btn:hover {
@@ -405,6 +465,52 @@ a:hover {
 .header-form img {
   max-width: 100px;
   height: auto;
+}
+
+/* Suppression des styles qui colorent les icônes et le texte en rouge */
+.input-container.error-input .icon-log i {
+  color: #d9d9d9;
+}
+
+.input-container.error-input h5 {
+  color: #999;
+}
+
+/* Style pour les messages d'erreur simplifiés */
+.simple-error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ff4444;
+  font-size: 0.8rem;
+  margin-top: -25px;
+  margin-bottom: 15px;
+  padding-left: 45px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.simple-error i {
+  font-size: 0.9rem;
+}
+
+.dark-mode .simple-error {
+  color: #ff6b6b;
+}
+
+/* Style pour le lien "Forgot Password" */
+.forgot-password {
+  display: block;
+  text-align: right;
+  text-decoration: none;
+  color: #999;
+  font-size: 0.9rem;
+  transition: 0.3s;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.forgot-password:hover {
+  color: #38d39f;
 }
 
 /* Styles des messages d'erreur */
