@@ -9,7 +9,7 @@
  * @module ProductsService
  */
 
-import { Injectable, OnModuleInit, NotFoundException, InternalServerErrorException } from "@nestjs/common";
+import { Injectable, NotFoundException, InternalServerErrorException } from "@nestjs/common";
 // Service
 import { DatabaseService } from "../database/database.service";
 import { OpenFoodFactsService } from "src/apiServices/openFoodFacts/openFoodFacts.service";

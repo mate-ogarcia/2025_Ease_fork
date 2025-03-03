@@ -41,9 +41,11 @@
   color: #13172e;
   margin-left: 8px;
 }
-.fa-solid{
+
+.fa-solid {
   font-size: 15px;
 }
+
 /* Boutons Filtre et Ajout */
 .filter-btn,
 .add-btn {

@@ -6,26 +6,34 @@
  * configures database connections, and starts the server.
  */
 
-// Use of .env
+// Load environment variables
 import * as dotenv from "dotenv";
 import * as path from "path";
+import * as cookieParser from "cookie-parser";
 
-// Load the right .env
+// Load the appropriate .env file based on the environment
 const envFile = path.resolve(
   __dirname,
-  "../../.env." + (process.env.NODE_ENV || "development")
+  "../../.env." + (process.env.NODE_ENV || "development"),
 );
 dotenv.config({ path: envFile });
 console.log(`🚀 Running in ${process.env.NODE_ENV} mode`);
 
-// Other
+// Import NestJS core dependencies
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { DatabaseService } from "./database/database.service";
-// Global logger
+
+// Logging configuration
 import * as winston from "winston";
 import { WinstonModule } from "nest-winston";
 
+/**
+ * @brief Initializes and starts the NestJS application.
+ *
+ * This function sets up logging, enables CORS, initializes the database,
+ * and starts the application server.
+ */
 async function bootstrap() {
   /**
    * Configures the Winston logger for logging messages and errors.
@@ -38,7 +46,7 @@ async function bootstrap() {
           winston.format.colorize(),
           winston.format.printf(({ timestamp, level, message }) => {
             return `[${timestamp}] ${level}: ${message}`;
-          })
+          }),
         ),
       }),
       new winston.transports.File({
@@ -51,9 +59,35 @@ async function bootstrap() {
     ],
   });
 
-  // Load NestJS application with global logger
+  // Create the NestJS application with the global logger
   const app = await NestFactory.create(AppModule, { logger });
-  // Retrieves necessary services from the application context.
+
+  // Middleware to parse cookies
+  app.use(cookieParser());
+
+  /**
+   * Middleware to extract the JWT token from cookies and add it
+   * to the Authorization header if not already set.
+   */
+  app.use((req, res, next) => {
+    const token = req.cookies?.accessToken;
+    if (token) {
+      if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
+        req.headers.authorization = `Bearer ${token}`;
+        console.log("🔄 Token extracted from cookies and added to Authorization header");
+        console.log("🔑 Token added:", token.substring(0, 20) + "...");
+      } else {
+        console.log("ℹ️ Authorization header already present:", req.headers.authorization.substring(0, 20) + "...");
+      }
+    } else {
+      console.log("⚠️ No token found in cookies");
+    }
+    next();
+  });
+
+  /**
+   * Retrieves necessary services from the application context.
+   */
   const databaseService = app.get(DatabaseService);
 
   try {
@@ -63,21 +97,23 @@ async function bootstrap() {
     await databaseService.onModuleInit();
     logger.log(
       "info",
-      `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`
+      `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`,
     );
   } catch (error) {
     logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
   }
 
   /**
-   * Configures CORS to allow requests from the Angular frontend.
+   * Configures CORS settings with credential support.
    */
+  // TODO configure the CORS: all requets are accepeted for now
   app.enableCors({
-    origin: process.env.URL_FRONTEND,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type, Authorization",
+    origin: true,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+    credentials: true,
+    allowedHeaders: "Content-Type, Accept, Authorization",
   });
-
+  
   /**
    * Starts the NestJS server on the configured port.
    */

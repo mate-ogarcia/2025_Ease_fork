@@ -15,15 +15,24 @@ export class NavbarComponent implements OnInit {
   isAuthenticated = false;
   showDropdown = false; // Gère le menu sur desktop
   isMobile = false; // ✅ Détecte si on est en mode responsive
+  userRole: string | null = null; // Ajout de la propriété pour stocker le rôle
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
   ngOnInit() {
     this.authService.isAuthenticated().subscribe((status) => {
       this.isAuthenticated = status;
     });
 
+    // Récupérer le rôle de l'utilisateur
+    this.authService.getUserRole().subscribe((role) => {
+      this.userRole = role;
+    });
+
     this.checkScreenSize(); // Vérifie la taille au chargement
+
+    // Ajouter Font Awesome si ce n'est pas déjà fait
+    this.loadFontAwesome();
   }
 
   toggleMenu() {
@@ -45,5 +54,16 @@ export class NavbarComponent implements OnInit {
   @HostListener('window:resize', ['$event'])
   checkScreenSize() {
     this.isMobile = window.innerWidth <= 768;
+  }
+
+  // Fonction pour charger Font Awesome si nécessaire
+  private loadFontAwesome() {
+    if (!document.getElementById('font-awesome-css')) {
+      const link = document.createElement('link');
+      link.id = 'font-awesome-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+      document.head.appendChild(link);
+    }
   }
 }

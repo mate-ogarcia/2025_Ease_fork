@@ -12,8 +12,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { UnsplashService } from '../../../../services/unsplash.service';
-
+import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 /**
  * @class DisplayResultsComponent
  * @brief Handles displaying search results with dynamic images and view mode toggling.
@@ -31,11 +30,8 @@ import { UnsplashService } from '../../../../services/unsplash.service';
   styleUrls: ['./display-results.component.css'],
 })
 export class DisplayResultsComponent implements OnInit {
-  /** Array of product results to display. */
-  resultsArray: any[] = [];
-
-  /** View mode state: 'list' (default) or 'grid'. */
-  viewMode: 'list' | 'grid' = 'list';
+  resultsArray: any[] = []; // Array of product results to display.
+  viewMode: 'list' | 'grid' = 'list'; // View mode state: 'list' (default) or 'grid'.
 
   /**
    * @constructor
@@ -44,7 +40,7 @@ export class DisplayResultsComponent implements OnInit {
    */
   constructor(
     private router: Router,
-    private unsplashService: UnsplashService
+    private APIUnsplash: APIUnsplash
   ) { }
 
   /**
@@ -59,21 +55,17 @@ export class DisplayResultsComponent implements OnInit {
     this.resultsArray = history.state.resultsArray || [];
 
     this.resultsArray.forEach(product => {
-      // Search for images only if not already provided
       if (!product?.image && product?.name) {
-        this.unsplashService.searchPhotos(product.name).subscribe({
+        this.APIUnsplash.searchPhotos(product.name).subscribe({
           next: (response) => {
-            if (response.results?.length > 0) {
-              const urls = response.results[0].urls;
-              product.image = urls.raw
-                ? `${urls.raw}?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300`
-                : urls.small ?? '';
+            if (response.imageUrl) {
+              product.image = response.imageUrl;
             } else {
-              console.warn(`🚫 No image found for ${product.name}`);
+              console.warn(`🚫 Aucune image trouvée pour ${product.name}`);
             }
           },
           error: (err) => {
-            console.error(`❌ Error fetching image for ${product.name}:`, err);
+            console.error(`❌ Erreur de récupération d'image pour ${product.name}:`, err);
           }
         });
       }
