@@ -178,4 +178,11 @@ export class ApiService {
         })
       );
   }
+
+  // TODO
+  postAddProduct(product: any): Observable<any> {
+    console.log('Product send:', product);
+    return this.http.post(`${this._productsUrl}/add`, product);
+  }
+  
 }

@@ -14,4 +14,5 @@ export interface Product {
     manufacturing_places: string;    // Manufacturing locations of the product.
     image: string;                   // Image URL of the product.
     source: 'Internal' | 'OpenFoodFacts'; // Data source of the product.
+    status: string;
   }

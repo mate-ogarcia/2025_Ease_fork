@@ -119,13 +119,13 @@ export class ProductsController {
   // TODO
     @Post("add")
     async addProduct(@Body() product: any) {
-      console.log('add controller');
-      if (!product || !product.name || !product.brand || !product.category) {
+      console.log('add controller:', product);
+      if (!product) {
         throw new BadRequestException("❌ Missing required product details!");
       }
   
       try {
-        // return await this.productsService.addProduct(product);
+        return await this.productsService.addProduct(product);
       } catch (error) {
         console.error("❌ Error adding product:", error);
         throw new InternalServerErrorException("Error adding product.");

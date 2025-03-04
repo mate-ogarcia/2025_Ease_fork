@@ -14,6 +14,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   InternalServerErrorException,
+  BadRequestException,
 } from "@nestjs/common";
 import {
   Bucket,
@@ -1091,33 +1092,48 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   /**
    * @brief Adds a new product to the Couchbase database.
    *
-   * @details This function checks if a product with the same ID already exists in the database.
-   * If not, it creates a new product document with the provided details and inserts it into the Couchbase database.
-   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the product was created and last updated.
-   *
-   * @param product The product object containing details such as name, brand, category, description, tags, ecoscore, origin, manufacturing places, image, and source.
-   *
-   * @returns A Promise that resolves to the result of the insertion query, or null if the product already exists.
-   *
-   * @throws InternalServerErrorException If there is an error during the insertion process.
-   */
-  /**
-   * @brief Adds a new product to the Couchbase database.
-   *
    * @param product The product object.
    * @returns A Promise that resolves to the result of the insertion.
    */
-  // TODO
+  // TODO: Need to update brandBucket if the brands doesn't exist
   async addProduct(product: any): Promise<any> {
     try {
       if (!this.productsBucket) {
-        throw new Error("❌ Products bucket is not initialized.");
+        throw new InternalServerErrorException("❌ Products bucket is not initialized.");
       }
-
+  
+      // Définition des champs obligatoires
+      const requiredFields = [
+        "name",
+        "brand",
+        "description",
+        "category",
+        "tags",
+        "ecoscore",
+        "origin",
+        "source",
+        "status",
+      ];
+  
+      // Vérification des champs manquants
+      const missingFields = requiredFields.filter((field) => !product[field]);
+  
+      if (missingFields.length > 0) {
+        console.error("❌ Missing required fields:", missingFields);
+        throw new BadRequestException(`Missing required fields: ${missingFields.join(", ")}`);
+      }  
+      // Vérifications spécifiques
+      if (!Array.isArray(product.tags)) {
+        throw new BadRequestException("❌ 'tags' must be an array of strings.");
+      }
+      if (!["Internal", "OpenFoodFacts"].includes(product.source)) {
+        throw new BadRequestException("❌ 'source' must be either 'Internal' or 'OpenFoodFacts'.");
+      }
+  
       // Générer un ID unique si non fourni
-      const generatedId = uuidv4(); // Génère un UUID unique
+      const generatedId = uuidv4();
       product.id = product.id || product.barcode || generatedId;
-
+  
       // Vérifier si un produit avec cet ID existe déjà
       const existingProduct = await this.getProductById(product.id);
       if (existingProduct) {
@@ -1125,34 +1141,98 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         return null;
       }
 
+
+      // Vérifier la marque 
+      const brandId = this.checkBrand(product.brand);
+      /**
+       * if brand exist :
+       *    product.brands <- id
+       * else 
+       *    add the brand to the brand bucket
+       *    and product.brands <- id of the new brand
+       */ 
+
+      if (!brandId) {
+        // La marque n'existe pas, on l'ajoute à la table brands
+        const newBrandId = await this.addBrand(product.brand);
+        product.brand = newBrandId; // Assigner le nouvel ID de la marque au produit
+      } else {
+        // La marque existe déjà, on assigne son ID au produit
+        product.brand = brandId;
+      }
+  
       // Création du produit avec timestamp
       const newProduct = {
         ...product,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-
+  
       // Générer un identifiant unique pour Couchbase
       const productId = `product::${product.id}`;
-
+  
       // Requête d'insertion
       const query = `
-      INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE)
-      VALUES ($productId, $newProduct)
-    `;
-
+        INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE)
+        VALUES ($productId, $newProduct)
+      `;
+  
       // Exécuter la requête
       const result = await this.cluster.query(query, {
         parameters: { productId, newProduct },
       });
-
+  
+      console.log("✅ Product added successfully:", productId);
       return result;
     } catch (error) {
       console.error("❌ Error occurred while adding the product:", error);
-      throw new InternalServerErrorException(
-        "Error occurred while adding the product.",
-      );
+      throw new InternalServerErrorException("Error occurred while adding the product.");
     }
   }
+
+  // Check if the brand exist
+  // TODO
+  async checkBrand(brandName: string): Promise<string | null> {
+    try {
+      // Récupérer toutes les marques existantes
+      const existingBrands = await this.getAllBrandName();
+  
+      // Rechercher si la marque existe déjà
+      const existingBrand = existingBrands.find(brand => brand.name.toLowerCase() === brandName.toLowerCase());
+  
+      // Retourner l'ID si la marque existe, sinon retourner null
+      return existingBrand ? existingBrand.id : null;
+    } catch (error) {
+      console.error("❌ Error checking brand existence:", error);
+      throw new InternalServerErrorException("Error checking brand existence.");
+    }
+  }
+
+  // TODO: Add brand description
+  async addBrand(brandName: string): Promise<string> {
+    try {
+      const brandId = `brand::${uuidv4()}`; // Générer un ID unique pour la marque
+      const newBrand = { id: brandId, name: brandName, createdAt: new Date().toISOString() };
+  
+      const query = `
+        INSERT INTO \`${this.brandBucket.name}\`._default._default (KEY, VALUE)
+        VALUES ($brandId, $newBrand)
+      `;
+  
+      await this.cluster.query(query, {
+        parameters: { brandId, newBrand },
+      });
+  
+      console.log("✅ Brand added successfully:", brandId);
+      return brandId;
+    } catch (error) {
+      console.error("❌ Error adding brand:", error);
+      throw new InternalServerErrorException("Error adding brand.");
+    }
+  }
+  
+
+  // TODO addbrand W/ nw brand is not operational
+  
 
 }
