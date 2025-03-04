@@ -103,4 +103,33 @@ export class ProductsController {
     }
   }
 
+  /**
+   * @brief Adds a new product to the database.
+   * 
+   * This endpoint accepts a POST request containing a product object,
+   * validates the necessary fields, and calls `addProduct` from `ProductsService`
+   * to store the product in the database.
+   * 
+   * @param product The product details sent in the request body.
+   * @returns {Promise<any>} The created product with its assigned ID.
+   * 
+   * @throws {BadRequestException} If required fields are missing.
+   * @throws {InternalServerErrorException} If an error occurs during insertion.
+   */
+  // TODO
+    @Post("add")
+    async addProduct(@Body() product: any) {
+      console.log('add controller');
+      if (!product || !product.name || !product.brand || !product.category) {
+        throw new BadRequestException("❌ Missing required product details!");
+      }
+  
+      try {
+        // return await this.productsService.addProduct(product);
+      } catch (error) {
+        console.error("❌ Error adding product:", error);
+        throw new InternalServerErrorException("Error adding product.");
+      }
+    }
+
 }

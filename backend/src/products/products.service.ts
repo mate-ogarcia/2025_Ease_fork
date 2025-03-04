@@ -96,7 +96,7 @@ export class ProductsService {
             if (!selectedProduct) {
                 throw new NotFoundException(`⚠️ Product with ID "${productId}" not found.`);
             }
-    
+
             // Extract search criteria from the selected product
             const searchCriteria = Object.fromEntries(
                 Object.entries({
@@ -106,22 +106,22 @@ export class ProductsService {
                     brand: selectedProduct.brand
                 }).filter(([_, value]) => value !== null && value !== undefined)
             );
-    
+
             // Retrieve alternative products based on the extracted criteria
             let alternatives = await this.databaseService.getAlternativeProducts(searchCriteria);
-    
+
             // Add productSource field to each alternative
             alternatives = alternatives.map(product => ({
                 ...product,
                 source: 'Internal'
             }));
-    
+
             return alternatives;
         } catch (error) {
             console.error("❌ Error retrieving alternative products:", error);
             throw new InternalServerErrorException("Error retrieving alternative products.");
         }
-    }  
+    }
 
     /**
      * @brief Retrieves the source product and finds alternatives based on business logic.
@@ -252,12 +252,13 @@ export class ProductsService {
         const { category } = criteria;
 
         // TODO: To complete
-       switch (category) {
-        case 'Food':
-            return this.getOFFAlternatives(criteria);
-        default:
-            console.warn('Others API are not yet available');
-            return Promise.resolve([]);       }
+        switch (category) {
+            case 'Food':
+                return this.getOFFAlternatives(criteria);
+            default:
+                console.warn('Others API are not yet available');
+                return Promise.resolve([]);
+        }
     }
 
     /**
@@ -332,6 +333,24 @@ export class ProductsService {
         } catch (error) {
             console.error("❌ Error during filtered product search:", error);
             return [];
+        }
+    }
+
+    // ========================================================================
+    // ======================== ADD PRODUCT
+    // ========================================================================
+    /**
+     * @brief Adds a new product to the database.
+     * @param product The product details to be added.
+     * @returns {Promise<Product>} The newly created product.
+     */
+    // TODO
+    async addProduct(product: any): Promise<any> {
+        try {
+            this.databaseService.addProduct(product);
+        } catch (error) {
+            console.error("❌ Error inserting product:", error);
+            throw new InternalServerErrorException("Error inserting product.");
         }
     }
 }

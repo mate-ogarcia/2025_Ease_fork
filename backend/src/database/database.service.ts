@@ -27,7 +27,10 @@ import * as fs from "fs";
 // HTTP
 import { HttpService } from "@nestjs/axios";
 import { UserRole } from "src/auth/enums/roles.enum";
+// .env
 import * as dotenv from "dotenv";
+// Generate unique ID
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
@@ -58,6 +61,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     this.initializeConnections();
   }
 
+  // ========================================================================
   // ======================== DATABASE INIT AND CONNECTION
   // ========================================================================
 
@@ -273,8 +277,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
     return this.brandCollection;
   }
-
+  // ========================================================================
   // ======================== UTILITY FUNCTIONS
+  // ========================================================================
+
   /**
    * @brief Retrieves all products stored in the database.
    *
@@ -295,42 +301,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error while retrieving data:", error);
       return [];
-    }
-  }
-
-  /**
-   * Executes a Full Text Search (FTS) query on Couchbase Capella.
-   * @param {string} searchQuery - The query string to search for.
-   * @returns {Promise<any[]>} A promise that resolves to an array of search results.
-   * @throws {Error} If the search query execution fails.
-   */
-  async searchQuery(searchQuery: string): Promise<any[]> {
-    const _indexName = process.env.INDEX_NAME;
-    searchQuery = searchQuery.toLowerCase(); // Normalize the query
-
-    try {
-      const prefixQuery = SearchQuery.prefix(searchQuery); // Prefix search
-      const matchQuery = SearchQuery.match(searchQuery); // Natural language search
-
-      // Combine prefix and match queries
-      const combinedQuery = SearchQuery.disjuncts(prefixQuery, matchQuery);
-
-      const searchRes = await this.cluster.searchQuery(
-        _indexName,
-        combinedQuery,
-        {
-          fields: ["name", "description", "category", "tags"],
-          highlight: {
-            style: HighlightStyle.HTML,
-            fields: ["name", "description", "category", "tags"],
-          },
-        },
-      );
-
-      return searchRes.rows;
-    } catch (error) {
-      console.error("❌ Error during FTS query:", error);
-      throw error;
     }
   }
 
@@ -361,90 +331,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error retrieving product:", error);
       throw new Error("Error retrieving product.");
-    }
-  }
-
-  /**
-   * @brief Retrieves alternative products based on search criteria from Couchbase.
-   *
-   * This method constructs a dynamic N1QL query to fetch alternative products from Couchbase
-   * based on the given search criteria. It also integrates an external API call to retrieve
-   * a list of European countries, ensuring that only European-origin products are included.
-   *
-   * @param {any} searchCriteria - Object containing the search filters such as category, tags, and brand.
-   * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
-   * @throws {InternalServerErrorException} If the query execution fails or no search criteria are provided.
-   */
-  async getAlternativeProducts(searchCriteria: any): Promise<any[]> {
-    const bucketName = this.productsBucket.name;
-
-    try {
-      if (Object.keys(searchCriteria).length === 0) {
-        throw new Error("❌ searchCriteria is empty");
-      }
-
-      console.log(`🔹 Searching alternatives with criteria:`, searchCriteria);
-
-      // API call to fetch the list of European countries
-      const response = await this.httpService.axiosRef.get(
-        "https://restcountries.com/v3.1/region/europe",
-      );
-      const europeanCountries = response.data.map(
-        (country) => country.name.common,
-      );
-
-      // Dynamically construct the N1QL query
-      let query = `SELECT * FROM \`${bucketName}\` WHERE `;
-      const queryConditions: string[] = [];
-      const queryParams: any[] = [];
-
-      // Add conditions dynamically based on provided criteria
-      // Exclude the product that was searched (by ID)
-      if (searchCriteria.searchedProductID) {
-        queryConditions.push("id != ?");
-        queryParams.push(searchCriteria.searchedProductID); // Exclude the searched product
-      }
-
-      if (searchCriteria.category) {
-        queryConditions.push("category = ?");
-        queryParams.push(searchCriteria.category);
-      }
-
-      if (searchCriteria.tags && searchCriteria.tags.length > 0) {
-        queryConditions.push("ANY tag IN tags SATISFIES tag IN ? END");
-        queryParams.push(searchCriteria.tags); // Ensures at least one tag matches
-      }
-
-      if (searchCriteria.brand) {
-        queryConditions.push("brand != ?");
-        queryParams.push(searchCriteria.brand); // Exclude the same brand
-      }
-
-      // Filter only European products
-      queryConditions.push("origin IN ?");
-      queryParams.push(europeanCountries); // Verify if the origin is European
-
-      // Finalize the query with conditions
-      query += queryConditions.join(" AND ");
-
-      console.log(
-        `🔹 Executing N1QL query: ${query} with params:`,
-        queryParams,
-      );
-
-      // Execute the query in Couchbase
-      const result = await this.cluster.query(query, {
-        parameters: queryParams,
-      });
-      return result.rows.map((row) => row[bucketName]); // Extract product data
-    } catch (error) {
-      console.error(
-        "❌ Error retrieving alternative products (database.service):",
-        error,
-      );
-      throw new InternalServerErrorException(
-        "Error retrieving alternative products (database.service)",
-      );
     }
   }
 
@@ -488,80 +374,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error retrieving user by email:", error);
       throw new InternalServerErrorException("Error retrieving user by email.");
-    }
-  }
-
-  /**
-   * @brief Adds a new user to the Couchbase database.
-   *
-   * @details This function checks if the user's email already exists in the database. If not, it creates a new user document with the provided username, email, password, and a default role of "User". The document is inserted into the Couchbase database.
-   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the user was created and last updated.
-   *
-   * @param username The username of the new user.
-   * @param email The email of the new user, used as the unique identifier.
-   * @param password The password of the new user, stored as plain text (must be hashed before actual usage).
-   * @param role The role of the new user.
-   *
-   * @returns A Promise that resolves to the result of the insertion query, or null if the user already exists.
-   *
-   * @throws InternalServerErrorException If there is an error during the insertion process.
-   */
-  async addUser(
-    username: string,
-    email: string,
-    password: string,
-    role?: UserRole,
-  ): Promise<any> {
-    try {
-      // Check if the users bucket is initialized
-      if (!this.usersBucket) {
-        throw new Error("❌ Users bucket is not initialized.");
-      }
-
-      // Check if a user with the same email already exists
-      const existingUser = await this.getUserByEmail(email);
-      if (existingUser) {
-        console.warn(`⚠️ A user with the email "${email}" already exists.`);
-        return null; // Return null if the user already exists
-      }
-
-      // Create the user object with the provided information
-      const newUser = {
-        username: username,
-        email: email,
-        password: password,
-        role: role || UserRole.USER, // Use provided role or default to User
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Log the new user object
-      console.log("👤 New user being created:", {
-        ...newUser,
-        password: "****",
-      });
-
-      // Generate a unique identifier for the user document
-      const userId = `user::${email}`; // Unique ID based on the email
-
-      // Construct the N1QL query to insert the user
-      const query = `
-      INSERT INTO \`${this.usersBucket.name}\`._default._default (KEY, VALUE)
-      VALUES ($userId, $newUser)
-    `;
-
-      // Execute the query with the parameters
-      const result = await this.cluster.query(query, {
-        parameters: { userId, newUser },
-      });
-
-      // Return the result of the insertion
-      return result;
-    } catch (error) {
-      console.error("❌ Error occurred while adding the user:", error);
-      throw new InternalServerErrorException(
-        "Error occurred while adding the user.",
-      );
     }
   }
 
@@ -723,6 +535,45 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ========================================================================
+  // ======================== SEARCH FUNCTIONS (SUGGESTIONS)
+  // ========================================================================
+  /**
+   * Executes a Full Text Search (FTS) query on Couchbase Capella.
+   * @param {string} searchQuery - The query string to search for.
+   * @returns {Promise<any[]>} A promise that resolves to an array of search results.
+   * @throws {Error} If the search query execution fails.
+   */
+  async searchQuery(searchQuery: string): Promise<any[]> {
+    const _indexName = process.env.INDEX_NAME;
+    searchQuery = searchQuery.toLowerCase(); // Normalize the query
+
+    try {
+      const prefixQuery = SearchQuery.prefix(searchQuery); // Prefix search
+      const matchQuery = SearchQuery.match(searchQuery); // Natural language search
+
+      // Combine prefix and match queries
+      const combinedQuery = SearchQuery.disjuncts(prefixQuery, matchQuery);
+
+      const searchRes = await this.cluster.searchQuery(
+        _indexName,
+        combinedQuery,
+        {
+          fields: ["name", "description", "category", "tags"],
+          highlight: {
+            style: HighlightStyle.HTML,
+            fields: ["name", "description", "category", "tags"],
+          },
+        },
+      );
+
+      return searchRes.rows;
+    } catch (error) {
+      console.error("❌ Error during FTS query:", error);
+      throw error;
+    }
+  }
+
+  // ========================================================================
   // ======================== SEARCH FUNCTIONS (ALTERNATIVE PRODUCTS, NOT THE SUGGESTIONS)
   // ========================================================================
 
@@ -877,6 +728,90 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         break
     }
     return `SELECT * FROM \`${bucketName}\` WHERE ${whereClause}`;
+  }
+
+  /**
+   * @brief Retrieves alternative products based on search criteria from Couchbase.
+   *
+   * This method constructs a dynamic N1QL query to fetch alternative products from Couchbase
+   * based on the given search criteria. It also integrates an external API call to retrieve
+   * a list of European countries, ensuring that only European-origin products are included.
+   *
+   * @param {any} searchCriteria - Object containing the search filters such as category, tags, and brand.
+   * @returns {Promise<any[]>} A promise resolving with an array of alternative products.
+   * @throws {InternalServerErrorException} If the query execution fails or no search criteria are provided.
+   */
+  async getAlternativeProducts(searchCriteria: any): Promise<any[]> {
+    const bucketName = this.productsBucket.name;
+
+    try {
+      if (Object.keys(searchCriteria).length === 0) {
+        throw new Error("❌ searchCriteria is empty");
+      }
+
+      console.log(`🔹 Searching alternatives with criteria:`, searchCriteria);
+
+      // API call to fetch the list of European countries
+      const response = await this.httpService.axiosRef.get(
+        "https://restcountries.com/v3.1/region/europe",
+      );
+      const europeanCountries = response.data.map(
+        (country) => country.name.common,
+      );
+
+      // Dynamically construct the N1QL query
+      let query = `SELECT * FROM \`${bucketName}\` WHERE `;
+      const queryConditions: string[] = [];
+      const queryParams: any[] = [];
+
+      // Add conditions dynamically based on provided criteria
+      // Exclude the product that was searched (by ID)
+      if (searchCriteria.searchedProductID) {
+        queryConditions.push("id != ?");
+        queryParams.push(searchCriteria.searchedProductID); // Exclude the searched product
+      }
+
+      if (searchCriteria.category) {
+        queryConditions.push("category = ?");
+        queryParams.push(searchCriteria.category);
+      }
+
+      if (searchCriteria.tags && searchCriteria.tags.length > 0) {
+        queryConditions.push("ANY tag IN tags SATISFIES tag IN ? END");
+        queryParams.push(searchCriteria.tags); // Ensures at least one tag matches
+      }
+
+      if (searchCriteria.brand) {
+        queryConditions.push("brand != ?");
+        queryParams.push(searchCriteria.brand); // Exclude the same brand
+      }
+
+      // Filter only European products
+      queryConditions.push("origin IN ?");
+      queryParams.push(europeanCountries); // Verify if the origin is European
+
+      // Finalize the query with conditions
+      query += queryConditions.join(" AND ");
+
+      console.log(
+        `🔹 Executing N1QL query: ${query} with params:`,
+        queryParams,
+      );
+
+      // Execute the query in Couchbase
+      const result = await this.cluster.query(query, {
+        parameters: queryParams,
+      });
+      return result.rows.map((row) => row[bucketName]); // Extract product data
+    } catch (error) {
+      console.error(
+        "❌ Error retrieving alternative products (database.service):",
+        error,
+      );
+      throw new InternalServerErrorException(
+        "Error retrieving alternative products (database.service)",
+      );
+    }
   }
 
   // =========== MAIN FUNCTION
@@ -1075,4 +1010,149 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw error;
     }
   }
+
+  /**
+   * @brief Adds a new user to the Couchbase database.
+   *
+   * @details This function checks if the user's email already exists in the database. If not, it creates a new user document with the provided username, email, password, and a default role of "User". The document is inserted into the Couchbase database.
+   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the user was created and last updated.
+   *
+   * @param username The username of the new user.
+   * @param email The email of the new user, used as the unique identifier.
+   * @param password The password of the new user, stored as plain text (must be hashed before actual usage).
+   * @param role The role of the new user.
+   *
+   * @returns A Promise that resolves to the result of the insertion query, or null if the user already exists.
+   *
+   * @throws InternalServerErrorException If there is an error during the insertion process.
+   */
+  async addUser(
+    username: string,
+    email: string,
+    password: string,
+    role?: UserRole,
+  ): Promise<any> {
+    try {
+      // Check if the users bucket is initialized
+      if (!this.usersBucket) {
+        throw new Error("❌ Users bucket is not initialized.");
+      }
+
+      // Check if a user with the same email already exists
+      const existingUser = await this.getUserByEmail(email);
+      if (existingUser) {
+        console.warn(`⚠️ A user with the email "${email}" already exists.`);
+        return null; // Return null if the user already exists
+      }
+
+      // Create the user object with the provided information
+      const newUser = {
+        username: username,
+        email: email,
+        password: password,
+        role: role || UserRole.USER, // Use provided role or default to User
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Log the new user object
+      console.log("👤 New user being created:", {
+        ...newUser,
+        password: "****",
+      });
+
+      // Generate a unique identifier for the user document
+      const userId = `user::${email}`; // Unique ID based on the email
+
+      // Construct the N1QL query to insert the user
+      const query = `
+      INSERT INTO \`${this.usersBucket.name}\`._default._default (KEY, VALUE)
+      VALUES ($userId, $newUser)
+    `;
+
+      // Execute the query with the parameters
+      const result = await this.cluster.query(query, {
+        parameters: { userId, newUser },
+      });
+
+      // Return the result of the insertion
+      return result;
+    } catch (error) {
+      console.error("❌ Error occurred while adding the user:", error);
+      throw new InternalServerErrorException(
+        "Error occurred while adding the user.",
+      );
+    }
+  }
+
+  // ========================================================================
+  // ======================== PRODUCTS FUNCTIONS
+  // ========================================================================
+  /**
+   * @brief Adds a new product to the Couchbase database.
+   *
+   * @details This function checks if a product with the same ID already exists in the database.
+   * If not, it creates a new product document with the provided details and inserts it into the Couchbase database.
+   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the product was created and last updated.
+   *
+   * @param product The product object containing details such as name, brand, category, description, tags, ecoscore, origin, manufacturing places, image, and source.
+   *
+   * @returns A Promise that resolves to the result of the insertion query, or null if the product already exists.
+   *
+   * @throws InternalServerErrorException If there is an error during the insertion process.
+   */
+  /**
+   * @brief Adds a new product to the Couchbase database.
+   *
+   * @param product The product object.
+   * @returns A Promise that resolves to the result of the insertion.
+   */
+  // TODO
+  async addProduct(product: any): Promise<any> {
+    try {
+      if (!this.productsBucket) {
+        throw new Error("❌ Products bucket is not initialized.");
+      }
+
+      // Générer un ID unique si non fourni
+      const generatedId = uuidv4(); // Génère un UUID unique
+      product.id = product.id || product.barcode || generatedId;
+
+      // Vérifier si un produit avec cet ID existe déjà
+      const existingProduct = await this.getProductById(product.id);
+      if (existingProduct) {
+        console.warn(`⚠️ A product with the ID "${product.id}" already exists.`);
+        return null;
+      }
+
+      // Création du produit avec timestamp
+      const newProduct = {
+        ...product,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Générer un identifiant unique pour Couchbase
+      const productId = `product::${product.id}`;
+
+      // Requête d'insertion
+      const query = `
+      INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE)
+      VALUES ($productId, $newProduct)
+    `;
+
+      // Exécuter la requête
+      const result = await this.cluster.query(query, {
+        parameters: { productId, newProduct },
+      });
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error occurred while adding the product:", error);
+      throw new InternalServerErrorException(
+        "Error occurred while adding the product.",
+      );
+    }
+  }
+
 }
