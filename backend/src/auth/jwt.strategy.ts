@@ -23,7 +23,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
        * @brief Extracts JWT from the request header or cookies.
        * @details Uses the `Authorization` header with a Bearer token or the accessToken cookie.
        */
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        // Essayer d'abord d'extraire le token de l'en-tête Authorization
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        // Si ça échoue, essayer d'extraire le token des cookies
+        (request) => {
+          if (request && request.cookies && request.cookies.accessToken) {
+            console.log("🍪 JWT Strategy - Found token in cookies:", request.cookies.accessToken.substring(0, 20) + "...");
+            return request.cookies.accessToken;
+          }
+          console.log("⚠️ JWT Strategy - No token found in cookies");
+          return null;
+        }
+      ]),
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || "DEFAULT_SECRET",
       passReqToCallback: true,
@@ -42,8 +54,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    */
   async validate(request: Request, payload: any) {
     console.log("🔑 JWT Strategy - Validating payload:", payload);
-    console.log("🔍 JWT Strategy - Request headers:", request.headers);
-    console.log("🔍 JWT Strategy - Request cookies:", request.cookies);
+    console.log("🔍 JWT Strategy - Request path:", request.path);
+    console.log("🔍 JWT Strategy - Request method:", request.method);
 
     try {
       // Vérifier si le payload contient l'email
@@ -59,17 +71,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException("User not found");
       }
 
-      console.log("✅ JWT Strategy - User validated:", {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
-      return {
+      // Créer un objet utilisateur simplifié pour attacher à la requête
+      const userInfo = {
         id: user.id,
         email: user.email,
         role: user.role,
       };
+
+      console.log("✅ JWT Strategy - User validated:", userInfo);
+
+      // Attacher l'utilisateur à la requête manuellement
+      request.user = userInfo;
+
+      // Vérifier que l'utilisateur est bien attaché à la requête
+      console.log("✅ JWT Strategy - User attached to request:", request.user ? "Yes" : "No");
+
+      return userInfo;
     } catch (error) {
       console.error("❌ JWT Strategy - Error during validation:", error.message);
       throw new UnauthorizedException("Authentication failed");

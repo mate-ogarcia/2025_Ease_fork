@@ -26,7 +26,7 @@ import {
 import * as fs from "fs";
 // HTTP
 import { HttpService } from "@nestjs/axios";
-import { UserRole } from "../auth/enums/role.enum";
+import { UserRole } from "../auth/enums/roles.enum";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -457,37 +457,37 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getUserByEmail(email: string): Promise<any> {
     try {
-      // Check if users bucket is initialized
-      if (!this.usersBucket) {
-        throw new Error("❌ Users bucket is not initialized.");
+      if (!this.cluster) {
+        console.error("❌ Cluster not initialized");
+        throw new InternalServerErrorException("Database connection not initialized");
       }
 
-      // Building an N1QL query
+      const bucketName = process.env.USERS_BUCKET || "UsersBDD";
+      console.log(`🔍 Looking for user with email "${email}" in bucket: ${bucketName}`);
+
+      // Requête SQL adaptée à la structure des documents utilisateurs
       const query = `
-        SELECT META(u).id as id, u.*
-        FROM \`${this.usersBucket.name}\`._default._default u 
+        SELECT META(u).id as id, u.* 
+        FROM \`${bucketName}\` u
         WHERE u.email = $email
       `;
 
-      // Executing query with secured settings
+      console.log(`🔍 Executing query: ${query}`);
       const result = await this.cluster.query(query, { parameters: { email } });
 
-      if (result.rows.length === 0) {
+      if (!result || !result.rows || result.rows.length === 0) {
         console.warn(`⚠️ User with email "${email}" not found.`);
         return null;
       }
 
-      // Return the user data with the bucket name as key and include the document ID
-      const userData = result.rows[0];
-      return {
-        [this.usersBucket.name]: {
-          id: userData.id,
-          ...userData,
-        },
-      };
+      console.log(`✅ User found: ${result.rows[0].id}`);
+
+      // Retourner directement l'utilisateur sans l'encapsuler dans un objet avec le nom du bucket
+      return result.rows[0];
     } catch (error) {
-      console.error("❌ Error retrieving user by email:", error);
-      throw new InternalServerErrorException("Error retrieving user by email.");
+      console.error(`❌ Error in getUserByEmail: ${error.message}`);
+      console.error(`❌ Error stack: ${error.stack}`);
+      throw new InternalServerErrorException(`Failed to retrieve user by email: ${error.message}`);
     }
   }
 
@@ -749,7 +749,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * Similarity criteria include:
    * - Category match  
    * - Shared tags  
-   * - Price within ±20% of the selected product’s price  
+   * - Price within ±20% of the selected product's price  
    * - Same brand (FK_Brands)
    *
    * @param productId The ID of the selected product for similarity comparison.
@@ -982,57 +982,55 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getAllUsers(): Promise<any[]> {
     try {
       if (!this.cluster) {
-        console.error("❌ Cluster non initialisé");
-        throw new Error("Cluster non initialisé");
+        console.error("❌ Cluster not initialized");
+        throw new InternalServerErrorException("Database connection not initialized");
       }
 
-      const bucketName = process.env.USER_BUCKET_NAME; // UsersBDD
-      console.log("🔍 Récupération des utilisateurs...");
+      const bucketName = process.env.USERS_BUCKET || "UsersBDD";
+      console.log(`🔍 Fetching users from bucket: ${bucketName}`);
 
-      // Requête modifiée pour récupérer uniquement les documents avec un champ 'role'
+      // Log available collections for debugging
+      try {
+        const collections = await this.getUsersBucket().collections().getAllScopes();
+        console.log(`📚 Available collections in ${bucketName}:`, JSON.stringify(collections, null, 2));
+      } catch (e) {
+        console.warn(`⚠️ Could not fetch collections: ${e.message}`);
+      }
+
+      // Requête SQL simplifiée pour éviter les erreurs de parsing
       const query = `
-        SELECT META(u).id as id, u.* 
+        SELECT META(u).id as id, u.*
         FROM \`${bucketName}\`._default._default u
-        WHERE u.role IS NOT MISSING
+        WHERE u.email IS NOT MISSING
+        ORDER BY u.createdAt DESC
       `;
 
-      console.log("🔍 Exécution:", query);
+      console.log(`🔍 Executing query: ${query}`);
       const result = await this.cluster.query(query);
 
-      if (!result?.rows?.length) {
-        console.log("⚠️ Aucun utilisateur trouvé");
+      if (!result || !result.rows || result.rows.length === 0) {
+        console.log("⚠️ No users found in database");
         return [];
       }
 
-      console.log(`✅ ${result.rows.length} utilisateurs trouvés`);
-      if (result.rows.length > 0) {
-        console.log("👤 Structure du premier utilisateur:", JSON.stringify(result.rows[0], null, 2));
-      }
+      console.log(`✅ Found ${result.rows.length} users`);
+      console.log(`🔍 Raw results sample:`, JSON.stringify(result.rows.slice(0, 1), null, 2));
 
-      // Mapper les résultats pour assurer une structure cohérente
+      // Map results to ensure consistent structure
       const users = result.rows.map((row) => {
-        return {
-          id: row.id || `unknown_${Math.random().toString(36).substring(7)}`,
-          email: row.email || 'unknown',
-          username: row.username || 'unknown',
-          role: row.role || 'user',
-          createdAt: row.createdAt || new Date().toISOString(),
-          updatedAt: row.updatedAt || new Date().toISOString()
-        };
+        // Ensure the user has an id field
+        if (!row.id && row.META) {
+          row.id = row.META.id;
+        }
+        return row;
       });
 
-      console.log(`✅ ${users.length} utilisateurs traités`);
-      if (users.length > 0) {
-        console.log("👤 Premier utilisateur après traitement:", users[0]);
-      }
-
+      console.log(`✅ Processed ${users.length} users`);
       return users;
-
     } catch (error) {
-      console.error("❌ Erreur lors de la récupération des utilisateurs:", error);
-      throw new InternalServerErrorException(
-        `Erreur lors de la récupération des utilisateurs: ${error.message}`
-      );
+      console.error(`❌ Error in getAllUsers: ${error.message}`);
+      console.error(`❌ Error stack: ${error.stack}`);
+      throw new InternalServerErrorException(`Failed to retrieve users: ${error.message}`);
     }
   }
 

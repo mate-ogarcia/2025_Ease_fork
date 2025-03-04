@@ -27,7 +27,6 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
 import { APP_GUARD } from "@nestjs/core";
-import { RolesGuard } from "./auth/guards/roles.guard";
 import { AdminModule } from "./admin/admin.module";
 
 /**
@@ -79,10 +78,6 @@ import { AdminModule } from "./admin/admin.module";
   // Service providers, including global role-based access control.
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
   ],
 })
 export class AppModule implements NestModule {

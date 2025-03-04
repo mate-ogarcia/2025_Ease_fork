@@ -16,9 +16,10 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { UserRole } from "../enums/role.enum";
+import { UserRole } from "../enums/roles.enum";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 
 @Injectable()
@@ -44,43 +45,45 @@ export class RolesGuard implements CanActivate {
     );
 
     if (!requiredRoles || requiredRoles.length === 0) {
+      console.log("✅ RolesGuard - No roles required for this route");
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
+    console.log(`🔍 RolesGuard - Path: ${request.path}`);
+    console.log(`🔍 RolesGuard - Method: ${request.method}`);
+
     const user = request.user;
 
-    console.log("👤 Request user:", user ? {
-      id: user?.id,
-      email: user?.email,
-      role: user?.role,
-    } : "No user found");
-
     if (!user) {
-      console.error("❌ No user found in request");
-      console.error("❌ This may indicate that the JWT strategy did not attach the user to the request");
-      console.error("❌ Make sure the JWT guard is applied before the roles guard");
+      console.error(`❌ RolesGuard - No user found in request for path: ${request.path}`);
+      console.error("❌ RolesGuard - This may indicate that the JWT strategy did not attach the user to the request");
+      console.error("❌ RolesGuard - Make sure the JWT guard is applied before the roles guard");
+
+      const hasAuthHeader = !!request.headers.authorization;
+      const hasCookieToken = request.cookies && request.cookies.accessToken;
+
+      if (hasAuthHeader || hasCookieToken) {
+        console.error("❌ RolesGuard - Token is present but user is not attached to request");
+      }
+
       throw new UnauthorizedException("User not authenticated");
     }
 
-    if (!user.role) {
-      console.error("❌ User without defined role");
-      throw new UnauthorizedException("User role not defined");
-    }
-
-    const hasRequiredRole = requiredRoles.includes(user.role);
-    console.log(`${hasRequiredRole ? "✅" : "❌"} Role verification:`, {
-      userRole: user.role,
-      requiredRoles,
-      hasAccess: hasRequiredRole,
+    console.log(`👤 RolesGuard - Request user:`, {
+      id: user.id,
+      email: user.email,
+      role: user.role
     });
 
+    const hasRequiredRole = requiredRoles.some((role) => user.role === role);
+
     if (!hasRequiredRole) {
-      throw new UnauthorizedException(
-        `Access denied. Required role: ${requiredRoles.join(", ")}`,
-      );
+      console.error(`❌ RolesGuard - User ${user.email} with role ${user.role} does not have required roles: ${requiredRoles.join(", ")}`);
+      throw new ForbiddenException("Insufficient permissions");
     }
 
+    console.log(`✅ RolesGuard - User ${user.email} has required role: ${user.role}`);
     return true;
   }
 }

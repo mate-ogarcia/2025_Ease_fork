@@ -21,7 +21,7 @@ import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { RegisterDto, LoginDto } from "./dto/auth.dto";
 import { Roles } from "./decorators/roles.decorator";
-import { UserRole } from "./enums/role.enum";
+import { UserRole } from "./enums/roles.enum";
 import { RolesGuard } from "./guards/roles.guard";
 
 /**

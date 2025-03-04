@@ -20,15 +20,15 @@ import {
   Patch,
   Delete,
   Param,
-  UseGuards,
   Req,
+  UseGuards,
 } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { UsersService } from "../users/users.service";
-import { UserRole } from "../auth/enums/role.enum";
+import { UserRole } from "../auth/enums/roles.enum";
 
 /**
  * @brief Controller for administrative operations.
@@ -100,34 +100,50 @@ export class AdminController {
    * @returns {Promise<Array>} Array of user objects or empty array on error.
    */
   @Get("users")
-  async getAllUsers(@Req() req) {
-    console.log("🔍 Getting all users from admin controller");
-    console.log("👤 Request user:", req.user ? {
-      id: req.user?.id,
-      email: req.user?.email,
-      role: req.user?.role,
-    } : "No user found");
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getAllUsers(@Req() request: any): Promise<any[]> {
     try {
-      console.log("🔍 Calling usersService.findAll()");
-      const users = await this.usersService.findAll();
-      console.log(`✅ Retrieved ${users.length} users successfully`);
+      console.log(`🔍 Admin Controller - getAllUsers - Path: ${request.path}`);
+      console.log(`🔍 Admin Controller - getAllUsers - Method: ${request.method}`);
+      console.log(`👤 Admin Controller - Request user:`, request.user ? {
+        id: request.user.id,
+        email: request.user.email,
+        role: request.user.role
+      } : "No user found");
 
-      // Log the first user for debugging
-      if (users.length > 0) {
-        console.log("👤 First user example:", JSON.stringify(users[0], null, 2));
-      } else {
-        console.log("⚠️ No users found in database");
+      // Vérifier si l'utilisateur est authentifié et a le rôle Admin
+      if (!request.user || request.user.role !== UserRole.ADMIN) {
+        console.error(`❌ Admin Controller - Unauthorized access attempt to getAllUsers by:`, request.user || "Unknown user");
+        throw new HttpException(
+          {
+            status: HttpStatus.FORBIDDEN,
+            error: "Insufficient permissions to access user data",
+          },
+          HttpStatus.FORBIDDEN
+        );
       }
 
+      console.log(`🔍 Admin Controller - Calling usersService.findAll()`);
+      const users = await this.usersService.findAll();
+
+      if (!users || users.length === 0) {
+        console.warn("⚠️ Admin Controller - No users found");
+        return [];
+      }
+
+      console.log(`✅ Admin Controller - Retrieved ${users.length} users`);
       return users;
     } catch (error) {
-      console.error("❌ Error retrieving users:", error);
-      console.error("Error stack:", error.stack);
+      console.error(`❌ Admin Controller - Error in getAllUsers: ${error.message}`);
+      console.error(`❌ Admin Controller - Error stack: ${error.stack}`);
 
-      // Return empty array but with a 500 status code to indicate error
       throw new HttpException(
-        "Error retrieving users list",
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: `Failed to retrieve users: ${error.message}`,
+          stack: process.env.NODE_ENV === "production" ? undefined : error.stack,
+        },
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
