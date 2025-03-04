@@ -28,8 +28,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { UsersService } from "../users/users.service";
-import { UserRole } from "../auth/enums/role.enum";
-
+import { UserRole } from "src/auth/enums/roles.enum";
 /**
  * @brief Controller for administrative operations.
  * @details This controller is protected by JwtAuthGuard and RolesGuard,

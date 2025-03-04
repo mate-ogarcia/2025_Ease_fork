@@ -26,7 +26,7 @@ import {
 import * as fs from "fs";
 // HTTP
 import { HttpService } from "@nestjs/axios";
-import { UserRole } from "../auth/enums/role.enum";
+import { UserRole } from "src/auth/enums/roles.enum";
 import * as dotenv from "dotenv";
 
 dotenv.config();

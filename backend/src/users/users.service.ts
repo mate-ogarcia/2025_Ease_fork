@@ -12,8 +12,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
-import { UserRole } from "../auth/enums/role.enum";
-
+import { UserRole } from "src/auth/enums/roles.enum";
 /**
  * @brief Service responsible for user management operations.
  * @details This service provides methods for creating, retrieving, updating, and deleting users.
