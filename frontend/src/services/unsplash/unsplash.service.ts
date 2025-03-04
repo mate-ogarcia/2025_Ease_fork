@@ -22,22 +22,22 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class APIUnsplash {
-  /** Base URL for the backend API handling Unsplash requests. */
-  private _unsplash = environment.unsplashAccessKey;
+    /** Base URL for the backend API handling Unsplash requests. */
+    private _unsplash = environment.apiUnsplashUrl;
 
-  /**
-   * @brief Constructor that injects the HttpClient.
-   * @param http HttpClient for making HTTP requests.
-   */
-  constructor(private http: HttpClient) { }
+    /**
+     * @brief Constructor that injects the HttpClient.
+     * @param http HttpClient for making HTTP requests.
+     */
+    constructor(private http: HttpClient) {}
 
-  /**
-   * @brief Searches for photos on Unsplash via the backend.
-   *
-   * @param query The search term used to find images.
-   * @returns An observable containing the image URL or null if not found.
-   */
-  searchPhotos(query: string): Observable<{ imageUrl: string | null }> {
-    return this.http.get<{ imageUrl: string | null }>(`${this._unsplash}/search?query=${query}`);
-  }
+    /**
+     * @brief Searches for photos on Unsplash via the backend.
+     *
+     * @param query The search term used to find images.
+     * @returns An observable containing the image URL or null if not found.
+     */
+    searchPhotos(query: string): Observable<{ imageUrl: string | null }> {
+        return this.http.get<{ imageUrl: string | null }>(`${this._unsplash}/search?query=${query}`);
+    }
 }
