@@ -23,6 +23,7 @@ import {
   connect,
   SearchQuery,
   HighlightStyle,
+  DocumentNotFoundError,
 } from "couchbase";
 import * as fs from "fs";
 // HTTP
@@ -499,7 +500,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * Similarity criteria include:
    * - Category match  
    * - Shared tags  
-   * - Price within ±20% of the selected product’s price  
+   * - Price within ±20% of the selected product's price  
    * - Same brand (FK_Brands)
    *
    * @param productId The ID of the selected product for similarity comparison.
@@ -822,9 +823,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       // Query to fetch all users with a defined role
       const query = `
-        SELECT META(u).id as id, u.* 
+        SELECT META(u).id as id, u.*
         FROM \`${bucketName}\`._default._default u
-        WHERE u.role IS NOT MISSING
+        WHERE u.email IS NOT MISSING
+        ORDER BY u.createdAt DESC
       `;
 
       // Execute the query
@@ -954,15 +956,24 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const query = `
       INSERT INTO \`${this.usersBucket.name}\`._default._default (KEY, VALUE)
       VALUES ($userId, $newUser)
-    `;
+      `;
 
       // Execute the query with the parameters
       const result = await this.cluster.query(query, {
         parameters: { userId, newUser },
       });
 
-      // Return the result of the insertion
-      return result;
+      // Retrieve inserted user for verification
+      const selectQuery = `
+      SELECT * FROM \`${this.usersBucket.name}\`._default._default
+      WHERE email = $email
+      `;
+
+      const selectResult = await this.cluster.query(selectQuery, {
+        parameters: { email },
+      });
+
+      return selectResult.rows[0]._default || null; // Return inserted user
     } catch (error) {
       console.error("❌ Error occurred while adding the user:", error);
       throw new InternalServerErrorException(
@@ -980,39 +991,31 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getUserByEmail(email: string): Promise<any> {
     try {
-      // Check if users bucket is initialized
+      // Ensure that the users bucket is initialized before querying
       if (!this.usersBucket) {
         throw new Error("❌ Users bucket is not initialized.");
       }
 
-      // Building an N1QL query
-      const query = `
-        SELECT META(u).id as id, u.*
-        FROM \`${this.usersBucket.name}\`._default._default u 
-        WHERE u.email = $email
-      `;
+      // Construct the unique document ID for the user based on their email
+      const userId = `user::${email}`;
+      const collection = this.getUsersCollection();
+      const result = await collection.get(userId);
 
-      // Executing query with secured settings
-      const result = await this.cluster.query(query, { parameters: { email } });
-
-      if (result.rows.length === 0) {
+      // Return the user data from the retrieved document
+      return result.content;
+    } catch (error) {
+      // Handle the case where the document is not found
+      if (error instanceof DocumentNotFoundError) {
         console.warn(`⚠️ User with email "${email}" not found.`);
         return null;
       }
-
-      // Return the user data with the bucket name as key and include the document ID
-      const userData = result.rows[0];
-      return {
-        [this.usersBucket.name]: {
-          id: userData.id,
-          ...userData,
-        },
-      };
-    } catch (error) {
       console.error("❌ Error retrieving user by email:", error);
       throw new InternalServerErrorException("Error retrieving user by email.");
     }
   }
+
+
+
 
   // ========================================================================
   // ======================== PRODUCTS FUNCTIONS

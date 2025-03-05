@@ -72,7 +72,6 @@ export class DataCacheService {
       tap(brands => {
         localStorage.setItem('brands', JSON.stringify(brands));
         this.brands$.next(brands.sort());
-        console.log('cachedBrand:', cachedBrands);
       })
     ).subscribe();
   

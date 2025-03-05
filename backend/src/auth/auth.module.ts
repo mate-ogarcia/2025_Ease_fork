@@ -26,13 +26,13 @@ dotenv.config(); // Load environment variables
     UsersModule,
     DatabaseModule,
     PassportModule.register({ defaultStrategy: "jwt" }),
-    JwtModule.register({
-      /**
-       * @brief JWT configuration.
-       * @details Uses a secret key from environment variables, with a fallback to a default value.
-       */
-      secret: process.env.JWT_SECRET || "DEFAULT_SECRET",
-      signOptions: { expiresIn: "1d" },
+    JwtModule.registerAsync({
+      useFactory: async () => ({
+        secret: process.env.JWT_SECRET || "DEFAULT_SECRET",
+        signOptions: {
+          expiresIn: process.env.JWT_EXPIRATION || "1d",
+        },
+      }),
     }),
   ],
   providers: [
@@ -40,12 +40,8 @@ dotenv.config(); // Load environment variables
     JwtStrategy,
     JwtAuthGuard,
     RolesGuard,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
   ],
   controllers: [AuthController],
-  exports: [AuthService, JwtAuthGuard, RolesGuard],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule { }
