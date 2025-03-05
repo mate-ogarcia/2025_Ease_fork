@@ -22,8 +22,6 @@ export class NavbarComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router,
-    private usersService: UsersService,
   ) { }
 
   ngOnInit(): void {
@@ -56,9 +54,11 @@ export class NavbarComponent implements OnInit {
   }
 
   logout() {
-    this.authService.logout();
+    this.authService.logout().subscribe();
     this.showDropdown = false;
   }
+  
+  
 
   // Vérifie la taille de l'écran et met à jour isMobile
   @HostListener('window:resize', ['$event'])

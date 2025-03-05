@@ -38,32 +38,24 @@ export class UsersService {
   async findByEmail(email: string) {
     try {
       // Calls databaseService to retrieve the user
-      const userResponse = await this.databaseService.getUserByEmail(email);
-      if (!userResponse) {
+      const user = await this.databaseService.getUserByEmail(email);
+      if (!user) {
+        console.log(`⚠️ User not found for email: ${email}`);
         throw new NotFoundException("User not found.");
       }
-
-      // Extract user data from the bucket response
-      const bucketName = process.env.USER_BUCKET_NAME;
-      const userData = userResponse[bucketName];
-
-      if (!userData) {
-        throw new NotFoundException("User data not found.");
-      }
-
-      // Return user data directly without bucket structure
+      // Return user data directly
       return {
-        id: userData.id,
-        email: userData.email,
-        username: userData.username,
-        password: userData.password,
-        role: userData.role,
-        createdAt: userData.createdAt,
-        updatedAt: userData.updatedAt,
+        email: user.email,
+        username: user.username,
+        password: user.password,
+        role: user.role,
       };
     } catch (error) {
-      console.error("❌ Error finding user:", error);
-      throw new InternalServerErrorException("Internal server error.");
+      console.error(`❌ Error finding user by email ${email}:`, error.message);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(`Internal server error: ${error.message}`);
     }
   }
 
@@ -81,6 +73,7 @@ export class UsersService {
         user.username,
         user.email,
         user.password,
+        user.role
       );
       return result;
     } catch (error) {
@@ -98,9 +91,12 @@ export class UsersService {
    */
   async findAll(): Promise<any[]> {
     try {
-      return await this.databaseService.getAllUsers();
+      console.log("🔍 UsersService - Retrieving all users");
+      const users = await this.databaseService.getAllUsers();
+      console.log(`✅ UsersService - Retrieved ${users?.length || 0} users`);
+      return users;
     } catch (error) {
-      console.error("❌ Error retrieving all users:", error);
+      console.error("❌ UsersService - Error retrieving all users:", error);
       throw new InternalServerErrorException("Error retrieving users list.");
     }
   }

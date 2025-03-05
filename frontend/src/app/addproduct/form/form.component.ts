@@ -192,4 +192,25 @@ export class FormComponent implements OnInit {
     };
     this.tagInput = '';
   }
+
+  /**
+ * @brief Handles the change event when a brand is selected.
+ * @param event The change event object.
+ */
+onBrandChange(event: Event): void {
+  const selectElement = event.target as HTMLSelectElement;
+  this.selectedBrand = selectElement.value;
+
+  // Check if the user selected "Other" to add a new brand
+  this.isOtherBrand = this.selectedBrand === 'other';
+
+  if (!this.isOtherBrand) {
+    this.product.brand = this.selectedBrand; // Assign the selected brand to the product
+    this.newBrand = ''; // Reset new brand input
+    this.newBrandDescription = ''; // Reset brand description input
+  } else {
+    this.product.brand = ''; // Clear brand field for a new entry
+  }
+}
+
 }

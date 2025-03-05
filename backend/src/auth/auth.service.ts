@@ -58,13 +58,12 @@ export class AuthService {
       throw new UnauthorizedException("Invalid password");
     }
 
+    console.log('user :', user);
+
     return {
-      id: user.id,
       email: user.email,
       username: user.username,
       role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
     };
   }
 
@@ -81,7 +80,6 @@ export class AuthService {
       const user = await this.validateUser(loginDto.email, loginDto.password);
       const payload = {
         email: user.email,
-        sub: user.id,
         role: user.role,
       };
 
@@ -89,7 +87,6 @@ export class AuthService {
       return {
         access_token,
         user: {
-          id: user.id,
           email: user.email,
           role: user.role,
           username: user.username,
@@ -135,12 +132,9 @@ export class AuthService {
         role,
       });
 
-      console.log("✅ User created successfully:", {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
+      console.log('user created:', user);
+      
+      // TODO: correct this
       return {
         id: user.id,
         email: user.email,
