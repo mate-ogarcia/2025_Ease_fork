@@ -73,7 +73,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
       // Créer un objet utilisateur simplifié pour attacher à la requête
       const userInfo = {
-        id: user.id,
         email: user.email,
         role: user.role,
       };

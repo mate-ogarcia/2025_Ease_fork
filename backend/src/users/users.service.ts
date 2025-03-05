@@ -45,13 +45,10 @@ export class UsersService {
       }
       // Return user data directly
       return {
-        id: user.id,
         email: user.email,
         username: user.username,
         password: user.password,
         role: user.role,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
       };
     } catch (error) {
       console.error(`❌ Error finding user by email ${email}:`, error.message);

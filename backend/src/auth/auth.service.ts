@@ -61,12 +61,9 @@ export class AuthService {
     console.log('user :', user);
 
     return {
-      id: user.id,
       email: user.email,
       username: user.username,
       role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
     };
   }
 
