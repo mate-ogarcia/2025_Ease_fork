@@ -45,10 +45,8 @@ export class DatabaseController {
   @Get("categName")
   async getAllCategName() {
     try {
-      console.log("📊 Controller: Retrieving all category names...");
       // Call the database service to retrieve category names
       const categories = await this.databaseService.getAllCategName();
-      console.log(`📊 Controller: Retrieved ${categories.length} categories`);
       return categories;
     } catch (error) {
       // Log the error but return an empty array instead of throwing an exception
@@ -71,11 +69,9 @@ export class DatabaseController {
   @Get("brandName")
   async getAllBrandName() {
     try {
-      console.log("📊 Controller: Retrieving all brand names...");
       // Call the database service to retrieve brand names
-      const brands = await this.databaseService.getAllBrandName();
-      console.log(`📊 Controller: Retrieved ${brands.length} brands`);
-      return brands;
+      const brands = await this.databaseService.getAllBrand();
+      return brands.map(brand => brand.name);
     } catch (error) {
       // Log the error but return an empty array instead of throwing an exception
       console.error("❌ Controller: Error retrieving the brands name:", error);

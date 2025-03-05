@@ -179,10 +179,13 @@ export class ApiService {
       );
   }
 
-  // TODO
+  /**
+   * @brief Sends a new product to the backend for addition.
+   * @param product The product object to be added.
+   * @return Observable<any> Response from the backend.
+   */
   postAddProduct(product: any): Observable<any> {
-    console.log('Product send:', product);
     return this.http.post(`${this._productsUrl}/add`, product);
   }
-  
+
 }

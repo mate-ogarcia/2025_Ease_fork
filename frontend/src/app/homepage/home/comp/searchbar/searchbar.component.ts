@@ -204,6 +204,7 @@ export class SearchbarComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.dataCacheService.loadData();
 
+    // Fetch the data in the localStorage
     forkJoin({
       countries: this.dataCacheService.getCountries().pipe(first()),
       categories: this.dataCacheService.getCategories().pipe(first()),
@@ -211,8 +212,14 @@ export class SearchbarComponent implements OnInit {
     }).subscribe(({ countries, categories, brands }) => {
       this.countries = countries;
       this.categories = categories.map(category => category.name);
-      this.brands = brands.map(brand => brand.name);
+      this.brands = brands;
     });
+
+    // Refresh brands automatically every 5 minutes
+    setInterval(() => {
+      console.log("🔄 Auto-refreshing brands...");
+      this.dataCacheService.refreshBrands();
+    }, 5 * 60 * 1000);
   
 
     // Get the cookie's info

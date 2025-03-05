@@ -116,10 +116,8 @@ export class ProductsController {
    * @throws {BadRequestException} If required fields are missing.
    * @throws {InternalServerErrorException} If an error occurs during insertion.
    */
-  // TODO
     @Post("add")
     async addProduct(@Body() product: any) {
-      console.log('add controller:', product);
       if (!product) {
         throw new BadRequestException("❌ Missing required product details!");
       }

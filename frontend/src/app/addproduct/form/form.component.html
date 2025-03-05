@@ -37,6 +37,8 @@
           <option *ngFor="let b of brands" [value]="b">{{ b }}</option>
           <option value="other">Other (Add New)</option>
         </select>
+        <button (click)="refreshBrands()">🔄 Refresh brand list</button>
+
 
         <!-- Champ de saisie pour une nouvelle marque (affiché seulement si "Other" est sélectionné) -->
         <input
