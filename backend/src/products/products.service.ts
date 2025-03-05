@@ -340,11 +340,10 @@ export class ProductsService {
     // ======================== ADD PRODUCT
     // ========================================================================
     /**
-     * @brief Adds a new product to the database.
-     * @param product The product details to be added.
-     * @returns {Promise<Product>} The newly created product.
+     * @brief Adds a product to the database.
+     * @param product The product object to be inserted.
+     * @return Promise<any> Resolves if successful, throws an error otherwise.
      */
-    // TODO
     async addProduct(product: any): Promise<any> {
         try {
             this.databaseService.addProduct(product);
@@ -353,4 +352,5 @@ export class ProductsService {
             throw new InternalServerErrorException("Error inserting product.");
         }
     }
+
 }

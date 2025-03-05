@@ -14,6 +14,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   InternalServerErrorException,
+  BadRequestException,
 } from "@nestjs/common";
 import {
   Bucket,
@@ -64,7 +65,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // ========================================================================
   // ======================== DATABASE INIT AND CONNECTION
   // ========================================================================
-
   /**
    * @brief Initializes the Couchbase connection when the module starts.
    *
@@ -157,7 +157,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // ========================================================================
   // ======================== DATABASE GET BUCKETS AND COLLECTION
   // ========================================================================
-
   /**
    * @brief Retrieves the Couchbase bucket instance for products.
    *
@@ -278,9 +277,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.brandCollection;
   }
   // ========================================================================
-  // ======================== UTILITY FUNCTIONS
+  // ======================== GET FUNCTIONS
   // ========================================================================
-
   /**
    * @brief Retrieves all products stored in the database.
    *
@@ -331,49 +329,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error("❌ Error retrieving product:", error);
       throw new Error("Error retrieving product.");
-    }
-  }
-
-  /**
-   * @brief Retrieves a user from Couchbase by their email.
-   *
-   * @param {string} email - The email of the user to retrieve.
-   * @returns {Promise<any>} - The user details or `null` if not found.
-   * @throws {InternalServerErrorException} If an error occurs during retrieval.
-   */
-  async getUserByEmail(email: string): Promise<any> {
-    try {
-      // Check if users bucket is initialized
-      if (!this.usersBucket) {
-        throw new Error("❌ Users bucket is not initialized.");
-      }
-
-      // Building an N1QL query
-      const query = `
-        SELECT META(u).id as id, u.*
-        FROM \`${this.usersBucket.name}\`._default._default u 
-        WHERE u.email = $email
-      `;
-
-      // Executing query with secured settings
-      const result = await this.cluster.query(query, { parameters: { email } });
-
-      if (result.rows.length === 0) {
-        console.warn(`⚠️ User with email "${email}" not found.`);
-        return null;
-      }
-
-      // Return the user data with the bucket name as key and include the document ID
-      const userData = result.rows[0];
-      return {
-        [this.usersBucket.name]: {
-          id: userData.id,
-          ...userData,
-        },
-      };
-    } catch (error) {
-      console.error("❌ Error retrieving user by email:", error);
-      throw new InternalServerErrorException("Error retrieving user by email.");
     }
   }
 
@@ -435,62 +390,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       return result.rows;
     } catch (error) {
       console.error("❌ Error retrieving categories:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
-
-      // Return empty array on error to avoid blocking the UI
-      return [];
-    }
-  }
-
-  /**
-   * @function getAllBrandName
-   * @description Retrieves all brand names from the Couchbase database
-   * @details This function executes a N1QL query to fetch all brand names.
-   * It includes enhanced error handling and logging to diagnose connection issues.
-   *
-   * @returns {Promise<any[]>} A promise that resolves with an array of brand names or empty array on error
-   */
-  async getAllBrandName(): Promise<any[]> {
-    try {
-      console.log("🔍 Attempting to retrieve all brand names...");
-
-      if (!this.cluster) {
-        console.log("⚠️ Cluster not initialized, attempting to reconnect...");
-        await this.initializeConnections();
-
-        if (!this.cluster) {
-          console.error("❌ Failed to initialize cluster connection");
-          throw new Error("Failed to initialize cluster connection");
-        }
-      }
-
-      const brandBucketName = process.env.BRAND_BUCKET_NAME;
-      if (!brandBucketName) {
-        console.error("❌ BRAND_BUCKET_NAME not defined in environment variables");
-        throw new Error("BRAND_BUCKET_NAME not defined in environment variables");
-      }
-
-      const query = `
-        SELECT DISTINCT b.name
-        FROM \`${brandBucketName}\`._default._default b
-        ORDER BY b.name`;
-
-      console.log("🔍 Executing query:", query);
-
-      const result = await this.cluster.query(query);
-      console.log(
-        `✅ Brands retrieved successfully: ${result.rows.length} brands found`,
-      );
-
-      // Return empty array if no results
-      if (!result.rows || result.rows.length === 0) {
-        console.log("⚠️ No brands found, returning empty array");
-        return [];
-      }
-
-      return result.rows;
-    } catch (error) {
-      console.error("❌ Error retrieving brands:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
 
       // Return empty array on error to avoid blocking the UI
@@ -906,107 +805,94 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ========================================================================
-  // ======================== USER FUNCTIONS
+  // ======================== USERS FUNCTIONS
   // ========================================================================
-
   /**
-   * @brief Récupère tous les utilisateurs de la base de données.
-   * @returns {Promise<any[]>} Tableau d'utilisateurs.
-   * @throws {InternalServerErrorException} En cas d'erreur.
+   * @brief Retrieves all users from the database.
+   * @returns {Promise<any[]>} Array of users.
+   * @throws {InternalServerErrorException} In case of error.
    */
   async getAllUsers(): Promise<any[]> {
     try {
+      const bucketName = process.env.USER_BUCKET_NAME;
       if (!this.cluster) {
-        console.error("❌ Cluster non initialisé");
-        throw new Error("Cluster non initialisé");
+        console.error("❌ Cluster not initialized");
+        throw new Error("Cluster not initialized");
       }
 
-      const bucketName = process.env.USER_BUCKET_NAME; // UsersBDD
-      console.log("🔍 Récupération des utilisateurs...");
-
-      // Requête modifiée pour récupérer uniquement les documents avec un champ 'role'
+      // Query to fetch all users with a defined role
       const query = `
         SELECT META(u).id as id, u.* 
         FROM \`${bucketName}\`._default._default u
         WHERE u.role IS NOT MISSING
       `;
 
-      console.log("🔍 Exécution:", query);
+      // Execute the query
       const result = await this.cluster.query(query);
 
+      // Check if users exist in the database
       if (!result?.rows?.length) {
-        console.log("⚠️ Aucun utilisateur trouvé");
+        console.log("⚠️ No users found");
         return [];
       }
 
-      console.log(`✅ ${result.rows.length} utilisateurs trouvés`);
-      if (result.rows.length > 0) {
-        console.log("👤 Structure du premier utilisateur:", JSON.stringify(result.rows[0], null, 2));
-      }
-
-      // Mapper les résultats pour assurer une structure cohérente
-      const users = result.rows.map((row) => {
-        return {
-          id: row.id || `unknown_${Math.random().toString(36).substring(7)}`,
-          email: row.email || 'unknown',
-          username: row.username || 'unknown',
-          role: row.role || 'user',
-          createdAt: row.createdAt || new Date().toISOString(),
-          updatedAt: row.updatedAt || new Date().toISOString()
-        };
-      });
-
-      console.log(`✅ ${users.length} utilisateurs traités`);
-      if (users.length > 0) {
-        console.log("👤 Premier utilisateur après traitement:", users[0]);
-      }
-
-      return users;
-
+      // Map the results to a structured format
+      return result.rows.map(row => ({
+        id: row.id || `unknown_${Math.random().toString(36).substring(7)}`,
+        email: row.email || 'unknown',
+        username: row.username || 'unknown',
+        role: row.role || 'user',
+        createdAt: row.createdAt || new Date().toISOString(),
+        updatedAt: row.updatedAt || new Date().toISOString()
+      }));
     } catch (error) {
-      console.error("❌ Erreur lors de la récupération des utilisateurs:", error);
-      throw new InternalServerErrorException(
-        `Erreur lors de la récupération des utilisateurs: ${error.message}`
-      );
+      console.error("❌ Error retrieving users:", error);
+      throw new InternalServerErrorException(`Error retrieving users: ${error.message}`);
     }
   }
 
-  async updateUserRole(id: string, role: UserRole): Promise<any> {
+  /**
+   * @brief Updates a user's role in the database.
+   * @param id User ID.
+   * @param role New role to be assigned.
+   * @returns {Promise<any>} Updated user data.
+   */
+  async updateUserRole(id: string, role: string): Promise<any> {
     try {
       if (!this.cluster) {
         throw new Error("Cluster not initialized");
       }
-
       const query = `
-        UPDATE \`${process.env.USER_BUCKET_NAME}\`
-        SET role = $role
-        WHERE META().id = $id
-        RETURNING META().id as id, email, username, role, createdAt, updatedAt;
-      `;
-
-      const result = await this.cluster.query(query, {
-        parameters: { id, role },
-      });
+      UPDATE \`${process.env.USER_BUCKET_NAME}\`
+      SET role = $role
+      WHERE META().id = $id
+      RETURNING META().id as id, email, username, role, createdAt, updatedAt;
+    `;
+      const result = await this.cluster.query(query, { parameters: { id, role } });
       return result.rows[0];
     } catch (error) {
-      console.error("❌ Error updating user role in database:", error);
+      console.error("❌ Error updating user role:", error);
       throw error;
     }
   }
 
+  /**
+   * @brief Deletes a user from the database.
+   * @param id User ID.
+   * @returns {Promise<boolean>} True if deleted, false otherwise.
+   */
   async deleteUser(id: string): Promise<boolean> {
     try {
       if (!this.usersCollection) {
         throw new Error("Collection not initialized");
       }
-
       await this.usersCollection.remove(id);
       return true;
     } catch (error) {
       if (error.message.includes("document not found")) {
         return false;
       }
-      console.error("❌ Error deleting user from database:", error);
+      console.error("❌ Error deleting user:", error);
       throw error;
     }
   }
@@ -1085,74 +971,244 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * @brief Retrieves a user from Couchbase by their email.
+   *
+   * @param {string} email - The email of the user to retrieve.
+   * @returns {Promise<any>} - The user details or `null` if not found.
+   * @throws {InternalServerErrorException} If an error occurs during retrieval.
+   */
+  async getUserByEmail(email: string): Promise<any> {
+    try {
+      // Check if users bucket is initialized
+      if (!this.usersBucket) {
+        throw new Error("❌ Users bucket is not initialized.");
+      }
+
+      // Building an N1QL query
+      const query = `
+        SELECT META(u).id as id, u.*
+        FROM \`${this.usersBucket.name}\`._default._default u 
+        WHERE u.email = $email
+      `;
+
+      // Executing query with secured settings
+      const result = await this.cluster.query(query, { parameters: { email } });
+
+      if (result.rows.length === 0) {
+        console.warn(`⚠️ User with email "${email}" not found.`);
+        return null;
+      }
+
+      // Return the user data with the bucket name as key and include the document ID
+      const userData = result.rows[0];
+      return {
+        [this.usersBucket.name]: {
+          id: userData.id,
+          ...userData,
+        },
+      };
+    } catch (error) {
+      console.error("❌ Error retrieving user by email:", error);
+      throw new InternalServerErrorException("Error retrieving user by email.");
+    }
+  }
+
   // ========================================================================
   // ======================== PRODUCTS FUNCTIONS
   // ========================================================================
   /**
-   * @brief Adds a new product to the Couchbase database.
-   *
-   * @details This function checks if a product with the same ID already exists in the database.
-   * If not, it creates a new product document with the provided details and inserts it into the Couchbase database.
-   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the product was created and last updated.
-   *
-   * @param product The product object containing details such as name, brand, category, description, tags, ecoscore, origin, manufacturing places, image, and source.
-   *
-   * @returns A Promise that resolves to the result of the insertion query, or null if the product already exists.
-   *
-   * @throws InternalServerErrorException If there is an error during the insertion process.
+   * @brief Adds a new product, handling validation and brand management.
+   * @param payload The product and brand data to be inserted.
+   * @return Promise<any> Resolves if successful, throws an error otherwise.
    */
-  /**
-   * @brief Adds a new product to the Couchbase database.
-   *
-   * @param product The product object.
-   * @returns A Promise that resolves to the result of the insertion.
-   */
-  // TODO
-  async addProduct(product: any): Promise<any> {
+  async addProduct(payload: any): Promise<any> {
     try {
+      // Ensure the products bucket is initialized before proceeding
       if (!this.productsBucket) {
-        throw new Error("❌ Products bucket is not initialized.");
+        throw new InternalServerErrorException("❌ Products bucket is not initialized.");
       }
 
-      // Générer un ID unique si non fourni
-      const generatedId = uuidv4(); // Génère un UUID unique
+      // Extract product and newBrand from the payload
+      const { product, newBrand } = payload;
+
+      // Define the required fields and check for missing ones
+      const requiredFields = ["name", "description", "category", "tags", "ecoscore", "origin", "source", "status"];
+      const missingFields = requiredFields.filter((field) => !product[field]);
+      if (missingFields.length > 0) {
+        console.error("❌ Missing required fields:", missingFields);
+        throw new BadRequestException(`Missing required fields: ${missingFields.join(", ")}`);
+      }
+
+      // Validate that 'tags' is an array
+      if (!Array.isArray(product.tags)) {
+        throw new BadRequestException("❌ 'tags' must be an array of strings.");
+      }
+
+      // Ensure 'source' is either 'Internal' or 'OpenFoodFacts'
+      if (!["Internal", "OpenFoodFacts"].includes(product.source)) {
+        throw new BadRequestException("❌ 'source' must be either 'Internal' or 'OpenFoodFacts'.");
+      }
+
+      // Generate a unique ID if not provided
+      const generatedId = uuidv4();
       product.id = product.id || product.barcode || generatedId;
 
-      // Vérifier si un produit avec cet ID existe déjà
+      // Check if a product with the same ID already exists
       const existingProduct = await this.getProductById(product.id);
       if (existingProduct) {
         console.warn(`⚠️ A product with the ID "${product.id}" already exists.`);
         return null;
       }
 
-      // Création du produit avec timestamp
+      // Handle brand association: Check if the brand exists or add a new one
+      let brandId = null;
+      if (product.brand) {
+        brandId = await this.checkBrand(product.brand);
+      }
+      if (!brandId && newBrand) {
+        brandId = await this.addBrand(newBrand.name, newBrand.description);
+      }
+      product.FK_Brands = brandId || null;
+      delete product.brand; // Remove the brand field as it's no longer needed
+
+      // Create a new product object with timestamps
       const newProduct = {
         ...product,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
-      // Générer un identifiant unique pour Couchbase
+      // Define the document key for the product
       const productId = `product::${product.id}`;
 
-      // Requête d'insertion
-      const query = `
-      INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE)
-      VALUES ($productId, $newProduct)
-    `;
+      // Construct the N1QL query to insert the new product
+      const query = `INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE) VALUES ($productId, $newProduct)`;
 
-      // Exécuter la requête
-      const result = await this.cluster.query(query, {
-        parameters: { productId, newProduct },
-      });
+      // Execute the query to insert the product into the database
+      const result = await this.cluster.query(query, { parameters: { productId, newProduct } });
 
+      // Return the result of the operation
       return result;
     } catch (error) {
+      // Handle errors gracefully
       console.error("❌ Error occurred while adding the product:", error);
-      throw new InternalServerErrorException(
-        "Error occurred while adding the product.",
-      );
+      throw new InternalServerErrorException("Error occurred while adding the product.");
     }
   }
 
+  // ========================================================================
+  // ======================== BRANDS FUNCTIONS
+  // ========================================================================
+  /**
+   * @brief Checks if a brand exists in the database.
+   * @param brandName The name of the brand to check.
+   * @return Promise<string | null> Returns the brand ID if found, otherwise null.
+   */
+  async checkBrand(brandName: string): Promise<string | null> {
+    try {
+      // Retrieve all existing brands from the database
+      const existingBrands = await this.getAllBrand();
+
+      // Find a brand that matches the given name (case insensitive)
+      const existingBrand = existingBrands.find(
+        brand => brand.name.toLowerCase() === brandName.toLowerCase()
+      );
+
+      // Return the brand ID if found, otherwise return null
+      return existingBrand ? existingBrand.id : null;
+    } catch (error) {
+      // Log the error for debugging
+      console.error("❌ Error checking brand existence:", error);
+
+      // Throw an internal server error exception
+      throw new InternalServerErrorException("Error checking brand existence.");
+    }
+  }
+
+  /**
+   * @brief Adds a new brand to the database.
+   * @param brandName The name of the new brand.
+   * @param brandDescription The description of the new brand.
+   * @return Promise<string> Returns the generated brand ID.
+   */
+  async addBrand(brandName: string, brandDescription: string): Promise<string> {
+    try {
+      // Generate a unique brand ID using UUID
+      const brandId = `brand::${uuidv4()}`;
+
+      // Construct the brand object with provided details
+      const newBrand = {
+        id: brandId,
+        name: brandName,
+        description: brandDescription || "",  // Use empty string if no description is provided
+        status: 'AddedByUser',                // Default status for newly added brands
+        createdAt: new Date().toISOString()   // Store the creation timestamp
+      };
+
+      // Define the N1QL query to insert the brand into the database
+      const query =
+        `INSERT INTO \`${this.brandBucket.name}\`._default._default (KEY, VALUE) 
+      VALUES ($brandId, $newBrand)`;
+
+      // Execute the query with the given parameters
+      await this.cluster.query(query, { parameters: { brandId, newBrand } });
+
+      // Return the newly created brand's ID
+      return brandId;
+    } catch (error) {
+      // Log the error details for debugging
+      console.error("❌ Error adding brand:", error);
+
+      // Throw an internal server error exception
+      throw new InternalServerErrorException("Error adding brand.");
+    }
+  }
+
+  /**
+   * @brief Retrieves all available brands.
+   * @return Promise<{ id: string; name: string }[]> List of brands.
+   */
+  async getAllBrand(): Promise<{ id: string; name: string }[]> {
+    try {
+      // Check if the database cluster is initialized
+      if (!this.cluster) {
+        console.log("⚠️ Cluster not initialized, attempting to reconnect...");
+        await this.initializeConnections();
+        if (!this.cluster) {
+          console.error("❌ Failed to initialize cluster connection");
+          throw new Error("Failed to initialize cluster connection");
+        }
+      }
+
+      // Retrieve the brand bucket name from environment variables
+      const brandBucketName = process.env.BRAND_BUCKET_NAME;
+      if (!brandBucketName) {
+        console.error("❌ BRAND_BUCKET_NAME not defined in environment variables");
+        throw new Error("BRAND_BUCKET_NAME not defined in environment variables");
+      }
+
+      // Define the query to fetch brand data from the database
+      const query = `SELECT META(b).id AS id, b.name AS name FROM \`${brandBucketName}\`._default._default b ORDER BY b.name`;
+
+      // Execute the query
+      const result = await this.cluster.query(query);
+
+      // Check if the query returned any rows, if not, return an empty array
+      if (!result.rows || result.rows.length === 0) {
+        console.log("⚠️ No brands found, returning empty array");
+        return [];
+      }
+
+      // Map the retrieved rows to an array of objects containing brand IDs and names
+      return result.rows.map(row => ({ id: row.id, name: row.name }));
+    } catch (error) {
+      // Log the error details for debugging
+      console.error("❌ Error retrieving brands:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+
+      // Return an empty array in case of an error to avoid breaking the application
+      return [];
+    }
+  }
 }

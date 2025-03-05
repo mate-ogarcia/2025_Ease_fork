@@ -16,15 +16,12 @@ import { ApiService } from '../api.service';
 @Injectable({
   providedIn: 'root', // Ensures the service is a singleton
 })
-export class DataCacheService {
-  //  BehaviorSubject<T> : Allows components to access the latest value at any time.
-  private countries$ = new ReplaySubject<string[]>(1);
-  private categories$ = new ReplaySubject<any[]>(1);
-  private brands$ = new ReplaySubject<any[]>(1);
-  
-
-  private isLoaded = false; // Flag to prevent redundant data loading
-  private apiCountriesUrl = environment.apiCountrieUrl;     // Backend API endpoint for fetching European countries
+export class DataCacheService {  
+  private countries$ = new ReplaySubject<string[]>(1);  // Subject holding the list of European countries.
+  private categories$ = new ReplaySubject<any[]>(1);    // Subject holding the list of product categories.
+  private brands$ = new ReplaySubject<any[]>(1);        // Subject holding the list of brands.
+  private isLoaded = false;                             // Flag to prevent redundant data loading.
+  private apiCountriesUrl = environment.apiCountrieUrl; // Backend URL
 
   /**
    * @brief Constructor initializes the HTTP client and API service.
@@ -52,27 +49,44 @@ export class DataCacheService {
     const cachedCategories = localStorage.getItem('categories');
     const cachedBrands = localStorage.getItem('brands');
   
-    if (cachedCountries && cachedCategories && cachedBrands) {
+    if (cachedCountries && cachedCategories) {
       this.countries$.next(JSON.parse(cachedCountries));
       this.categories$.next(JSON.parse(cachedCategories));
-      this.brands$.next(JSON.parse(cachedBrands));
-      return;
     }
-  
+    // Fetch European countries
     this.http.get<string[]>(this.apiCountriesUrl).pipe(
       tap(countries => {
         localStorage.setItem('countries', JSON.stringify(countries));
         this.countries$.next(countries);
       })
     ).subscribe();
-  
+    // Fetch all the category name in the DB
     this.apiService.getAllCategories().pipe(
       tap(categories => {
         localStorage.setItem('categories', JSON.stringify(categories));
         this.categories$.next(categories.sort());
       })
     ).subscribe();
+    // Fetch all the brand name in the DB
+    this.apiService.getAllBrands().pipe(
+      tap(brands => {
+        localStorage.setItem('brands', JSON.stringify(brands));
+        this.brands$.next(brands.sort());
+        console.log('cachedBrand:', cachedBrands);
+      })
+    ).subscribe();
   
+    if (cachedBrands) {
+      this.brands$.next(JSON.parse(cachedBrands));
+    }
+    this.refreshBrands();
+  }
+  
+  /**
+   * @brief Refreshes the brand list on demand.
+   * @note This function is useful if the brand data changes frequently.
+   */
+  refreshBrands(): void {
     this.apiService.getAllBrands().pipe(
       tap(brands => {
         localStorage.setItem('brands', JSON.stringify(brands));
@@ -80,7 +94,7 @@ export class DataCacheService {
       })
     ).subscribe();
   }
-  
+
   /**
    * @brief Returns the cached list of European countries.
    * @return Observable<string[]> List of European countries.
@@ -115,6 +129,4 @@ export class DataCacheService {
       map((countries: string[]) => countries.includes(origin))
     );
   }
-  
-  
 }

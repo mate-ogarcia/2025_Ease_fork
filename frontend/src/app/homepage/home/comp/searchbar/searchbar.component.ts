@@ -16,15 +16,13 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subject, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first } from 'rxjs/operators';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 // API
 import { ApiService } from '../../../../../services/api.service';
 import { UsersService } from '../../../../../services/users/users.service';
 import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
 // Cache API
 import { DataCacheService } from '../../../../../services/cache/data-cache.service';
-// Model
-import { Product } from '../../../../models/product.model';
 
 @Component({
   selector: 'app-searchbar',
@@ -104,7 +102,9 @@ export class SearchbarComponent implements OnInit {
    * @param router Angular router for navigation.
    * @param usersService Service for handling user information.
    * @param apiOFF Service to interact with the Open Food Facts API.
-   */
+   * @param dataCacheService Service to gather data from the localStorage
+ 
+  */
   constructor(
     private apiService: ApiService,
     private router: Router,
@@ -202,8 +202,9 @@ export class SearchbarComponent implements OnInit {
    * @details Fetches authentication status, countries, categories, and brands
    */
   async ngOnInit(): Promise<void> {
-    this.dataCacheService.loadData(); // Assure-toi que les données sont chargées
+    this.dataCacheService.loadData();
 
+    // Fetch the data in the localStorage
     forkJoin({
       countries: this.dataCacheService.getCountries().pipe(first()),
       categories: this.dataCacheService.getCategories().pipe(first()),
@@ -211,8 +212,14 @@ export class SearchbarComponent implements OnInit {
     }).subscribe(({ countries, categories, brands }) => {
       this.countries = countries;
       this.categories = categories.map(category => category.name);
-      this.brands = brands.map(brand => brand.name);
+      this.brands = brands;
     });
+
+    // Refresh brands automatically every 5 minutes
+    setInterval(() => {
+      console.log("🔄 Auto-refreshing brands...");
+      this.dataCacheService.refreshBrands();
+    }, 5 * 60 * 1000);
   
 
     // Get the cookie's info
