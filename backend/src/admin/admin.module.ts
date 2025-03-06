@@ -5,6 +5,7 @@ import { UsersModule } from "../users/users.module";
 import { AuthModule } from "../auth/auth.module";
 import { APP_GUARD } from "@nestjs/core";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { AdminService } from "./admin.service";
 
 @Module({
   imports: [
@@ -13,5 +14,6 @@ import { RolesGuard } from "../auth/guards/roles.guard";
     DatabaseModule,
   ],
   controllers: [AdminController],
+  providers: [AdminService],
 })
 export class AdminModule { }

@@ -1214,4 +1214,62 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       return [];
     }
   }
+
+  // ========================================================================
+  // ======================== REQUESTS FUNCTIONS (FOR ADMIN MANAGEMENT)
+  // ========================================================================
+  /**
+   * @brief Retrieves product requests with associated brand names.
+   * 
+   * This function fetches product data from the products bucket and associates 
+   * them with their respective brands from the brands bucket using a LEFT JOIN.
+   * Only products with specific statuses ("add-product", "edit-product", "delete-product") 
+   * are retrieved.
+   * 
+   * @return {Promise<any[]>} - A promise that resolves to an array of product requests.
+   * @throws {InternalServerErrorException} - If an error occurs during retrieval.
+   */
+  async getRequests(): Promise<any[]> {
+    try {
+      const productBucket = this.productsBucket.name;
+      const brandBucket = this.brandBucket.name;
+
+      // Ensure bucket names are properly defined
+      if (!productBucket || !brandBucket) {
+        console.error("❌ Bucket names are not defined in environment variables");
+        throw new Error("Bucket names are not defined");
+      }
+
+      // N1QL query to fetch product requests with associated brands.
+      const query = `
+          SELECT 
+              META(p).id AS id,  /**< Retrieve document ID as 'id' */
+              p.*,               /**< Retrieve all product properties */
+              b.name AS brandName /**< Retrieve brand name from associated brand */
+          FROM \`${productBucket}\`._default._default p
+          LEFT JOIN \`${brandBucket}\`._default._default b
+          ON p.FK_Brands = META(b).id
+          WHERE p.status IN ["add-product", "edit-product", "delete-product"]
+      `;
+
+      // Execute the query
+      const result = await this.cluster.query(query);
+
+      // Handle cases where no matching products are found
+      if (!result.rows || result.rows.length === 0) {
+        console.log("⚠️ No products found matching the specified statuses.");
+        return [];
+      }
+
+      // Reformats the result to include the brand name.
+      return result.rows.map(row => ({
+        ...row,
+        FK_Brands: row.brandName || "Unknown Brand", // Replace FK_Brands with brandName
+      }));
+    } catch (error) {
+      console.error('❌ Error retrieving products with brands:', error);
+      throw new InternalServerErrorException('Unable to retrieve product requests with brands');
+    }
+  }
+
 }
