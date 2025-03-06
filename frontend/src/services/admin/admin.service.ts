@@ -1,199 +1,175 @@
 /**
  * @file admin.service.ts
- * @brief Service for administrative operations and user management
- * @details This service provides methods for administrative operations including
- * user management, role updates, and system initialization. It communicates with
- * the backend API to perform these operations securely.
- * 
+ * @brief Service for administrative operations and user management.
+ * @details This service provides methods for performing administrative operations,
+ * including user management, role updates, system initialization, and retrieving
+ * product requests. It securely communicates with the backend API and includes
+ * robust error handling.
+ *
  * Key features:
  * - User retrieval and management
  * - Role-based access control management
  * - Error handling with detailed logging
  * - Automatic retry for network issues
  * - Initial system setup functionality
- * 
- * @author Original Author
- * @date Original Date
- * @modified 2023-XX-XX
- * @version 1.2.0
  */
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry, tap } from 'rxjs/operators';
+import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 /**
  * @interface User
- * @description Interface representing a user entity in the system
+ * @description Interface representing a user entity in the system.
  * 
- * This interface defines the structure of user objects as they are
- * received from and sent to the backend API.
+ * This interface defines the structure of user objects received from 
+ * and sent to the backend API.
  */
 export interface User {
-  /** @property {string} id - Unique identifier for the user */
-  id: string;
-
-  /** @property {string} username - User's display name */
+  email: string;    // as the email is unique, the email will act as the id
   username: string;
-
-  /** @property {string} email - User's email address (used for login) */
-  email: string;
-
-  /** @property {string} role - User's role (e.g., 'Admin', 'User') */
   role: string;
-
-  /** @property {Date} createdAt - Timestamp when the user was created */
   createdAt: Date;
 }
 
 /**
  * @class AdminService
- * @description Service that handles all administrative operations
+ * @description Service that handles all administrative operations.
  * 
- * This service provides methods to manage users, update roles, and
- * perform other administrative tasks. It communicates with the backend
- * API and includes error handling and logging.
+ * This service provides methods to manage users, update roles, retrieve
+ * product requests, and perform other administrative tasks. It includes
+ * error handling and secure API communication.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class AdminService {
   /** 
-   * @property {string} apiUrl - The base URL for admin API endpoints
+   * @property {string} adminURL - The base URL for admin API endpoints.
    * @private
    */
-  private apiUrl = `${environment.globalBackendUrl}/admin`;
+  private adminURL = `${environment.globalBackendUrl}/admin`;
 
   /**
    * @constructor
-   * @description Initializes the AdminService with the API URL from environment
+   * @description Initializes the AdminService with the API URL from environment.
    * 
-   * @param {HttpClient} http - The Angular HttpClient for making HTTP requests
+   * @param {HttpClient} http - The Angular HttpClient for making HTTP requests.
    */
-  constructor(private http: HttpClient) {
-    console.log('🔧 AdminService initialized with API URL:', this.apiUrl);
-  }
+  constructor(private http: HttpClient) {}
 
   /**
    * @method handleError
-   * @description Handles HTTP errors with detailed logging
+   * @description Handles HTTP errors with detailed logging.
    * 
-   * This method processes HTTP errors, logs appropriate messages based on
-   * the error type, and returns an observable that errors with the provided error.
-   * It distinguishes between network errors and server errors for better debugging.
+   * Processes HTTP errors, logs appropriate messages based on error type, 
+   * and returns an observable that throws the error.
    * 
-   * @param {HttpErrorResponse} error - The HTTP error response to handle
-   * @returns {Observable<never>} An observable that errors with the provided error
+   * @param {HttpErrorResponse} error - The HTTP error response to handle.
+   * @returns {Observable<never>} An observable that throws the error.
    * @private
    */
   private handleError(error: HttpErrorResponse) {
-    console.error('An error occurred:', error);
+    console.error('❌ HTTP Error:', error);
     if (error.status === 0) {
-      console.error('Network error:', error.error);
+      console.error('❌ Network error:', error.error);
     } else {
       console.error(
-        `Backend returned code ${error.status}, ` +
-        `message: ${error.error?.message || error.message}`
+        `❌ Backend returned code ${error.status}, message: ${error.error?.message || error.message}`
       );
     }
-    return throwError(() => error);
+    return throwError(() => new Error(`Failed request: ${error.message}`));
   }
 
   /**
    * @method getAllUsers
-   * @description Retrieves all users from the backend
+   * @description Retrieves all users from the backend.
    * 
-   * This method fetches the complete list of users from the system.
-   * It includes automatic retry for network issues and detailed logging.
+   * Fetches a complete list of users in the system.
+   * Includes automatic retry for network issues.
    * 
-   * @returns {Observable<User[]>} An observable containing an array of user objects
+   * @returns {Observable<User[]>} An observable containing an array of user objects.
    * @public
    */
   getAllUsers(): Observable<User[]> {
-    console.log('🔍 Fetching all users from:', `${this.apiUrl}/users`);
-    return this.http.get<User[]>(`${this.apiUrl}/users`, {
+    return this.http.get<User[]>(`${this.adminURL}/users`, {
       withCredentials: true
     }).pipe(
-      tap(users => {
-        console.log(`✅ Retrieved ${users?.length || 0} users`);
-        if (users?.length > 0) {
-          console.log('👤 First user example:', users[0]);
-        } else {
-          console.log('⚠️ No users found');
-        }
-      }),
-      retry({ count: 2, delay: 1000 }), // Retry twice with 1 second delay
-      catchError(error => {
-        console.error('❌ Error fetching users:', error);
-        // Rethrow the error to be handled by the component
-        return throwError(() => new Error(`Failed to load users: ${error.message}`));
-      })
+      retry({ count: 2, delay: 1000 }), // Retry twice with a 1-second delay
+      catchError(this.handleError)
     );
   }
 
   /**
    * @method updateUserRole
-   * @description Updates a user's role in the system
+   * @description Updates a user's role in the system.
    * 
-   * This method changes a user's role, which affects their permissions
-   * and access rights within the application.
+   * Changes a user's role, which affects their permissions and access rights.
    * 
-   * @param {string} userId - The ID of the user to update
-   * @param {string} role - The new role to assign to the user
-   * @returns {Observable<any>} An observable containing the response from the server
+   * @param {string} userId - The ID of the user to update.
+   * @param {string} role - The new role to assign.
+   * @returns {Observable<any>} An observable containing the server response.
    * @public
    */
   updateUserRole(userId: string, role: string): Observable<any> {
-    console.log(`🔄 Updating role for user ${userId} to ${role}`);
-    return this.http.put(`${this.apiUrl}/users/${userId}/role`, { role }, {
+    return this.http.put(`${this.adminURL}/users/${userId}/role`, { role }, {
       withCredentials: true
     }).pipe(
-      tap(response => console.log('✅ Role updated successfully:', response)),
       catchError(this.handleError)
     );
   }
 
   /**
    * @method deleteUser
-   * @description Permanently removes a user from the system
+   * @description Permanently removes a user from the system.
    * 
-   * This method deletes a user account based on the provided user ID.
+   * Deletes a user account based on the provided user ID.
    * This operation cannot be undone.
    * 
-   * @param {string} userId - The ID of the user to delete
-   * @returns {Observable<any>} An observable containing the response from the server
+   * @param {string} userId - The ID of the user to delete.
+   * @returns {Observable<any>} An observable containing the server response.
    * @public
    */
   deleteUser(userId: string): Observable<any> {
-    console.log(`🗑️ Deleting user ${userId}`);
-    return this.http.delete(`${this.apiUrl}/users/${userId}`, {
+    return this.http.delete(`${this.adminURL}/users/${userId}`, {
       withCredentials: true
     }).pipe(
-      tap(() => console.log('✅ User deleted successfully')),
       catchError(this.handleError)
     );
   }
 
   /**
    * @method createInitialAdmin
-   * @description Creates the initial administrator account for system setup
+   * @description Creates the initial administrator account for system setup.
    * 
-   * This method is typically used during initial system setup to create
-   * the first administrator account. It should only be callable when no
-   * admin accounts exist in the system.
+   * Used during initial system setup to create the first administrator account.
    * 
-   * @param {string} email - The email address for the admin account
-   * @param {string} password - The password for the admin account
-   * @returns {Observable<any>} An observable containing the response from the server
+   * @param {string} email - The email address for the admin account.
+   * @param {string} password - The password for the admin account.
+   * @returns {Observable<any>} An observable containing the server response.
    * @public
    */
   createInitialAdmin(email: string, password: string): Observable<any> {
-    console.log('🔧 Creating initial admin with email:', email);
-    return this.http.post(`${this.apiUrl}/initialize`, { email, password }).pipe(
-      tap(response => console.log('✅ Initial admin created successfully:', response)),
+    return this.http.post(`${this.adminURL}/initialize`, { email, password }).pipe(
       catchError(this.handleError)
     );
   }
-} 
+
+  /**
+   * @method getAllProductsRequests
+   * @description Retrieves all product requests from the backend.
+   * 
+   * Fetches product-related requests that require administrative action 
+   * (e.g., new product additions, edits, or deletions).
+   * 
+   * @returns {Observable<any[]>} An observable containing an array of product requests.
+   * @public
+   */
+  getAllProductsRequests(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.adminURL}/getRequests`).pipe(
+      catchError(this.handleError)
+    );
+  }
+}

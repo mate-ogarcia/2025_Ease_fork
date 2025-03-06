@@ -46,9 +46,9 @@ export class UserManagementComponent implements OnInit {
   updateUserRole(): void {
     if (!this.selectedUser) return;
 
-    this.adminService.updateUserRole(this.selectedUser.id, this.selectedUser.role).subscribe({
+    this.adminService.updateUserRole(this.selectedUser.email, this.selectedUser.role).subscribe({
       next: () => {
-        const userIndex = this.users.findIndex(u => u.id === this.selectedUser?.id);
+        const userIndex = this.users.findIndex(u => u.email === this.selectedUser?.email);
         if (userIndex !== -1) {
           this.users[userIndex] = { ...this.selectedUser! };
         }
@@ -68,7 +68,7 @@ export class UserManagementComponent implements OnInit {
 
     this.adminService.deleteUser(userId).subscribe({
       next: () => {
-        this.users = this.users.filter(u => u.id !== userId);
+        this.users = this.users.filter(u => u.email !== userId);
         this.successMessage = "Utilisateur supprimé avec succès";
         setTimeout(() => this.successMessage = '', 3000);
       },
