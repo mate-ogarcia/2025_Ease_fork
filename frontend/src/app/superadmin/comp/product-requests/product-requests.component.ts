@@ -150,4 +150,53 @@ export class ProductRequestsComponent implements OnInit {
       this.selectedRequest.tags = this.selectedRequest.tags.filter((t: string) => t !== tag);
     }
   }
+
+  /**
+   * @brief Updates the status of a selected product request.
+   * 
+   * @details This function calls the `updateProduct` method in `AdminService` 
+   * to update the status of a selected product request. It ensures that the 
+   * request ID is provided and logs the process for debugging.
+   * 
+   * @param {any} selectedRequest - The selected product request object.
+   * @param {string} status - The new status to be assigned to the request.
+   * 
+   * @returns {Promise<void>} - Resolves when the update process completes.
+   * 
+   * @throws {Error} If an error occurs during the status update process.
+   */
+  async validateRequest(selectedRequest: any, status: string): Promise<void> {
+    try {
+      /**
+       * Calling the `updateProduct` function with:
+       * - `selectedRequest.id`: Extracts the unique product ID.
+       * - `{ status }`: Constructs an object `{ status: "newStatusValue" }` to update only the status field.
+       * 
+       * Final format of the data sent:
+       * json
+       * {
+       *   "productId": "some-product-id",
+       *   "status": "Approved"
+       * }
+       * 
+       * If needed you can constructs an object with multiple fields thie way :
+       *  - `selectedRequest.id`: Extracts the unique product ID.
+       * - `{ status, name }`: Constructs an object to update both the status and the product name.
+       * 
+       * Final format of the data sent (when updating multiple fields):
+       * json
+       * {
+       *   "productId": "some-product-id",
+       *   "status": "Approved",
+       *   "name": "New Product Name"
+       * }
+       * 
+       */
+      const response = await this.adminService.updateProduct(selectedRequest.id, { status });
+
+      console.log(`Status successfully updated:`, response);
+    } catch (error) {
+      console.error("❌ Error updating status:", error);
+    }
+  }
 }

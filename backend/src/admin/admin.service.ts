@@ -15,7 +15,7 @@ import { DatabaseService } from "src/database/database.service";
 export class AdminService {
   constructor(
     private databaseService: DatabaseService,
-  ) {}
+  ) { }
 
   /**
    * @brief Retrieves product requests from the database.
@@ -27,7 +27,7 @@ export class AdminService {
     try {
       // Fetch product requests from the database service
       const requests = await this.databaseService.getRequests();
-      
+
       // Return the retrieved requests
       return requests;
     } catch (error) {
@@ -35,4 +35,35 @@ export class AdminService {
       throw new InternalServerErrorException('Unable to retrieve requests');
     }
   }
+
+  /**
+   * @brief Updates a product request in the database.
+   * 
+   * @details This function ensures that the `productId` and at least one update field 
+   * are provided before calling the `databaseService.updateProduct()` method to execute the update.
+   * 
+   * @param {string} productId - The unique ID of the product to update.
+   * @param {Record<string, any>} valueToUpdate - An object containing the fields to update.
+   * 
+   * @returns {Promise<any>} - A promise resolving to the updated product data.
+   * 
+   * @throws {Error} If required parameters are missing or an error occurs during execution.
+   */
+  async updateRequest(productId: string, valueToUpdate: Record<string, any>): Promise<any> {
+    try {
+      // Ensure productId is provided and at least one field is being updated
+      if (!productId || Object.keys(valueToUpdate).length === 0) {
+        throw new Error("Product ID and at least one field to update are required");
+      }
+
+      // Call the database service to perform the update
+      const updatedProduct = await this.databaseService.updateProduct(productId, valueToUpdate);
+
+      return updatedProduct;
+    } catch (error) {
+      console.error("❌ Error in AdminService.updateRequest:", error);
+      throw new Error("Error updating the product");
+    }
+  }
+
 }

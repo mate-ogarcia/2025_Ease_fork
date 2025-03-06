@@ -278,61 +278,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.brandCollection;
   }
   // ========================================================================
-  // ======================== GET FUNCTIONS
+  // ======================== CATEGORY FUNCTIONS
   // ========================================================================
-  /**
-   * @brief Retrieves all products stored in the database.
-   *
-   * Executes an N1QL query to fetch all product documents from Couchbase.
-   *
-   * @returns {Promise<any[]>} An array containing all product records.
-   * @throws {Error} If the query execution fails.
-   */
-  async getAllProductsData(): Promise<any[]> {
-    try {
-      console.log(`🔹 Executing N1QL query on \`${this.productsBucket.name}\``);
-
-      // Execute query on product bucket
-      const query = `SELECT * FROM \`${this.productsBucket.name}\``;
-      const result = await this.cluster.query(query);
-
-      return result.rows;
-    } catch (error) {
-      console.error("❌ Error while retrieving data:", error);
-      return [];
-    }
-  }
-
-  /**
-   * @brief Retrieves a specific product from Couchbase by its ID.
-   *
-   * @param {string} productId - The ID of the product to retrieve.
-   * @returns {Promise<any>} - The product details or `null` if not found.
-   * @throws {Error} If the query execution fails.
-   */
-  async getProductById(productId: string): Promise<any> {
-    const bucketName = process.env.BUCKET_NAME;
-
-    try {
-      console.log(`🔹 Retrieving product with ID: ${productId}`);
-
-      const query = `SELECT * FROM \`${bucketName}\` WHERE META().id = ?`;
-      const options = { parameters: [productId] };
-
-      const result = await this.cluster.query(query, options);
-
-      if (result.rows.length > 0) {
-        return result.rows[0][bucketName];
-      } else {
-        console.warn(`⚠️ Product with ID "${productId}" not found.`);
-        return null;
-      }
-    } catch (error) {
-      console.error("❌ Error retrieving product:", error);
-      throw new Error("Error retrieving product.");
-    }
-  }
-
   /**
    * @function getAllCategName
    * @description Alias pour getAllCategoryName pour maintenir la compatibilité avec le contrôleur
@@ -395,42 +342,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       // Return empty array on error to avoid blocking the UI
       return [];
-    }
-  }
-
-  /**
-   * @brief Retrieves products associated with a specified brand.
-   *
-   * @details
-   * Executes a N1QL query that performs a join between the products and brands buckets.
-   * This function searches for products whose foreign key (`FK_Brands`) matches the given brand name.
-   *
-   * @param brandName The name of the brand to search for.
-   *
-   * @returns {Promise<any[]>} An array of objects containing product and brand names.
-   *
-   * @throws {Error} Throws an error if the query execution fails.
-   */
-  async getProductsByBrand(brandName: string): Promise<any> {
-    const productsBucketName = this.productsBucket.name;
-    const brandBucketName = this.brandBucket.name;
-
-    const query = `
-      SELECT p.name AS productName, b.name AS brandName
-      FROM \`${productsBucketName}\` p
-      JOIN \`${brandBucketName}\` b ON KEYS p.FK_Brands
-      WHERE b.name = $brandName
-    `;
-
-    try {
-      const result = await this.cluster.query(query, {
-        parameters: { brandName },
-      });
-      console.log("Query result:\n", result.rows);
-      return result.rows;
-    } catch (error) {
-      console.error("Error executing query:", error);
-      throw error;
     }
   }
 
@@ -1014,9 +925,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-
-
-
   // ========================================================================
   // ======================== PRODUCTS FUNCTIONS
   // ========================================================================
@@ -1083,7 +991,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       };
 
       // Define the document key for the product
-      const productId = `product::${product.id}`;
+      const productId = product.id;
 
       // Construct the N1QL query to insert the new product
       const query = `INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE) VALUES ($productId, $newProduct)`;
@@ -1097,6 +1005,170 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Handle errors gracefully
       console.error("❌ Error occurred while adding the product:", error);
       throw new InternalServerErrorException("Error occurred while adding the product.");
+    }
+  }
+
+  /**
+   * @brief Retrieves all products stored in the database.
+   *
+   * Executes an N1QL query to fetch all product documents from Couchbase.
+   *
+   * @returns {Promise<any[]>} An array containing all product records.
+   * @throws {Error} If the query execution fails.
+   */
+  async getAllProductsData(): Promise<any[]> {
+    try {
+      console.log(`🔹 Executing N1QL query on \`${this.productsBucket.name}\``);
+
+      // Execute query on product bucket
+      const query = `SELECT * FROM \`${this.productsBucket.name}\``;
+      const result = await this.cluster.query(query);
+
+      return result.rows;
+    } catch (error) {
+      console.error("❌ Error while retrieving data:", error);
+      return [];
+    }
+  }
+
+  /**
+   * @brief Retrieves a specific product from Couchbase by its ID.
+   *
+   * @param {string} productId - The ID of the product to retrieve.
+   * @returns {Promise<any>} - The product details or `null` if not found.
+   * @throws {Error} If the query execution fails.
+   */
+  async getProductById(productId: string): Promise<any> {
+    const bucketName = this.productsBucket.name;
+
+    try {
+      const query = `
+        SELECT META(p).id AS id, p.*
+        FROM \`${bucketName}\`._default._default p
+        WHERE META().id = $productId;
+      `;
+
+      const options = { parameters: { productId } };
+      const result = await this.cluster.query(query, options);
+
+      if (result.rows.length > 0) {
+        console.log("✅ Product found:", result.rows[0]);
+        return result.rows[0];
+      } else {
+        console.warn(`⚠️ Product with ID "${productId}" not found.`);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error retrieving product:", error);
+      throw new Error("Error retrieving product.");
+    }
+  }
+
+
+  /**
+   * @brief Retrieves products associated with a specified brand.
+   *
+   * @details
+   * Executes a N1QL query that performs a join between the products and brands buckets.
+   * This function searches for products whose foreign key (`FK_Brands`) matches the given brand name.
+   *
+   * @param brandName The name of the brand to search for.
+   *
+   * @returns {Promise<any[]>} An array of objects containing product and brand names.
+   *
+   * @throws {Error} Throws an error if the query execution fails.
+   */
+  async getProductsByBrand(brandName: string): Promise<any> {
+    const productsBucketName = this.productsBucket.name;
+    const brandBucketName = this.brandBucket.name;
+
+    const query = `
+      SELECT p.name AS productName, b.name AS brandName
+      FROM \`${productsBucketName}\` p
+      JOIN \`${brandBucketName}\` b ON KEYS p.FK_Brands
+      WHERE b.name = $brandName
+    `;
+
+    try {
+      const result = await this.cluster.query(query, {
+        parameters: { brandName },
+      });
+      console.log("Query result:\n", result.rows);
+      return result.rows;
+    } catch (error) {
+      console.error("Error executing query:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * @brief Updates a product in the database.
+   * 
+   * @details This function updates an existing product's fields dynamically based on 
+   * the provided `valueToUpdate` object. It ensures that the bucket exists, required 
+   * parameters are provided, and the database connection is established before executing 
+   * the update query.
+   * 
+   * @param {string} productId - The unique ID of the product to update.
+   * @param {Record<string, any>} valueToUpdate - An object containing the fields to update.
+   * 
+   * @returns {Promise<any>} - A promise resolving to the updated product data.
+   * 
+   * @throws {Error} If the bucket is not available, required parameters are missing, or an error occurs during execution.
+   */
+  async updateProduct(productId: string, valueToUpdate: Record<string, any>): Promise<any> {
+    try {
+      const productBucket = this.productsBucket.name;
+
+      // Ensure the product bucket exists
+      if (!productBucket) {
+        console.error("❌ PRODUCT_BUCKET_NAME is not defined or bucket is unavailable");
+        throw new Error("The product bucket is not defined or unavailable");
+      }
+
+      // Validate required parameters
+      if (!productId) {
+        console.error("❌ `productId` is required for product update");
+        throw new Error("Product ID is required");
+      }
+      if (!valueToUpdate || Object.keys(valueToUpdate).length === 0) {
+        console.error("❌ No fields provided for update");
+        throw new Error("No update fields provided");
+      }
+      // Ensure Couchbase cluster connection is established
+      if (!this.cluster) {
+        console.error("❌ Couchbase cluster is not initialized");
+        throw new Error("Couchbase connection is not established");
+      }
+
+      // Dynamically construct the fields to update in the query
+      const setClauses = Object.keys(valueToUpdate)
+        .map(key => `${key} = $${key}`)
+        .join(", ");
+
+      // Construct the Couchbase update query
+      const query = `
+          UPDATE \`${productBucket}\`._default._default
+          SET ${setClauses}
+          WHERE META().id = $productId
+          RETURNING *;
+      `;
+
+      // Execute the query with parameterized values
+      const result = await this.cluster.query(query, {
+        parameters: { productId, ...valueToUpdate }
+      });
+
+      // Verify that the product was successfully updated
+      if (!result.rows || result.rows.length === 0) {
+        console.warn("⚠️ No product was updated. Ensure the provided ID exists.");
+        throw new Error("No product was updated. Check the product ID.");
+      }
+
+      return { success: true, message: "Product successfully updated", data: result.rows[0] };
+    } catch (error) {
+      console.error("❌ Error updating product:", error.message || error);
+      throw new Error("Error updating product");
     }
   }
 
@@ -1243,9 +1315,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // N1QL query to fetch product requests with associated brands.
       const query = `
           SELECT 
-              META(p).id AS id,  /**< Retrieve document ID as 'id' */
-              p.*,               /**< Retrieve all product properties */
-              b.name AS brandName /**< Retrieve brand name from associated brand */
+              META(p).id AS id,
+              p.*,
+              b.name AS brandName
           FROM \`${productBucket}\`._default._default p
           LEFT JOIN \`${brandBucket}\`._default._default b
           ON p.FK_Brands = META(b).id
