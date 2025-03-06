@@ -25,6 +25,14 @@
       >
         <i class="fas fa-pencil-alt"></i>
       </button>
+      <!-- TODO-->
+      <button class="accept-btn" (click)="validateRequest(selectedRequest, 'Validated')">
+        Validate
+      </button>
+      <button class="reject-btn" (click)="rejectRequest(selectedRequest, 'Rejected')">
+        Refuse
+      </button>
+      <!---->
     </div>
     <div class="details-content">
       <div class="detail-item">

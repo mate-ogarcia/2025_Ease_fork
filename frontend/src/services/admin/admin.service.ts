@@ -16,7 +16,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { lastValueFrom, Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
@@ -46,19 +46,9 @@ export interface User {
   providedIn: 'root'
 })
 export class AdminService {
-  /** 
-   * @property {string} adminURL - The base URL for admin API endpoints.
-   * @private
-   */
-  private adminURL = `${environment.globalBackendUrl}/admin`;
+  private adminURL = `${environment.globalBackendUrl}/admin`; // adminURL - The base URL for admin API endpoints.
 
-  /**
-   * @constructor
-   * @description Initializes the AdminService with the API URL from environment.
-   * 
-   * @param {HttpClient} http - The Angular HttpClient for making HTTP requests.
-   */
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * @method handleError
@@ -172,4 +162,28 @@ export class AdminService {
       catchError(this.handleError)
     );
   }
+
+  /**
+   * @brief Sends a request to update a product's details.
+   * 
+   * @details This method sends a PATCH request to the backend, passing the `productId` 
+   * and the fields to be updated. It converts the observable response into a promise 
+   * using `lastValueFrom()` and includes error handling.
+   * 
+   * @param {string} productId - The unique ID of the product to update.
+   * @param {Record<string, any>} valueToUpdate - An object containing the fields to update.
+   * 
+   * @returns {Promise<any>} - A promise resolving to the updated product data.
+   * 
+   * @throws {Error} If the request fails, it triggers the `handleError()` method.
+   */
+  updateProduct(productId: string, valueToUpdate: Record<string, any>): Promise<any> {
+    return lastValueFrom(
+      // Send a PATCH request with productId and the updated fields
+      this.http.patch<any>(`${this.adminURL}/updateProduct`, { productId, ...valueToUpdate }).pipe(
+        catchError(this.handleError)
+      )
+    );
+  }
+
 }
