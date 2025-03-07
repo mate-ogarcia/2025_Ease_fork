@@ -46,7 +46,7 @@ export class DatabaseController {
   async getAllCategName() {
     try {
       // Call the database service to retrieve category names
-      const categories = await this.databaseService.getAllCategName();
+      const categories = await this.databaseService.getAllCategoryName();
       return categories;
     } catch (error) {
       // Log the error but return an empty array instead of throwing an exception

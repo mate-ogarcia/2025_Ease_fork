@@ -38,7 +38,6 @@ import { v4 as uuidv4 } from "uuid";
 type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket";
 type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection";
 
-
 /**
  * @brief Service responsible for database operations.
  * @details This service manages connections to Couchbase buckets and provides methods
@@ -100,36 +99,40 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Initializes Couchbase connections for products and users buckets.
-   *
-   * This method ensures a secure connection to Couchbase using an SSL certificate
-   * and initializes collections for product and user data storage.
    */
   private async initializeConnections() {
     try {
-      const certPath = process.env.SSL_CERT_PATH;
-      if (!certPath) {
-        throw new Error("❌ SSL_CERT_PATH is not set in environment variables");
+      if (this.cluster) {
+        console.warn("⚠️ Couchbase connection is already initialized.");
+        return;
       }
-      // Vérifier que le certificat existe
-      fs.readFileSync(certPath);
+
+      const certPath = process.env.SSL_CERT_PATH;
+      if (!certPath || !fs.existsSync(certPath)) {
+        throw new Error("❌ SSL certificate not found. Check SSL_CERT_PATH.");
+      }
 
       this.cluster = await connect(
         process.env.DB_HOST || "couchbase://localhost",
         {
           username: process.env.DB_USER || "Administrator",
           password: process.env.DB_PASSWORD || "password",
-          configProfile: "wanDevelopment", // Required for WAN connections
+          configProfile: "wanDevelopment",
         },
       );
-      // Connection to all buckets and collections
-      await this.connectToBucket("BUCKET_NAME", "productsBucket", "productsCollection");
-      await this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection");
-      await this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection");
-      await this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection");
 
+      // Connection to all buckets and collections
+      await Promise.all([
+        this.connectToBucket("BUCKET_NAME", "productsBucket", "productsCollection"),
+        this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
+        this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
+        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection")
+      ]);
+
+      console.log("✅ Successfully connected to Couchbase!");
     } catch (error) {
-      console.error("❌ Connection error to Couchbase Capella:", error.message);
-      throw new Error("Unable to connect to Couchbase Capella");
+      console.error("❌ Connection error to Couchbase:", error);
+      setTimeout(() => this.initializeConnections(), 5000); // Retry after 5s
     }
   }
 
@@ -235,70 +238,49 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ========================================================================
-  // ======================== CATEGORY FUNCTIONS
+  // ======================== EXECUTE QUERY FUNCTIONS
   // ========================================================================
   /**
-   * @function getAllCategName
-   * @description Alias pour getAllCategoryName pour maintenir la compatibilité avec le contrôleur
-   * @returns {Promise<any[]>} A promise that resolves with an array of category names
+   * @brief Executes a Couchbase N1QL query with provided parameters.
+   * 
+   * @details This method runs a given N1QL query against the Couchbase cluster, 
+   * handling errors and timeouts appropriately. It logs the execution process 
+   * for debugging purposes and ensures queries do not block indefinitely.
+   * 
+   * @param {string} query - The N1QL query string to be executed.
+   * @param {any} [params={}] - An optional object containing query parameters.
+   * 
+   * @returns {Promise<any[]>} - A promise resolving to the query result rows.
+   * 
+   * @throws {InternalServerErrorException} If the query execution fails due to syntax errors, timeouts, or other issues.
    */
-  async getAllCategName(): Promise<any[]> {
-    return this.getAllCategoryName();
-  }
-
-  /**
-   * @function getAllCategoryName
-   * @description Retrieves all category names from the Couchbase database
-   * @details This function executes a N1QL query to fetch all category names.
-   * It includes enhanced error handling and logging to diagnose connection issues.
-   *
-   * @returns {Promise<any[]>} A promise that resolves with an array of category names or empty array on error
-   */
-  async getAllCategoryName(): Promise<any[]> {
+  private async executeQuery(query: string, params: any = {}): Promise<any[]> {
     try {
-      console.log("🔍 Attempting to retrieve all category names...");
+      console.log(`Executing query:\n${query}\nParameters:`, params);
 
-      if (!this.cluster) {
-        console.log("⚠️ Cluster not initialized, attempting to reconnect...");
-        await this.initializeConnections();
+      // Execute the Couchbase query with parameters and a timeout
+      const result = await this.cluster.query(query, {
+        parameters: params,
+        timeout: 10000, // Timeout to prevent long-running queries
+      });
 
-        if (!this.cluster) {
-          console.error("❌ Failed to initialize cluster connection");
-          throw new Error("Failed to initialize cluster connection");
-        }
-      }
-
-      const categBucketName = process.env.CATEGORY_BUCKET_NAME;
-      if (!categBucketName) {
-        console.error("❌ CATEGORY_BUCKET_NAME not defined in environment variables");
-        throw new Error("CATEGORY_BUCKET_NAME not defined in environment variables");
-      }
-
-      const query = `
-        SELECT DISTINCT c.name
-        FROM \`${categBucketName}\`._default._default c
-        ORDER BY c.name`;
-
-      console.log("🔍 Executing query:", query);
-
-      const result = await this.cluster.query(query);
-      console.log(
-        `✅ Categories retrieved successfully: ${result.rows.length} categories found`,
-      );
-
-      // Return empty array if no results
-      if (!result.rows || result.rows.length === 0) {
-        console.log("⚠️ No categories found, returning empty array");
-        return [];
-      }
-
-      return result.rows;
+      console.log(`Query executed successfully. ${result.rows.length} rows returned.`);
+      return result.rows || [];
     } catch (error) {
-      console.error("❌ Error retrieving categories:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
+      console.error("❌ Couchbase Query Error:", error.message || error);
 
-      // Return empty array on error to avoid blocking the UI
-      return [];
+      /**
+       * Error Handling:
+       * - `error.first_error_code === 5000` → Syntax error in the query.
+       * - `error.cause?.code === 1080` → Query execution timed out.
+       */
+      if (error?.first_error_code === 5000) {
+        console.error("⚠️ Couchbase syntax error. Check your query.");
+      } else if (error?.cause?.code === 1080) {
+        console.error("⚠️ Couchbase query timed out.");
+      }
+
+      throw new InternalServerErrorException("Database query execution failed.");
     }
   }
 
@@ -313,31 +295,29 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async searchQuery(searchQuery: string): Promise<any[]> {
     const _indexName = process.env.INDEX_NAME;
-    searchQuery = searchQuery.toLowerCase(); // Normalize the query
+    if (!_indexName) {
+      throw new InternalServerErrorException("❌ Full-Text Search index name is not defined in environment variables.");
+    }
 
     try {
-      const prefixQuery = SearchQuery.prefix(searchQuery); // Prefix search
-      const matchQuery = SearchQuery.match(searchQuery); // Natural language search
-
-      // Combine prefix and match queries
-      const combinedQuery = SearchQuery.disjuncts(prefixQuery, matchQuery);
-
-      const searchRes = await this.cluster.searchQuery(
-        _indexName,
-        combinedQuery,
-        {
-          fields: ["name", "description", "category", "tags"],
-          highlight: {
-            style: HighlightStyle.HTML,
-            fields: ["name", "description", "category", "tags"],
-          },
-        },
+      const queryLower = searchQuery.toLowerCase(); // Normalize only once
+      const combinedQuery = SearchQuery.disjuncts(
+        SearchQuery.prefix(queryLower),
+        SearchQuery.match(queryLower)
       );
 
-      return searchRes.rows;
+      const searchRes = await this.cluster.searchQuery(_indexName, combinedQuery, {
+        fields: ["name", "description", "category", "tags"],
+        highlight: {
+          style: HighlightStyle.HTML,
+          fields: ["name", "description", "category", "tags"],
+        },
+      });
+
+      return searchRes.rows || [];
     } catch (error) {
       console.error("❌ Error during FTS query:", error);
-      throw error;
+      throw new InternalServerErrorException("Full-Text Search query execution failed.");
     }
   }
 
@@ -347,17 +327,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   // =========== UTILITY FUNCTIONS
   /**
-   * @brief Builds a SQL WHERE clause from an array of conditions.
+   * @brief Builds a SQL WHERE clause from an array of conditions with a dynamic operator.
    * 
-   * @details
-   * Takes an array of condition strings and joins them with `OR`.  
-   * Returns an empty string if no conditions are provided.
-   * 
-   * @param conditions An array of condition strings (e.g., `"price >= $minPrice"`).
-   * @returns {string} A formatted SQL condition string or an empty string if no conditions are given.
+   * @param conditions An array of condition strings.
+   * @param operator The SQL operator to use ("OR" or "AND"). Default is "OR".
+   * @returns {string} A formatted SQL condition string or an empty string.
    */
-  buildConditions(conditions: string[]): string {
-    return conditions.length ? `(${conditions.join(" OR ")})` : "";
+  buildConditions(conditions: string[], operator: "OR" | "AND" = "OR"): string {
+    return conditions.length ? `(${conditions.join(` ${operator} `)})` : "";
   }
 
   /**
@@ -387,7 +364,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     if (selectedProduct.price) conditions.push(`price BETWEEN $minPrice AND $maxPrice`);
     if (selectedProduct.FK_Brands) conditions.push(`FK_Brands = $brandFK`);
 
-    return this.buildConditions(conditions);
+    return this.buildConditions(conditions, "AND");
   }
 
   /**
@@ -435,7 +412,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @param brandBucketName Name of the Couchbase bucket containing brand documents.
    * @returns {Promise<string>} A string containing filter conditions.
    */
-  async buildFilterConditions(this: any, filters: any, brandBucketName: string): Promise<string> {
+  async buildFilterConditions(filters: any, brandBucketName: string): Promise<string> {
     const conditions: string[] = [];
 
     if (filters.category) conditions.push(`category = $filterCategory`);
@@ -451,20 +428,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       conditions.push(`ANY tag IN tags SATISFIES tag IN $filterTags END`);
     }
 
-    if (filters.brand && !filters.productId) {
-      console.log(`🔎 Checking brand FK for brand: ${filters.brand}`);
-      const brandResult = await this.getProductsByBrand(filters.brand);
-      const brandFK = brandResult?.[0]?.brandName;
-
-      if (brandFK) {
-        const brandSubquery = `(SELECT RAW META(b).id FROM \`${brandBucketName}\` b WHERE b.name = $filterBrandName LIMIT 1)`;
-        console.log('brandSubquery:\n', brandSubquery);
-        conditions.push(`FK_Brands IN ${brandSubquery}`);
-      } else {
-        console.warn(`⚠️ No FK_Brands found for brand: ${filters.brand}`);
-      }
+    // Optimisation : Requête SQL pour trouver `FK_Brands`
+    if (filters.brand) {
+      conditions.push(`FK_Brands = (
+        SELECT RAW META(b).id 
+        FROM \`${brandBucketName}\` b 
+        WHERE b.name = $filterBrandName 
+        LIMIT 1
+      )`);
     }
-    return this.buildConditions(conditions);
+
+    return this.buildConditions(conditions, "AND");
   }
 
   /**
@@ -626,46 +600,48 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error("❌ Filters are empty");
     }
 
-    // Step 1: Build similarity conditions if productId is provided
-    // Avoid similarity search if the product comes from an external API
-    const similarityClause = (productId && productSource === "Internal")
+    // Step 1: Get product details if productId is provided and is from Internal DB
+    let selectedProduct: any = null;
+    if (productId && productSource === "Internal") {
+      selectedProduct = await this.getProductById(productId);
+    }
+
+    // Step 2: Build similarity conditions
+    const similarityClause = selectedProduct
       ? await this.buildSimilarityConditions.call(this, productId)
       : this.buildSimilarityConditionsFromExternalProduct(filters);
 
-    // Step 2: Build filter-based conditions, including brand subqueries
+    // Step 3: Build filter-based conditions, including brand subqueries
     const filtersClause = await this.buildFilterConditions.call(this, filters, brandBucketName);
 
-    // Step 3: Build the final query depending on the current route
+    // Step 4: Build the final query
+    // Check if both conditions are identical and avoid duplicates
+    if (similarityClause === filtersClause) {
+      console.warn("⚠️ Duplicate conditions detected. Using only one set.");
+    }
     const queryWithJoin = this.buildQuery(similarityClause, filtersClause, currentRoute, bucketName);
-
     if (!queryWithJoin) return [];
 
-    // Step 4: Prepare parameters for query execution
-    const selectedProduct = (productId && productSource === "Internal")
-      ? await this.getProductById(productId)
-      : null;
-
+    // Step 5: Prepare parameters for query execution
     const parameters = {
-      category: selectedProduct?.category,
-      tags: selectedProduct?.tags.map(tag => tag.toLowerCase()) || [],
-      minPrice: selectedProduct?.price ? selectedProduct.price * 0.8 : undefined,
-      maxPrice: selectedProduct?.price ? selectedProduct.price * 1.2 : undefined,
-      brandFK: selectedProduct?.FK_Brands,
+      category: selectedProduct?.category ?? filters.category,
+      tags: selectedProduct?.tags?.map(tag => tag.toLowerCase()) ?? filters.tags ?? [],
+      minPrice: selectedProduct?.price ? selectedProduct.price * 0.8 : filters.minPrice,
+      maxPrice: selectedProduct?.price ? selectedProduct.price * 1.2 : filters.maxPrice,
+      brandFK: selectedProduct?.FK_Brands ?? filters.brand,
       filterCategory: filters.category,
       filterCountry: filters.country,
       filterMinPrice: filters.minPrice,
       filterMaxPrice: filters.maxPrice,
       filterBrandName: filters.brand,
-      filterName: filters.name,
+      filterName: filters.name ?? "",
       filterBrand: filters.brand,
-      filterTags: filters.tags || [],
+      filterTags: filters.tags ?? [],
     };
 
-    // Step 5: Execute query and return results
+    // Step 6: Execute query and return results
     try {
-      console.log(`🔹 Executing query: ${queryWithJoin}`);
       const result = await this.cluster.query(queryWithJoin, { parameters });
-      console.log(`📦 Total products found: ${result.rows.length}`);
       return result.rows.map(row => row[bucketName]);
     } catch (error) {
       console.error("❌ Error executing query:", error);
@@ -682,43 +658,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {InternalServerErrorException} In case of error.
    */
   async getAllUsers(): Promise<any[]> {
-    try {
-      const bucketName = process.env.USER_BUCKET_NAME;
-      if (!this.cluster) {
-        console.error("❌ Cluster not initialized");
-        throw new Error("Cluster not initialized");
-      }
-
-      // Query to fetch all users with a defined role
-      const query = `
-        SELECT META(u).id as id, u.*
-        FROM \`${bucketName}\`._default._default u
-        WHERE u.email IS NOT MISSING
-        ORDER BY u.createdAt DESC
-      `;
-
-      // Execute the query
-      const result = await this.cluster.query(query);
-
-      // Check if users exist in the database
-      if (!result?.rows?.length) {
-        console.log("⚠️ No users found");
-        return [];
-      }
-
-      // Map the results to a structured format
-      return result.rows.map(row => ({
-        id: row.id || `unknown_${Math.random().toString(36).substring(7)}`,
-        email: row.email || 'unknown',
-        username: row.username || 'unknown',
-        role: row.role || 'user',
-        createdAt: row.createdAt || new Date().toISOString(),
-        updatedAt: row.updatedAt || new Date().toISOString()
-      }));
-    } catch (error) {
-      console.error("❌ Error retrieving users:", error);
-      throw new InternalServerErrorException(`Error retrieving users: ${error.message}`);
+    const bucketName = process.env.USER_BUCKET_NAME;
+    if (!bucketName) {
+      throw new Error("❌ USER_BUCKET_NAME is not defined in environment variables.");
     }
+
+    const query = `
+      SELECT 
+        META(u).id AS id, 
+        COALESCE(u.email, 'unknown') AS email,
+        COALESCE(u.username, 'unknown') AS username,
+        COALESCE(u.role, 'user') AS role,
+        COALESCE(u.createdAt, NOW_STR()) AS createdAt,
+        COALESCE(u.updatedAt, NOW_STR()) AS updatedAt
+      FROM \`${bucketName}\`._default._default u
+      WHERE u.email IS NOT MISSING
+      ORDER BY u.createdAt DESC;
+    `;
+
+    return this.executeQuery(query);
   }
 
   /**
@@ -728,22 +686,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @returns {Promise<any>} Updated user data.
    */
   async updateUserRole(id: string, role: string): Promise<any> {
-    try {
-      if (!this.cluster) {
-        throw new Error("Cluster not initialized");
-      }
-      const query = `
+    const query = `
       UPDATE \`${process.env.USER_BUCKET_NAME}\`
       SET role = $role
       WHERE META().id = $id
       RETURNING META().id as id, email, username, role, createdAt, updatedAt;
     `;
-      const result = await this.cluster.query(query, { parameters: { id, role } });
-      return result.rows[0];
-    } catch (error) {
-      console.error("❌ Error updating user role:", error);
-      throw error;
-    }
+
+    const result = await this.executeQuery(query, { id, role });
+    return result.length ? result[0] : null;
   }
 
   /**
@@ -753,17 +704,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async deleteUser(id: string): Promise<boolean> {
     try {
-      if (!this.usersCollection) {
-        throw new Error("Collection not initialized");
-      }
-      await this.usersCollection.remove(id);
+      const collection = this.getUsersCollection();
+      await collection.remove(id);
       return true;
     } catch (error) {
-      if (error.message.includes("document not found")) {
+      if (error instanceof DocumentNotFoundError) {
         return false;
       }
       console.error("❌ Error deleting user:", error);
-      throw error;
+      throw new InternalServerErrorException("Error deleting user.");
     }
   }
 
@@ -782,72 +731,27 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    *
    * @throws InternalServerErrorException If there is an error during the insertion process.
    */
-  async addUser(
-    username: string,
-    email: string,
-    password: string,
-    role?: UserRole,
-  ): Promise<any> {
-    try {
-      // Check if the users bucket is initialized
-      if (!this.usersBucket) {
-        throw new Error("❌ Users bucket is not initialized.");
-      }
+  async addUser(username: string, email: string, password: string, role?: UserRole): Promise<any> {
+    const bucketName = this.usersBucket.name;
+    const userId = uuidv4();
 
-      // Check if a user with the same email already exists
-      const existingUser = await this.getUserByEmail(email);
-      if (existingUser) {
-        console.warn(`⚠️ A user with the email "${email}" already exists.`);
-        return null; // Return null if the user already exists
-      }
+    // Directly insert the document with `INSERT ... ON CONFLICT DO NOTHING`
+    const query = `
+      INSERT INTO \`${bucketName}\`._default._default (KEY, VALUE)
+      VALUES ($userId, {
+        "username": $username,
+        "email": $email,
+        "password": $password,
+        "role": $role,
+        "createdAt": NOW_STR(),
+        "updatedAt": NOW_STR()
+      })
+      RETURNING *;
+    `;
 
-      // Create the user object with the provided information
-      const newUser = {
-        username: username,
-        email: email,
-        password: password,
-        role: role || UserRole.USER, // Use provided role or default to User
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+    const result = await this.executeQuery(query, { userId, username, email, password, role: role || UserRole.USER });
 
-      // Log the new user object
-      console.log("👤 New user being created:", {
-        ...newUser,
-        password: "****",
-      });
-
-      // Generate a unique identifier for the user document
-      const userId = `user::${email}`; // Unique ID based on the email
-
-      // Construct the N1QL query to insert the user
-      const query = `
-      INSERT INTO \`${this.usersBucket.name}\`._default._default (KEY, VALUE)
-      VALUES ($userId, $newUser)
-      `;
-
-      // Execute the query with the parameters
-      const result = await this.cluster.query(query, {
-        parameters: { userId, newUser },
-      });
-
-      // Retrieve inserted user for verification
-      const selectQuery = `
-      SELECT * FROM \`${this.usersBucket.name}\`._default._default
-      WHERE email = $email
-      `;
-
-      const selectResult = await this.cluster.query(selectQuery, {
-        parameters: { email },
-      });
-
-      return selectResult.rows[0]._default || null; // Return inserted user
-    } catch (error) {
-      console.error("❌ Error occurred while adding the user:", error);
-      throw new InternalServerErrorException(
-        "Error occurred while adding the user.",
-      );
-    }
+    return result.length ? result[0] : null; // Returns `null` if already existing
   }
 
   /**
@@ -858,28 +762,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {InternalServerErrorException} If an error occurs during retrieval.
    */
   async getUserByEmail(email: string): Promise<any> {
-    try {
-      // Ensure that the users bucket is initialized before querying
-      if (!this.usersBucket) {
-        throw new Error("❌ Users bucket is not initialized.");
-      }
+    const query = `
+      SELECT META(u).id AS id, u.*
+      FROM \`${this.usersBucket.name}\`._default._default u
+      WHERE u.email = $email
+    `;
 
-      // Construct the unique document ID for the user based on their email
-      const userId = `user::${email}`;
-      const collection = this.getUsersCollection();
-      const result = await collection.get(userId);
-
-      // Return the user data from the retrieved document
-      return result.content;
-    } catch (error) {
-      // Handle the case where the document is not found
-      if (error instanceof DocumentNotFoundError) {
-        console.warn(`⚠️ User with email "${email}" not found.`);
-        return null;
-      }
-      console.error("❌ Error retrieving user by email:", error);
-      throw new InternalServerErrorException("Error retrieving user by email.");
-    }
+    const result = await this.executeQuery(query, { email });
+    return result.length ? result[0] : null;
   }
 
   // ========================================================================
@@ -891,78 +781,55 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @return Promise<any> Resolves if successful, throws an error otherwise.
    */
   async addProduct(payload: any): Promise<any> {
-    try {
-      // Ensure the products bucket is initialized before proceeding
-      if (!this.productsBucket) {
-        throw new InternalServerErrorException("❌ Products bucket is not initialized.");
-      }
+    const { product, newBrand } = payload;
 
-      // Extract product and newBrand from the payload
-      const { product, newBrand } = payload;
-
-      // Define the required fields and check for missing ones
-      const requiredFields = ["name", "description", "category", "tags", "ecoscore", "origin", "source", "status"];
-      const missingFields = requiredFields.filter((field) => !product[field]);
-      if (missingFields.length > 0) {
-        console.error("❌ Missing required fields:", missingFields);
-        throw new BadRequestException(`Missing required fields: ${missingFields.join(", ")}`);
-      }
-
-      // Validate that 'tags' is an array
-      if (!Array.isArray(product.tags)) {
-        throw new BadRequestException("❌ 'tags' must be an array of strings.");
-      }
-
-      // Ensure 'source' is either 'Internal' or 'OpenFoodFacts'
-      if (!["Internal", "OpenFoodFacts"].includes(product.source)) {
-        throw new BadRequestException("❌ 'source' must be either 'Internal' or 'OpenFoodFacts'.");
-      }
-
-      // Generate a unique ID if not provided
-      const generatedId = uuidv4();
-      product.id = product.id || product.barcode || generatedId;
-
-      // Check if a product with the same ID already exists
-      const existingProduct = await this.getProductById(product.id);
-      if (existingProduct) {
-        console.warn(`⚠️ A product with the ID "${product.id}" already exists.`);
-        return null;
-      }
-
-      // Handle brand association: Check if the brand exists or add a new one
-      let brandId = null;
-      if (product.brand) {
-        brandId = await this.checkBrand(product.brand);
-      }
-      if (!brandId && newBrand) {
-        brandId = await this.addBrand(newBrand.name, newBrand.description);
-      }
-      product.FK_Brands = brandId || null;
-      delete product.brand; // Remove the brand field as it's no longer needed
-
-      // Create a new product object with timestamps
-      const newProduct = {
-        ...product,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      // Define the document key for the product
-      const productId = product.id;
-
-      // Construct the N1QL query to insert the new product
-      const query = `INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE) VALUES ($productId, $newProduct)`;
-
-      // Execute the query to insert the product into the database
-      const result = await this.cluster.query(query, { parameters: { productId, newProduct } });
-
-      // Return the result of the operation
-      return result;
-    } catch (error) {
-      // Handle errors gracefully
-      console.error("❌ Error occurred while adding the product:", error);
-      throw new InternalServerErrorException("Error occurred while adding the product.");
+    // Check required fields
+    const requiredFields = ["name", "description", "category", "tags", "ecoscore", "origin", "source", "status"];
+    const missingFields = requiredFields.filter(field => !product[field]);
+    if (missingFields.length > 0) {
+      throw new BadRequestException(`Missing required fields: ${missingFields.join(", ")}`);
     }
+
+    // Type validation
+    if (!Array.isArray(product.tags)) {
+      throw new BadRequestException("❌ 'tags' must be an array of strings.");
+    }
+    if (!["Internal", "OpenFoodFacts"].includes(product.source)) {
+      throw new BadRequestException("❌ 'source' must be either 'Internal' or 'OpenFoodFacts'.");
+    }
+
+    // Id generation
+    product.id = product.id || product.barcode || uuidv4();
+
+    // Check if the product already exists
+    const existingProduct = await this.getProductById(product.id);
+    if (existingProduct) {
+      return null; // Do not insert duplicates
+    }
+
+    // Brand management
+    let brandId = product.brand ? await this.checkBrand(product.brand) : null;
+    if (!brandId && newBrand) {
+      brandId = await this.addBrand(newBrand.name, newBrand.description);
+    }
+    product.FK_Brands = brandId || null;
+    delete product.brand;
+
+    // Product creation with timestamps
+    const newProduct = {
+      ...product,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const query = `
+      INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE)
+      VALUES ($productId, $newProduct)
+      RETURNING *;
+    `;
+
+    const result = await this.executeQuery(query, { productId: product.id, newProduct });
+    return result.length ? result[0] : null;
   }
 
   /**
@@ -974,18 +841,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {Error} If the query execution fails.
    */
   async getAllProductsData(): Promise<any[]> {
-    try {
-      console.log(`🔹 Executing N1QL query on \`${this.productsBucket.name}\``);
-
-      // Execute query on product bucket
-      const query = `SELECT * FROM \`${this.productsBucket.name}\``;
-      const result = await this.cluster.query(query);
-
-      return result.rows;
-    } catch (error) {
-      console.error("❌ Error while retrieving data:", error);
-      return [];
-    }
+    const query = `SELECT * FROM \`${this.productsBucket.name}\``;
+    return this.executeQuery(query);
   }
 
   /**
@@ -996,31 +853,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {Error} If the query execution fails.
    */
   async getProductById(productId: string): Promise<any> {
-    const bucketName = this.productsBucket.name;
+    const query = `
+      SELECT META(p).id AS id, p.*
+      FROM \`${this.productsBucket.name}\`._default._default p
+      WHERE META().id = $productId;
+    `;
 
-    try {
-      const query = `
-        SELECT META(p).id AS id, p.*
-        FROM \`${bucketName}\`._default._default p
-        WHERE META().id = $productId;
-      `;
-
-      const options = { parameters: { productId } };
-      const result = await this.cluster.query(query, options);
-
-      if (result.rows.length > 0) {
-        console.log("✅ Product found:", result.rows[0]);
-        return result.rows[0];
-      } else {
-        console.warn(`⚠️ Product with ID "${productId}" not found.`);
-        return null;
-      }
-    } catch (error) {
-      console.error("❌ Error retrieving product:", error);
-      throw new Error("Error retrieving product.");
-    }
+    const result = await this.executeQuery(query, { productId });
+    return result.length ? result[0] : null;
   }
-
 
   /**
    * @brief Retrieves products associated with a specified brand.
@@ -1035,27 +876,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    *
    * @throws {Error} Throws an error if the query execution fails.
    */
-  async getProductsByBrand(brandName: string): Promise<any> {
-    const productsBucketName = this.productsBucket.name;
-    const brandBucketName = this.brandBucket.name;
-
+  async getProductsByBrand(brandName: string): Promise<any[]> {
     const query = `
       SELECT p.name AS productName, b.name AS brandName
-      FROM \`${productsBucketName}\` p
-      JOIN \`${brandBucketName}\` b ON KEYS p.FK_Brands
+      FROM \`${this.productsBucket.name}\` p
+      JOIN \`${this.brandBucket.name}\` b ON KEYS p.FK_Brands
       WHERE b.name = $brandName
     `;
 
-    try {
-      const result = await this.cluster.query(query, {
-        parameters: { brandName },
-      });
-      console.log("Query result:\n", result.rows);
-      return result.rows;
-    } catch (error) {
-      console.error("Error executing query:", error);
-      throw error;
-    }
+    return this.executeQuery(query, { brandName });
   }
 
   /**
@@ -1074,59 +903,23 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {Error} If the bucket is not available, required parameters are missing, or an error occurs during execution.
    */
   async updateProduct(productId: string, valueToUpdate: Record<string, any>): Promise<any> {
-    try {
-      const productBucket = this.productsBucket.name;
-
-      // Ensure the product bucket exists
-      if (!productBucket) {
-        console.error("❌ PRODUCT_BUCKET_NAME is not defined or bucket is unavailable");
-        throw new Error("The product bucket is not defined or unavailable");
-      }
-
-      // Validate required parameters
-      if (!productId) {
-        console.error("❌ `productId` is required for product update");
-        throw new Error("Product ID is required");
-      }
-      if (!valueToUpdate || Object.keys(valueToUpdate).length === 0) {
-        console.error("❌ No fields provided for update");
-        throw new Error("No update fields provided");
-      }
-      // Ensure Couchbase cluster connection is established
-      if (!this.cluster) {
-        console.error("❌ Couchbase cluster is not initialized");
-        throw new Error("Couchbase connection is not established");
-      }
-
-      // Dynamically construct the fields to update in the query
-      const setClauses = Object.keys(valueToUpdate)
-        .map(key => `${key} = $${key}`)
-        .join(", ");
-
-      // Construct the Couchbase update query
-      const query = `
-          UPDATE \`${productBucket}\`._default._default
-          SET ${setClauses}
-          WHERE META().id = $productId
-          RETURNING *;
-      `;
-
-      // Execute the query with parameterized values
-      const result = await this.cluster.query(query, {
-        parameters: { productId, ...valueToUpdate }
-      });
-
-      // Verify that the product was successfully updated
-      if (!result.rows || result.rows.length === 0) {
-        console.warn("⚠️ No product was updated. Ensure the provided ID exists.");
-        throw new Error("No product was updated. Check the product ID.");
-      }
-
-      return { success: true, message: "Product successfully updated", data: result.rows[0] };
-    } catch (error) {
-      console.error("❌ Error updating product:", error.message || error);
-      throw new Error("Error updating product");
+    if (!productId || !valueToUpdate || Object.keys(valueToUpdate).length === 0) {
+      throw new BadRequestException("Invalid parameters: productId and fields to update are required.");
     }
+
+    const setClauses = Object.keys(valueToUpdate).map(key => `${key} = $${key}`).join(", ");
+
+    const query = `
+      UPDATE \`${this.productsBucket.name}\`._default._default
+      SET ${setClauses}, updatedAt = NOW_STR()
+      WHERE META().id = $productId
+      RETURNING *;
+    `;
+
+    const result = await this.executeQuery(query, { productId, ...valueToUpdate });
+    if (!result.length) throw new Error("No product was updated. Check the product ID.");
+
+    return result[0];
   }
 
   // ========================================================================
@@ -1138,24 +931,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @return Promise<string | null> Returns the brand ID if found, otherwise null.
    */
   async checkBrand(brandName: string): Promise<string | null> {
-    try {
-      // Retrieve all existing brands from the database
-      const existingBrands = await this.getAllBrand();
+    const query = `
+      SELECT META(b).id AS id 
+      FROM \`${this.brandBucket.name}\`._default._default b 
+      WHERE LOWER(b.name) = LOWER($brandName)
+      LIMIT 1;
+    `;
 
-      // Find a brand that matches the given name (case insensitive)
-      const existingBrand = existingBrands.find(
-        brand => brand.name.toLowerCase() === brandName.toLowerCase()
-      );
-
-      // Return the brand ID if found, otherwise return null
-      return existingBrand ? existingBrand.id : null;
-    } catch (error) {
-      // Log the error for debugging
-      console.error("❌ Error checking brand existence:", error);
-
-      // Throw an internal server error exception
-      throw new InternalServerErrorException("Error checking brand existence.");
-    }
+    const result = await this.executeQuery(query, { brandName });
+    return result.length ? result[0].id : null;
   }
 
   /**
@@ -1165,36 +949,23 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @return Promise<string> Returns the generated brand ID.
    */
   async addBrand(brandName: string, brandDescription: string): Promise<string> {
-    try {
-      // Generate a unique brand ID using UUID
-      const brandId = `brand::${uuidv4()}`;
+    const brandId = `brand::${uuidv4()}`;
+    const newBrand = {
+      id: brandId,
+      name: brandName,
+      description: brandDescription || "",
+      status: "AddedByUser",
+      createdAt: new Date().toISOString(),
+    };
 
-      // Construct the brand object with provided details
-      const newBrand = {
-        id: brandId,
-        name: brandName,
-        description: brandDescription || "",  // Use empty string if no description is provided
-        status: 'AddedByUser',                // Default status for newly added brands
-        createdAt: new Date().toISOString()   // Store the creation timestamp
-      };
+    const query = `
+      INSERT INTO \`${this.brandBucket.name}\`._default._default (KEY, VALUE) 
+      VALUES ($brandId, $newBrand)
+      RETURNING META().id AS id;
+    `;
 
-      // Define the N1QL query to insert the brand into the database
-      const query =
-        `INSERT INTO \`${this.brandBucket.name}\`._default._default (KEY, VALUE) 
-      VALUES ($brandId, $newBrand)`;
-
-      // Execute the query with the given parameters
-      await this.cluster.query(query, { parameters: { brandId, newBrand } });
-
-      // Return the newly created brand's ID
-      return brandId;
-    } catch (error) {
-      // Log the error details for debugging
-      console.error("❌ Error adding brand:", error);
-
-      // Throw an internal server error exception
-      throw new InternalServerErrorException("Error adding brand.");
-    }
+    const result = await this.executeQuery(query, { brandId, newBrand });
+    return result.length ? result[0].id : brandId;
   }
 
   /**
@@ -1202,46 +973,39 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @return Promise<{ id: string; name: string }[]> List of brands.
    */
   async getAllBrand(): Promise<{ id: string; name: string }[]> {
-    try {
-      // Check if the database cluster is initialized
-      if (!this.cluster) {
-        console.log("⚠️ Cluster not initialized, attempting to reconnect...");
-        await this.initializeConnections();
-        if (!this.cluster) {
-          console.error("❌ Failed to initialize cluster connection");
-          throw new Error("Failed to initialize cluster connection");
-        }
-      }
+    const query = `
+      SELECT META(b).id AS id, b.name AS name 
+      FROM \`${this.brandBucket.name}\`._default._default b 
+      ORDER BY b.name;
+    `;
 
-      // Retrieve the brand bucket name from environment variables
-      const brandBucketName = process.env.BRAND_BUCKET_NAME;
-      if (!brandBucketName) {
-        console.error("❌ BRAND_BUCKET_NAME not defined in environment variables");
-        throw new Error("BRAND_BUCKET_NAME not defined in environment variables");
-      }
+    return this.executeQuery(query);
+  }
 
-      // Define the query to fetch brand data from the database
-      const query = `SELECT META(b).id AS id, b.name AS name FROM \`${brandBucketName}\`._default._default b ORDER BY b.name`;
-
-      // Execute the query
-      const result = await this.cluster.query(query);
-
-      // Check if the query returned any rows, if not, return an empty array
-      if (!result.rows || result.rows.length === 0) {
-        console.log("⚠️ No brands found, returning empty array");
-        return [];
-      }
-
-      // Map the retrieved rows to an array of objects containing brand IDs and names
-      return result.rows.map(row => ({ id: row.id, name: row.name }));
-    } catch (error) {
-      // Log the error details for debugging
-      console.error("❌ Error retrieving brands:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
-
-      // Return an empty array in case of an error to avoid breaking the application
-      return [];
+  // ========================================================================
+  // ======================== CATEGORY FUNCTIONS
+  // ========================================================================
+  /**
+   * @function getAllCategoryName
+   * @description Retrieves all category names from the Couchbase database
+   * @details This function executes a N1QL query to fetch all category names.
+   * It includes enhanced error handling and logging to diagnose connection issues.
+   *
+   * @returns {Promise<any[]>} A promise that resolves with an array of category names or empty array on error
+   */
+  async getAllCategoryName(): Promise<any[]> {
+    const categBucketName = this.categBucket.name;
+    if (!categBucketName) {
+      throw new Error("❌ CATEGORY_BUCKET_NAME not defined in environment variables");
     }
+
+    const query = `
+      SELECT DISTINCT c.name
+      FROM \`${categBucketName}\`._default._default c
+      ORDER BY c.name
+    `;
+
+    return this.executeQuery(query);
   }
 
   // ========================================================================
@@ -1259,46 +1023,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {InternalServerErrorException} - If an error occurs during retrieval.
    */
   async getRequests(): Promise<any[]> {
-    try {
-      const productBucket = this.productsBucket.name;
-      const brandBucket = this.brandBucket.name;
+    const query = `
+      SELECT 
+          META(p).id AS id,
+          p.*,
+          COALESCE(b.name, "Unknown Brand") AS FK_Brands
+      FROM \`${this.productsBucket.name}\`._default._default p
+      LEFT JOIN \`${this.brandBucket.name}\`._default._default b
+      ON p.FK_Brands = META(b).id
+      WHERE p.status IN ["add-product", "edit-product", "delete-product"]
+    `;
 
-      // Ensure bucket names are properly defined
-      if (!productBucket || !brandBucket) {
-        console.error("❌ Bucket names are not defined in environment variables");
-        throw new Error("Bucket names are not defined");
-      }
-
-      // N1QL query to fetch product requests with associated brands.
-      const query = `
-          SELECT 
-              META(p).id AS id,
-              p.*,
-              b.name AS brandName
-          FROM \`${productBucket}\`._default._default p
-          LEFT JOIN \`${brandBucket}\`._default._default b
-          ON p.FK_Brands = META(b).id
-          WHERE p.status IN ["add-product", "edit-product", "delete-product"]
-      `;
-
-      // Execute the query
-      const result = await this.cluster.query(query);
-
-      // Handle cases where no matching products are found
-      if (!result.rows || result.rows.length === 0) {
-        console.log("⚠️ No products found matching the specified statuses.");
-        return [];
-      }
-
-      // Reformats the result to include the brand name.
-      return result.rows.map(row => ({
-        ...row,
-        FK_Brands: row.brandName || "Unknown Brand", // Replace FK_Brands with brandName
-      }));
-    } catch (error) {
-      console.error('❌ Error retrieving products with brands:', error);
-      throw new InternalServerErrorException('Unable to retrieve product requests with brands');
-    }
+    return this.executeQuery(query);
   }
-
 }
