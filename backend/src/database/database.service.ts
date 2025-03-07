@@ -31,10 +31,13 @@ import { HttpService } from "@nestjs/axios";
 import { UserRole } from "src/auth/enums/roles.enum";
 // .env
 import * as dotenv from "dotenv";
+dotenv.config();
 // Generate unique ID
 import { v4 as uuidv4 } from "uuid";
+// Definition of expected keys for Buckets and Collections
+type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket";
+type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection";
 
-dotenv.config();
 
 /**
  * @brief Service responsible for database operations.
@@ -77,6 +80,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * @brief Connects to a Couchbase bucket and initializes its collection.
+   * @param {string} bucketNameEnv - The environment variable holding the bucket name.
+   * @param {BucketKeys} bucketVar - The bucket property in the class.
+   * @param {CollectionKeys} collectionVar - The collection property in the class.
+   */
+  private async connectToBucket(
+    bucketNameEnv: string,
+    bucketVar: BucketKeys,
+    collectionVar: CollectionKeys
+  ): Promise<void> {
+    const bucketName = process.env[bucketNameEnv];
+    if (!bucketName) throw new Error(`❌ ${bucketNameEnv} is not defined in environment variables.`);
+
+    const bucket = this.cluster.bucket(bucketName); // Couchbase bucket
+    this[bucketVar] = bucket as any;                // Force TypeScript to accept it
+    this[collectionVar] = bucket.defaultCollection() as any; // Force TypeScript to accept it
+  }
+
+  /**
    * @brief Initializes Couchbase connections for products and users buckets.
    *
    * This method ensures a secure connection to Couchbase using an SSL certificate
@@ -90,9 +112,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       }
       // Vérifier que le certificat existe
       fs.readFileSync(certPath);
-      console.log("🔹 SSL Certificate loaded.");
 
-      console.log("🔹 Connecting to Couchbase Capella...");
       this.cluster = await connect(
         process.env.DB_HOST || "couchbase://localhost",
         {
@@ -101,46 +121,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           configProfile: "wanDevelopment", // Required for WAN connections
         },
       );
-
-      // Connect to the products bucket
-      const productsBucketName = process.env.BUCKET_NAME;
-      if (!productsBucketName) {
-        throw new Error(
-          "❌ BUCKET_NAME is not defined in environment variables in database.service.ts",
-        );
-      }
-      this.productsBucket = this.cluster.bucket(productsBucketName);
-      this.productsCollection = this.productsBucket.defaultCollection();
-
-      // Connect to the users bucket
-      const usersBucketName = process.env.USER_BUCKET_NAME;
-      if (!usersBucketName) {
-        throw new Error(
-          "❌ USER_BUCKET_NAME is not defined in environment variables in database.service.ts",
-        );
-      }
-      this.usersBucket = this.cluster.bucket(usersBucketName);
-      this.usersCollection = this.usersBucket.defaultCollection();
-
-      // Connect to the category bucket
-      const categBucketName = process.env.CATEGORY_BUCKET_NAME;
-      if (!categBucketName) {
-        throw new Error(
-          "❌ CATEGORY_BUCKET_NAME is not defined in environment variables in database.service.ts",
-        );
-      }
-      this.categBucket = this.cluster.bucket(categBucketName);
-      this.categCollection = this.categBucket.defaultCollection();
-
-      // Connect to the brand bucket
-      const brandBucketName = process.env.BRAND_BUCKET_NAME;
-      if (!brandBucketName) {
-        throw new Error(
-          "❌ BRAND_BUCKET_NAME is not defined in environment variables in database.service.ts",
-        );
-      }
-      this.brandBucket = this.cluster.bucket(brandBucketName);
-      this.brandCollection = this.brandBucket.defaultCollection();
+      // Connection to all buckets and collections
+      await this.connectToBucket("BUCKET_NAME", "productsBucket", "productsCollection");
+      await this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection");
+      await this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection");
+      await this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection");
 
     } catch (error) {
       console.error("❌ Connection error to Couchbase Capella:", error.message);
@@ -158,125 +143,97 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // ========================================================================
   // ======================== DATABASE GET BUCKETS AND COLLECTION
   // ========================================================================
+
+  // ======================== GENERIC METHODS
+  /**
+   * @brief Validates and returns the specified Couchbase bucket.
+   * 
+   * @details This method ensures that the provided Couchbase bucket is initialized. 
+   * If the bucket is undefined or uninitialized, an error is thrown.
+   * 
+   * @param {Bucket | undefined} bucket - The Couchbase bucket instance to validate.
+   * @param {string} name - The name of the bucket (for error messages).
+   */
+  private getBucket(bucket: Bucket | undefined, name: string): Bucket {
+    if (!bucket) {
+      throw new Error(`❌ Couchbase bucket '${name}' is not initialized yet.`);
+    }
+    return bucket;
+  }
+
+  /**
+   * @brief Validates and returns the specified Couchbase collection.
+   * 
+   * @details This method ensures that the provided Couchbase collection is initialized. 
+   * If the collection is undefined or uninitialized, an error is thrown.
+   * 
+   * @param {Collection | undefined} collection - The Couchbase collection instance to validate.
+   * @param {string} name - The name of the collection (for error messages).
+   */
+  private getCollection(collection: Collection | undefined, name: string): Collection {
+    if (!collection) {
+      throw new Error(`❌ Couchbase collection '${name}' is not initialized yet.`);
+    }
+    return collection;
+  }
+  // ======================== BUCKET METHODS
   /**
    * @brief Retrieves the Couchbase bucket instance for products.
-   *
-   * This method returns the initialized Couchbase bucket for storing and retrieving product data.
-   * If the bucket is not initialized, it throws an error.
-   *
-   * @returns {couchbase.Bucket} The initialized products bucket.
-   * @throws {Error} If the products bucket is not initialized.
    */
   getProductsBucket(): Bucket {
-    if (!this.productsBucket) {
-      throw new Error("❌ Couchbase bucket is not initialized yet.");
-    }
-    return this.productsBucket;
+    return this.getBucket(this.productsBucket, "products");
   }
 
   /**
    * @brief Retrieves the Couchbase bucket instance for users.
-   *
-   * This method returns the initialized Couchbase bucket for managing user data.
-   * If the bucket is not initialized, it throws an error.
-   *
-   * @returns {couchbase.Bucket} The initialized users bucket.
-   * @throws {Error} If the users bucket is not initialized.
    */
   getUsersBucket(): Bucket {
-    if (!this.usersBucket) {
-      throw new Error("❌ Couchbase bucket is not initialized yet.");
-    }
-    return this.usersBucket;
+    return this.getBucket(this.usersBucket, "users");
   }
 
   /**
    * @brief Retrieves the Couchbase bucket instance for category.
-   *
-   * This method returns the initialized Couchbase bucket for managing category data.
-   * If the bucket is not initialized, it throws an error.
-   *
-   * @returns {couchbase.Bucket} The initialized category bucket.
-   * @throws {Error} If the category bucket is not initialized.
    */
   getCategBucket(): Bucket {
-    if (!this.categBucket) {
-      throw new Error("❌ Couchbase bucket is not initialized yet.");
-    }
-    return this.categBucket;
+    return this.getBucket(this.categBucket, "category");
   }
 
   /**
-   * @brief Retrieves the Couchbase bucket instance for brand.
-   *
-   * This method returns the initialized Couchbase bucket for managing brand data.
-   * If the bucket is not initialized, it throws an error.
-   *
-   * @returns {couchbase.Bucket} The initialized brand bucket.
-   * @throws {Error} If the brand bucket is not initialized.
+   * @brief Retrieves the Couchbase bucket instance for brands.
    */
   getBrandBucket(): Bucket {
-    if (!this.brandBucket) {
-      throw new Error("❌ Couchbase bucket is not initialized yet.");
-    }
-    return this.brandBucket;
+    return this.getBucket(this.brandBucket, "brands");
   }
 
+  // ======================== COLLECTION METHODS
   /**
    * @brief Retrieves the products collection.
-   * @details This method returns the initialized Couchbase collection for products.
-   *
-   * @returns {couchbase.Collection} The initialized products collection.
-   * @throws {Error} If the products collection is not initialized.
    */
   getProductsCollection(): Collection {
-    if (!this.productsCollection) {
-      throw new Error("Products collection is not initialized.");
-    }
-    return this.productsCollection;
+    return this.getCollection(this.productsCollection, "products");
   }
 
   /**
    * @brief Retrieves the users collection.
-   * @details This method returns the initialized Couchbase collection for users.
-   *
-   * @returns {couchbase.Collection} The initialized users collection.
-   * @throws {Error} If the users collection is not initialized.
    */
   getUsersCollection(): Collection {
-    if (!this.usersCollection) {
-      throw new Error("Users collection is not initialized.");
-    }
-    return this.usersCollection;
+    return this.getCollection(this.usersCollection, "users");
   }
 
   /**
    * @brief Retrieves the category collection.
-   * @details This method returns the initialized Couchbase collection for categories.
-   *
-   * @returns {couchbase.Collection} The initialized category collection.
-   * @throws {Error} If the category collection is not initialized.
    */
   getCategCollection(): Collection {
-    if (!this.categCollection) {
-      throw new Error("Category collection is not initialized.");
-    }
-    return this.categCollection;
+    return this.getCollection(this.categCollection, "categories");
   }
 
   /**
    * @brief Retrieves the brand collection.
-   * @details This method returns the initialized Couchbase collection for brands.
-   *
-   * @returns {couchbase.Collection} The initialized brand collection.
-   * @throws {Error} If the brand collection is not initialized.
    */
   getBrandCollection(): Collection {
-    if (!this.brandCollection) {
-      throw new Error("Brand collection is not initialized.");
-    }
-    return this.brandCollection;
+    return this.getCollection(this.brandCollection, "brands");
   }
+
   // ========================================================================
   // ======================== CATEGORY FUNCTIONS
   // ========================================================================
