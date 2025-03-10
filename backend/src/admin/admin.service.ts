@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
 } from "@nestjs/common";
+import { log } from "console";
 // Services
 import { DatabaseService } from "src/database/database.service";
 
@@ -55,6 +56,11 @@ export class AdminService {
       if (!productId || Object.keys(valueToUpdate).length === 0) {
         throw new Error("Product ID and at least one field to update are required");
       }
+      // If the product is rejected by the admin then delete it from the database
+      if (valueToUpdate.status === 'Rejected') {
+        const rejectedProduct = await this.databaseService.deleteProduct(productId);
+        return rejectedProduct;
+      }
 
       // Call the database service to perform the update
       const updatedProduct = await this.databaseService.updateProduct(productId, valueToUpdate);
@@ -65,5 +71,4 @@ export class AdminService {
       throw new Error("Error updating the product");
     }
   }
-
 }
