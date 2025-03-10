@@ -15,6 +15,7 @@ import {
   OnModuleDestroy,
   InternalServerErrorException,
   BadRequestException,
+  NotFoundException,
 } from "@nestjs/common";
 import {
   Bucket,
@@ -829,6 +830,33 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     `;
 
     const result = await this.executeQuery(query, { productId: product.id, newProduct });
+    return result.length ? result[0] : null;
+  }
+
+  /**
+   * @brief Deletes a product by its ID.
+   * @param productId The ID of the product to be deleted.
+   * @return Promise<any> Resolves if successful, throws an error otherwise.
+   */
+  async deleteProduct(productId: string): Promise<any> {
+    if (!productId) {
+      throw new BadRequestException("❌ 'productId' is required.");
+    }
+
+    // Check if the product exists
+    const existingProduct = await this.getProductById(productId);
+    if (!existingProduct) {
+      throw new NotFoundException(`❌ Product with ID '${productId}' not found.`);
+    }
+
+    // Delete the product
+    const query = `
+    DELETE FROM \`${this.productsBucket.name}\`._default._default
+    WHERE META().id = $productId
+    RETURNING *;
+  `;
+
+    const result = await this.executeQuery(query, { productId });
     return result.length ? result[0] : null;
   }
 
