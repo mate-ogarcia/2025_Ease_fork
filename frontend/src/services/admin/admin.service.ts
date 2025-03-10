@@ -163,10 +163,21 @@ export class AdminService {
     );
   }
 
-  // TODO
+  /**
+   * @brief Sends a request to update an entity (product or brand) via the API.
+   * 
+   * @details This method makes a PATCH request to update an entity in the database. 
+   * It dynamically constructs the API endpoint based on the entity type (`product` or `brand`).
+   * 
+   * @param {'product' | 'brand'} type - The type of entity to update.
+   * @param {string} id - The unique identifier of the entity.
+   * @param {Record<string, any>} valueToUpdate - The fields to update.
+   * 
+   * @returns {Promise<any>} - A promise resolving to the updated entity.
+   */
   updateEntity(type: 'product' | 'brand', id: string, valueToUpdate: Record<string, any>): Promise<any> {
-    return lastValueFrom(this.http.patch<any>(`${this.adminURL}/updateEntity/${type}/${id}`, valueToUpdate));
+    return lastValueFrom(
+      this.http.patch<any>(`${this.adminURL}/updateEntity/${type}/${id}`, valueToUpdate)
+    );
   }
-  
-
 }

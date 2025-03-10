@@ -189,19 +189,35 @@ export class AdminController {
       );
     }
   }
-  // TODO
+
+  /**
+   * @brief Updates an entity (product or brand) through an API endpoint.
+   * 
+   * @details This endpoint updates an entity in the database by calling the `AdminService.updateEntity()` method.
+   * If the entity ID or update fields are missing, it returns a `BAD_REQUEST` error.
+   * 
+   * @route PATCH /updateEntity/:type/:id
+   * 
+   * @param {string} type - The type of entity to update ("product" or "brand"), extracted from URL parameters.
+   * @param {string} id - The unique identifier of the entity, extracted from URL parameters.
+   * @param {Record<string, any>} valueToUpdate - The fields to update, provided in the request body.
+   * 
+   * @returns {Promise<any>} - The updated entity.
+   * 
+   * @throws {HttpException} - If required parameters are missing (`BAD_REQUEST`) or if an internal server error occurs.
+   */
   @Patch('updateEntity/:type/:id')
   async updateEntity(
-    @Param("type") type: string, 
-    @Param("id") id: string, 
+    @Param("type") type: string,
+    @Param("id") id: string,
     @Body() valueToUpdate: Record<string, any>
   ) {
     try {
       if (!id || Object.keys(valueToUpdate).length === 0) {
         throw new HttpException("Entity ID and at least one field to update are required", HttpStatus.BAD_REQUEST);
       }
-  
-      // Appelle le service générique pour la mise à jour
+
+      // Call the generic service method to update the entity
       const updatedEntity = await this.adminService.updateEntity(type, id, valueToUpdate);
       return updatedEntity;
     } catch (error) {
