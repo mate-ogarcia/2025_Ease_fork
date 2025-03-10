@@ -130,7 +130,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection")
       ]);
 
-      console.log("✅ Successfully connected to Couchbase!");
+      console.log("Successfully connected to Couchbase!");
     } catch (error) {
       console.error("❌ Connection error to Couchbase:", error);
       setTimeout(() => this.initializeConnections(), 5000); // Retry after 5s
@@ -795,8 +795,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     if (!Array.isArray(product.tags)) {
       throw new BadRequestException("❌ 'tags' must be an array of strings.");
     }
-    if (!["Internal", "OpenFoodFacts"].includes(product.source)) {
-      throw new BadRequestException("❌ 'source' must be either 'Internal' or 'OpenFoodFacts'.");
+    if (product.source !== 'Internal') {
+      throw new BadRequestException("❌ Cannot add an external product");
     }
 
     // Id generation
@@ -811,7 +811,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     // Brand management
     let brandId = product.brand ? await this.checkBrand(product.brand) : null;
     if (!brandId && newBrand) {
-      brandId = await this.addBrand(newBrand.name, newBrand.description);
+      brandId = await this.addBrand(newBrand.name, newBrand.description, newBrand.status);
     }
     product.FK_Brands = brandId || null;
     delete product.brand;
@@ -971,28 +971,50 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @brief Adds a new brand to the database.
-   * @param brandName The name of the new brand.
-   * @param brandDescription The description of the new brand.
-   * @return Promise<string> Returns the generated brand ID.
+   * @brief Adds a new brand to the database if it does not already exist.
+   * 
+   * @details This method checks if the brand exists before inserting a new one.
+   * If the brand is found, it throws an exception. Otherwise, it creates a new 
+   * brand with a unique ID and inserts it into the database.
+   * 
+   * @param {string} brandName - The name of the brand.
+   * @param {string} brandDescription - The description of the brand.
+   * @param {string} [status] - The optional status of the brand.
+   * 
+   * @returns {Promise<string>} - The ID of the created or existing brand.
+   * 
+   * @throws {BadRequestException} - If the brand already exists.
    */
-  async addBrand(brandName: string, brandDescription: string): Promise<string> {
-    const brandId = `brand::${uuidv4()}`;
+  async addBrand(brandName: string, brandDescription: string, status?: string): Promise<string> {
+    if (!brandName) {
+      throw new BadRequestException("❌ Brand name is required.");
+    }
+
+    // Check if the brand already exists
+    const existingBrandId = await this.checkBrand(brandName);
+    if (existingBrandId) {
+      throw new BadRequestException(`❌ Brand '${brandName}' already exists with ID: ${existingBrandId}`);
+    }
+
+    // Create a new brand entry
+    const brandId = uuidv4();
     const newBrand = {
       id: brandId,
       name: brandName,
       description: brandDescription || "",
-      status: "AddedByUser",
+      status: status || "",
       createdAt: new Date().toISOString(),
     };
 
+    // Insert the brand into the database
     const query = `
       INSERT INTO \`${this.brandBucket.name}\`._default._default (KEY, VALUE) 
       VALUES ($brandId, $newBrand)
       RETURNING META().id AS id;
-    `;
+  `;
 
     const result = await this.executeQuery(query, { brandId, newBrand });
+
     return result.length ? result[0].id : brandId;
   }
 
@@ -1008,6 +1030,106 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     `;
 
     return this.executeQuery(query);
+  }
+
+  /**
+   * @brief Retrieves a brand by its ID.
+   * 
+   * @details Queries the database to fetch a brand based on its unique identifier.
+   * 
+   * @param {string} brandId - The unique ID of the brand.
+   * @returns {Promise<any>} - The brand data if found, otherwise `null`.
+   */
+  async getBrandById(brandId: string): Promise<any> {
+    const query = `
+    SELECT META(b).id AS docId, b.*
+    FROM \`${this.brandBucket.name}\`._default._default b
+    WHERE b.id = $brandId
+  `;
+
+    const result = await this.executeQuery(query, { brandId });
+    return result.length ? result[0] : null;
+  }
+
+  /**
+  * @brief Deletes a brand from the database.
+  * 
+  * @details Ensures the brand exists before deletion. If not found, it throws an error.
+  * 
+  * @param {string} brandId - The unique ID of the brand to delete.
+  * @returns {Promise<any>} - The deleted brand data if successful.
+  * 
+  * @throws {BadRequestException} If `brandId` is empty.
+  * @throws {NotFoundException} If the brand does not exist.
+  */
+  async deleteBrand(brandId: string): Promise<any> {
+    if (!brandId) {
+      throw new BadRequestException("❌ 'brandId' is required.");
+    }
+
+    // Check if the brand exists
+    const existingBrand = await this.getBrandById(brandId);
+    if (!existingBrand) {
+      throw new NotFoundException(`❌ Brand with ID '${brandId}' not found.`);
+    }
+
+    // Delete the brand
+    const query = `
+    DELETE FROM \`${this.brandBucket.name}\`._default._default
+    WHERE META().id = $brandId
+    RETURNING *;
+  `;
+
+    const result = await this.executeQuery(query, { brandId });
+    if (!result.length) {
+      throw new Error(`❌ Failed to delete brand with ID '${brandId}'.`);
+    }
+
+    return result[0];
+  }
+
+  /**
+  * @brief Updates a brand in the database.
+  * 
+  * @details Checks if the brand exists before applying updates. The update 
+  * dynamically modifies only the provided fields while maintaining other data.
+  * 
+  * @param {string} brandId - The unique ID of the brand to update.
+  * @param {Record<string, any>} valueToUpdate - The fields to update.
+  * @returns {Promise<any>} - The updated brand data.
+  * 
+  * @throws {BadRequestException} If `brandId` or `valueToUpdate` is empty.
+  * @throws {NotFoundException} If the brand does not exist.
+  */
+  async updateBrand(brandId: string, valueToUpdate: Record<string, any>): Promise<any> {
+    if (!brandId || !valueToUpdate || Object.keys(valueToUpdate).length === 0) {
+      throw new BadRequestException("Invalid parameters: brandId and fields to update are required.");
+    }
+
+    // Check if the brand exists before updating
+    const existingBrand = await this.getBrandById(brandId);
+    if (!existingBrand) {
+      throw new NotFoundException(`❌ Brand with ID '${brandId}' not found.`);
+    }
+
+    // Construct the dynamic update query
+    const setClauses = Object.keys(valueToUpdate)
+      .map(key => `${key} = $${key}`)
+      .join(", ");
+
+    const query = `
+    UPDATE \`${this.brandBucket.name}\`._default._default
+    SET ${setClauses}, updatedAt = NOW_STR()
+    WHERE id = $brandId
+    RETURNING *;
+  `;
+
+    const result = await this.executeQuery(query, { brandId, ...valueToUpdate });
+    if (!result.length) {
+      throw new Error(`❌ No brand was updated. Check the brand ID.`);
+    }
+
+    return result[0];
   }
 
   // ========================================================================
@@ -1051,7 +1173,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {InternalServerErrorException} - If an error occurs during retrieval.
    */
   async getRequests(): Promise<any[]> {
-    const query = `
+    // Fetch all the waiting products
+    const productQuery = `
       SELECT 
           META(p).id AS id,
           p.*,
@@ -1061,7 +1184,80 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       ON p.FK_Brands = META(b).id
       WHERE p.status IN ["add-product", "edit-product", "delete-product"]
     `;
+    // Fetch all the waiting brands
+    const brandQuery = `
+      SELECT 
+          META(b).id AS id,
+          b.* 
+      FROM \`${this.brandBucket.name}\`._default._default b
+      WHERE b.status = "add-brand"
+    `;
 
-    return this.executeQuery(query);
+    // Run both requests in parallel
+    const [productRequests, brandRequests] = await Promise.all([
+      this.executeQuery(productQuery),
+      this.executeQuery(brandQuery),
+    ]);
+    // Merge results into a single array
+    return [...productRequests, ...brandRequests];
+  }
+
+  /**
+   * @brief Updates an entity (product or brand) using existing update functions.
+   * 
+   * @details This method determines whether the entity is a product or brand 
+   * and calls the corresponding update function.
+   * 
+   * @param {string} type - The type of entity to update ("product" or "brand").
+   * @param {string} entityId - The unique identifier of the entity.
+   * @param {Record<string, any>} valueToUpdate - The fields to update.
+   * 
+   * @returns {Promise<any>} - The updated entity.
+   * 
+   * @throws {BadRequestException} If the entity type is invalid or parameters are missing.
+   */
+  async updateEntity(type: string, entityId: string, valueToUpdate: Record<string, any>): Promise<any> {
+    if (!entityId || !valueToUpdate || Object.keys(valueToUpdate).length === 0) {
+      throw new BadRequestException(`❌ Invalid parameters: ${type} ID and fields to update are required.`);
+    }
+
+    // Determine which entity type to update
+    switch (type) {
+      case 'product':
+        return this.updateProduct(entityId, valueToUpdate);
+      case 'brand':
+        return this.updateBrand(entityId, valueToUpdate);
+      default:
+        throw new BadRequestException(`❌ Invalid entity type: ${type}`);
+    }
+  }
+
+  /**
+  * @brief Deletes an entity (product or brand) using existing delete functions.
+  * 
+  * @details This method determines whether the entity is a product or brand 
+  * and calls the corresponding delete function.
+  * 
+  * @param {string} type - The type of entity to delete ("product" or "brand").
+  * @param {string} entityId - The unique identifier of the entity.
+  * 
+  * @returns {Promise<any>} - The deleted entity.
+  * 
+  * @throws {BadRequestException} If the entity type is invalid or the ID is missing.
+  */
+  async deleteEntity(type: string, entityId: string): Promise<any> {
+    if (!entityId) {
+      throw new BadRequestException(`❌ Invalid parameters: ${type} ID is required.`);
+    }
+
+    // Determine which entity type to delete
+    switch (type) {
+      case 'product':
+        return this.deleteProduct(entityId);
+      case 'brand':
+        return this.deleteBrand(entityId);
+      default:
+        throw new BadRequestException(`❌ Invalid entity type: ${type}`);
+    }
   }
 }

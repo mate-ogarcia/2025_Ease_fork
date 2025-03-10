@@ -38,7 +38,8 @@ import { AdminService } from '../../../../services/admin/admin.service';
  * product requests submitted by users.
  */
 export class ProductRequestsComponent implements OnInit {
-  requests: any[] = [];         // List of product requests retrieved from the backend.
+  productRequests: any[] = [];  // List of product requests retrieved from the backend.
+  brandRequests: any[] = [];    // List of brands requests retrieved from the backend.
   selectedRequest: any = null;  // The currently selected product request.
   tagInput: string = '';        //Input field for adding a new tag to the selected request.
 
@@ -53,21 +54,35 @@ export class ProductRequestsComponent implements OnInit {
   }
 
   /**
-   * @brief Fetches product requests from the backend.
-   * @details Calls the AdminService to retrieve product requests and updates the component state.
+   * @brief Fetches product and brand requests from the backend.
+   * 
+   * @details This method calls the `AdminService.getAllRequests()` to retrieve 
+   * pending requests and categorizes them into products and brands. It updates 
+   * the component state by filtering requests based on their status and assigns 
+   * them a specific type (`'product'` or `'brand'`).
    * 
    * @public
    */
   loadProductRequests(): void {
-    this.adminService.getAllProductsRequests().subscribe({
+    this.adminService.getAllRequests().subscribe({
       next: (data) => {
-        this.requests = data;
+        // Extract product requests
+        this.productRequests = data
+          .filter(item => item.status === "add-product")  // Identifies products
+          .map(req => ({ ...req, type: 'product' }));     // Assigns the type
+
+        // Extract brand requests
+        this.brandRequests = data
+          .filter(item => item.status === "add-brand")  // Identifies brands
+          .map(req => ({ ...req, type: 'brand' }));     // Assigns the type
       },
       error: (error) => {
-        console.error('❌ Error while loading product requests:', error);
+        console.error('❌ Error while loading requests:', error);
       }
     });
   }
+
+
 
   /**
    * @brief Selects a product request and displays its details.
@@ -100,7 +115,6 @@ export class ProductRequestsComponent implements OnInit {
   saveRequest(): void {
     if (this.selectedRequest) {
       this.selectedRequest.isEditing = false;
-      // TODO: Implement backend update logic
     }
   }
 
@@ -112,7 +126,6 @@ export class ProductRequestsComponent implements OnInit {
   cancelEdit(): void {
     if (this.selectedRequest) {
       this.selectedRequest.isEditing = false;
-      // TODO: Implement logic to revert changes if necessary
     }
   }
 
@@ -192,7 +205,9 @@ export class ProductRequestsComponent implements OnInit {
        * }
        * 
        */
-      const response = await this.adminService.updateProduct(selectedRequest.id, { status });
+
+      console.log('resquestType:', selectedRequest);
+      const response = await this.adminService.updateEntity(selectedRequest.type, selectedRequest.id, { status });
 
       console.log(`Status successfully updated:`, response);
     } catch (error) {

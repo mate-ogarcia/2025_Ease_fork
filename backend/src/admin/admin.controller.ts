@@ -189,44 +189,24 @@ export class AdminController {
       );
     }
   }
-
-  /**
-   * @brief Updates a product's information.
-   * 
-   * @details This endpoint allows administrators to update a product's details. 
-   * It ensures that a valid `productId` is provided and that at least one field 
-   * is specified for updating before calling the `AdminService.updateRequest()` method.
-   * 
-   * @route PATCH /admin/updateProduct
-   * 
-   * @param {string} productId - The unique ID of the product to update (provided in the request body).
-   * @param {Record<string, any>} valueToUpdate - An object containing the fields to be updated.
-   * 
-   * @returns {Promise<any>} - A promise resolving to the updated product data.
-   * 
-   * @throws {HttpException} If the request is invalid (missing product ID or update fields) 
-   * or if an error occurs during the update process.
-   */
-  @Patch('updateProduct')
-  async updateProduct(@Body("productId") productId: string, @Body() valueToUpdate: Record<string, any>) {
+  // TODO
+  @Patch('updateEntity/:type/:id')
+  async updateEntity(
+    @Param("type") type: string, 
+    @Param("id") id: string, 
+    @Body() valueToUpdate: Record<string, any>
+  ) {
     try {
-      // Ensure productId is provided and at least one field is being updated
-      if (!productId || Object.keys(valueToUpdate).length === 0) {
-        throw new HttpException(
-          "Product ID and at least one field to update are required",
-          HttpStatus.BAD_REQUEST
-        );
+      if (!id || Object.keys(valueToUpdate).length === 0) {
+        throw new HttpException("Entity ID and at least one field to update are required", HttpStatus.BAD_REQUEST);
       }
-
-      // Call the admin service to process the update request
-      const updatedProduct = await this.adminService.updateRequest(productId, valueToUpdate);
-      return updatedProduct;
+  
+      // Appelle le service générique pour la mise à jour
+      const updatedEntity = await this.adminService.updateEntity(type, id, valueToUpdate);
+      return updatedEntity;
     } catch (error) {
-      console.error("❌ Error updating the product:", error);
-      throw new HttpException(
-        "Internal server error",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      console.error(`❌ Error updating ${type}:`, error);
+      throw new HttpException("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

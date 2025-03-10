@@ -1,14 +1,30 @@
 <div class="product-requests-container">
-  <!-- List of product requests displayed as cards (left column) -->
+  <!-- List of requests displayed as cards (left column) -->
+  <!-- Products -->
   <div class="requests-list">
+    <div>Products</div>
     <div
       class="request-card"
-      *ngFor="let req of requests"
+      *ngFor="let req of productRequests"
       (click)="selectRequest(req)"
       [ngClass]="{ selected: selectedRequest && selectedRequest.id === req.id }"
     >
       <h4>{{ req.name }}</h4>
       <p>{{ req.category }} - {{ req.FK_Brands }}</p>
+      <p>Status: {{ req.status }}</p>
+    </div>
+  </div>
+  <!-- Brands -->
+  <div class="requests-list">
+    <div>Brands</div>
+    <div
+      class="request-card"
+      *ngFor="let req of brandRequests"
+      (click)="selectRequest(req)"
+      [ngClass]="{ selected: selectedRequest && selectedRequest.id === req.id }"
+    >
+      <h4>{{ req.name }}</h4>
+      <p>{{ req.description }}</p>
       <p>Status: {{ req.status }}</p>
     </div>
   </div>
@@ -25,47 +41,110 @@
       >
         <i class="fas fa-pencil-alt"></i>
       </button>
-      <!-- TODO-->
-      <button class="accept-btn" (click)="validateRequest(selectedRequest, 'Validated')">
+      <!-- TODO -->
+      <button
+        class="accept-btn"
+        (click)="validateRequest(selectedRequest, 'Validated')"
+      >
         Validate
       </button>
-      <button class="reject-btn" (click)="validateRequest(selectedRequest, 'Rejected')">
+      <button
+        class="reject-btn"
+        (click)="validateRequest(selectedRequest, 'Rejected')"
+      >
         Refuse
       </button>
       <!---->
     </div>
     <div class="details-content">
-      <div class="detail-item">
-        <label>Category:</label>
-        <span *ngIf="!selectedRequest.isEditing">{{
-          selectedRequest.category
-        }}</span>
-        <input
-          *ngIf="selectedRequest.isEditing"
-          [(ngModel)]="selectedRequest.category"
-        />
-      </div>
-      <div class="detail-item">
-        <label>Brand:</label>
-        <span *ngIf="!selectedRequest.isEditing">{{
-          selectedRequest.FK_Brands
-        }}</span>
-        <input
-          *ngIf="selectedRequest.isEditing"
-          [(ngModel)]="selectedRequest.FK_Brands"
-        />
-      </div>
-      <div class="detail-item">
-        <label>Quantity:</label>
-        <span *ngIf="!selectedRequest.isEditing">{{
-          selectedRequest.quantity
-        }}</span>
-        <input
-          type="number"
-          *ngIf="selectedRequest.isEditing"
-          [(ngModel)]="selectedRequest.quantity"
-        />
-      </div>
+      <!-- Specific display for a product -->
+      <ng-container *ngIf="selectedRequest?.type === 'product'">
+        <div class="detail-item">
+          <label>Category:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{
+            selectedRequest.category
+          }}</span>
+          <input
+            *ngIf="selectedRequest.isEditing"
+            [(ngModel)]="selectedRequest.category"
+          />
+        </div>
+        <div class="detail-item">
+          <label>Brand:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{
+            selectedRequest.FK_Brands
+          }}</span>
+          <input
+            *ngIf="selectedRequest.isEditing"
+            [(ngModel)]="selectedRequest.FK_Brands"
+          />
+        </div>
+        <div class="detail-item">
+          <label>Quantity:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{
+            selectedRequest.quantity
+          }}</span>
+          <input
+            type="number"
+            *ngIf="selectedRequest.isEditing"
+            [(ngModel)]="selectedRequest.quantity"
+          />
+        </div>
+        <div class="detail-item">
+          <label>Eco Score:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{
+            selectedRequest.ecoscore
+          }}</span>
+          <input
+            type="number"
+            *ngIf="selectedRequest.isEditing"
+            [(ngModel)]="selectedRequest.ecoscore"
+          />
+        </div>
+        <div class="detail-item">
+          <label for="tags">Tags:</label>
+          <!-- Read mode: displays tags only -->
+          <ng-container *ngIf="!selectedRequest.isEditing; else editTags">
+            <div class="tags-input-container">
+              <span class="tag" *ngFor="let tag of selectedRequest.tags">{{
+                tag
+              }}</span>
+            </div>
+          </ng-container>
+          <!-- Edit mode: allows adding/removing tags -->
+          <ng-template #editTags>
+            <div class="tags-input-container">
+              <span class="tag" *ngFor="let tag of selectedRequest.tags">
+                {{ tag }}
+                <button type="button" (click)="removeTag(tag)">x</button>
+              </span>
+              <input
+                id="tags"
+                type="text"
+                placeholder="Type a tag and press Enter"
+                [(ngModel)]="tagInput"
+                (keydown)="addTag($event)"
+              />
+            </div>
+          </ng-template>
+        </div>
+      </ng-container>
+
+      <!-- Specific display for a brand -->
+      <ng-container *ngIf="selectedRequest?.type === 'brand'">
+        <div class="detail-item">
+          <label>Description:</label>
+          <span *ngIf="!selectedRequest.isEditing">{{
+            selectedRequest.description
+          }}</span>
+          <textarea
+            *ngIf="selectedRequest.isEditing"
+            [(ngModel)]="selectedRequest.description"
+          ></textarea>
+        </div>
+      </ng-container>
+
+      <!-- Common fields (apply to both brands AND products) -->
       <div class="detail-item">
         <label>Status:</label>
         <span *ngIf="!selectedRequest.isEditing">{{
@@ -76,59 +155,12 @@
           [(ngModel)]="selectedRequest.status"
         >
           <option value="En attente">Pending</option>
-          <option value="Validé">Approved</option>
+          <option value="Validé">Validated</option>
           <option value="Refusé">Rejected</option>
         </select>
       </div>
-      <div class="detail-item">
-        <label>Description:</label>
-        <span *ngIf="!selectedRequest.isEditing">{{
-          selectedRequest.description
-        }}</span>
-        <textarea
-          *ngIf="selectedRequest.isEditing"
-          [(ngModel)]="selectedRequest.description"
-        ></textarea>
-      </div>
-      <div class="detail-item">
-        <label for="tags">Tags:</label>
-        <!-- Read mode: only displays the tag list -->
-        <ng-container *ngIf="!selectedRequest.isEditing; else editTags">
-          <div class="tags-input-container">
-            <span class="tag" *ngFor="let tag of selectedRequest.tags">
-              {{ tag }}
-            </span>
-          </div>
-        </ng-container>
-        <!-- Edit mode: allows adding and removing tags -->
-        <ng-template #editTags>
-          <div class="tags-input-container">
-            <span class="tag" *ngFor="let tag of selectedRequest.tags">
-              {{ tag }}
-              <button type="button" (click)="removeTag(tag)">x</button>
-            </span>
-            <input
-              id="tags"
-              type="text"
-              placeholder="Type a tag and press Enter"
-              [(ngModel)]="tagInput"
-              (keydown)="addTag($event)"
-            />
-          </div>
-        </ng-template>
-      </div>
-      <div class="detail-item">
-        <label>Eco Score:</label>
-        <span *ngIf="!selectedRequest.isEditing">{{
-          selectedRequest.ecoscore
-        }}</span>
-        <input
-          type="number"
-          *ngIf="selectedRequest.isEditing"
-          [(ngModel)]="selectedRequest.ecoscore"
-        />
-      </div>
     </div>
+
     <div class="details-actions" *ngIf="selectedRequest.isEditing">
       <button class="save-btn" (click)="saveRequest()" title="Save">
         <i class="fas fa-check"></i> Save

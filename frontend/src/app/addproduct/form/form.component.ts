@@ -55,7 +55,7 @@ export class FormComponent implements OnInit {
    */
   ngOnInit(): void {
     this.dataCacheService.loadData();
-    
+
     forkJoin({
       countries: this.dataCacheService.getCountries().pipe(first()),
       categories: this.dataCacheService.getCategories().pipe(first()),
@@ -107,25 +107,26 @@ export class FormComponent implements OnInit {
   /**
    * @brief Saves the product data and submits it to the backend.
    */
-  async onSave() {  
+  async onSave() {
     if (!this.checkProductField(this.product)) {
       return;
     }
-    
+
     let newBrandInfo = null;
-    
+
     if (this.isOtherBrand && this.newBrand.trim() !== '') {
       newBrandInfo = {
         name: this.newBrand,
-        description: this.newBrandDescription
+        description: this.newBrandDescription,
+        status: 'add-brand'
       };
     }
-    
+
     const payload = {
       product: this.product,
       newBrand: newBrandInfo
     };
-    
+
     this.apiService.postAddProduct(payload).subscribe({
       next: () => {
         alert("Product submitted for admin review!");
@@ -146,39 +147,39 @@ export class FormComponent implements OnInit {
    */
   checkProductField(product: Product): boolean {
     let errors: string[] = [];
-    
+
     const requiredFields: (keyof Product)[] = [
       "name", "description", "category", "tags",
       "ecoscore", "origin", "source", "status"
     ];
-    
+
     const missingFields = requiredFields.filter(field => !product[field]);
     if (missingFields.length > 0) {
       errors.push(`Missing required fields: ${missingFields.join(", ")}`);
     }
-    
+
     if (!this.isOtherBrand && !product.brand) {
       errors.push("Brand is required.");
     }
-    
+
     if (this.isOtherBrand && !this.newBrand.trim()) {
       errors.push("New brand name is required.");
     }
-    
+
     if (!Array.isArray(product.tags)) {
       errors.push("Tags must be an array.");
     }
-    
+
     if (!["Internal", "OpenFoodFacts"].includes(product.source)) {
       errors.push("Source must be 'Internal' or 'OpenFoodFacts'.");
     }
-    
+
     if (errors.length > 0) {
       alert(errors.join("\n"));
       console.error("Product validation errors:", errors);
       return false;
     }
-    
+
     return true;
   }
 
@@ -194,23 +195,23 @@ export class FormComponent implements OnInit {
   }
 
   /**
- * @brief Handles the change event when a brand is selected.
- * @param event The change event object.
- */
-onBrandChange(event: Event): void {
-  const selectElement = event.target as HTMLSelectElement;
-  this.selectedBrand = selectElement.value;
+   * @brief Handles the change event when a brand is selected.
+   * @param event The change event object.
+   */
+  onBrandChange(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    this.selectedBrand = selectElement.value;
 
-  // Check if the user selected "Other" to add a new brand
-  this.isOtherBrand = this.selectedBrand === 'other';
+    // Check if the user selected "Other" to add a new brand
+    this.isOtherBrand = this.selectedBrand === 'other';
 
-  if (!this.isOtherBrand) {
-    this.product.brand = this.selectedBrand; // Assign the selected brand to the product
-    this.newBrand = ''; // Reset new brand input
-    this.newBrandDescription = ''; // Reset brand description input
-  } else {
-    this.product.brand = ''; // Clear brand field for a new entry
+    if (!this.isOtherBrand) {
+      this.product.brand = this.selectedBrand; // Assign the selected brand to the product
+      this.newBrand = '';             // Reset new brand input
+      this.newBrandDescription = ''; // Reset brand description input
+    } else {
+      this.product.brand = ''; // Clear brand field for a new entry
+    }
   }
-}
 
 }
