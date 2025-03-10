@@ -148,42 +148,36 @@ export class AdminService {
   }
 
   /**
-   * @method getAllProductsRequests
-   * @description Retrieves all product requests from the backend.
+   * @method getAllRequests
+   * @description Retrieves all requests from the backend.
    * 
-   * Fetches product-related requests that require administrative action 
+   * Fetches product-related and brands-related requests that require administrative action 
    * (e.g., new product additions, edits, or deletions).
    * 
    * @returns {Observable<any[]>} An observable containing an array of product requests.
    * @public
    */
-  getAllProductsRequests(): Observable<any[]> {
+  getAllRequests(): Observable<any[]> {
     return this.http.get<any[]>(`${this.adminURL}/getRequests`).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * @brief Sends a request to update a product's details.
+   * @brief Sends a request to update an entity (product or brand) via the API.
    * 
-   * @details This method sends a PATCH request to the backend, passing the `productId` 
-   * and the fields to be updated. It converts the observable response into a promise 
-   * using `lastValueFrom()` and includes error handling.
+   * @details This method makes a PATCH request to update an entity in the database. 
+   * It dynamically constructs the API endpoint based on the entity type (`product` or `brand`).
    * 
-   * @param {string} productId - The unique ID of the product to update.
-   * @param {Record<string, any>} valueToUpdate - An object containing the fields to update.
+   * @param {'product' | 'brand'} type - The type of entity to update.
+   * @param {string} id - The unique identifier of the entity.
+   * @param {Record<string, any>} valueToUpdate - The fields to update.
    * 
-   * @returns {Promise<any>} - A promise resolving to the updated product data.
-   * 
-   * @throws {Error} If the request fails, it triggers the `handleError()` method.
+   * @returns {Promise<any>} - A promise resolving to the updated entity.
    */
-  updateProduct(productId: string, valueToUpdate: Record<string, any>): Promise<any> {
+  updateEntity(type: 'product' | 'brand', id: string, valueToUpdate: Record<string, any>): Promise<any> {
     return lastValueFrom(
-      // Send a PATCH request with productId and the updated fields
-      this.http.patch<any>(`${this.adminURL}/updateProduct`, { productId, ...valueToUpdate }).pipe(
-        catchError(this.handleError)
-      )
+      this.http.patch<any>(`${this.adminURL}/updateEntity/${type}/${id}`, valueToUpdate)
     );
   }
-
 }

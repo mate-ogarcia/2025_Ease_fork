@@ -191,42 +191,38 @@ export class AdminController {
   }
 
   /**
-   * @brief Updates a product's information.
+   * @brief Updates an entity (product or brand) through an API endpoint.
    * 
-   * @details This endpoint allows administrators to update a product's details. 
-   * It ensures that a valid `productId` is provided and that at least one field 
-   * is specified for updating before calling the `AdminService.updateRequest()` method.
+   * @details This endpoint updates an entity in the database by calling the `AdminService.updateEntity()` method.
+   * If the entity ID or update fields are missing, it returns a `BAD_REQUEST` error.
    * 
-   * @route PATCH /admin/updateProduct
+   * @route PATCH /updateEntity/:type/:id
    * 
-   * @param {string} productId - The unique ID of the product to update (provided in the request body).
-   * @param {Record<string, any>} valueToUpdate - An object containing the fields to be updated.
+   * @param {string} type - The type of entity to update ("product" or "brand"), extracted from URL parameters.
+   * @param {string} id - The unique identifier of the entity, extracted from URL parameters.
+   * @param {Record<string, any>} valueToUpdate - The fields to update, provided in the request body.
    * 
-   * @returns {Promise<any>} - A promise resolving to the updated product data.
+   * @returns {Promise<any>} - The updated entity.
    * 
-   * @throws {HttpException} If the request is invalid (missing product ID or update fields) 
-   * or if an error occurs during the update process.
+   * @throws {HttpException} - If required parameters are missing (`BAD_REQUEST`) or if an internal server error occurs.
    */
-  @Patch('updateProduct')
-  async updateProduct(@Body("productId") productId: string, @Body() valueToUpdate: Record<string, any>) {
+  @Patch('updateEntity/:type/:id')
+  async updateEntity(
+    @Param("type") type: string,
+    @Param("id") id: string,
+    @Body() valueToUpdate: Record<string, any>
+  ) {
     try {
-      // Ensure productId is provided and at least one field is being updated
-      if (!productId || Object.keys(valueToUpdate).length === 0) {
-        throw new HttpException(
-          "Product ID and at least one field to update are required",
-          HttpStatus.BAD_REQUEST
-        );
+      if (!id || Object.keys(valueToUpdate).length === 0) {
+        throw new HttpException("Entity ID and at least one field to update are required", HttpStatus.BAD_REQUEST);
       }
 
-      // Call the admin service to process the update request
-      const updatedProduct = await this.adminService.updateRequest(productId, valueToUpdate);
-      return updatedProduct;
+      // Call the generic service method to update the entity
+      const updatedEntity = await this.adminService.updateEntity(type, id, valueToUpdate);
+      return updatedEntity;
     } catch (error) {
-      console.error("❌ Error updating the product:", error);
-      throw new HttpException(
-        "Internal server error",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      console.error(`❌ Error updating ${type}:`, error);
+      throw new HttpException("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
