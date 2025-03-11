@@ -317,8 +317,6 @@ export class ProductsService {
      */
     private async getProductsByFilters(filters: any): Promise<any[]> {
         try {
-            console.log("🔍 Searching products based on filters:", filters);
-
             // Search only in the internal database
             const internalResults = await this.databaseService.getProductsWithFilters(filters);
 
