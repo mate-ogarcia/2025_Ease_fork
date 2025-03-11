@@ -308,19 +308,26 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       );
 
       const searchRes = await this.cluster.searchQuery(_indexName, combinedQuery, {
-        fields: ["name", "description", "category", "tags"],
+        fields: ["name", "description", "category", "tags", "status"],
         highlight: {
           style: HighlightStyle.HTML,
-          fields: ["name", "description", "category", "tags"],
+          fields: ["name", "description", "category", "tags", "status"],
         },
       });
 
-      return searchRes.rows || [];
+      // Exclude unwanted statuses
+      const filteredResults = searchRes.rows.filter(row => 
+        !["add-product", "edit-product", "delete-product", "Rejected"].includes(row.fields?.status)
+      );
+      console.log('ok:', filteredResults);
+
+      return filteredResults;
     } catch (error) {
       console.error("❌ Error during FTS query:", error);
       throw new InternalServerErrorException("Full-Text Search query execution failed.");
     }
   }
+
 
   // ========================================================================
   // ======================== SEARCH FUNCTIONS (ALTERNATIVE PRODUCTS, NOT THE SUGGESTIONS)
@@ -429,7 +436,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       conditions.push(`ANY tag IN tags SATISFIES tag IN $filterTags END`);
     }
 
-    // Optimisation : Requête SQL pour trouver `FK_Brands`
+    // Optimization: SQL query to find `FK_Brands`.
     if (filters.brand) {
       conditions.push(`FK_Brands = (
         SELECT RAW META(b).id 
@@ -513,17 +520,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         queryConditions.push("id != ?");
         queryParams.push(searchCriteria.searchedProductID); // Exclude the searched product
       }
-
       if (searchCriteria.category) {
         queryConditions.push("category = ?");
         queryParams.push(searchCriteria.category);
       }
-
       if (searchCriteria.tags && searchCriteria.tags.length > 0) {
         queryConditions.push("ANY tag IN tags SATISFIES tag IN ? END");
         queryParams.push(searchCriteria.tags); // Ensures at least one tag matches
       }
-
       if (searchCriteria.brand) {
         queryConditions.push("brand != ?");
         queryParams.push(searchCriteria.brand); // Exclude the same brand
