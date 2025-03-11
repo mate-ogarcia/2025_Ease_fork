@@ -117,18 +117,20 @@ export class ProductsController {
    * @throws {BadRequestException} If required fields are missing.
    * @throws {InternalServerErrorException} If an error occurs during insertion.
    */
-    @Post("add")
-    async addProduct(@Body() product: any) {
-      if (!product) {
-        throw new BadRequestException("❌ Missing required product details!");
-      }
-  
-      try {
-        return await this.productsService.addProduct(product);
-      } catch (error) {
-        console.error("❌ Error adding product:", error);
-        throw new InternalServerErrorException("Error adding product.");
-      }
+  @Post("add")
+  async addProduct(@Body() product: any) {
+    if (!product) {
+      throw new BadRequestException("❌ Missing required product details!");
     }
+    try {
+      return await this.productsService.addProduct(product);
+    } catch (error) {
+      console.error("❌ Error adding product:", error);
 
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException("Error adding product.");
+    }
+  }
 }

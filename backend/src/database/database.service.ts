@@ -316,7 +316,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       });
 
       // Exclude unwanted statuses
-      const filteredResults = searchRes.rows.filter(row => 
+      const filteredResults = searchRes.rows.filter(row =>
         !["add-product", "edit-product", "delete-product", "Rejected"].includes(row.fields?.status)
       );
 
@@ -783,15 +783,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // ========================================================================
   // ======================== PRODUCTS FUNCTIONS
   // ========================================================================
+
   /**
    * @brief Adds a new product, handling validation and brand management.
-   * @param payload The product and brand data to be inserted.
-   * @return Promise<any> Resolves if successful, throws an error otherwise.
+   *
+   * @param {any} payload - The product and brand data to be inserted.
+   * @returns {Promise<any>} - Resolves if successful, throws an error otherwise.
    */
   async addProduct(payload: any): Promise<any> {
     const { product, newBrand } = payload;
 
-    // Check required fields
+    // Required field validation
     const requiredFields = ["name", "description", "category", "tags", "ecoscore", "origin", "source", "status"];
     const missingFields = requiredFields.filter(field => !product[field]);
     if (missingFields.length > 0) {
@@ -806,24 +808,47 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException("❌ Cannot add an external product");
     }
 
-    // Id generation
-    product.id = product.id || product.barcode || uuidv4();
-
-    // Check if the product already exists
-    const existingProduct = await this.getProductById(product.id);
-    if (existingProduct) {
-      return null; // Do not insert duplicates
+    // Check if a similar product exists
+    const existingSimilarProduct = await this.findProductByNameAndCateg(product.name, product.category);
+    if (existingSimilarProduct) {
+      console.warn(`⚠ Product similar to '${product.name}' already exists with ID: ${existingSimilarProduct.id}`);
+      throw new BadRequestException({
+        error: `A similar product ('${existingSimilarProduct.name}') already exists with ID: ${existingSimilarProduct.id}`,
+        statusCode: 400,
+      });
     }
 
-    // Brand management
+    // Generate a unique ID if necessary
+    product.id = product.id || product.barcode || uuidv4();
+
+    // Check if the product exists by ID
+    const existingProduct = await this.getProductById(product.id);
+    if (existingProduct) {
+      throw new BadRequestException({
+        error: "Product already exists.",
+        statusCode: 400,
+      });
+    }
+
+    // Handle brand management
     let brandId = product.brand ? await this.checkBrand(product.brand) : null;
     if (!brandId && newBrand) {
-      brandId = await this.addBrand(newBrand.name, newBrand.description, newBrand.status);
+      try {
+        brandId = await this.addBrand(newBrand.name, newBrand.description, newBrand.status);
+      } catch (error) {
+        if (error instanceof BadRequestException) {
+          throw new BadRequestException({
+            error: `Brand '${newBrand.name}' already exists.`,
+            statusCode: 400,
+          });
+        }
+        throw error;
+      }
     }
     product.FK_Brands = brandId || null;
     delete product.brand;
 
-    // Product creation with timestamps
+    // Create product with timestamps
     const newProduct = {
       ...product,
       createdAt: new Date().toISOString(),
@@ -834,10 +859,32 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE)
       VALUES ($productId, $newProduct)
       RETURNING *;
-    `;
+  `;
 
     const result = await this.executeQuery(query, { productId: product.id, newProduct });
-    return result.length ? result[0] : null;
+    return result.length ? result[0] : { error: "Failed to insert product." };
+  }
+
+  /**
+   * @brief Finds a product by name and category.
+   *
+   * @param {string} name - The product name.
+   * @param {string} category - The product category.
+   * @returns {Promise<any | null>} - The product data if found, otherwise null.
+   */
+  async findProductByNameAndCateg(name: string, category: string): Promise<any | null> {
+    if (!name.trim() || !category.trim()) return null;
+
+    const query = `
+      SELECT META(p).id AS id, p.name
+      FROM \`${this.productsBucket.name}\`._default._default p
+      WHERE LOWER(p.name) = LOWER($name)
+      AND LOWER(p.category) = LOWER($category)
+      LIMIT 1;
+  `;
+
+    const result = await this.executeQuery(query, { name: name.trim(), category: category.trim() });
+    return result?.[0] || null;
   }
 
   /**
@@ -962,67 +1009,63 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // ========================================================================
   /**
    * @brief Checks if a brand exists in the database.
-   * @param brandName The name of the brand to check.
-   * @return Promise<string | null> Returns the brand ID if found, otherwise null.
+   *
+   * @param {string} brandName - The brand name to check.
+   * @returns {Promise<string | null>} - The brand ID if found, otherwise null.
    */
   async checkBrand(brandName: string): Promise<string | null> {
+    if (!brandName.trim()) return null;
+
     const query = `
       SELECT META(b).id AS id 
       FROM \`${this.brandBucket.name}\`._default._default b 
       WHERE LOWER(b.name) = LOWER($brandName)
       LIMIT 1;
-    `;
+  `;
 
-    const result = await this.executeQuery(query, { brandName });
-    return result.length ? result[0].id : null;
+    const result = await this.executeQuery(query, { brandName: brandName.trim() });
+    return result?.[0]?.id || null;
   }
 
   /**
    * @brief Adds a new brand to the database if it does not already exist.
-   * 
-   * @details This method checks if the brand exists before inserting a new one.
-   * If the brand is found, it throws an exception. Otherwise, it creates a new 
-   * brand with a unique ID and inserts it into the database.
-   * 
-   * @param {string} brandName - The name of the brand.
-   * @param {string} brandDescription - The description of the brand.
-   * @param {string} [status] - The optional status of the brand.
-   * 
-   * @returns {Promise<string>} - The ID of the created or existing brand.
-   * 
+   *
+   * @param {string} brandName - The brand name.
+   * @param {string} brandDescription - The brand description.
+   * @param {string} [status] - Optional brand status.
+   *
+   * @returns {Promise<string>} - The ID of the created brand.
+   *
    * @throws {BadRequestException} - If the brand already exists.
    */
-  async addBrand(brandName: string, brandDescription: string, status?: string): Promise<string> {
-    if (!brandName) {
+  async addBrand(brandName: string, brandDescription: string, status: string = ""): Promise<string> {
+    if (!brandName.trim()) {
       throw new BadRequestException("❌ Brand name is required.");
     }
 
-    // Check if the brand already exists
     const existingBrandId = await this.checkBrand(brandName);
     if (existingBrandId) {
-      throw new BadRequestException(`❌ Brand '${brandName}' already exists with ID: ${existingBrandId}`);
+      console.warn(`⚠ Brand '${brandName}' already exists with ID: ${existingBrandId}`);
+      throw new BadRequestException(`Brand '${brandName}' already exists.`);
     }
 
-    // Create a new brand entry
     const brandId = uuidv4();
     const newBrand = {
       id: brandId,
-      name: brandName,
-      description: brandDescription || "",
-      status: status || "",
+      name: brandName.trim(),
+      description: brandDescription?.trim() || "",
+      status: status.trim(),
       createdAt: new Date().toISOString(),
     };
 
-    // Insert the brand into the database
     const query = `
-      INSERT INTO \`${this.brandBucket.name}\`._default._default (KEY, VALUE) 
-      VALUES ($brandId, $newBrand)
-      RETURNING META().id AS id;
-  `;
+        INSERT INTO \`${this.brandBucket.name}\`._default._default (KEY, VALUE)
+        VALUES ($brandId, $newBrand)
+        RETURNING META().id AS id;
+    `;
 
     const result = await this.executeQuery(query, { brandId, newBrand });
-
-    return result.length ? result[0].id : brandId;
+    return result?.[0]?.id || brandId;
   }
 
   /**
