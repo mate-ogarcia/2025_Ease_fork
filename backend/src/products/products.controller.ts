@@ -16,6 +16,7 @@ import {
   Param,
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
+import { filter } from "rxjs";
 
 @Controller("products")
 export class ProductsController {

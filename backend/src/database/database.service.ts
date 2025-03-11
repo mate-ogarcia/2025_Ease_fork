@@ -319,7 +319,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const filteredResults = searchRes.rows.filter(row => 
         !["add-product", "edit-product", "delete-product", "Rejected"].includes(row.fields?.status)
       );
-      console.log('ok:', filteredResults);
 
       return filteredResults;
     } catch (error) {
@@ -327,7 +326,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new InternalServerErrorException("Full-Text Search query execution failed.");
     }
   }
-
 
   // ========================================================================
   // ======================== SEARCH FUNCTIONS (ALTERNATIVE PRODUCTS, NOT THE SUGGESTIONS)
@@ -444,6 +442,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         WHERE b.name = $filterBrandName 
         LIMIT 1
       )`);
+    }
+
+    // Exclude unwanted statuses only for internal products
+    if (filters.productSource === "Internal") {
+      conditions.push("status NOT IN ['add-product', 'edit-product', 'delete-product']");
     }
 
     return this.buildConditions(conditions, "AND");

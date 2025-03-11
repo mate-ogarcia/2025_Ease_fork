@@ -160,6 +160,7 @@ export class ProductsService {
                 brand: referenceProduct.brand || referenceProduct.brands || null,
                 category: referenceProduct.category || referenceProduct.categories,
                 tags: referenceProduct.tags || referenceProduct._keywords || null,
+                status: referenceProduct.status,
                 currentRoute: currentRoute,
                 productSource: productSource,
             };
@@ -222,7 +223,6 @@ export class ProductsService {
      * @returns {Promise<any[]>} Array of products found in the internal database.
      */
     private async getInternalAlternatives(criteria: any): Promise<any[]> {
-        console.log('GetInternalAlternatives');
         try {
             const filters = {
                 productId: criteria.productId,
@@ -230,6 +230,7 @@ export class ProductsService {
                 brand: criteria.brand,
                 category: criteria.category,
                 tags: criteria.tags || [],
+                status: criteria.status,
                 currentRoute: criteria.currentRoute,
                 productSource: criteria.productSource,
             };
