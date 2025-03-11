@@ -113,7 +113,6 @@ export class FormComponent implements OnInit {
     }
 
     let newBrandInfo = null;
-
     if (this.isOtherBrand && this.newBrand.trim() !== '') {
       newBrandInfo = {
         name: this.newBrand,
@@ -134,9 +133,17 @@ export class FormComponent implements OnInit {
         this.onCancel();
       },
       error: (err) => {
-        console.error("Error submitting product:", err);
-        alert("Error submitting product!");
+        console.error("❌ API Error:", err);
+
+        if (err.status === 400) {
+          alert(err.error.error);
+        } else if (err.status === 0) {
+          alert("Unable to connect to server. Check your backend.");
+        } else {
+          alert("An unknown error has occurred.");
+        }
       }
+
     });
   }
 
@@ -213,5 +220,4 @@ export class FormComponent implements OnInit {
       this.product.brand = ''; // Clear brand field for a new entry
     }
   }
-
 }

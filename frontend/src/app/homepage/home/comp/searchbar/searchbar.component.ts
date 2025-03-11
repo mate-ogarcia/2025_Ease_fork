@@ -219,8 +219,7 @@ export class SearchbarComponent implements OnInit {
     setInterval(() => {
       console.log("🔄 Auto-refreshing brands...");
       this.dataCacheService.refreshBrands();
-    }, 5 * 60 * 1000);
-  
+    }, 10 * 60 * 1000);
 
     // Get the cookie's info
     const userRole = this.usersService.getUserRole();
@@ -229,9 +228,9 @@ export class SearchbarComponent implements OnInit {
   }
 
   /**
- * @function toggleFilterDropdown
- * @description Toggles the visibility of the filter dropdown.
- */
+   * @function toggleFilterDropdown
+   * @description Toggles the visibility of the filter dropdown.
+   */
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
   }
@@ -306,6 +305,18 @@ export class SearchbarComponent implements OnInit {
     this.searchResults = []; // Hide suggestions after selection.
   }
 
+  /**
+   * @brief Performs a search based on applied filters and optional selected product.
+   * 
+   * @details This method applies filters, validates if any filters are applied, 
+   * constructs the search request, and sends it to the API. The results are processed, 
+   * ensuring the selected product appears first if included, and then navigates 
+   * to the results page.
+   * 
+   * @param {boolean} [includeSelectedProduct=false] - Whether to include the selected product in the search.
+   * 
+   * @returns {void}
+   */
   search(includeSelectedProduct: boolean = false): void {
     this.applyFilters(); // Apply filters before performing the search.
 
