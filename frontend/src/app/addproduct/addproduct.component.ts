@@ -18,10 +18,10 @@ export class AddproductComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    // Vérification supplémentaire des permissions
+    // Additional verification of permissions
     this.authService.getUserRole().subscribe((role: string | null) => {
-      if (!role || !['Admin', 'User'].includes(role)) {
-        this.router.navigate(['/']); // Redirection si pas le bon rôle
+      if (!role || !['Admin', 'User', 'SuperAdmin'].includes(role)) {
+        this.router.navigate(['/']); // Redirect if wrong role
       }
     });
   }

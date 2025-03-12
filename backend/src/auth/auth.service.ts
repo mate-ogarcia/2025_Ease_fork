@@ -60,6 +60,8 @@ export class AuthService {
 
     console.log('user :', user);
 
+    console.log('user :', user);
+
     return {
       email: user.email,
       username: user.username,
@@ -131,12 +133,8 @@ export class AuthService {
         password: hashedPassword,
         role,
       });
-
-      console.log('user created:', user);
       
-      // TODO: correct this
       return {
-        id: user.id,
         email: user.email,
         username: user.username,
         role: user.role,

@@ -28,14 +28,14 @@
     <li class="user">
       <div class="log-container">
         <ng-container class="log-info" *ngIf="isAuthenticated; else loginTemplate">
-          <!--Image de profil qui ouvre le menu déroulant -->
+          <!--Profile image that opens the drop-down menu -->
           <img class="userprofile" src="rhinoceros.png" alt="Profile" (click)="toggleDropdown()">
-          <!-- Menu déroulant -->
+          <!-- Drop-down menu -->
           <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
             <span routerLink="/user-profile" class="profile-btn"><i class="fas fa-user"></i> Profile</span>
-            <!-- Ajout du bouton admin si l'utilisateur est un administrateur -->
-            <span *ngIf="userRole === 'Admin'" routerLink="/admin" class="profile-btn admin-btn"><i
-                class="fas fa-user-shield"></i> Dashboard Admin</span>
+            <!-- Add admin button if user is an administrator -->
+            <span *ngIf="userRole === 'Admin' || userRole === 'SuperAdmin'" routerLink="/admin"
+              class="profile-btn admin-btn"><i class="fas fa-user-shield"></i>Dashboard Admin</span>
             <span (click)="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Log out</span>
           </div>
         </ng-container>
