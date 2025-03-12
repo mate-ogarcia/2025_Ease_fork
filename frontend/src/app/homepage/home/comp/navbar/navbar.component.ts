@@ -2,7 +2,6 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../../services/auth/auth.service';
-import { UsersService } from '../../../../../services/users/users.service';
 
 
 /**
@@ -26,7 +25,7 @@ export class NavbarComponent implements OnInit {
 
   /**
    * @brief Constructor injecting authentication service.
-   * @param[in] authService Service for authentication management.
+   * @param authService Service for authentication management.
    */
   constructor(
     private authService: AuthService,

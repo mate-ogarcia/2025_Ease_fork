@@ -5,7 +5,11 @@ import { UsercompComponent } from './usercomp/usercomp.component';
 
 @Component({
   selector: 'app-userprofile',
-  imports: [NavbarComponent,UsercompComponent],
+  imports: [
+    NavbarComponent,
+    UsercompComponent,
+    CommonModule
+  ],
   templateUrl: './userprofile.component.html',
   styleUrl: './userprofile.component.css'
 })

@@ -75,6 +75,8 @@ export class AuthService {
    * @private
    */
   private jwtHelper = new JwtHelperService();
+  // store user info
+  private user: { email: string, role: string, username: string } | null = null;
 
   /**
    * @constructor
@@ -211,6 +213,7 @@ export class AuthService {
         tap((response: any) => {
           const decodedToken = this.jwtHelper.decodeToken(response.access_token);
           this.updateAuthState(true, decodedToken.role);
+          this.user = response.user;
         })
       );
   }
@@ -309,5 +312,13 @@ export class AuthService {
   hasRole(roles: string[]): boolean {
     const currentRole = this.authState.value.role;
     return currentRole !== null && roles.includes(currentRole);
+  }
+
+  /**
+   * Retrieve user information
+   * @returns User information
+   */
+  getUserInfo(): { email: string, role: string, username: string } | null {
+    return this.user;
   }
 }
