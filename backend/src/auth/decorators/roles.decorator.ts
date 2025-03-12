@@ -8,7 +8,6 @@
 
 import { SetMetadata } from "@nestjs/common";
 import { UserRole } from "../enums/roles.enum";
-
 /**
  * @brief Key used to store roles metadata.
  */

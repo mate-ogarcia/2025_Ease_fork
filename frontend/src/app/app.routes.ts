@@ -3,33 +3,16 @@ import { AuthGuard } from '../services/auth/auth.guard';
 
 export const routes: Routes = [
   {
-    path: 'admin-init',
-    loadComponent: () =>
-      import('./admin/admin-init/admin-init.component').then((m) => m.AdminInitComponent),
-  },
-  {
     path: 'admin',
     loadComponent: () =>
-      import('./admin/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
+      import('./superadmin/superadmin.component').then((m) => m.SuperadminComponent),
     canActivate: [AuthGuard],
-    data: { roles: ['Admin'] },
-  },
-  {
-    path: 'admin/users',
-    loadComponent: () =>
-      import('./admin/user-management/user-management.component').then((m) => m.UserManagementComponent),
-    canActivate: [AuthGuard],
-    data: { roles: ['Admin'] },
+    data: { roles: ['Admin', 'SuperAdmin'] },
   },
   {
     path: 'products-alternative/:id/:source',
     loadComponent: () =>
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),
-  },
-  {
-    path: 'superadmin',
-    loadComponent: () =>
-      import('./superadmin/superadmin.component').then((m) => m.SuperadminComponent),
   },
   {
     path: 'home',
@@ -48,7 +31,7 @@ export const routes: Routes = [
         (m) => m.UserprofileComponent
       ),
     canActivate: [AuthGuard],
-    data: { roles: ['Admin', 'User'] },
+    data: { roles: ['Admin', 'User', 'SuperAdmin'] },
   },
   {
     path: 'add-product',
@@ -57,7 +40,7 @@ export const routes: Routes = [
         (m) => m.AddproductComponent
       ),
     canActivate: [AuthGuard],
-    data: { roles: ['Admin', 'User'] },
+    data: { roles: ['Admin', 'User', 'SuperAdmin'] },
   },
   {
     path: 'searched-prod',

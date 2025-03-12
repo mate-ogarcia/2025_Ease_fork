@@ -22,8 +22,6 @@ export class NavbarComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router,
-    private usersService: UsersService,
   ) { }
 
   ngOnInit(): void {
@@ -36,7 +34,7 @@ export class NavbarComponent implements OnInit {
     this.authService.getUserRole().subscribe((role) => {
       this.userRole = role;
       // Vérifier si le rôle permet d'ajouter un produit
-      this.canAddProduct = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin';
+      this.canAddProduct = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'superadmin';
     });
 
     this.checkScreenSize(); // Vérifie la taille au chargement
@@ -56,9 +54,11 @@ export class NavbarComponent implements OnInit {
   }
 
   logout() {
-    this.authService.logout();
+    this.authService.logout().subscribe();
     this.showDropdown = false;
   }
+
+
 
   // Vérifie la taille de l'écran et met à jour isMobile
   @HostListener('window:resize', ['$event'])

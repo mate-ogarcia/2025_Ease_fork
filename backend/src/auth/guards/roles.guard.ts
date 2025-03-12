@@ -33,6 +33,7 @@ export class RolesGuard implements CanActivate {
   /**
    * @brief Determines if the request can proceed based on user roles.
    * @details Checks if the authenticated user has at least one of the required roles.
+   *          SUPERADMIN role has access to all protected routes regardless of the required roles.
    *
    * @param {ExecutionContext} context - The execution context of the request.
    * @returns {boolean} Whether the user has the required role.
@@ -75,6 +76,7 @@ export class RolesGuard implements CanActivate {
       email: user.email,
       role: user.role
     });
+
 
     const hasRequiredRole = requiredRoles.some((role) => user.role === role);
 

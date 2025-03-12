@@ -15,7 +15,7 @@ import { Observable, map, tap } from 'rxjs';
   providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
   /**
    * @brief Determines if a route can be activated based on authentication status and role.
@@ -36,10 +36,24 @@ export class AuthGuard implements CanActivate {
 
         const requiredRoles = route.data['roles'] as Array<string>;
         console.log('🎯 Rôles requis:', requiredRoles);
-        
-        if (requiredRoles && !requiredRoles.includes(role)) {
-          console.log('❌ Rôle insuffisant, redirection vers accueil');
-          this.router.navigate(['/']);
+
+        // Convertir le rôle actuel en minuscules pour la comparaison
+        const currentRole = role.toLowerCase();
+
+        // Vérifier si le rôle actuel est dans la liste des rôles requis
+        const hasRequiredRole = requiredRoles?.some(r => r.toLowerCase() === currentRole);
+
+        console.log('🔍 Vérification des rôles:', {
+          currentRole,
+          requiredRoles,
+          hasRequiredRole
+        });
+
+        if (requiredRoles && !hasRequiredRole) {
+          console.log('❌ Rôle insuffisant:', role);
+          console.log('❌ Rôles requis:', requiredRoles);
+          // Rediriger vers la page d'accueil si le rôle est insuffisant
+          this.router.navigate(['/home']);
           return false;
         }
 

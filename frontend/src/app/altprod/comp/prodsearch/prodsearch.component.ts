@@ -15,24 +15,8 @@ import { ApiService } from '../../../../services/api.service';
 import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 import { DataCacheService } from '../../../../services/cache/data-cache.service';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
-
-/** 
- * @struct Product
- * @brief Interface representing product details.
- */
-interface Product {
-  id: string;                     // Unique identifier of the product.
-  name: string;                   // Name of the product.
-  brand: string;                  // Brand of the product.
-  description: string;             // Description of the product.
-  category: string;                // Category of the product.
-  tags: string[];                  // Associated tags for the product.
-  ecoscore: string;                // Ecoscore rating of the product.
-  origin: string;                  // Country of origin of the product.
-  manufacturing_places: string;    // Manufacturing locations of the product.
-  image: string;                   // Image URL of the product.
-  source: 'Internal' | 'OpenFoodFacts'; // Data source of the product.
-}
+// Model
+import { Product } from '../../../models/product.model';
 
 /**
  * @class ProdsearchComponent
@@ -129,28 +113,32 @@ export class ProdsearchComponent implements OnInit {
     this.dataCacheService.checkIfEuropean(this.productDetails.origin).subscribe(isEuropean => {
       this.isEuropean = isEuropean;
     });
-    this.loadProductImage(this.productDetails.name);
+    this.loadProductImage(this.productDetails);
   }
 
   /**
-   * @brief Fetches a product image from Unsplash via the APIUnsplash service.
-   * @param productName The name of the product.
+   * @brief Fetches a product image from Unsplash only if the product has no existing image.
+   * @param product The product object.
    */
-  loadProductImage(productName: string) {
-    if (!productName) return;
-    this.apiUnsplash.searchPhotos(productName).subscribe({
+  loadProductImage(product: Product) {
+    if (!product || !product.name) return;
+
+    // Check if the product already has an image
+    if (product.image) {
+      return;
+    }
+
+    this.apiUnsplash.searchPhotos(product.name).subscribe({
       next: (response) => {
         if (response.imageUrl) {
-          if (this.productDetails) {
-            this.productDetails.image = response.imageUrl;
-          } else {
-            console.warn("⚠️ productDetails is null, cannot assign image.");
-          }
+          product.image = response.imageUrl;
         } else {
-          console.warn(`🚫 No image found for ${productName}`);
+          console.warn(`🚫 No image found for : ${product.name}`);
         }
       },
-      error: (error) => console.error("❌ Error retrieving image from Unsplash API:", error),
+      error: (error) => {
+        console.error(`❌ Image retrieval error for ${product.name}:`, error);
+      }
     });
   }
 

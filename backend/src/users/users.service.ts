@@ -12,8 +12,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
-import { UserRole } from "../auth/enums/roles.enum";
-
+import { UserRole } from "src/auth/enums/roles.enum";
 /**
  * @brief Service responsible for user management operations.
  * @details This service provides methods for creating, retrieving, updating, and deleting users.
@@ -44,22 +43,12 @@ export class UsersService {
         console.log(`⚠️ User not found for email: ${email}`);
         throw new NotFoundException("User not found.");
       }
-
-      console.log(`✅ User found for email ${email}:`, {
-        id: user.id,
-        email: user.email,
-        role: user.role
-      });
-
       // Return user data directly
       return {
-        id: user.id,
         email: user.email,
         username: user.username,
         password: user.password,
         role: user.role,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
       };
     } catch (error) {
       console.error(`❌ Error finding user by email ${email}:`, error.message);
@@ -84,6 +73,7 @@ export class UsersService {
         user.username,
         user.email,
         user.password,
+        user.role
       );
       return result;
     } catch (error) {
@@ -93,39 +83,40 @@ export class UsersService {
   }
 
   /**
-   * @brief Retrieves all users from the database.
-   * @details This method queries the database to get a list of all registered users.
+   * @brief Retrieves all users from the database, excluding SuperAdmins and the current user.
+   * @details This method queries the database to get a filtered list of registered users.
    *
-   * @returns {Promise<any[]>} Array of user objects.
+   * @param {string} currentUserEmail - Email of the currently connected user to exclude.
+   * @returns {Promise<any[]>} Array of filtered user objects.
    * @throws {InternalServerErrorException} If an error occurs during retrieval.
    */
-  async findAll(): Promise<any[]> {
+  async findAll(currentUserEmail?: string): Promise<any[]> {
     try {
-      console.log("🔍 UsersService - Retrieving all users");
-      const users = await this.databaseService.getAllUsers();
-      console.log(`✅ UsersService - Retrieved ${users?.length || 0} users`);
+      console.log("🔍 UsersService - Retrieving filtered users");
+      const users = await this.databaseService.getFilteredUsers(currentUserEmail);
+      console.log(`✅ UsersService - Retrieved ${users?.length || 0} filtered users`);
       return users;
     } catch (error) {
-      console.error("❌ UsersService - Error retrieving all users:", error);
+      console.error("❌ UsersService - Error retrieving filtered users:", error);
       throw new InternalServerErrorException("Error retrieving users list.");
     }
   }
 
   /**
    * @brief Updates a user's role.
-   * @details This method changes the role of a specified user in the database.
+   * @details This method updates the role of a user with the specified email.
    *
-   * @param {string} id - The ID of the user to update.
+   * @param {string} email - The email of the user to update.
    * @param {UserRole} role - The new role to assign.
    * @returns {Promise<any>} The updated user object.
-   * @throws {NotFoundException} If the user with the specified ID is not found.
+   * @throws {NotFoundException} If the user with the specified email is not found.
    * @throws {InternalServerErrorException} If an error occurs during the update.
    */
-  async updateRole(id: string, role: UserRole): Promise<any> {
+  async updateRole(email: string, role: UserRole): Promise<any> {
     try {
-      const result = await this.databaseService.updateUserRole(id, role);
+      const result = await this.databaseService.updateUserRole(email, role);
       if (!result) {
-        throw new NotFoundException(`User with ID ${id} not found`);
+        throw new NotFoundException(`User with email ${email} not found`);
       }
       return result;
     } catch (error) {
@@ -136,18 +127,18 @@ export class UsersService {
 
   /**
    * @brief Deletes a user from the database.
-   * @details This method removes a user with the specified ID from the database.
+   * @details This method removes a user with the specified email from the database.
    *
-   * @param {string} id - The ID of the user to delete.
+   * @param {string} email - The email of the user to delete.
    * @returns {Promise<void>}
-   * @throws {NotFoundException} If the user with the specified ID is not found.
+   * @throws {NotFoundException} If the user with the specified email is not found.
    * @throws {InternalServerErrorException} If an error occurs during deletion.
    */
-  async delete(id: string): Promise<void> {
+  async delete(email: string): Promise<void> {
     try {
-      const result = await this.databaseService.deleteUser(id);
+      const result = await this.databaseService.deleteUser(email);
       if (!result) {
-        throw new NotFoundException(`User with ID ${id} not found`);
+        throw new NotFoundException(`User with email ${email} not found`);
       }
     } catch (error) {
       console.error("❌ Error deleting user:", error);

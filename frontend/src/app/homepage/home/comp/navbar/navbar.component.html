@@ -34,8 +34,8 @@
           <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
             <span routerLink="/user-profile" class="profile-btn"><i class="fas fa-user"></i> Profile</span>
             <!-- Ajout du bouton admin si l'utilisateur est un administrateur -->
-            <span *ngIf="userRole === 'Admin'" routerLink="/admin" class="profile-btn admin-btn"><i
-                class="fas fa-user-shield"></i> Dashboard Admin</span>
+            <span *ngIf="userRole === 'Admin' || userRole === 'SuperAdmin'" routerLink="/admin"
+              class="profile-btn admin-btn"><i class="fas fa-user-shield"></i>Dashboard Admin</span>
             <span (click)="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Log out</span>
           </div>
         </ng-container>

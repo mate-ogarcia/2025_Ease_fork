@@ -11,7 +11,7 @@
  */
 export enum UserRole {
   /**
-   * @brief Administrator role with full access to all features.
+   * @brief Administrator role with almost full access to all features.
    */
   ADMIN = "Admin",
 
@@ -19,4 +19,14 @@ export enum UserRole {
    * @brief Standard user role with limited access to features.
    */
   USER = "User",
+
+  /**
+   * @brief Super administrator role with full access to all features.
+   */
+  SUPERADMIN = "SuperAdmin",
+
+  /**
+   * @brief Banned user role with no access to features.
+   */
+  BANNED = "Banned"
 }

@@ -70,7 +70,7 @@ export class DisplayResultsComponent implements OnInit {
         });
       }
     });
-  }
+  } 
 
   /**
    * @brief Sets the display mode for the results view.

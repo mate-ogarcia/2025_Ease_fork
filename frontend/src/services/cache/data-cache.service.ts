@@ -8,22 +8,20 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { ApiService } from '../api.service';
 
 @Injectable({
   providedIn: 'root', // Ensures the service is a singleton
 })
-export class DataCacheService {
-  //  BehaviorSubject<T> : Allows components to access the latest value at any time.
-  private countries$ = new BehaviorSubject<string[]>([]);   // Stores the cached list of European countries
-  private categories$ = new BehaviorSubject<any[]>([]);     // Stores the cached list of product categories
-  private brands$ = new BehaviorSubject<any[]>([]);         // Stores the cached list of brands
-
-  private isLoaded = false; // Flag to prevent redundant data loading
-  private apiCountriesUrl = environment.apiCountrieUrl;     // Backend API endpoint for fetching European countries
+export class DataCacheService {  
+  private countries$ = new ReplaySubject<string[]>(1);  // Subject holding the list of European countries.
+  private categories$ = new ReplaySubject<any[]>(1);    // Subject holding the list of product categories.
+  private brands$ = new ReplaySubject<any[]>(1);        // Subject holding the list of brands.
+  private isLoaded = false;                             // Flag to prevent redundant data loading.
+  private apiCountriesUrl = environment.apiCountrieUrl; // Backend URL
 
   /**
    * @brief Constructor initializes the HTTP client and API service.
@@ -39,31 +37,61 @@ export class DataCacheService {
    * @brief Loads all necessary data (countries, categories, brands) only once.
    * 
    * This function ensures that the data is fetched only once and stored in a cache.
+   * Prevents unnecessary reloading on F5 (data is stored in localStorage).
+   * Optimizes performance by reducing HTTP requests.
+   * Ensures that data is loaded only once, even if the user refreshes the page.
    */
   loadData(): void {
     if (this.isLoaded) return;
     this.isLoaded = true;
-
-    // Load countries from the backend NestJS API
+  
+    const cachedCountries = localStorage.getItem('countries');
+    const cachedCategories = localStorage.getItem('categories');
+    const cachedBrands = localStorage.getItem('brands');
+  
+    if (cachedCountries && cachedCategories) {
+      this.countries$.next(JSON.parse(cachedCountries));
+      this.categories$.next(JSON.parse(cachedCategories));
+    }
+    // Fetch European countries
     this.http.get<string[]>(this.apiCountriesUrl).pipe(
-      tap(countries => this.countries$.next(countries))
-    ).subscribe({
-      error: (error) => console.error('❌ Error fetching countries:', error)
-    });
-
-    // Load product categories from the backend API
+      tap(countries => {
+        localStorage.setItem('countries', JSON.stringify(countries));
+        this.countries$.next(countries);
+      })
+    ).subscribe();
+    // Fetch all the category name in the DB
     this.apiService.getAllCategories().pipe(
-      tap(categories => this.categories$.next(categories.sort()))
-    ).subscribe({
-      error: (error) => console.error('❌ Error fetching categories:', error)
-    });
-
-    // Load brands from the backend API
+      tap(categories => {
+        localStorage.setItem('categories', JSON.stringify(categories));
+        this.categories$.next(categories.sort());
+      })
+    ).subscribe();
+    // Fetch all the brand name in the DB
     this.apiService.getAllBrands().pipe(
-      tap(brands => this.brands$.next(brands.sort()))
-    ).subscribe({
-      error: (error) => console.error('❌ Error fetching brands:', error)
-    });
+      tap(brands => {
+        localStorage.setItem('brands', JSON.stringify(brands));
+        this.brands$.next(brands.sort());
+      })
+    ).subscribe();
+  
+    if (cachedBrands) {
+      this.brands$.next(JSON.parse(cachedBrands));
+    }
+    this.refreshBrands();
+  }
+  
+  /**
+   * @brief Refreshes the brand list on demand.
+   * @note This function is useful if the brand data changes frequently.
+   */
+  refreshBrands(): void {
+    this.apiService.getAllBrands().pipe(
+      tap(brands => {
+        localStorage.setItem('brands', JSON.stringify(brands));
+        this.brands$.next(brands.sort());
+      })
+    ).subscribe();
   }
 
   /**
@@ -96,11 +124,8 @@ export class DataCacheService {
    * @return Observable<boolean> Returns true if the country is European, false otherwise.
    */
   checkIfEuropean(origin: string): Observable<boolean> {
-    return new Observable<boolean>(observer => {
-      this.getCountries().subscribe(countries => {
-        observer.next(countries.includes(origin));
-        observer.complete();
-      });
-    });
+    return this.countries$.pipe(
+      map((countries: string[]) => countries.includes(origin))
+    );
   }
 }

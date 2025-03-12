@@ -1,32 +1,26 @@
 <div class="dashboard-container">
-    <!-- Barre d'onglets -->
-    <nav class="tab-bar">
-      <a 
-        [class.active]="activeTab === 'stats'" 
-        (click)="selectTab('stats')">
-        <i class="fa-solid fa-chart-pie"></i>Statistiques
-      </a>
-      <a 
-        [class.active]="activeTab === 'users'" 
-        (click)="selectTab('users')">
-        <i class="fa-solid fa-users-gear"></i>Utilisateurs
-      </a>
-      <a 
-        [class.active]="activeTab === 'products'" 
-        (click)="selectTab('products')">
-        <i class="fa-solid fa-cloud-arrow-up"></i>Demandes Produits
-      </a>
-    </nav>
-  
-    <!-- Contenu qui dépend de l'onglet sélectionné -->
-    <div class="tab-content">
-      <!-- Si l'onglet est 'stats', on affiche <app-stats> -->
-      <app-stats *ngIf="activeTab === 'stats'"></app-stats>
-  
-      <!-- Si l'onglet est 'users', on affiche <app-user-management> -->
-      <app-users *ngIf="activeTab === 'users'"></app-users>
-  
-      <!-- Si l'onglet est 'products', on affiche <app-product-requests> -->
-      <app-product-requests *ngIf="activeTab === 'products'"></app-product-requests>
-    </div>
+  <!-- Barre d'onglets -->
+  <nav class="tab-bar">
+    <a [class.active]="activeTab === 'stats'" (click)="selectTab('stats')">
+      <i class="fa-solid fa-chart-pie"></i>Statistiques
+    </a>
+    <a [class.active]="activeTab === 'users' " (click)="selectTab('users')">
+      <i class="fa-solid fa-users-gear"></i>Utilisateurs
+    </a>
+    <a [class.active]="activeTab === 'products'" (click)="selectTab('products')">
+      <i class="fa-solid fa-cloud-arrow-up"></i>Demandes Produits
+    </a>
+  </nav>
+
+  <!-- Contenu qui dépend de l'onglet sélectionné -->
+  <div class="tab-content">
+    <!-- Si l'onglet est 'stats', on affiche <app-stats> -->
+    <app-stats *ngIf="activeTab === 'stats'"></app-stats>
+
+    <!-- Si l'onglet est 'users', on affiche <app-user-management> -->
+    <app-users *ngIf="activeTab === 'users'"></app-users>
+
+    <!-- Si l'onglet est 'products', on affiche <app-product-requests> -->
+    <app-product-requests *ngIf="activeTab === 'products'"></app-product-requests>
   </div>
+</div>
