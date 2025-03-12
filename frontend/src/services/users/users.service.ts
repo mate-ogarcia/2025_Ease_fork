@@ -37,6 +37,7 @@ export class UsersService {
    * 
    * @details
    * - Retrieves the JWT from the `access_token` cookie.
+   * - If not found, retrieves the JWT from the `accessToken` cookie.
    * - Decodes the token using `jwtDecode`.
    * - Extracts the `role` field from the decoded payload.
    *
@@ -47,12 +48,18 @@ export class UsersService {
    * @throws {Error} Potentially throws if the token is malformed or the `jwtDecode` function fails.
    */
   getUserRole(): string | null {
-    const token = this.cookieService.get('access_token');
-    if (!token) return null; // Return null if token is missing
+    // Essayer d'abord access_token
+    let token = this.cookieService.get('access_token');
+    if (!token) {
+      // Si pas trouvé, essayer accessToken
+      token = this.cookieService.get('accessToken');
+      if (!token) return null;
+    }
 
     try {
-      const decoded: any = jwtDecode(token); // Decode the JWT token
-      return decoded.role ?? null; // Return the role or null if undefined
+      const decoded: any = jwtDecode(token);
+      console.log("🔑 Decoded token:", decoded);
+      return decoded.role ?? null;
     } catch (error) {
       console.error("❌ Error decoding JWT:", error);
       return null;

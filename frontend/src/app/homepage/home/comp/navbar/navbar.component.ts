@@ -5,6 +5,10 @@ import { AuthService } from '../../../../../services/auth/auth.service';
 import { UsersService } from '../../../../../services/users/users.service';
 
 
+/**
+ * @brief Navbar component for handling navigation and user interactions.
+ * @details Manages authentication status, role-based UI changes, and responsive menu behavior.
+ */
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
@@ -13,60 +17,73 @@ import { UsersService } from '../../../../../services/users/users.service';
   imports: [CommonModule, RouterModule, RouterLink],
 })
 export class NavbarComponent implements OnInit {
-  menuOpen = false;
-  isAuthenticated = false;
-  showDropdown = false; // Gère le menu sur desktop
-  isMobile = false; // Détecte si on est en mode responsive
-  userRole: string | null = null; // Ajout de la propriété pour stocker le rôle
-  canAddProduct: boolean = false; // Default: user cannot add product
+  menuOpen = false; // Controls the mobile menu state.
+  isAuthenticated = false; // Tracks user authentication status.
+  showDropdown = false; // Manages the dropdown menu visibility on desktop.
+  isMobile = false; // Detects if the screen is in mobile mode.
+  userRole: string | null = null; // Stores the user role.
+  canAddProduct: boolean = false; // Determines if the user can add a product.
 
+  /**
+   * @brief Constructor injecting authentication service.
+   * @param[in] authService Service for authentication management.
+   */
   constructor(
     private authService: AuthService,
   ) { }
 
+  /**
+   * @brief Initializes component, checks authentication, and retrieves user role.
+   */
   ngOnInit(): void {
-    // Vérifier si l'utilisateur est authentifié
     this.authService.isAuthenticated().subscribe((status) => {
       this.isAuthenticated = status;
     });
 
-    // Récupérer le rôle de l'utilisateur
     this.authService.getUserRole().subscribe((role) => {
       this.userRole = role;
-      // Vérifier si le rôle permet d'ajouter un produit
-      this.canAddProduct = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin';
+      this.canAddProduct = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'superadmin';
     });
 
-    this.checkScreenSize(); // Vérifie la taille au chargement
-
-    // Ajouter Font Awesome si ce n'est pas déjà fait
+    this.checkScreenSize();
     this.loadFontAwesome();
   }
 
+  /**
+   * @brief Toggles the mobile menu state.
+   */
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
   }
 
+  /**
+   * @brief Toggles the dropdown menu on desktop.
+   */
   toggleDropdown() {
     if (!this.isMobile) {
       this.showDropdown = !this.showDropdown;
     }
   }
 
+  /**
+   * @brief Logs out the user and closes the dropdown menu.
+   */
   logout() {
     this.authService.logout().subscribe();
     this.showDropdown = false;
   }
   
-  
-
-  // Vérifie la taille de l'écran et met à jour isMobile
+  /**
+   * @brief Checks the screen size and updates isMobile accordingly.
+   */
   @HostListener('window:resize', ['$event'])
   checkScreenSize() {
     this.isMobile = window.innerWidth <= 768;
   }
 
-  // Fonction pour charger Font Awesome si nécessaire
+  /**
+   * @brief Loads Font Awesome dynamically if not already included.
+   */
   private loadFontAwesome() {
     if (!document.getElementById('font-awesome-css')) {
       const link = document.createElement('link');
@@ -77,3 +94,4 @@ export class NavbarComponent implements OnInit {
     }
   }
 }
+

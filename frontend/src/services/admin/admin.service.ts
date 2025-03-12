@@ -17,7 +17,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { lastValueFrom, Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, map, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 /**
@@ -130,22 +130,6 @@ export class AdminService {
     );
   }
 
-  /**
-   * @method createInitialAdmin
-   * @description Creates the initial administrator account for system setup.
-   * 
-   * Used during initial system setup to create the first administrator account.
-   * 
-   * @param {string} email - The email address for the admin account.
-   * @param {string} password - The password for the admin account.
-   * @returns {Observable<any>} An observable containing the server response.
-   * @public
-   */
-  createInitialAdmin(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.adminURL}/initialize`, { email, password }).pipe(
-      catchError(this.handleError)
-    );
-  }
 
   /**
    * @method getAllRequests
@@ -178,6 +162,42 @@ export class AdminService {
   updateEntity(type: 'product' | 'brand', id: string, valueToUpdate: Record<string, any>): Promise<any> {
     return lastValueFrom(
       this.http.patch<any>(`${this.adminURL}/updateEntity/${type}/${id}`, valueToUpdate)
+    );
+  }
+
+
+    // Récupère le rôle de l'utilisateur actuel
+    getCurrentUserRole(): Observable<string> {
+      console.log('🔄 Récupération du rôle utilisateur...');
+      return this.http.get<{ role: string }>(`${this.adminURL}/currentUserRole`, {
+        withCredentials: true
+      }).pipe(
+        map(response => {
+          console.log('✅ Rôle reçu:', response);
+          return response.role;
+        }),
+        retry(3),
+        catchError((error) => {
+          console.error('❌ Erreur lors de la récupération du rôle:', error);
+          return this.handleError(error);
+        })
+      );
+    }
+
+  /**
+   * @method getAllRoles
+   * @description Retrieves all available user roles from the system.
+   * 
+   * Fetches a list of all possible roles that can be assigned to users.
+   * 
+   * @returns {Observable<string[]>} An observable containing an array of role names.
+   * @public
+   */
+  getAllRoles(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.adminURL}/roles`, {
+      withCredentials: true
+    }).pipe(
+      catchError(this.handleError)
     );
   }
 }

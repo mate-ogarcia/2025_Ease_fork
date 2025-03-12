@@ -666,22 +666,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @throws {InternalServerErrorException} In case of error.
    */
   async getAllUsers(): Promise<any[]> {
-    const bucketName = process.env.USER_BUCKET_NAME;
+    const bucketName = this.usersBucket.name;
     if (!bucketName) {
       throw new Error("❌ USER_BUCKET_NAME is not defined in environment variables.");
     }
 
     const query = `
-      SELECT 
-        META(u).id AS id, 
-        COALESCE(u.email, 'unknown') AS email,
-        COALESCE(u.username, 'unknown') AS username,
-        COALESCE(u.role, 'user') AS role,
-        COALESCE(u.createdAt, NOW_STR()) AS createdAt,
-        COALESCE(u.updatedAt, NOW_STR()) AS updatedAt
+      SELECT META(u).id as id, u.*
       FROM \`${bucketName}\`._default._default u
       WHERE u.email IS NOT MISSING
-      ORDER BY u.createdAt DESC;
+      ORDER BY u.createdAt DESC
     `;
 
     return this.executeQuery(query);
@@ -695,7 +689,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async updateUserRole(id: string, role: string): Promise<any> {
     const query = `
-      UPDATE \`${process.env.USER_BUCKET_NAME}\`
+      UPDATE \`${this.usersBucket.name}\`
       SET role = $role
       WHERE META().id = $id
       RETURNING META().id as id, email, username, role, createdAt, updatedAt;
@@ -778,6 +772,33 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     const result = await this.executeQuery(query, { email });
     return result.length ? result[0] : null;
+  }
+
+  /**
+   * @brief Retrieves all users from the database, excluding SuperAdmins and optionally the current user.
+   * 
+   * @param[in] currentUserEmail (Optional) Email of the currently connected user to exclude.
+   * @return Filtered array of users.
+   * @throws Error if the retrieval process fails.
+   */
+  async getFilteredUsers(): Promise<any[]> {
+    try {
+      // Fetch all users
+      const allUsers = await this.getAllUsers();
+
+      // Filter superadmin and current users
+      return allUsers.filter(user => {
+        // Exculude superadmin
+        if (user.role === 'SuperAdmin') {
+          return false;
+        }
+
+        return true;
+      });
+    } catch (error) {
+      console.error("❌ Error in getFilteredUsers:", error);
+      throw new Error("Failed to retrieve filtered users list");
+    }
   }
 
   // ========================================================================

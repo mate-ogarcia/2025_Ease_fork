@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../services/auth/auth.service';
 import { SearchbarComponent } from '../../../homepage/home/comp/searchbar/searchbar.component';
-import { UsersService } from '../../../../services/users/users.service';
 
+/**
+ * @brief Navbar component for handling navigation, authentication, and user roles.
+ * @details Manages the menu state, user authentication, and access permissions based on roles.
+ */
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
@@ -13,53 +16,77 @@ import { UsersService } from '../../../../services/users/users.service';
   imports: [CommonModule, RouterModule, RouterLink, SearchbarComponent],
 })
 export class NavbarComponent implements OnInit {
-  menuOpen = false;
-  isAuthenticated = false;
-  showDropdown = false; // Gère le menu sur desktop
-  isMobile = false; // ✅ Détecte si on est en mode responsive
-  canAddProduct: boolean = false;   // Default: user cannot add product
+  menuOpen = false; // Controls the mobile menu state.
+  isAuthenticated = false; // Tracks user authentication status.
+  showDropdown = false; // Manages the dropdown menu visibility on desktop.
+  isMobile = false; // Detects if the screen is in mobile mode.
+  userRole: string | null = null; // Stores the user role.
+  canAddProduct: boolean = false; // Determines if the user can add a product.
+  canAccessDashboard: boolean = false; // Determines if the user can access the dashboard.
 
+  /**
+   * @brief Constructor for NavbarComponent.
+   * @param authService Service for authentication management.
+   * @param router Angular Router service.
+   * @param usersService Service for handling user-related data.
+   * @param cookieService Service for managing cookies.
+   */
   constructor(
-    private authService: AuthService, 
-    private router: Router,
-    private usersService: UsersService,
-  
+    private authService: AuthService,
   ) { }
 
-
-
+  /**
+   * @brief Toggles the mobile menu state.
+   */
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
   }
 
+  /**
+   * @brief Toggles the dropdown menu on desktop.
+   */
   toggleDropdown() {
     if (!this.isMobile) {
       this.showDropdown = !this.showDropdown;
     }
   }
 
-
+  /**
+   * @brief Logs out the user and closes the dropdown menu.
+   */
   logout(): void {
-    this.authService.logout();
+    this.authService.logout().subscribe();
     this.showDropdown = false;
   }
 
-  // ✅ Vérifie la taille de l'écran et met à jour isMobile
+  /**
+   * @brief Checks the screen size and updates isMobile accordingly.
+   */
   @HostListener('window:resize', ['$event'])
   checkScreenSize() {
     this.isMobile = window.innerWidth <= 850;
   }
-  async ngOnInit(): Promise<void> {
+
+  /**
+   * @brief Initializes the component, checks authentication status, role, and permissions.
+   * @details Also retrieves cookies and decodes JWT token for debugging purposes.
+   */
+  ngOnInit(): void {
+
     this.authService.isAuthenticated().subscribe((status) => {
       this.isAuthenticated = status;
+      console.log("🔐 Authentication Status:", status);
     });
 
-    this.checkScreenSize(); // Vérifie la taille au chargement
+    this.authService.getUserRole().subscribe((role) => {
+      this.userRole = role;
+      console.log("🔑 User Role:", role);
 
-    // Get the cookie's info
-    const userRole = this.usersService.getUserRole();
-    console.log("🔑 User Role from Cookie:", userRole);
-    // Check if the role allows you to add a product
-    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
+      // Check permissions based on role
+      this.canAddProduct = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'superadmin';
+      this.canAccessDashboard = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'superadmin';
+    });
+
+    this.checkScreenSize();
   }
 }
