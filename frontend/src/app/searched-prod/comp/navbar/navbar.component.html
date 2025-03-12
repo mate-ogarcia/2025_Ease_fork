@@ -38,8 +38,6 @@
           <!-- Menu déroulant -->
           <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
             <span routerLink="/user-profile" class="profile-btn"><i class="fas fa-user"></i> Profile</span>
-            <span *ngIf="userRole === 'Admin' || userRole === 'SuperAdmin'" routerLink="/admin"
-              class="profile-btn admin-btn"><i class="fas fa-user-shield"></i> Dashboard Admin</span>
             <span (click)="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Log out</span>
           </div>
         </ng-container>

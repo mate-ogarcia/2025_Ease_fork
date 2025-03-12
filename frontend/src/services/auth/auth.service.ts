@@ -128,9 +128,9 @@ export class AuthService {
    * error handling to prevent disrupting the user experience.
    * 
    * @returns {Observable<any>} An observable of the profile API response
-   * @private
+   * @public
    */
-  private refreshAuthState(): Observable<any> {
+  refreshAuthState(): Observable<any> {
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
         tap(response => {

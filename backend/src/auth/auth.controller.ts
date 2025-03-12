@@ -73,11 +73,13 @@ export class AuthController {
 
     // Définir le cookie avec des options plus permissives pour le développement
     response.cookie("accessToken", result.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      httpOnly: false, // Temporairement false pour debug
+      secure: false, // Temporairement false pour le développement local
+      sameSite: "lax",
       path: "/",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      domain: undefined, // Laisser le navigateur gérer le domaine
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 
     console.log("🍪 Cookie set with token:", result.access_token.substring(0, 15) + "...");
