@@ -49,3 +49,64 @@ input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 1000px #2c3e50 inset !important;
     -webkit-text-fill-color: #fff !important;
 }
+
+/* Styles pour les notifications */
+.error-snackbar {
+    background: #f44336;
+    color: white;
+}
+
+.warning-snackbar {
+    background: #ff9800;
+    color: white;
+}
+
+.success-snackbar {
+    background: #4caf50;
+    color: white;
+}
+
+/* Style du bouton de fermeture */
+.mat-mdc-snack-bar-action {
+    color: white !important;
+}
+
+/* Style du conteneur de notification */
+.mat-mdc-snack-bar-container {
+    margin: 16px !important;
+    max-width: 90% !important;
+    border-radius: 4px !important;
+}
+
+/* Animations pour les notifications */
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+}
+
+/* Styles pour les notifications */
+.toast-notification {
+    font-family: 'Montserrat', sans-serif;
+    max-width: 90%;
+    text-align: center;
+    white-space: pre-wrap;
+}

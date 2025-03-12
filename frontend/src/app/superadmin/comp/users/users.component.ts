@@ -67,13 +67,14 @@ export class UsersComponent implements OnInit {
   loadRoles() {
     this.adminService.getAllRoles().subscribe({
       next: (roles) => {
-        this.availableRoles = roles;
+        // Filtrer le rôle 'Banned' du menu déroulant
+        this.availableRoles = roles.filter(role => role !== 'Banned');
         console.log('✅ Rôles chargés:', this.availableRoles);
       },
       error: (error) => {
         console.error('❌ Erreur lors du chargement des rôles:', error);
         // Fallback sur des rôles par défaut en cas d'erreur
-        this.availableRoles = ['SuperAdmin', 'Admin', 'User', 'Banned'];
+        this.availableRoles = ['SuperAdmin', 'Admin', 'User'];
       }
     });
   }
