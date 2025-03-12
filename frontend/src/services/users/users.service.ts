@@ -30,7 +30,7 @@ export class UsersService {
    * @brief Constructor injecting required services.
    * @param cookieService Service used to read cookies (specifically the `access_token` cookie).
    */
-  constructor(private cookieService: CookieService) { }
+  constructor(private cookieService: CookieService) {}
 
   /**
    * @brief Retrieves the user's role from the JWT stored in cookies.
