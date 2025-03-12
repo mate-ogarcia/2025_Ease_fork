@@ -859,7 +859,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       INSERT INTO \`${this.productsBucket.name}\`._default._default (KEY, VALUE)
       VALUES ($productId, $newProduct)
       RETURNING *;
-  `;
+    `;
 
     const result = await this.executeQuery(query, { productId: product.id, newProduct });
     return result.length ? result[0] : { error: "Failed to insert product." };
