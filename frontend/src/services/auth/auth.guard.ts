@@ -21,6 +21,9 @@ export class AuthGuard implements CanActivate {
   private lastCheck: number = 0;
   private readonly CHECK_INTERVAL = 30000; // 30 secondes entre chaque vérification
 
+  // Liste des routes publiques
+  private publicRoutes: string[] = ['/home', '/category', '/contact', '/login', '/searched-prod'];
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -50,7 +53,10 @@ export class AuthGuard implements CanActivate {
     // Attendre 2 secondes avant de rediriger
     return timer(2000).pipe(
       map(() => {
-        this.location.back();
+        // Si l'URL actuelle n'est pas une route publique, rediriger vers /home
+        if (!this.publicRoutes.includes(this.router.url)) {
+          this.router.navigate(['/home']);
+        }
         return false;
       })
     );
@@ -63,6 +69,11 @@ export class AuthGuard implements CanActivate {
       return true;
     }
     return false;
+  }
+
+  private handleBannedUser(): Observable<boolean> {
+    const message = `Votre compte a été suspendu. Vous pouvez toujours accéder aux fonctionnalités de base du site, mais certaines actions comme l'ajout de produits ou l'accès au tableau de bord sont restreintes. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur.`;
+    return this.handleAccessDenied(message);
   }
 
   /**
@@ -90,13 +101,20 @@ export class AuthGuard implements CanActivate {
             console.log('🔒 État authentification:', { isAuthenticated, role });
           }),
           switchMap(([isAuthenticated, role]) => {
+            // Vérifier si la route actuelle est publique
+            const isPublicRoute = this.publicRoutes.some(publicRoute =>
+              this.router.url.startsWith(publicRoute)
+            );
+
             if (!isAuthenticated) {
               console.log('❌ Non authentifié');
-              this.notificationService.showWarning(
-                'Veuillez vous connecter pour accéder à cette page'
-              );
-              this.router.navigate(['/login']);
-              return of(false);
+              if (!isPublicRoute) {
+                this.notificationService.showWarning(
+                  'Veuillez vous connecter pour accéder à cette page'
+                );
+                this.router.navigate(['/login']);
+              }
+              return of(isPublicRoute);
             }
 
             if (!role) {
@@ -109,20 +127,23 @@ export class AuthGuard implements CanActivate {
               return of(false);
             }
 
+            const currentRole = role.toLowerCase();
+
+            // Si l'utilisateur est banni
+            if (currentRole === 'banned') {
+              console.log('❌ Utilisateur banni tentant d\'accéder à une fonctionnalité protégée');
+              // Autoriser l'accès uniquement aux routes publiques
+              if (!isPublicRoute) {
+                return this.handleBannedUser();
+              }
+              return of(true);
+            }
+
             const requiredRoles = route.data['roles'] as Array<string>;
             console.log('🎯 Rôles requis:', requiredRoles);
 
             if (!requiredRoles || requiredRoles.length === 0) {
               return of(true);
-            }
-
-            const currentRole = role.toLowerCase();
-
-            if (currentRole === 'banned' && requiredRoles.length > 0) {
-              console.log('❌ Utilisateur banni tentant d\'accéder à une fonctionnalité protégée');
-              return this.handleAccessDenied(
-                'Votre compte a été suspendu. Vous pouvez naviguer sur le site mais certaines fonctionnalités sont restreintes.'
-              );
             }
 
             const hasRequiredRole = requiredRoles.some(r => r.toLowerCase() === currentRole);
@@ -154,7 +175,9 @@ export class AuthGuard implements CanActivate {
         this.notificationService.showError('Une erreur est survenue lors de la vérification de vos droits d\'accès');
         return timer(2000).pipe(
           map(() => {
-            this.location.back();
+            if (!this.publicRoutes.includes(this.router.url)) {
+              this.router.navigate(['/home']);
+            }
             return false;
           })
         );
