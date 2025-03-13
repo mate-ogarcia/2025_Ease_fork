@@ -18,7 +18,7 @@
     <app-stats *ngIf="activeTab === 'stats'"></app-stats>
 
     <!-- If the tab is 'users', it displays <app-user-management>. -->
-    <app-users *ngIf="activeTab === 'users'"></app-users>
+    <app-users *ngIf="activeTab === 'users' && isAuthorized" class="app-users"></app-users>
 
     <!-- If the tab is 'products', it displays <app-product-requests>. -->
     <app-product-requests *ngIf="activeTab === 'products'"></app-product-requests>
