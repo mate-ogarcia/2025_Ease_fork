@@ -113,7 +113,7 @@ This approach is especially suitable for development mode and offers greater fle
       npm run start:prod
       ```
 
-    #### Note:
+    #### Notes:
     You can launch the project components either via the global `package.json` or by using the specific scripts in the frontend and backend folders, depending on which method suits you best.
     In this case, you may need to take a look at each `package.json` to find out which script to run according to your needs (in the `package.json` files, look for the `scripts` section).
 
