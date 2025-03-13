@@ -7,13 +7,24 @@
  * once when the server starts and can be accessed via a getter.
  */
 
-import { Injectable, OnModuleInit, InternalServerErrorException } from "@nestjs/common";
+import { Injectable, OnModuleInit, InternalServerErrorException, Logger } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
 import { firstValueFrom } from "rxjs";
 
 @Injectable()
 export class CountriesService implements OnModuleInit {
+    private readonly logger = new Logger(CountriesService.name);
     private _europeanCountries: string[] = []; // List of European countries retrieved from the API.
+
+    // Liste de secours des pays européens en cas d'échec de l'API
+    private readonly defaultEuropeanCountries: string[] = [
+        "France", "Germany", "Italy", "Spain", "United Kingdom", "Portugal", "Netherlands",
+        "Belgium", "Switzerland", "Austria", "Sweden", "Norway", "Denmark", "Finland",
+        "Ireland", "Greece", "Poland", "Czech Republic", "Hungary", "Romania", "Bulgaria",
+        "Croatia", "Slovenia", "Slovakia", "Estonia", "Latvia", "Lithuania", "Luxembourg",
+        "Malta", "Cyprus", "Iceland", "Andorra", "Monaco", "Liechtenstein", "San Marino",
+        "Vatican City"
+    ];
 
     constructor(private httpService: HttpService) { }
 
@@ -24,7 +35,13 @@ export class CountriesService implements OnModuleInit {
      * when the server starts.
      */
     async onModuleInit() {
-        await this.fetchEuropeanCountries();
+        try {
+            await this.fetchEuropeanCountries();
+            this.logger.log(`✅ Successfully loaded ${this._europeanCountries.length} European countries`);
+        } catch (error) {
+            this.logger.warn(`⚠️ Failed to fetch European countries from API, using default list of ${this.defaultEuropeanCountries.length} countries`);
+            this._europeanCountries = [...this.defaultEuropeanCountries];
+        }
     }
 
     /**
@@ -37,15 +54,20 @@ export class CountriesService implements OnModuleInit {
      */
     async fetchEuropeanCountries() {
         try {
-            // Fetch data from the API
+            this.logger.log('🔄 Fetching European countries from external API...');
+
+            // Fetch data from the API with a timeout of 5 seconds
             const response = await firstValueFrom(
-                this.httpService.get<any[]>('https://restcountries.com/v3.1/region/europe')
+                this.httpService.get<any[]>('https://restcountries.com/v3.1/region/europe', {
+                    timeout: 5000
+                })
             );
 
             // Extract country names and store them
             this._europeanCountries = response.data.map(country => country.name.common);
+            this.logger.log(`✅ Successfully fetched ${this._europeanCountries.length} European countries`);
         } catch (error) {
-            console.error("❌ Error fetching European countries:", error);
+            this.logger.error("❌ Error fetching European countries:", error);
             throw new InternalServerErrorException("Unable to fetch European countries");
         }
     }
