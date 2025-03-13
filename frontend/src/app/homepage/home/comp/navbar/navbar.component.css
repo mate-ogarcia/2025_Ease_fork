@@ -12,6 +12,7 @@
   height: 60px;
   color: #f9f9f9;
 }
+
 /* Logo */
 .logo {
   display: flex;
@@ -34,7 +35,7 @@
   list-style: none;
   display: flex;
   align-items: center;
-  flex: 1; 
+  flex: 1;
   gap: 15px;
   padding-left: 20px;
   margin: 0;
@@ -58,7 +59,7 @@
   font-weight: 500;
   border-radius: 40px;
   padding: 10px 15px;
-  transition: all 0.3s ease-in-out;  
+  transition: all 0.3s ease-in-out;
   cursor: pointer;
   width: 160px;
 }
@@ -80,6 +81,7 @@
   height: 40px;
   margin-left: auto;
 }
+
 .log-container {
   display: flex;
   justify-content: center;
@@ -88,10 +90,12 @@
   gap: 10px;
   margin-left: auto;
 }
-.login-btn{
+
+.login-btn {
   background-color: #011f20;
   color: white;
 }
+
 .userprofile {
   height: 100%;
   cursor: pointer;
@@ -105,6 +109,7 @@
   cursor: pointer;
   z-index: 10000;
 }
+
 /* Position et style du menu déroulant */
 .dropdown-menu {
   position: absolute;
@@ -123,24 +128,32 @@
   align-items: center;
   z-index: 1000;
 }
+
 .profile-btn {
   padding: 10px 15px;
   color: black;
 }
+
 /* Style du bouton logout dans le menu */
-.logout-container{
+.logout-container {
   width: 100%;
   display: flex;
   padding-top: 10px;
   border-top: 1px solid #778081;
 }
-.user-btn{
+
+.user-btn {
   gap: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
 }
+
+.admin-btn {
+  color: #011f20;
+}
+
 .logout-btn {
   background-color: red;
   color: white;
@@ -175,49 +188,56 @@
 /* Responsive */
 @media (max-width: 850px) {
   .navbar {
-      flex-direction: row;
+    flex-direction: row;
   }
 
   .navbar ul {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      position: absolute;
-      top: 60px;
-      right: 0px;
-      background: white;
-      color: #2d2b27;
-      width: fit-content;
-      padding: 10px 20px;
-      gap: 5px;
-      border-radius: 15px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 60px;
+    right: 0px;
+    background: white;
+    color: #2d2b27;
+    width: fit-content;
+    padding: 10px 20px;
+    gap: 5px;
+    border-radius: 15px;
   }
 
   .navbar ul.active {
     display: flex;
   }
-  .nav-btn{
+
+  .nav-btn {
     border-radius: 10px;
     color: black;
   }
-  .login-btn{
+
+  .login-btn {
     color: white;
   }
+
   .menu-toggle {
-      display: flex;
+    display: flex;
   }
-  .user{
-    margin-left: 0; 
+
+  .user {
+    margin-left: 0;
     width: 100%;
     height: fit-content;
     display: flex;
     flex-direction: column;
   }
+
   .logo {
     border-right: none;
   }
+
   .log-container {
-    position: relative; /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
+    position: relative;
+    /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -227,18 +247,23 @@
     margin-left: auto;
     flex-direction: column;
   }
-  .userprofile{
+
+  .userprofile {
     display: none;
   }
-  
-  .profile-btn{
+
+  .profile-btn {
     width: 100%;
     padding-top: 10px;
     border-top: 1px solid #778081;
   }
+
+
+
   .dropdown-menu {
     position: relative;
-    display: flex !important; /* Toujours visible */
+    display: flex !important;
+    /* Toujours visible */
     visibility: visible !important;
     opacity: 1 !important;
     font-weight: 500;
@@ -251,5 +276,5 @@
     box-shadow: none;
     padding: 0;
   }
-  
+
 }

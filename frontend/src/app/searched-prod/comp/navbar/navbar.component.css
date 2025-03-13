@@ -162,6 +162,11 @@ picture {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  color: #011f20;
+}
+
+.admin-btn {
+  color: #011f20;
 }
 
 .logout-btn {
