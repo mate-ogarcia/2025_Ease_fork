@@ -17,6 +17,8 @@ body {
 .app-navbar {
   width: 100%;
   z-index: 10000;
+  border-bottom: 1px solid #ccc;
+
 }
 
 .contact-content {
