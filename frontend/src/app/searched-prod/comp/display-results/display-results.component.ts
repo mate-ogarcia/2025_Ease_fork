@@ -13,6 +13,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
+import { LikeBtnComponent } from '../like-btn/like-btn.component';
 /**
  * @class DisplayResultsComponent
  * @brief Handles displaying search results with dynamic images and view mode toggling.
@@ -25,7 +26,7 @@ import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 @Component({
   selector: 'app-display-results',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LikeBtnComponent],
   templateUrl: './display-results.component.html',
   styleUrls: ['./display-results.component.css'],
 })
@@ -96,7 +97,10 @@ export class DisplayResultsComponent implements OnInit {
       console.warn("⚠️ Invalid product or missing ID");
     }
   }
-
+  // Réception de l'événement "likeToggled" émis par le composant enfant
+  onLikeToggled(product: any, liked: boolean): void {
+    product.liked = liked;
+  }
   /**
    * @brief Tracks products by their ID to optimize rendering in ngFor.
    * 

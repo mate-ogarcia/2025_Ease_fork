@@ -131,11 +131,22 @@ picture{
 }
 .profile-btn {
   padding: 10px 15px;
-  border-bottom: 1px solid #778081;
   color: black;
-  cursor: pointer;
 }
 /* Style du bouton logout dans le menu */
+.logout-container{
+  width: 100%;
+  display: flex;
+  padding-top: 10px;
+  border-top: 1px solid #778081;
+}
+.user-btn{
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
 .logout-btn {
   background-color: red;
   color: white;
@@ -147,7 +158,12 @@ picture{
   transition: 0.3s;
   width: 100%;
   text-align: center;
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
 
 .logout-btn:hover {
   background-color: darkred;
@@ -164,7 +180,7 @@ picture{
 }
 
 /* Responsive */
-@media (max-width: 950px) {
+@media (max-width: 1100px) {
   .navbar {
       flex-direction: row;
   }
@@ -183,7 +199,8 @@ picture{
       background: white;
       color: #2d2b27;
       width: fit-content;
-      padding: 10px;
+      padding: 10px 20px;
+      gap: 5px;
       border-radius: 5px;
   }
 
@@ -226,7 +243,8 @@ picture{
   }
   
   .profile-btn{
-    width: 85%;
+    width: 100%;
+    padding-top: 10px;
     border-top: 1px solid #778081;
   }
   .dropdown-menu {

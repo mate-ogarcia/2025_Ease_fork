@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { StatsComponent } from '../stats/stats.component';
 import { ProductRequestsComponent } from '../product-requests/product-requests.component';
 import { UsersComponent } from '../users/users.component';
+import { UsersService } from '../../../../services/users/users.service';
+
 @Component({
   standalone: true,
   selector: 'app-super-admin-dashboard',
@@ -20,4 +22,12 @@ export class SuperAdminDashboardComponent {
   selectTab(tabName: string) {
     this.activeTab = tabName;
   }
+   isAuthorized: boolean = false;
+  
+    constructor(private usersService: UsersService) { }
+  
+    ngOnInit() {
+      const userRole = this.usersService.getUserRole()?.toLowerCase();
+      this.isAuthorized = userRole === 'superadmin' || userRole === 'admin';
+    }
 }

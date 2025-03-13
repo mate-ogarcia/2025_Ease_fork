@@ -8,34 +8,20 @@
   align-items: center;
   padding: 0 10px;
   background: transparent;
-  backdrop-filter: blur(1.5rem);
-  padding: 10px;
-  height: 55px;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  border-radius: 40px;
   width: 100%;
+  height: 60px;
   color: #f9f9f9;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-  font-size: 0.85rem;
 }
-
 /* Logo */
 .logo {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 35px;
-  font-size: 1.2em;
-  border-right: 1px solid rgba(249, 249, 249, 0.3);
+  height: 40px;
+  font-size: 1.5em;
   padding-right: 12px;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.logo:hover {
-  transform: scale(1.05);
 }
 
 .easelogo {
@@ -48,12 +34,13 @@
   list-style: none;
   display: flex;
   align-items: center;
-  flex: 1;
-  gap: 12px;
-  padding-left: 15px;
+  flex: 1; 
+  gap: 15px;
+  padding-left: 20px;
   margin: 0;
   text-align: center;
   color: #f9f9f9;
+
 }
 
 .navbar ul li {
@@ -66,76 +53,49 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
   color: #f9f9f9;
   font-weight: 500;
-  border-radius: 30px;
-  padding: 5px 10px;
-  transition: all 0.3s ease-in-out;
+  border-radius: 40px;
+  padding: 10px 15px;
+  transition: all 0.3s ease-in-out;  
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  font-size: 0.8rem;
+  width: 160px;
 }
 
 .nav-btn:hover {
   color: #2d2b27;
-  background-color: rgba(249, 249, 249, 0.9);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background-color: #f9f9f9;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease-in-out;
 }
 
-.nav-btn i {
-  font-size: 0.9rem;
-}
 
 /* User Profile */
 .user {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 35px;
+  height: 40px;
   margin-left: auto;
 }
-
 .log-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 35px;
-  gap: 8px;
+  height: 40px;
+  gap: 10px;
   margin-left: auto;
 }
-
-.login-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-radius: 30px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  font-size: 0.8rem;
+.login-btn{
+  background-color: #011f20;
+  color: white;
 }
-
-.login-btn:hover {
-  background-color: #033a3c;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
-}
-
 .userprofile {
   height: 100%;
   cursor: pointer;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.userprofile:hover {
-  transform: scale(1.1);
-  border-color: white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
 /* Menu burger pour mobiles */
@@ -145,181 +105,151 @@
   cursor: pointer;
   z-index: 10000;
 }
-
-.menu-toggle span {
-  width: 22px;
-  height: 2px;
-  background: #f9f9f9;
-  margin: 3px 0;
-  transition: 0.3s;
-  border-radius: 3px;
-}
-
 /* Position et style du menu déroulant */
 .dropdown-menu {
   position: absolute;
   right: 10px;
-  top: 45px;
-  gap: 6px;
+  top: 70px;
+  gap: 10px;
   background: white;
-  border: none;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-  padding: 6px;
-  min-width: 140px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  min-width: 120px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  overflow: hidden;
 }
-
 .profile-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  width: 100%;
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(119, 128, 129, 0.2);
-  color: #333;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  padding: 10px 15px;
+  color: black;
 }
-
-.profile-btn:hover {
-  background-color: #f5f5f5;
-  transform: translateX(5px);
-}
-
-.profile-btn i {
-  font-size: 0.9rem;
-  color: #555;
-}
-
 /* Style du bouton logout dans le menu */
-.logout-btn {
+.logout-container{
+  width: 100%;
   display: flex;
-  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #778081;
+}
+.user-btn{
+  gap: 10px;
+  display: flex;
   justify-content: center;
-  gap: 5px;
-  background-color: #ff3b30;
+  align-items: center;
+  cursor: pointer;
+}
+.logout-btn {
+  background-color: red;
   color: white;
-  padding: 8px 0;
+  padding: 10px 0;
   font-weight: 500;
   border: none;
-  border-radius: 25px;
+  border-radius: 30px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: 0.3s;
   width: 100%;
   text-align: center;
-  margin-top: 4px;
-  box-shadow: 0 2px 5px rgba(255, 59, 48, 0.3);
-  font-size: 0.8rem;
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .logout-btn:hover {
-  background-color: #e0352b;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(255, 59, 48, 0.4);
+  background-color: darkred;
 }
 
-.logout-btn i {
-  font-size: 0.9rem;
+
+
+.menu-toggle span {
+  width: 25px;
+  height: 3px;
+  background: #f9f9f9;
+  margin: 4px 0;
+  transition: 0.3s;
 }
 
-/* Style du bouton admin dans le menu */
-.admin-btn {
-  background-color: #007aff;
-  color: white !important;
-}
-
-.admin-btn:hover {
-  background-color: #0066d6;
-}
-
-.admin-btn i {
-  color: white !important;
-}
-
+/* Responsive */
 @media (max-width: 850px) {
   .navbar {
-    padding: 0 15px;
+      flex-direction: row;
   }
 
   .navbar ul {
-    position: fixed;
-    top: 0;
-    left: -100%;
-    height: 100vh;
-    width: 80%;
-    max-width: 300px;
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(10px);
-    flex-direction: column;
-    justify-content: flex-start;
-    padding-top: 60px;
-    transition: 0.5s ease-in-out;
-    z-index: 1000;
-    gap: 20px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      position: absolute;
+      top: 60px;
+      right: 0px;
+      background: white;
+      color: #2d2b27;
+      width: fit-content;
+      padding: 10px 20px;
+      gap: 5px;
+      border-radius: 15px;
   }
 
   .navbar ul.active {
-    left: 0;
-  }
-
-  .navbar ul li {
-    width: 100%;
-    margin: 5px 0;
-  }
-
-  .nav-btn {
-    width: 80%;
-    margin: 0 auto;
-    padding: 10px;
-  }
-
-  .menu-toggle {
     display: flex;
   }
-
-  .user {
-    margin-top: auto;
-    margin-bottom: 30px;
-    width: 100%;
+  .nav-btn{
+    border-radius: 10px;
+    color: black;
   }
-
-  .logo {
-    border: none;
+  .login-btn{
+    color: white;
   }
-
-  .log-container {
+  .menu-toggle {
+      display: flex;
+  }
+  .user{
+    margin-left: 0; 
     width: 100%;
+    height: fit-content;
     display: flex;
     flex-direction: column;
+  }
+  .logo {
+    border-right: none;
+  }
+  .log-container {
+    position: relative; /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
+    display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 15px;
+    width: 100%;
+    height: fit-content;
+    gap: 10px;
+    margin-left: auto;
+    flex-direction: column;
   }
-
-  .userprofile {
-    height: 40px;
+  .userprofile{
+    display: none;
   }
-
-  .profile-btn {
-    width: 80%;
+  
+  .profile-btn{
+    width: 100%;
+    padding-top: 10px;
+    border-top: 1px solid #778081;
   }
-
   .dropdown-menu {
     position: relative;
-    top: 10px;
-    right: 0;
-    width: 80%;
-    margin: 0 auto;
+    display: flex !important; /* Toujours visible */
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-weight: 500;
+    border: none;
+    top: auto;
+    right: auto;
+    width: 100%;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: none;
+    padding: 0;
   }
-
-  .admin-btn {
-    width: 80%;
-  }
+  
 }
