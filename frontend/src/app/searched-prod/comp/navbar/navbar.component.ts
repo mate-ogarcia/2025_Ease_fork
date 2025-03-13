@@ -28,11 +28,10 @@ export class NavbarComponent implements OnInit {
    * @brief Constructor for NavbarComponent.
    * @param authService Service for authentication management.
    * @param router Angular Router service.
-   * @param usersService Service for handling user-related data.
-   * @param cookieService Service for managing cookies.
    */
   constructor(
     private authService: AuthService,
+    public router: Router
   ) { }
 
   /**
@@ -68,11 +67,18 @@ export class NavbarComponent implements OnInit {
   }
 
   /**
+   * @brief Vérifie si le lien admin doit être affiché
+   * @returns {boolean} True si le lien admin doit être affiché, false sinon
+   */
+  isAdminLinkVisible(): boolean {
+    return this.canAccessDashboard && !this.router.url.startsWith('/admin');
+  }
+
+  /**
    * @brief Initializes the component, checks authentication status, role, and permissions.
    * @details Also retrieves cookies and decodes JWT token for debugging purposes.
    */
   ngOnInit(): void {
-
     this.authService.isAuthenticated().subscribe((status) => {
       this.isAuthenticated = status;
       console.log("🔐 Authentication Status:", status);

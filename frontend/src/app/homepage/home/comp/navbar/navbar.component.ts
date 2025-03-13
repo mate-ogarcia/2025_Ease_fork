@@ -71,7 +71,7 @@ export class NavbarComponent implements OnInit {
     this.authService.logout().subscribe();
     this.showDropdown = false;
   }
-  
+
   /**
    * @brief Checks the screen size and updates isMobile accordingly.
    */

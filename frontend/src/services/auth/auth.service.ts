@@ -27,6 +27,7 @@ import { environment } from '../../environments/environment';
 import { JwtHelperService } from '@auth0/angular-jwt';
 // Cookies
 import { CookieService } from 'ngx-cookie-service';
+import { NotificationService } from '../notification/notification.service';
 
 /**
  * @interface AuthState
@@ -85,11 +86,13 @@ export class AuthService {
    * @param {HttpClient} http - The Angular HttpClient for making HTTP requests
    * @param {Router} router - The Angular Router for navigation
    * @param {CookieService} cookieService - Service for managing browser cookies
+   * @param {NotificationService} notificationService - Service for showing notifications
    */
   constructor(
     private http: HttpClient,
     private router: Router,
-    private cookieService: CookieService
+    private cookieService: CookieService,
+    private notificationService: NotificationService
   ) {
     // Check initial authentication state on service initialization
     this.checkAuthState();
@@ -106,16 +109,30 @@ export class AuthService {
    * @private
    */
   private checkAuthState(): void {
-    const hasAccessToken = this.cookieService.check('accessToken');
-    if (hasAccessToken) {
-      // If we have a token, try to get the user profile
-      this.refreshAuthState().subscribe({
-        error: (error) => {
-          console.error('Error checking auth state:', error);
-          // In case of error, we DO NOT reset the state
-          // We keep the user logged in and will try again later
+    const token = this.cookieService.get('accessToken');
+    if (token) {
+      try {
+        const decodedToken = this.jwtHelper.decodeToken(token);
+        const previousRole = this.authState.value.role;
+        const newRole = decodedToken.role;
+
+        this.updateAuthState(true, newRole);
+        this.user = {
+          email: decodedToken.email,
+          role: newRole,
+          username: decodedToken.username
+        };
+
+        // Vérifier si l'utilisateur a été banni ou débanni
+        if (previousRole === 'Banned' && newRole !== 'Banned') {
+          this.notificationService.showSuccess('Votre compte a été débanni.');
+        } else if (previousRole !== 'Banned' && newRole === 'Banned') {
+          this.notificationService.showWarning('Votre compte a été banni. Certaines fonctionnalités sont maintenant restreintes.');
         }
-      });
+      } catch (error) {
+        console.error('Error checking auth state:', error);
+        this.logout();
+      }
     } else {
       this.updateAuthState(false, null);
     }
@@ -132,13 +149,14 @@ export class AuthService {
    * @returns {Observable<any>} An observable of the profile API response
    * @public
    */
-  refreshAuthState(): Observable<any> {
+  public refreshAuthState(): Observable<any> {
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
         tap(response => {
           console.log('Profile response:', response);
           if (response && response.role) {
             this.updateAuthState(true, response.role);
+            this.user = response;
           }
         }),
         catchError(error => {
@@ -212,8 +230,18 @@ export class AuthService {
       .pipe(
         tap((response: any) => {
           const decodedToken = this.jwtHelper.decodeToken(response.access_token);
-          this.updateAuthState(true, decodedToken.role);
+          const previousRole = this.authState.value.role;
+          const newRole = decodedToken.role;
+
+          this.updateAuthState(true, newRole);
           this.user = response.user;
+
+          // Vérifier si l'utilisateur a été banni ou débanni
+          if (previousRole === 'Banned' && newRole !== 'Banned') {
+            this.notificationService.showSuccess('Votre compte a été débanni. Vous avez maintenant accès à toutes les fonctionnalités.');
+          } else if (previousRole !== 'Banned' && newRole === 'Banned') {
+            this.notificationService.showWarning('Votre compte a été banni. Certaines fonctionnalités sont maintenant restreintes.');
+          }
         })
       );
   }
