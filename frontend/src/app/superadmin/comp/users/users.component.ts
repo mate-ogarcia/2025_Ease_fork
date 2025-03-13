@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, User } from '../../../../services/admin/admin.service';
+import { NotificationService } from '../../../../services/notification/notification.service';
 
 @Component({
   selector: 'app-users',
@@ -23,7 +24,10 @@ export class UsersComponent implements OnInit {
   // Indique si l'utilisateur actuel est SuperAdmin
   isSuperAdmin: boolean = false;
 
-  constructor(private adminService: AdminService) { }
+  constructor(
+    private adminService: AdminService,
+    private notificationService: NotificationService
+  ) { }
 
   ngOnInit() {
     this.checkUserRole();
@@ -157,7 +161,7 @@ export class UsersComponent implements OnInit {
   // Bascule entre bannir et débannir l'utilisateur avec validation
   banUser(user: User & { isEditing: boolean }): void {
     const newRole = user.role === 'Banned' ? 'User' : 'Banned';
-    const action = user.role === 'Banned' ? 'débannir' : 'bannir';
+    const action = user.role === 'Banned' ? 'débanni' : 'banni';
 
     if (confirm(`Voulez-vous vraiment ${action} ${user.username} ?`)) {
       this.adminService.updateUserRole(user.email, newRole).subscribe({
@@ -165,9 +169,11 @@ export class UsersComponent implements OnInit {
           user.role = newRole;
           user.isEditing = false;
           console.log(`✅ Utilisateur ${action} avec succès`);
+          this.notificationService.showSuccess(`L'utilisateur ${user.username} a été ${action} avec succès`);
         },
         error: (error) => {
           console.error(`❌ Erreur lors du ${action}:`, error);
+          this.notificationService.showError(`Erreur lors du ${action} de l'utilisateur ${user.username}`);
           // Recharger les utilisateurs en cas d'erreur
           this.loadUsers();
         }

@@ -25,9 +25,9 @@ import { switchMap, tap } from 'rxjs/operators';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
-  title = 'Ease-2025';
+  title = 'Ease';
   isAppReady = new BehaviorSubject<boolean>(false);
-  private readonly MIN_LOADING_TIME = 800; // Temps minimum d'affichage du chargement en ms
+  private readonly MIN_LOADING_TIME = 400; // Temps minimum d'affichage du chargement en ms
 
   /**
    * @brief Constructor for AppComponent.

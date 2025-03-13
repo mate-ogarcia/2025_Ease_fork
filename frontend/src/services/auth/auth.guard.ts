@@ -73,7 +73,15 @@ export class AuthGuard implements CanActivate {
 
   private handleBannedUser(): Observable<boolean> {
     const message = `Votre compte a été suspendu. Vous pouvez toujours accéder aux fonctionnalités de base du site, mais certaines actions comme l'ajout de produits ou l'accès au tableau de bord sont restreintes. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur.`;
-    return this.handleAccessDenied(message);
+    this.notificationService.showWarning(message);
+    return timer(2000).pipe(
+      map(() => {
+        if (!this.publicRoutes.includes(this.router.url)) {
+          this.router.navigate(['/home']);
+        }
+        return false;
+      })
+    );
   }
 
   /**
