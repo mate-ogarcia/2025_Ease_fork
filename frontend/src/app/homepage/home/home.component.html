@@ -1,31 +1,82 @@
 <div #vantaBackground class="container">
-    <app-navbar class="app-navbar"></app-navbar>
-  
-    <!-- Section Titre -->
-    <div class="title">
-      <div class="slogan">
-        <h1>Consommez local, trouvez l’alternative idéale !</h1>
-      </div>
-      <div class="explication">
-        <h5>Trouvez des alternatives européennes à vos produits importés en un clic !</h5>
-      </div>
+  <app-navbar class="app-navbar"></app-navbar>
+
+  <!-- Section Titre -->
+  <div class="title">
+    <div class="slogan">
+      <h1>Consommez local, trouvez l'alternative idéale !</h1>
     </div>
-  
-    <app-searchbar class="app-searchbar"></app-searchbar>
-  
-    <!-- Bouton engrenage -->
-    <div class="settings-icon" [class.open]="isSettingsOpen" (click)="toggleSettingsPanel()">
-      ⚙
-    </div>
-  
-    <!-- Menu des paramètres -->
-    <div class="settings-menu" [class.open]="isSettingsOpen">
-      <button class="settings-btn" (click)="toggleDarkMode()" title="Mode Sombre">
-        {{ isDarkMode ? '☀' : '🌙' }}
-      </button>
-      <button class="settings-btn" (click)="toggleVantaEffect()" title="Animation">
-        {{ isVantaActive ? '💨' : '🎨' }}
-      </button>
+    <div class="explication">
+      <h5>Trouvez des alternatives européennes à vos produits importés en un clic !</h5>
     </div>
   </div>
-  
+
+  <app-searchbar class="app-searchbar"></app-searchbar>
+
+  <!-- Section d'explications du projet -->
+  <div class="project-info">
+    <button class="info-toggle" (click)="toggleProjectInfo()">
+      <i class="fas fa-info-circle"></i> À propos du projet
+    </button>
+
+    <div class="info-panel" [class.open]="isProjectInfoOpen">
+      <div class="info-header">
+        <h2>Bienvenue sur le projet Ease</h2>
+        <button class="close-btn" (click)="toggleProjectInfo()">×</button>
+      </div>
+
+      <div class="info-content">
+        <div class="info-section">
+          <div class="info-icon"><i class="fas fa-leaf"></i></div>
+          <div class="info-text">
+            <h3>Notre Mission</h3>
+            <p>Ease a pour objectif de faciliter la transition vers une consommation plus locale et durable en
+              proposant des alternatives européennes aux produits importés. Tout cela le plus facilement possible.</p>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-icon"><i class="fas fa-search"></i></div>
+          <div class="info-text">
+            <h3>Comment ça marche</h3>
+            <p>Recherchez un produit dans la barre de recherche, consultez les alternatives européennes disponibles, et
+              découvrez d'ou provient les produits.</p>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-icon"><i class="fas fa-users"></i></div>
+          <div class="info-text">
+            <h3>Communauté</h3>
+            <p>Rejoignez notre communauté d'utilisateurs engagés pour partager vos découvertes et contribuer à
+              l'enrichissement de notre base de données d'alternatives locales en rajoutant vos produits préférés !</p>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-icon"><i class="fas fa-globe-europe"></i></div>
+          <div class="info-text">
+            <h3>Impact</h3>
+            <p>En choisissant des produits locaux, vous réduisez votre empreinte carbone, soutenez l'économie européenne
+              et contribuez à la préservation des savoir-faire locaux.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton engrenage -->
+  <div class="settings-icon" [class.open]="isSettingsOpen" (click)="toggleSettingsPanel()">
+    ⚙
+  </div>
+
+  <!-- Menu des paramètres -->
+  <div class="settings-menu" [class.open]="isSettingsOpen">
+    <button class="settings-btn" (click)="toggleDarkMode()" title="Mode Sombre">
+      {{ isDarkMode ? '☀' : '🌙' }}
+    </button>
+    <button class="settings-btn" (click)="toggleVantaEffect()" title="Animation">
+      {{ isVantaActive ? '💨' : '🎨' }}
+    </button>
+  </div>
+</div>

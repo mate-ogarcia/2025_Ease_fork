@@ -1,0 +1,59 @@
+/* Container principal : sidebar + contenu */
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Geologica', sans-serif;
+  background: #f8f9fd; /* Fond général clair (optionnel) */
+}
+
+/* Barre latérale */
+.tab-bar {
+  width: 320px;
+  background: #ffffff; /* Fond blanc */
+  padding: 20px;
+  border-right: 1px solid #eee; /* Séparation légère */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Boutons (onglets) de la barre latérale */
+.tab-bar a {
+  display: flex;             /* Pour pouvoir centrer icône+texte si tu veux */
+  align-items: center;       /* Aligner verticalement */
+  gap: 10px;                 /* Espace entre icône et texte */
+  margin-bottom: 10px;
+  padding: 15px 20px;
+  border: none;
+  background: #ffffff;
+  color: #333;
+  font-size: 17px;
+  font-weight: 700;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s  ease-in-out;
+
+}
+
+/* Au survol, on change la couleur de fond/texte pour un effet hover */
+.tab-bar a:hover {
+  color: #1cac53;
+  transform: scale(1.05); /* Zoom au survol */
+  transition: all 0.3s  ease-in-out;
+  background-color: #eee;
+}
+
+/* Bouton actif (onglet sélectionné) */
+.tab-bar a.active {
+  color: #0a7c22;
+  transform: scale(1.03); /* Zoom au survol */
+}
+
+/* Contenu à droite */
+.tab-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #f8f9fd; /* Même fond clair que le container */
+}

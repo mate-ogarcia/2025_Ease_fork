@@ -1,0 +1,55 @@
+<!-- Barre de recherche -->
+<div class="search-container">
+  <input class="search-bar" type="text" placeholder="Rechercher des utilisateurs..." [(ngModel)]="searchTerm" />
+</div>
+
+<!-- Liste des cartes utilisateurs (filtrée) -->
+<div class="user-cards">
+  <div class="user-card" *ngFor="let user of filteredUsers" [ngClass]="{'banned': user.role === 'Banned'}">
+    <div class="card-header">
+      <div class="user-info">
+        <div class="avatar-box">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="text">
+          <h3>{{ user.username }}</h3>
+          <p>{{ user.email }}</p>
+          <p class="created-at">Créé le : {{ user.createdAt | date:'dd/MM/yyyy' }}</p>
+          <div class="edit-container">
+            <ng-container *ngIf="isSuperAdmin">
+              <ng-container *ngIf="user.isEditing; else viewRole">
+                <select class="edit-selector" #roleSelect>
+                  <option *ngFor="let role of availableRoles" [value]="role" [selected]="user.role === role">{{ role }}
+                  </option>
+                </select>
+                <button class="icon-btn save-btn" (click)="saveRole(user, roleSelect.value)" title="Sauvegarder">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="icon-btn cancel-btn" (click)="cancelEdit(user)" title="Annuler">
+                  <i class="fas fa-times"></i>
+                </button>
+              </ng-container>
+              <ng-template #viewRole>
+                <span>Role : {{ user.role }}</span>
+                <button class="icon-btn edit-btn" (click)="editRole(user)" title="Modifier le rôle">
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+              </ng-template>
+            </ng-container>
+            <ng-container *ngIf="!isSuperAdmin">
+              <span>Role : {{ user.role }}</span>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-actions" *ngIf="isSuperAdmin">
+      <button (click)="deleteUser(user)" title="Supprimer l'utilisateur">
+        <i class="fas fa-trash"></i> Supprimer
+      </button>
+      <button (click)="banUser(user)" title="Bannir/Débannir l'utilisateur">
+        <i class="fas fa-ban"></i> {{ user.role === 'Banned' ? 'Débannir' : 'Bannir' }}
+      </button>
+    </div>
+  </div>
+</div>

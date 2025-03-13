@@ -3,6 +3,13 @@ import { AuthGuard } from '../services/auth/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'admin',
+    loadComponent: () =>
+      import('./superadmin/superadmin.component').then((m) => m.SuperadminComponent),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'SuperAdmin'] },
+  },
+  {
     path: 'products-alternative/:id/:source',
     loadComponent: () =>
       import('./altprod/altprod.component').then((m) => m.AltprodComponent),
@@ -20,12 +27,20 @@ export const routes: Routes = [
   {
     path: 'user-profile',
     loadComponent: () =>
-      import('./userprofile/userprofile.component').then((m) => m.UserprofileComponent),
+      import('./userprofile/userprofile.component').then(
+        (m) => m.UserprofileComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'User', 'SuperAdmin'] },
   },
   {
     path: 'add-product',
     loadComponent: () =>
-      import('./addproduct/addproduct.component').then((m) => m.AddproductComponent),
+      import('./addproduct/addproduct.component').then(
+        (m) => m.AddproductComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { roles: ['Admin', 'User', 'SuperAdmin'] },
   },
   {
     path: 'searched-prod',
@@ -33,7 +48,7 @@ export const routes: Routes = [
       import('./searched-prod/searched-prod.component').then(
         (m) => m.SearchedProdComponent
       ),
-  },  
+  },
   {
     path: 'login',
     loadComponent: () =>
@@ -45,7 +60,7 @@ export const routes: Routes = [
       import('./contact/contact.component').then((m) => m.ContactComponent),
   },
   {
-    path: 'product-page/:id',
+    path: 'product-page/:id/:source',
     loadComponent: () => import('./prodpage/prodpage.component').then(m => m.ProdpageComponent)
   },
   {

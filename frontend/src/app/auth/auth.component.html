@@ -3,104 +3,87 @@
   <img class="wave" [src]="isDarkMode ? 'wavedark.png' : 'wave.png'" />
   <img class="wavetop" [src]="isDarkMode ? 'wavetopdark.png' : 'wavetop.png'" />
 
+  <!-- Bouton de retour à l'accueil -->
+  <button class="back-btn" (click)="navigateToHome()">
+    <i class="fas fa-arrow-left"></i> Accueil
+  </button>
+
   <div class="container">
     <div class="login-content">
       <div class="header-form">
         <img src="ours.png" />
       </div>
       <div class="switch-container">
-        <button
-          type="button"
-          class="switch-button"
-          [class.active]="isLoginMode"
-          (click)="setLoginMode(true)"
-        >
+        <button type="button" class="switch-button" [class.active]="isLoginMode" (click)="setLoginMode(true)">
           Login
         </button>
-        <button
-          type="button"
-          class="switch-button"
-          [class.active]="!isLoginMode"
-          (click)="setLoginMode(false)"
-        >
+        <button type="button" class="switch-button" [class.active]="!isLoginMode" (click)="setLoginMode(false)">
           Register
         </button>
       </div>
       <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
         <!-- Champ Username Login -->
-        <div class="input-container name" *ngIf="isLoginMode">
+        <div class="input-container name" *ngIf="isLoginMode" [class.error-input]="!isUsernameValid">
           <div class="icon-log">
             <i class="fas fa-user"></i>
           </div>
           <div class="data">
             <h5>Email</h5>
-            <input #usernameInput type="text" class="input-log" name="usernameLogin" [(ngModel)]="username">
+            <input #usernameInput type="text" class="input-log" name="usernameLogin" [(ngModel)]="username" required>
           </div>
+        </div>
+        <div class="simple-error" *ngIf="usernameError && isLoginMode">
+          <i class="fas fa-exclamation-circle"></i> {{ usernameError }}
         </div>
 
         <!-- Champ Username Register -->
-        <div class="input-container" *ngIf="!isLoginMode">
+        <div class="input-container" *ngIf="!isLoginMode" [class.error-input]="!isUsernameValid">
           <div class="icon-log">
             <i class="fas fa-user"></i>
           </div>
           <div class="data">
             <h5>Username</h5>
-            <input
-              #usernameInput
-              type="text"
-              class="input-log"
-              name="username"
-              [(ngModel)]="username"
-            />
+            <input #usernameInput type="text" class="input-log" name="username" [(ngModel)]="username" required />
           </div>
+        </div>
+        <div class="simple-error" *ngIf="usernameError && !isLoginMode">
+          <i class="fas fa-exclamation-circle"></i> {{ usernameError }}
         </div>
 
         <!-- Champ Email uniquement pour l'inscription -->
-        <div class="input-container" *ngIf="!isLoginMode">
+        <div class="input-container" *ngIf="!isLoginMode" [class.error-input]="!isEmailValid">
           <div class="icon-log">
             <i class="fas fa-envelope"></i>
           </div>
           <div class="data">
             <h5>Email</h5>
-            <input
-              #emailInput
-              type="email"
-              class="input-log"
-              name="email"
-              [(ngModel)]="email"
-            />
+            <input #emailInput type="email" class="input-log" name="email" [(ngModel)]="email" required email />
           </div>
         </div>
+        <div class="simple-error" *ngIf="emailError">
+          <i class="fas fa-exclamation-circle"></i> {{ emailError }}
+        </div>
+
         <!-- Champ Password avec icône d'œil -->
-        <div class="input-container pass">
+        <div class="input-container pass" [class.error-input]="!isPasswordValid">
           <div class="icon-log">
             <i class="fas fa-lock"></i>
           </div>
           <div class="data">
             <h5>Password</h5>
-            <input
-              #passwordInput
-              [attr.type]="showPassword ? 'text' : 'password'"
-              class="input-log"
-              name="password"
-              [(ngModel)]="password"
-            />
+            <input #passwordInput [attr.type]="showPassword ? 'text' : 'password'" class="input-log" name="password"
+              [(ngModel)]="password" required minlength="6" />
             <span class="eye-icon" (click)="togglePasswordVisibility()">
-              <i
-                class="fas eyes"
-                [class.fa-eye]="showPassword"
-                [class.fa-eye-slash]="!showPassword"
-              ></i>
+              <i class="fas eyes" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
             </span>
           </div>
         </div>
+        <div class="simple-error" *ngIf="passwordError">
+          <i class="fas fa-exclamation-circle"></i> {{ passwordError }}
+        </div>
 
-        <a href="#" *ngIf="isLoginMode">Forgot Password?</a>
-        <input
-          type="submit"
-          class="btn"
-          [value]="isLoginMode ? 'Login' : 'Register'"
-        />
+        <a href="#" *ngIf="isLoginMode" class="forgot-password">Forgot Password?</a>
+        <input type="submit" class="btn" [value]="isLoginMode ? 'LOGIN' : 'REGISTER'" />
       </form>
     </div>
   </div>

@@ -4,16 +4,19 @@
  * @details This component provides a search bar with real-time search capabilities, efficient caching of results, 
  * and product selection functionalities. It uses RxJS to debounce user input, manages cached search results to improve 
  * performance, and includes filtering options to refine search queries by country, department, category, and price.
+ * It has been modified to handle API errors gracefully and prevent UI crashes.
  * 
- * @component SearchbarComponent
+ * @author Original Author
+ * @date Original Date
+ * @modified 2023-XX-XX
  */
 
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subject, of, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, tap, filter } from 'rxjs/operators';
-import { Router, RouterLink } from '@angular/router';
+import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first } from 'rxjs/operators';
+import { Router } from '@angular/router';
 // API
 import { ApiService } from '../../../../../services/api.service';
 import { UsersService } from '../../../../../services/users/users.service';
@@ -24,9 +27,9 @@ import { DataCacheService } from '../../../../../services/cache/data-cache.servi
 @Component({
   selector: 'app-searchbar',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterLink],
+  imports: [FormsModule, CommonModule],
   templateUrl: './searchbar.component.html',
-  styleUrls: ['./searchbar.component.css']
+  styleUrls: ['./searchbar.component.css'],
 })
 export class SearchbarComponent implements OnInit {
   searchQuery: string = '';         // The current search query entered by the user.
@@ -45,11 +48,11 @@ export class SearchbarComponent implements OnInit {
   selectedCategory: string = '';
   categories: any[] = [];           // Contains all the categories name
   selectedBrand: string = '';
-  brands: any[] = []                // Contains all the brands
+  brands: any[] = [] // Contains all the brands
   // Price filter
-  priceFilter: boolean = false;     // State of the third filter.
-  minPrice: number = 0;             // Min price selected by the user
-  maxPrice: number = 5000;          // Max price selected by the user
+  priceFilter: boolean = false; // State of the third filter.
+  minPrice: number = 0;          // Min price selected by the user
+  maxPrice: number = 5000;       // Max price selected by the user
   // Save the filters
   appliedFilters: any = {};
   // Range boundaries for price filter
@@ -62,6 +65,9 @@ export class SearchbarComponent implements OnInit {
   private CACHE_DURATION = 5 * 60 * 1000; // Cache expiration time (5 minutes).
   // Dropdown for filters (renamed for cohérence with the new design)
   filterDropdownOpen: boolean = false; // Indicates if the filter dropdown is open.
+  // Wait time
+  isLoading: boolean = false; // Display a message while search is in progress
+
 
   @Output() searchExecuted = new EventEmitter<void>(); // Event to notify when a search is completed.
 
@@ -96,7 +102,9 @@ export class SearchbarComponent implements OnInit {
    * @param router Angular router for navigation.
    * @param usersService Service for handling user information.
    * @param apiOFF Service to interact with the Open Food Facts API.
-   */
+   * @param dataCacheService Service to gather data from the localStorage
+ 
+  */
   constructor(
     private apiService: ApiService,
     private router: Router,
@@ -126,12 +134,15 @@ export class SearchbarComponent implements OnInit {
             return of(null); // Skip API calls.
           }
 
+          this.isLoading = true;
+
           // Launch parallel requests: Internal API + Open Food Facts
           return forkJoin({
             internalResults: this.apiService.sendSearchData({ search: trimmedQuery }),
             offResults: this.apiOFF.getProductInfo(trimmedQuery),
           }).pipe(
             tap(({ internalResults, offResults }) => {
+              this.isLoading = false;
               const combinedResults = [
                 ...(internalResults || []),
                 ...(offResults?.products || []), // Include Open Food Facts products.
@@ -152,6 +163,7 @@ export class SearchbarComponent implements OnInit {
          * @returns {void}
          */
         next: (response: any) => {
+          this.isLoading = false;
           if (response) {
             const internalResults = response.internalResults || [];
             const offResults = response.offResults?.products || [];
@@ -177,29 +189,37 @@ export class SearchbarComponent implements OnInit {
             this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
           }
         },
-        error: (error) => console.error('❌ Error during search:', error),
+        error: (error) => {
+          this.isLoading = false;
+          console.error('❌ Error during search:', error)
+        },
       });
   }
 
   /**
-   * @brief Lifecycle hook that initializes the component.
+   * @function ngOnInit
+   * @description Lifecycle hook that initializes the component
+   * @details Fetches authentication status, countries, categories, and brands
    */
   async ngOnInit(): Promise<void> {
+    this.dataCacheService.loadData();
 
-    // Retrieve countries from cache
-    this.dataCacheService.getCountries().subscribe(countries => {
+    // Fetch the data in the localStorage
+    forkJoin({
+      countries: this.dataCacheService.getCountries().pipe(first()),
+      categories: this.dataCacheService.getCategories().pipe(first()),
+      brands: this.dataCacheService.getBrands().pipe(first())
+    }).subscribe(({ countries, categories, brands }) => {
       this.countries = countries;
-    });
-
-    // Retrieve categories from cache
-    this.dataCacheService.getCategories().subscribe(categories => {
-      this.categories = categories;
-    });
-
-    // Retrieve brands from cache
-    this.dataCacheService.getBrands().subscribe(brands => {
+      this.categories = categories.map(category => category.name);
       this.brands = brands;
     });
+
+    // Refresh brands automatically every 5 minutes
+    setInterval(() => {
+      console.log("🔄 Auto-refreshing brands...");
+      this.dataCacheService.refreshBrands();
+    }, 10 * 60 * 1000);
 
     // Get the cookie's info
     const userRole = this.usersService.getUserRole();
@@ -208,9 +228,9 @@ export class SearchbarComponent implements OnInit {
   }
 
   /**
- * @function toggleFilterDropdown
- * @description Toggles the visibility of the filter dropdown.
- */
+   * @function toggleFilterDropdown
+   * @description Toggles the visibility of the filter dropdown.
+   */
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
   }
@@ -253,7 +273,9 @@ export class SearchbarComponent implements OnInit {
         this.search(true);    // Search including the selected product
       } else {
         if (this.fullSearchResults.length > 0) {
-          this.router.navigate(['/searched-prod'], { state: { resultsArray: this.fullSearchResults } });
+          this.router.navigate(['/searched-prod'], {
+            state: { resultsArray: this.fullSearchResults },
+          });
         } else {
           this.search(false); // Search without including the selected product
         }
@@ -284,19 +306,16 @@ export class SearchbarComponent implements OnInit {
   }
 
   /**
-   * @brief Executes a product search with applied filters and navigates to the results page.
+   * @brief Performs a search based on applied filters and optional selected product.
    * 
-   * @details
-   * This method applies the selected filters and sends them to the API to retrieve matching products.  
-   * It handles two cases:
-   * - **With a selected product:** Searches for products similar to the selected one.
-   * - **Without a selected product:** Searches based solely on the applied filters.
-   *  
-   * @param includeSelectedProduct (boolean) Indicates whether the selected product should be included in the search criteria.  
-   *        - `true`: Includes the selected product for similarity-based search.  
-   *        - `false`: Searches using only the applied filters. (default: `false`)  
+   * @details This method applies filters, validates if any filters are applied, 
+   * constructs the search request, and sends it to the API. The results are processed, 
+   * ensuring the selected product appears first if included, and then navigates 
+   * to the results page.
    * 
-   * @returns {void} This function does not return anything but navigates to the results page upon completion.
+   * @param {boolean} [includeSelectedProduct=false] - Whether to include the selected product in the search.
+   * 
+   * @returns {void}
    */
   search(includeSelectedProduct: boolean = false): void {
     this.applyFilters(); // Apply filters before performing the search.
@@ -314,9 +333,18 @@ export class SearchbarComponent implements OnInit {
       currentRoute: this.router.url, // Pass the current route for backend context
     };
 
+    this.isLoading = true;
+
     // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
+        this.isLoading = false;
+
+        // Ensure the selected product is at the first position
+        if (includeSelectedProduct && this.selectedProduct) {
+          response = this.reorderResults(response, this.selectedProduct);
+        }
+
         // Navigate to results page with the response
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
@@ -324,6 +352,23 @@ export class SearchbarComponent implements OnInit {
       },
       error: (error) => console.error('❌ Search error:', error),
     });
+  }
+
+  /**
+   * @brief Moves the searched product to the first position in the results array.
+   * @param results The array of product results.
+   * @param searchedProductId The ID of the searched product.
+   * @returns The reordered array with the searched product first.
+   */
+  private reorderResults(results: any[], searchedProductId: string): any[] {
+    if (!results || results.length === 0) return results;
+
+    const index = results.findIndex(product => product.id === searchedProductId);
+    if (index > 0) {
+      const [searchedProduct] = results.splice(index, 1);
+      results.unshift(searchedProduct);
+    }
+    return results;
   }
 
   // ======================== FILTER FUNCTIONS

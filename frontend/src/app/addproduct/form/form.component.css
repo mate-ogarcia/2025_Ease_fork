@@ -183,3 +183,11 @@ select {
   margin-left: 4px;
   cursor: pointer;
 }
+@media screen and (max-width: 1200px) {
+  .content {
+    flex-direction: column;
+  }
+  .left-column{
+    width: 100%;
+  }
+}

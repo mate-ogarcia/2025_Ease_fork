@@ -13,9 +13,11 @@
   color: #f9f9f9;
   margin: 10px 0;
 }
-.app-searchbar{
+
+.app-searchbar {
   width: 50%;
 }
+
 /* Logo */
 .logo {
   display: flex;
@@ -27,9 +29,11 @@
   font-weight: bold;
   cursor: pointer;
 }
-picture{
+
+picture {
   height: 40px;
 }
+
 .easelogo {
   height: 100%;
   border-radius: 45px;
@@ -40,7 +44,7 @@ picture{
   list-style: none;
   display: flex;
   align-items: center;
-  flex: 1; 
+  flex: 1;
   gap: 10px;
   padding-left: 20px;
   margin: 0;
@@ -56,19 +60,27 @@ picture{
 
 .nav-btn {
   text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
   color: #f9f9f9;
   font-weight: 500;
   border-radius: 40px;
   padding: 10px 15px;
-  transition: all 0.3s ease-in-out;  
+  transition: all 0.3s ease-in-out;
   cursor: pointer;
+  width: 160px;
 }
 
 .nav-btn:hover {
   color: #2d2b27;
   background-color: #f9f9f9;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease-in-out;
 }
+
 
 /* User Profile */
 .user {
@@ -78,6 +90,7 @@ picture{
   height: 40px;
   margin-left: auto;
 }
+
 .log-container {
   display: flex;
   justify-content: center;
@@ -86,10 +99,12 @@ picture{
   gap: 10px;
   margin-left: auto;
 }
-.login-btn{
+
+.login-btn {
   background-color: #011f20;
   color: white;
 }
+
 .userprofile {
   height: 100%;
   cursor: pointer;
@@ -103,6 +118,7 @@ picture{
   cursor: pointer;
   z-index: 10000;
 }
+
 /* Position et style du menu déroulant */
 .dropdown-menu {
   position: absolute;
@@ -119,15 +135,35 @@ picture{
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10000;
 }
+
 .profile-btn {
   padding: 10px 15px;
-  border-bottom: 1px solid #778081;
   color: black;
+}
+
+.admin-btn {
+  padding: 10px 15px;
+  color: black;
+}
+
+/* Style du bouton logout dans le menu */
+.logout-container {
+  width: 100%;
+  display: flex;
+  padding-top: 10px;
+  border-top: 1px solid #778081;
+}
+
+.user-btn {
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
 }
-/* Style du bouton logout dans le menu */
+
 .logout-btn {
   background-color: red;
   color: white;
@@ -139,13 +175,16 @@ picture{
   transition: 0.3s;
   width: 100%;
   text-align: center;
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
 
 .logout-btn:hover {
   background-color: darkred;
 }
-
-
 
 .menu-toggle span {
   width: 25px;
@@ -156,54 +195,64 @@ picture{
 }
 
 /* Responsive */
-@media (max-width: 850px) {
+@media (max-width: 1100px) {
   .navbar {
-      flex-direction: row;
+    flex-direction: row;
   }
-  .app-searchbar{
+
+  .app-searchbar {
     width: 100%;
     padding: 0 20px;
     border-left: 1px solid #f9f9f9;
   }
+
   .navbar ul {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      position: absolute;
-      top: 60px;
-      right: 0px;
-      background: white;
-      color: #2d2b27;
-      width: 150px;
-      padding: 10px;
-      border-radius: 5px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 60px;
+    right: 0px;
+    background: white;
+    color: #2d2b27;
+    width: fit-content;
+    padding: 10px 20px;
+    gap: 5px;
+    border-radius: 5px;
   }
 
   .navbar ul.active {
-    
+
     display: flex;
   }
-  .nav-btn{
+
+  .nav-btn {
     color: black;
   }
-  .login-btn{
+
+  .login-btn {
     color: white;
   }
+
   .menu-toggle {
-      display: flex;
+    display: flex;
   }
-  .user{
-    margin-left: 0; 
+
+  .user {
+    margin-left: 0;
     width: 100%;
     height: fit-content;
     display: flex;
     flex-direction: column;
   }
+
   .logo {
     border-right: none;
   }
+
   .log-container {
-    position: relative; /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
+    position: relative;
+    /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -213,17 +262,21 @@ picture{
     margin-left: auto;
     flex-direction: column;
   }
-  .userprofile{
+
+  .userprofile {
     display: none;
   }
-  
-  .profile-btn{
-    width: 85%;
+
+  .profile-btn {
+    width: 100%;
+    padding-top: 10px;
     border-top: 1px solid #778081;
   }
+
   .dropdown-menu {
     position: relative;
-    display: flex !important; /* Toujours visible */
+    display: flex !important;
+    /* Toujours visible */
     visibility: visible !important;
     opacity: 1 !important;
     font-weight: 500;
@@ -236,5 +289,5 @@ picture{
     box-shadow: none;
     padding: 0;
   }
-  
+
 }

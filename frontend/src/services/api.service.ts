@@ -12,14 +12,18 @@ import { catchError, Observable, throwError } from 'rxjs';
 import { environment } from '../environments/environment';
 import { tap } from 'rxjs/operators';
 
+/**
+ * @class ApiService
+ * @brief Service responsible for handling API calls to the backend.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
-  private _backendUrl = environment.backendUrl;
-  private _searchUrl = environment.searchUrl;
-  private _productsUrl = environment.productsURL;
-  private _dbUrl = environment.databaseBackendURL;
+  private _backendUrl = environment.backendUrl;   // Backend API base URL.
+  private _searchUrl = environment.searchUrl;     // Search API base URL.
+  private _productsUrl = environment.productsURL; // Products API base URL.
+  private _dbUrl = environment.databaseBackendURL;// Database API base URL.
 
   constructor(private http: HttpClient) { }
 
@@ -46,22 +50,15 @@ export class ApiService {
    * @returns {Observable<any>} An `Observable` containing the product details.
    */
   getProductById(id: string): Observable<any> {
-    console.log(
-      '🔹 Fetching product by ID from:',
-      `${this._productsUrl}/${id}`
-    );
     return this.http.get<any[]>(`${this._productsUrl}/${id}`);
   }
 
   /**
-   * Retrieves all alternative products for the selected one.
-   * @param {string} id - ID of the selected product
-   */
+    * @brief Retrieves all alternative products for the selected one.
+    * @param {string} id - ID of the selected product.
+    * @returns {Observable<any>} An `Observable` containing alternative products.
+    */
   getAlternativeProducts(id: string): Observable<any> {
-    console.log(
-      '🔹 Fetching alternative products from:',
-      `${this._productsUrl}/alternativeProducts/${id}`
-    );
     return this.http
       .get<any[]>(`${this._productsUrl}/alternativeProducts/${id}`)
       .pipe(
@@ -89,19 +86,20 @@ export class ApiService {
     return this.http.get<any[]>(`${this._dbUrl}/categName`);
   }
 
+  /**
+   * @brief Retrieves all brand names from the database.
+   * @returns {Observable<any[]>} An `Observable` that emits an array of brand names.
+   */
   getAllBrands(): Observable<any> {
     return this.http.get<any[]>(`${this._dbUrl}/brandName`);
   }
 
   /**
    * @brief Performs a product search on the backend using an HTTP GET request.
-   *
    * @param {string} query - The search term entered by the user.
    * @returns {Observable<any[]>} An `Observable` containing the search results.
    */
   searchProducts(query: string): Observable<any[]> {
-    console.log('🔹 Sending search request:', `${this._searchUrl}?q=${query}`);
-
     return this.http.get<any[]>(`${this._searchUrl}?q=${query}`).pipe(
       tap((response) => console.log('🔹 API Response:', response)),
       catchError((error) => {
@@ -166,7 +164,6 @@ export class ApiService {
    * @throws {Error} If there is an issue with the API request, an error is thrown with a message indicating the failure.
    */
   postProductsWithFilters(filters: any): Observable<any> {
-    console.log('filters:', filters);
     return this.http
       .post<any[]>(`${this._productsUrl}/filteredProducts`, filters)
       .pipe(
@@ -180,6 +177,15 @@ export class ApiService {
           );
         })
       );
+  }
+
+  /**
+   * @brief Sends a new product to the backend for addition.
+   * @param product The product object to be added.
+   * @return Observable<any> Response from the backend.
+   */
+  postAddProduct(product: any): Observable<any> {
+    return this.http.post(`${this._productsUrl}/add`, product);
   }
 
 }

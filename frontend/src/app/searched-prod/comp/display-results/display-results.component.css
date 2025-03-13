@@ -9,7 +9,8 @@
 }
 
 .grid-btn button {
-  background-color: #ccc; /* Couleur par défaut */
+  background-color: #ccc;
+  /* Couleur par défaut */
   border: none;
   outline: none;
   padding: 10px;
@@ -20,7 +21,8 @@
 }
 
 .grid-btn button.active {
-  background-color: #3498db; /* Couleur pour le bouton actif */
+  background-color: #3498db;
+  /* Couleur pour le bouton actif */
   color: white;
 }
 
@@ -31,7 +33,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  
   border-radius: 15px;
   scroll-behavior: smooth;
 }
@@ -42,7 +43,7 @@
 }
 
 /* === Items Container === */
-.item-container {  
+.item-container {
   display: flex;
   width: 100%;
   height: auto;
@@ -69,7 +70,8 @@
   width: 100%;
   justify-content: center;
 }
-.items-list.grid .item{
+
+.items-list.grid .item {
   align-items: center;
 }
 
@@ -81,12 +83,14 @@
   background-color: #f9ebde;
   gap: 10px;
   padding: 15px;
+  padding-bottom: 70px; /* Espace réservé pour le bouton like */
   border-radius: 20px;
   cursor: pointer;
   transition: transform 0.3s ease-in-out;
   max-height: 300px;
   overflow: hidden;
   z-index: 999;
+  position: relative; /* Pour que le like-btn en absolu se positionne par rapport à cette carte */
 }
 
 .item:hover {
@@ -109,6 +113,40 @@
   box-sizing: border-box;
   flex-shrink: 0;
 }
+/* === product Description === */
+.product-description {
+  height: 80px;
+  overflow-y: auto;
+  padding-right: 5px;
+  /* Pour Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #3498db #f1f1f1;
+}
+.product-description::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Pour Chrome, Edge, Safari */
+.product-description::-webkit-scrollbar {
+  width: 5px; /* plus fine */
+}
+
+.product-description::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+.product-description::-webkit-scrollbar-thumb {
+  background: #34db6c;
+  border-radius: 25px;
+}
+
+.product-description::-webkit-scrollbar-thumb:hover {
+  background: #2980b9;
+}
+
 
 /* === Product Image === */
 .product-image {
@@ -123,16 +161,27 @@
   color: rgb(23, 241, 41);
 }
 
+/* Positionnement du bouton "like" en bas à droite */
+
+.like-btn {
+  position: absolute;
+  
+  bottom: 15px;
+  right: 15px;
+  z-index: 1000;
+}
+
 /* === Responsive Design for Screens ≤ 768px === */
 @media screen and (max-width: 768px) {
   .item {
     flex-direction: column;
-    max-height: none;
   }
+  
   .img-container {
     width: 100%;
     height: auto;
   }
+  
   .product-image {
     width: 100%;
     height: auto;

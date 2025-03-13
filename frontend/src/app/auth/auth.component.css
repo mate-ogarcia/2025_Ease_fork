@@ -19,6 +19,7 @@ body {
     opacity: 0;
     transform: translateY(15px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -89,6 +90,38 @@ form {
   width: 360px;
 }
 
+/* Animation pour la barre d'erreur */
+@keyframes errorPulse {
+  0% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scaleX(1.02);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes validGlow {
+  0% {
+    box-shadow: 0 0 0px rgba(56, 211, 159, 0);
+  }
+
+  50% {
+    box-shadow: 0 2px 4px rgba(56, 211, 159, 0.5);
+  }
+
+  100% {
+    box-shadow: 0 0 0px rgba(56, 211, 159, 0);
+  }
+}
+
 /* Conteneurs des champs */
 .input-container {
   position: relative;
@@ -96,8 +129,10 @@ form {
   grid-template-columns: 7% 93%;
   margin: 25px 0;
   padding: 5px 0;
-  border-bottom: 2px solid #d9d9d9;
-  transition: 0.4s;
+  border-bottom: 2px solid #38d39f;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  margin-bottom: 35px;
+  animation: validGlow 3s infinite;
 }
 
 .icon-log {
@@ -111,7 +146,7 @@ form {
   transition: 0.3s;
 }
 
-.input-container > div {
+.input-container>div {
   position: relative;
   height: 45px;
 }
@@ -129,8 +164,8 @@ h5 {
 
 /* Effets dynamiques des inputs */
 .input-container.focus h5,
-.input-log:focus + h5,
-.input-log:not(:placeholder-shown) + h5 {
+.input-log:focus+h5,
+.input-log:not(:placeholder-shown)+h5 {
   top: -10px;
   font-size: 15px;
   color: #38d39f;
@@ -160,7 +195,33 @@ h5 {
   width: 50%;
 }
 
-.input-container.focus > .icon-log i {
+/* Styles pour les champs en erreur avec animation améliorée */
+.input-container.error-input {
+  border-bottom: 2px solid #ff4444;
+  animation: errorPulse 2s infinite;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 2px 5px rgba(255, 68, 68, 0.3);
+}
+
+.input-container.error-input:before,
+.input-container.error-input:after {
+  background-color: #ff4444;
+  transition: all 0.3s ease-in-out;
+}
+
+.input-container.error-input.focus:before,
+.input-container.error-input.focus:after {
+  width: 50%;
+  transition: all 0.5s ease-in-out;
+}
+
+/* Couleur de l'icône en focus */
+.input-container.focus>.icon-log i {
+  color: #38d39f;
+}
+
+/* Couleur de l'icône en focus et en erreur */
+.input-container.error-input.focus>.icon-log i {
   color: #38d39f;
 }
 
@@ -225,6 +286,8 @@ a:hover {
   margin: 1rem 0;
   cursor: pointer;
   transition: 0.5s;
+  letter-spacing: 1px;
+  font-weight: 600;
 }
 
 .btn:hover {
@@ -279,6 +342,7 @@ a:hover {
   background-color: #2e9b7f;
   transform: scale(1.1);
 }
+
 /* Bouton switch Login/Register */
 .switch-container {
   display: flex;
@@ -311,8 +375,10 @@ a:hover {
 
 /* Bouton actif */
 .switch-button.active {
-  background-color: #17b317; /* Couleur bleue pour le bouton actif */
-  color: #fff; /* Couleur blanche pour le texte */
+  background-color: #17b317;
+  /* Couleur bleue pour le bouton actif */
+  color: #fff;
+  /* Couleur blanche pour le texte */
   font-weight: 700;
   border-radius: 20px;
 }
@@ -329,16 +395,216 @@ a:hover {
   .container {
     grid-template-columns: 1fr;
   }
+
   form {
     width: 290px;
   }
+
   .image {
     display: none;
   }
+
   .wave {
     height: 40%;
   }
+
   .wavetop {
     height: 60%;
   }
+}
+
+/* Bouton de retour */
+.back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  background-color: #38d39f;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.back-btn i {
+  font-size: 18px;
+}
+
+.back-btn:hover {
+  background-color: #2e9b7f;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .back-btn {
+  background-color: #2e9b7f;
+  color: white;
+}
+
+.dark-mode .back-btn:hover {
+  background-color: #38d39f;
+}
+
+/* Position du header-form */
+.header-form {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-form img {
+  max-width: 100px;
+  height: auto;
+}
+
+/* Suppression des styles qui colorent les icônes et le texte en rouge */
+.input-container.error-input .icon-log i {
+  color: #d9d9d9;
+}
+
+.input-container.error-input h5 {
+  color: #999;
+}
+
+/* Style pour les messages d'erreur simplifiés */
+.simple-error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ff4444;
+  font-size: 0.8rem;
+  margin-top: -25px;
+  margin-bottom: 15px;
+  padding-left: 45px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.simple-error i {
+  font-size: 0.9rem;
+}
+
+.dark-mode .simple-error {
+  color: #ff6b6b;
+}
+
+/* Style pour le lien "Forgot Password" */
+.forgot-password {
+  display: block;
+  text-align: right;
+  text-decoration: none;
+  color: #999;
+  font-size: 0.9rem;
+  transition: 0.3s;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.forgot-password:hover {
+  color: #38d39f;
+}
+
+/* Styles des messages d'erreur */
+.error-wrapper {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-wrapper i {
+  color: #ff4444;
+  font-size: 0.9rem;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.error-container {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: rgba(255, 68, 68, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.error-container i {
+  color: #ff4444;
+  font-size: 1rem;
+}
+
+.error-container .error-message {
+  color: #ff4444;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Mode sombre */
+.dark-mode .error-wrapper i,
+.dark-mode .error-message {
+  color: #ff6b6b;
+}
+
+.dark-mode .error-container {
+  background-color: rgba(255, 107, 107, 0.15);
+}
+
+.dark-mode .error-container i,
+.dark-mode .error-container .error-message {
+  color: #ff6b6b;
+}
+
+/* Ajustement des conteneurs pour les messages d'erreur */
+.input-container {
+  margin-bottom: 35px;
+}
+
+/* Style pour l'autocomplétion spécifique au composant d'authentification */
+.input-log:-webkit-autofill,
+.input-log:-webkit-autofill:hover,
+.input-log:-webkit-autofill:focus,
+.input-log:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #d5f5ea inset !important;
+  -webkit-text-fill-color: #333 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Pour le mode sombre */
+.dark-mode .input-log:-webkit-autofill,
+.dark-mode .input-log:-webkit-autofill:hover,
+.dark-mode .input-log:-webkit-autofill:focus,
+.dark-mode .input-log:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #2c3e50 inset !important;
+  -webkit-text-fill-color: #fff !important;
 }

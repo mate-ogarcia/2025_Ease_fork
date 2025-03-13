@@ -1,1 +1,14 @@
-<router-outlet></router-outlet>
+<!-- Écran de chargement qui s'affiche pendant l'initialisation de l'application -->
+<div *ngIf="!(isAppReady | async)" class="app-loading">
+  <div class="loading-container">
+    <div class="loading-spinner">
+      <span></span>
+    </div>
+    <p>Initialisation de l'application...</p>
+  </div>
+</div>
+
+<!-- Contenu de l'application qui s'affiche une fois l'initialisation terminée -->
+<div *ngIf="isAppReady | async">
+  <router-outlet></router-outlet>
+</div>

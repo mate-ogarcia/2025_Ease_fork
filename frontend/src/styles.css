@@ -1,13 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
 @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
-*,::before,::after{
+*,
+::before,
+::after {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
 }
 
-body,html{
+body,
+html {
     font-family: 'Geologica', sans-serif;
     font-size: 16px;
     font-weight: 400;
@@ -15,4 +18,95 @@ body,html{
     color: #333;
     background-color: #f8f9fa;
     width: 100%;
+}
+
+/* Style pour l'autocomplétion des formulaires - Règle globale */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    /* Utiliser la couleur de fond globale du site */
+    -webkit-box-shadow: 0 0 0 1000px #f8f9fa inset !important;
+    -webkit-text-fill-color: #333 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Style spécifique pour l'autocomplétion dans le composant d'authentification */
+.container input:-webkit-autofill,
+.container input:-webkit-autofill:hover,
+.container input:-webkit-autofill:focus,
+.container input:-webkit-autofill:active {
+    /* Utiliser la couleur de fond du composant d'authentification */
+    -webkit-box-shadow: 0 0 0 1000px #d5f5ea inset !important;
+    -webkit-text-fill-color: #333 !important;
+}
+
+/* Pour le mode sombre */
+.dark-mode input:-webkit-autofill,
+.dark-mode input:-webkit-autofill:hover,
+.dark-mode input:-webkit-autofill:focus,
+.dark-mode input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #2c3e50 inset !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+/* Styles pour les notifications */
+.error-snackbar {
+    background: #f44336;
+    color: white;
+}
+
+.warning-snackbar {
+    background: #ff9800;
+    color: white;
+}
+
+.success-snackbar {
+    background: #4caf50;
+    color: white;
+}
+
+/* Style du bouton de fermeture */
+.mat-mdc-snack-bar-action {
+    color: white !important;
+}
+
+/* Style du conteneur de notification */
+.mat-mdc-snack-bar-container {
+    margin: 16px !important;
+    max-width: 90% !important;
+    border-radius: 4px !important;
+}
+
+/* Animations pour les notifications */
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
     }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+}
+
+/* Styles pour les notifications */
+.toast-notification {
+    font-family: 'Montserrat', sans-serif;
+    max-width: 90%;
+    text-align: center;
+    white-space: pre-wrap;
+}

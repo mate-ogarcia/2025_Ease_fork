@@ -1,0 +1,285 @@
+/* 🌟 Global : Lisibilité et transitions */
+body {
+  font-family: 'Arial', sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+/* 🏗️ Conteneur principal */
+.product-requests-container {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+/* 📌 Liste des produits et des marques */
+.requests-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 320px;
+}
+
+/* 📌 Conteneur des produits et marques */
+.requests-list {
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.3s ease-in-out;
+}
+
+.requests-list h3 {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+/* 🎨 Cartes des demandes */
+.request-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.request-card:hover, .request-card.selected {
+  background: #007bff;
+  color: #fff;
+  transform: scale(1.03);
+}
+
+/* 📝 Zone d'édition */
+.request-details {
+  flex: 1;
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 450px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* 📌 Header */
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.details-header h3 {
+  margin: 0;
+}
+
+/* ✏️ Bouton d'édition */
+.edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #007bff;
+  font-size: 1rem;
+  transition: opacity 0.2s;
+}
+
+.edit-btn:hover {
+  opacity: 0.8;
+}
+
+/* 🌟 Mode Édition : Amélioration des inputs */
+.detail-item {
+  margin-bottom: 15px;
+  transition: all 0.3s;
+}
+
+.detail-item label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+/* 🌟 Input & Select stylisés */
+.detail-item input,
+.detail-item select,
+.detail-item textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 30px;
+  background: #f9f9f9;
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s;
+}
+
+.detail-item input:focus,
+.detail-item select:focus,
+.detail-item textarea:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+  outline: none;
+  background: #fff;
+}
+
+/* 📌 Boutons d'actions */
+.details-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.details-actions button {
+  padding: 10px 14px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* 🎨 Bouton SAVE */
+.details-actions .save-btn {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  border: none;
+  box-shadow: 0 3px 6px rgba(40, 167, 69, 0.3);
+}
+
+.details-actions .save-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+}
+
+/* 🚫 Bouton CANCEL */
+.details-actions .cancel-btn {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: #fff;
+  border: none;
+  box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
+}
+
+.details-actions .cancel-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+/* 🏷️ Amélioration des tags */
+.tags-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  border: 2px solid #ccc;
+  border-radius: 30px;
+  padding: 6px 10px;
+  gap: 6px;
+  background: #f9f9f9;
+  transition: border-color 0.3s ease-in-out;
+}
+
+.tags-input-container:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+}
+
+/* 💡 Style des tags */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background: #007bff;
+  color: #fff;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  transition: background 0.3s ease-in-out;
+}
+
+/* ❌ Bouton de suppression des tags */
+.tag button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #fff;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.tag button:hover {
+  color: #ffdddd;
+}
+
+/* ✏️ Input des tags */
+.tags-input-container input {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+  transition: all 0.3s ease-in-out;
+}
+
+.tags-input-container input:focus {
+  color: #333;
+}
+
+/* 🎯 Effet sur l’ensemble */
+.request-details:focus-within {
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+}
+
+/* 📌 Alignement des boutons Validate & Refuse */
+.validate-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+/* 🟢 Bouton VALIDATE */
+.accept-btn {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+}
+
+.accept-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 10px rgba(40, 167, 69, 0.4);
+}
+
+/* 🔴 Bouton REFUSE */
+.reject-btn {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
+}
+
+.reject-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 10px rgba(220, 53, 69, 0.4);
+}
