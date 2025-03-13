@@ -132,13 +132,14 @@ export class AuthService {
    * @returns {Observable<any>} An observable of the profile API response
    * @public
    */
-  refreshAuthState(): Observable<any> {
+  public refreshAuthState(): Observable<any> {
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
         tap(response => {
           console.log('Profile response:', response);
           if (response && response.role) {
             this.updateAuthState(true, response.role);
+            this.user = response;
           }
         }),
         catchError(error => {

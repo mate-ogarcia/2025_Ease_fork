@@ -683,20 +683,47 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Updates a user's role in the database.
-   * @param id User ID.
+   * @param email User email.
    * @param role New role to be assigned.
    * @returns {Promise<any>} Updated user data.
    */
-  async updateUserRole(id: string, role: string): Promise<any> {
-    const query = `
-      UPDATE \`${this.usersBucket.name}\`
-      SET role = $role
-      WHERE META().id = $id
-      RETURNING META().id as id, email, username, role, createdAt, updatedAt;
-    `;
+  async updateUserRole(email: string, role: string): Promise<any> {
+    try {
+      // Vérifier si l'utilisateur existe avant de mettre à jour
+      const userExists = await this.getUserByEmail(email);
+      if (!userExists) {
+        console.warn(`⚠️ No user found with email: ${email}`);
+        return null;
+      }
 
-    const result = await this.executeQuery(query, { id, role });
-    return result.length ? result[0] : null;
+      // Utiliser l'API Couchbase directement pour mettre à jour le document
+      const collection = this.getUsersCollection();
+      const userId = userExists.id;
+
+      try {
+        // Récupérer le document actuel
+        const getResult = await collection.get(userId);
+        const userDoc = getResult.content;
+
+        // Mettre à jour le rôle
+        userDoc.role = role;
+        userDoc.updatedAt = new Date().toISOString();
+
+        // Enregistrer le document mis à jour
+        await collection.replace(userId, userDoc);
+
+        console.log(`✅ Role updated successfully for user ${email}`);
+
+        // Récupérer l'utilisateur mis à jour pour confirmation
+        return await this.getUserByEmail(email);
+      } catch (err) {
+        console.error(`❌ Error during Couchbase operation: ${err.message}`);
+        throw new Error(`Failed to update user role: ${err.message}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error updating role for user ${email}:`, error);
+      throw new Error(`Failed to update role: ${error.message}`);
+    }
   }
 
   /**
