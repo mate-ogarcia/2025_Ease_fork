@@ -16,7 +16,7 @@ export class CountriesService implements OnModuleInit {
     private readonly logger = new Logger(CountriesService.name);
     private _europeanCountries: string[] = []; // List of European countries retrieved from the API.
 
-    // Liste de secours des pays européens en cas d'échec de l'API
+    // Emergency list of European countries in case of API failure
     private readonly defaultEuropeanCountries: string[] = [
         "France", "Germany", "Italy", "Spain", "United Kingdom", "Portugal", "Netherlands",
         "Belgium", "Switzerland", "Austria", "Sweden", "Norway", "Denmark", "Finland",

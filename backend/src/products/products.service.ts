@@ -252,13 +252,12 @@ export class ProductsService {
   private async getExternalAlternatives(criteria: any): Promise<any[]> {
     const { category } = criteria;
 
-    // TODO: To complete
-    switch (category) {
-      case 'Food':
-        return this.getOFFAlternatives(criteria);
-      default:
-        console.warn('Others API are not yet available');
-        return Promise.resolve([]);
+    // TODO: To complete w/ other API
+    if (category === 'Food' || category === 'Beverages') {
+      return this.getOFFAlternatives(criteria);
+    } else {
+      console.warn('Others API are not yet available');
+      return Promise.resolve([]);
     }
   }
 
@@ -273,14 +272,19 @@ export class ProductsService {
   private async getOFFAlternatives(criteria: any): Promise<any[]> {
     try {
       console.log("🌍 Searching via Open Food Facts with criteria:", criteria);
-
-      const results = await this.openFoodFactsService.searchSimilarProducts({
-        category: criteria.category,
-        productSource: criteria.productSource,
-        tags: criteria.tags,
-        productName: criteria.productName,
-      });
-
+      let results: any;
+      // if user's only looking for food
+      if ( criteria.category === 'Food' && !criteria.productSource && !criteria.tags) {
+        results = await this.openFoodFactsService.searchFoodProducts();
+      // else search for similar products
+      } else {
+        results = await this.openFoodFactsService.searchSimilarProducts({
+          category: criteria.category,
+          productSource: criteria.productSource,
+          tags: criteria.tags,
+        });
+      }
+      // normalize the results
       return results.map(product => ({
         id: product.code,
         name: product.product_name || 'Unknown name',
@@ -318,6 +322,7 @@ export class ProductsService {
    */
   private async getProductsByFilters(filters: any): Promise<any[]> {
     try {
+      console.log('filters products.service:', filters);
       // Search only in the internal database
       const internalResults = await this.databaseService.getProductsWithFilters(filters);
 
