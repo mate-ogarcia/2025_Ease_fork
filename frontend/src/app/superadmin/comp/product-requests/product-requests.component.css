@@ -47,7 +47,8 @@ body {
   transition: background 0.3s, transform 0.2s;
 }
 
-.request-card:hover, .request-card.selected {
+.request-card:hover,
+.request-card.selected {
   background: #007bff;
   color: #fff;
   transform: scale(1.03);
@@ -229,7 +230,7 @@ body {
   color: #333;
 }
 
-/* 🎯 Effet sur l’ensemble */
+/* 🎯 Effet sur l'ensemble */
 .request-details:focus-within {
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
 }
@@ -282,4 +283,65 @@ body {
 .reject-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 5px 10px rgba(220, 53, 69, 0.4);
+}
+
+/* Animation pour le spinner de chargement - version améliorée */
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-rotate {
+  animation: rotate 1s linear infinite;
+  display: inline-block;
+  /* Forcer le rendu hardware pour améliorer les performances */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  will-change: transform;
+  /* Assurer que l'animation est toujours visible */
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Styles pour le conteneur de chargement */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin: 1rem 0;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 300px;
+}
+
+.loading-spinner {
+  font-size: 2rem;
+  color: #1976d2;
+  margin-bottom: 1rem;
+}
+
+.loading-container p {
+  font-size: 1rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Style pour le message "aucune demande" */
+.no-requests {
+  text-align: center;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 1rem 0;
+  color: #6c757d;
 }

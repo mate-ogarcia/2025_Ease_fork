@@ -3,8 +3,16 @@
   <input class="search-bar" type="text" placeholder="Rechercher des utilisateurs..." [(ngModel)]="searchTerm" />
 </div>
 
+<!-- Indicateur de chargement des utilisateurs -->
+<div class="loading-container" *ngIf="isLoadingUsers">
+  <div class="loading-spinner">
+    <i class="fas fa-spinner spinner-rotate"></i>
+  </div>
+  <p>Chargement des utilisateurs...</p>
+</div>
+
 <!-- Liste des cartes utilisateurs (filtrée) -->
-<div class="user-cards">
+<div class="user-cards" *ngIf="!isLoadingUsers">
   <div class="user-card" *ngFor="let user of filteredUsers" [ngClass]="{'banned': user.role === 'Banned'}">
     <div class="card-header">
       <div class="user-info">
@@ -18,14 +26,19 @@
           <div class="edit-container">
             <ng-container *ngIf="isSuperAdmin">
               <ng-container *ngIf="user.isEditing; else viewRole">
-                <select class="edit-selector" #roleSelect>
-                  <option *ngFor="let role of availableRoles" [value]="role" [selected]="user.role === role">{{ role }}
-                  </option>
-                </select>
-                <button class="icon-btn save-btn" (click)="saveRole(user, roleSelect.value)" title="Sauvegarder">
+                <div class="role-selector-container">
+                  <select class="edit-selector" #roleSelect [disabled]="isLoadingRoles">
+                    <option *ngFor="let role of availableRoles" [value]="role" [selected]="user.role === role">{{ role
+                      }}</option>
+                  </select>
+                  <i *ngIf="isLoadingRoles" class="fas fa-spinner spinner-rotate role-loading"></i>
+                </div>
+                <button class="icon-btn save-btn" (click)="saveRole(user, roleSelect.value)" title="Sauvegarder"
+                  [disabled]="isLoadingRoles">
                   <i class="fas fa-check"></i>
                 </button>
-                <button class="icon-btn cancel-btn" (click)="cancelEdit(user)" title="Annuler">
+                <button class="icon-btn cancel-btn" (click)="cancelEdit(user)" title="Annuler"
+                  [disabled]="isLoadingRoles">
                   <i class="fas fa-times"></i>
                 </button>
               </ng-container>
@@ -52,4 +65,9 @@
       </button>
     </div>
   </div>
+</div>
+
+<!-- Message si aucun utilisateur trouvé -->
+<div class="no-results" *ngIf="!isLoadingUsers && filteredUsers.length === 0">
+  <p>Aucun utilisateur trouvé pour "{{ searchTerm }}"</p>
 </div>
