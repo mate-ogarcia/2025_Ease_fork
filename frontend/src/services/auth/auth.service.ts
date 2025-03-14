@@ -161,7 +161,14 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('Error refreshing auth state:', error);
-          // Don't update state in case of error
+          // En cas d'erreur, mettre à jour l'état d'authentification comme non authentifié
+          // mais ne pas rediriger l'utilisateur
+          this.updateAuthState(false, null);
+          this.user = null;
+
+          // Ne pas supprimer le cookie pour éviter des redirections non désirées
+          // Ne pas rediriger vers la page de login
+
           return throwError(() => error);
         })
       );

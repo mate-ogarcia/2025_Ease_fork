@@ -41,7 +41,11 @@ export class ProductRequestsComponent implements OnInit {
   productRequests: any[] = [];  // List of product requests retrieved from the backend.
   brandRequests: any[] = [];    // List of brands requests retrieved from the backend.
   selectedRequest: any = null;  // The currently selected product request.
-  tagInput: string = '';        //Input field for adding a new tag to the selected request.
+  tagInput: string = '';        // Input field for adding a new tag to the selected request.
+
+  // Indicateurs de chargement
+  isLoadingRequests: boolean = false;
+  isSavingRequest: boolean = false;
 
   constructor(private adminService: AdminService) { }
 
@@ -64,6 +68,7 @@ export class ProductRequestsComponent implements OnInit {
    * @public
    */
   loadProductRequests(): void {
+    this.isLoadingRequests = true;
     this.adminService.getAllRequests().subscribe({
       next: (data) => {
         // Extract product requests
@@ -75,14 +80,15 @@ export class ProductRequestsComponent implements OnInit {
         this.brandRequests = data
           .filter(item => item.status === "add-brand")  // Identifies brands
           .map(req => ({ ...req, type: 'brand' }));     // Assigns the type
+
+        this.isLoadingRequests = false;
       },
       error: (error) => {
         console.error('❌ Error while loading requests:', error);
+        this.isLoadingRequests = false;
       }
     });
   }
-
-
 
   /**
    * @brief Selects a product request and displays its details.
@@ -91,7 +97,11 @@ export class ProductRequestsComponent implements OnInit {
    * @public
    */
   selectRequest(request: any): void {
-    this.selectedRequest = request;
+    this.selectedRequest = { ...request, isEditing: false };
+    // Ensure tags is an array
+    if (!this.selectedRequest.tags) {
+      this.selectedRequest.tags = [];
+    }
   }
 
   /**
@@ -113,8 +123,15 @@ export class ProductRequestsComponent implements OnInit {
    * @public
    */
   saveRequest(): void {
-    if (this.selectedRequest) {
-      this.selectedRequest.isEditing = false;
+    if (this.selectedRequest && this.selectedRequest.isEditing) {
+      this.isSavingRequest = true;
+
+      // Simulate API call with setTimeout
+      setTimeout(() => {
+        console.log('✅ Request saved:', this.selectedRequest);
+        this.selectedRequest.isEditing = false;
+        this.isSavingRequest = false;
+      }, 1000);
     }
   }
 
@@ -164,22 +181,22 @@ export class ProductRequestsComponent implements OnInit {
     }
   }
 
-/**
- * @brief Updates the status of a selected request (product or brand).
- * 
- * @details Calls `updateEntity` in `AdminService` to update the status of a selected 
- * request. The function ensures the request type and ID are available before proceeding. 
- * If needed, additional fields can be updated alongside the status.
- * 
- * @param {any} selectedRequest - The selected request object (product or brand).
- * @param {string} status - The new status to be assigned (e.g., "Validated", "Rejected").
- * 
- * @returns {Promise<void>} - Resolves when the update process is completed.
- * 
- * @throws {Error} If an error occurs during the status update process.
- */
-async validateRequest(selectedRequest: any, status: string): Promise<void> {
-  try {
+  /**
+   * @brief Updates the status of a selected request (product or brand).
+   * 
+   * @details Calls `updateEntity` in `AdminService` to update the status of a selected 
+   * request. The function ensures the request type and ID are available before proceeding. 
+   * If needed, additional fields can be updated alongside the status.
+   * 
+   * @param {any} selectedRequest - The selected request object (product or brand).
+   * @param {string} status - The new status to be assigned (e.g., "Validated", "Rejected").
+   * 
+   * @returns {Promise<void>} - Resolves when the update process is completed.
+   * 
+   * @throws {Error} If an error occurs during the status update process.
+   */
+  async validateRequest(selectedRequest: any, status: string): Promise<void> {
+    try {
       /**
        * Calling `updateEntity` with:
        * - `selectedRequest.id`: Extracts the unique entity ID.
@@ -208,15 +225,15 @@ async validateRequest(selectedRequest: any, status: string): Promise<void> {
        */
       // Update entity status in the database
       const response = await this.adminService.updateEntity(
-          selectedRequest.type, 
-          selectedRequest.id, 
-          { status }
+        selectedRequest.type,
+        selectedRequest.id,
+        { status }
       );
 
       console.log(`Status successfully updated:`, response);
-  } catch (error) {
+    } catch (error) {
       console.error("❌ Error updating status:", error);
+    }
   }
-}
 
 }
