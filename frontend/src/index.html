@@ -8,10 +8,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="ours.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
 <body>
+  <!-- Écran de chargement initial qui s'affiche avant que l'application Angular ne soit chargée -->
+  <div class="initial-loading" id="initial-loading">
+    <div class="initial-loading-container">
+      <div class="initial-loading-logo">
+        <i class="fas fa-leaf"></i>
+      </div>
+      <div class="initial-loading-spinner">
+        <span></span>
+      </div>
+      <p>Reactualisation de la page <span class="loading-dots">...</span></p>
+    </div>
+  </div>
+
   <app-root></app-root>
+
+  <script>
+    // Ne pas masquer automatiquement l'écran de chargement
+    // L'application Angular le fera elle-même via completeInitialization
+
+    // Marquer que le DOM est chargé pour que l'application puisse le détecter
+    document.addEventListener('DOMContentLoaded', function () {
+      window.domLoaded = true;
+    });
+  </script>
 </body>
 
 </html>

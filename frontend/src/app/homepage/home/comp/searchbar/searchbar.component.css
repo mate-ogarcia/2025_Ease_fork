@@ -6,6 +6,9 @@
   justify-content: center;
   align-items: center;
   gap: 10px;
+  position: relative;
+  z-index: 10;
+  /* Valeur intermédiaire pour la barre de recherche */
 }
 
 /* Zone de recherche principale */
@@ -15,10 +18,18 @@
   height: 50px;
   background: #ffffff;
   border-radius: 40px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
-  padding: 5px 10px;
+  padding: 5px 15px;
+  transition: all 0.3s ease;
+  z-index: 11;
+  /* Légèrement au-dessus du conteneur */
+}
+
+.search-container:hover {
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 /* Champ de saisie */
@@ -40,6 +51,11 @@
   font-size: 18px;
   color: #13172e;
   margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.search-btn:hover {
+  transform: scale(1.1);
 }
 
 .fa-solid {
@@ -50,13 +66,18 @@
 .filter-btn,
 .add-btn {
   border: none;
-  border-left: 1px solid rgb(64, 60, 60);
+  border-left: 1px solid rgba(64, 60, 60, 0.2);
   margin-left: 10px;
-  color: black;
+  color: #333;
   background-color: transparent;
   padding: 6px 12px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
 
+.filter-btn:hover,
+.add-btn:hover {
+  color: #007bff;
 }
 
 .add-btn {
@@ -72,17 +93,32 @@
   border-top: 1px solid #ddd;
   overflow-y: auto;
   border-radius: 0 0 20px 20px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.2);
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 99999;
+  z-index: 12;
+  /* Au-dessus de la barre de recherche */
   display: none;
-  max-height: 20vh;
+  max-height: 300px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .suggestions.show {
   display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .suggestions ul {
@@ -93,6 +129,7 @@
 
 .has-suggestions {
   border-radius: 25px 25px 0 0;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .has-suggestions input {
@@ -100,15 +137,22 @@
 }
 
 .suggestions ul li {
-  padding: 10px 15px;
+  padding: 12px 20px;
   cursor: pointer;
-  transition: background 0.2s;
-  color: black;
+  transition: all 0.2s ease;
+  color: #333;
   text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 15px;
+}
+
+.suggestions ul li:last-child {
+  border-bottom: none;
 }
 
 .suggestions ul li:hover {
   background: #f4f4f4;
+  padding-left: 25px;
 }
 
 /* Dropdown des filtres intégré à la searchbar */
@@ -118,11 +162,31 @@
   right: 0;
   background: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 15px;
   padding: 20px;
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
-  z-index: 1100;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
+  z-index: 13;
+  /* Au-dessus des suggestions */
   min-width: 320px;
+  max-height: none;
+  /* Supprimer toute limite de hauteur */
+  animation: slideDown 0.3s ease;
+  /* Assurer que le filtre reste dans la vue même s'il est grand */
+  max-width: 90vw;
+  margin-right: 10px;
+  /* Réduire la marge à droite pour la barre de défilement plus discrète */
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .filter-dropdown-menu h3 {
@@ -243,4 +307,48 @@
 
 .filter-buttons button:last-child:hover {
   background-color: #545b62;
+}
+
+.loading-message {
+  color: black;
+}
+
+/* Styles responsives pour le filtre */
+@media (max-width: 768px) {
+  .filter-dropdown {
+    right: 0;
+    left: 0;
+    width: 90%;
+    margin: 0 auto;
+    max-width: none;
+    margin-right: 15px;
+    /* Maintenir la marge à droite */
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-dropdown {
+    width: 95%;
+    padding: 15px;
+    margin-right: 10px;
+    /* Réduire légèrement la marge sur très petits écrans */
+    max-height: 80vh;
+    /* Limiter la hauteur sur mobile pour éviter qu'il prenne tout l'écran */
+    overflow-y: auto;
+    /* Permettre le défilement à l'intérieur du filtre sur mobile */
+  }
+
+  .filter-group {
+    margin-bottom: 10px;
+  }
+
+  .filter-dropdown-menu h3 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+
+  .filter-buttons button {
+    padding: 8px;
+    font-size: 0.9em;
+  }
 }

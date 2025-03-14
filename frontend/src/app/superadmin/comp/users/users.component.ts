@@ -24,6 +24,10 @@ export class UsersComponent implements OnInit {
   // Indique si l'utilisateur actuel est SuperAdmin
   isSuperAdmin: boolean = false;
 
+  // Indicateurs de chargement
+  isLoadingUsers: boolean = false;
+  isLoadingRoles: boolean = false;
+
   constructor(
     private adminService: AdminService,
     private notificationService: NotificationService
@@ -53,6 +57,7 @@ export class UsersComponent implements OnInit {
 
   // Charge la liste des utilisateurs
   loadUsers() {
+    this.isLoadingUsers = true;
     this.adminService.getAllUsers().subscribe({
       next: (users) => {
         this.users = users.map(user => ({
@@ -60,25 +65,32 @@ export class UsersComponent implements OnInit {
           isEditing: false
         }));
         console.log('✅ Utilisateurs chargés:', this.users);
+        this.isLoadingUsers = false;
       },
       error: (error) => {
         console.error('❌ Erreur lors du chargement des utilisateurs:', error);
+        this.isLoadingUsers = false;
+        this.notificationService.showError('Erreur lors du chargement des utilisateurs');
       }
     });
   }
 
   // Charge la liste des rôles disponibles
   loadRoles() {
+    this.isLoadingRoles = true;
     this.adminService.getAllRoles().subscribe({
       next: (roles) => {
         // Filtrer le rôle 'Banned' du menu déroulant
         this.availableRoles = roles.filter(role => role !== 'Banned');
         console.log('✅ Rôles chargés:', this.availableRoles);
+        this.isLoadingRoles = false;
       },
       error: (error) => {
         console.error('❌ Erreur lors du chargement des rôles:', error);
         // Fallback sur des rôles par défaut en cas d'erreur
         this.availableRoles = ['SuperAdmin', 'Admin', 'User'];
+        this.isLoadingRoles = false;
+        this.notificationService.showError('Erreur lors du chargement des rôles');
       }
     });
   }
