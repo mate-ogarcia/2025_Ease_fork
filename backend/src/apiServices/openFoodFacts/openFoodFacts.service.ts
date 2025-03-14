@@ -63,12 +63,12 @@ export class OpenFoodFactsService {
    * @brief Searches for similar products based on given criteria.
    */
   async searchSimilarProducts(
-    criteria: { category?: string; productSource?: string; tags?: string[]; productName?: string },
+    criteria: { category?: string; productSource?: string; tags?: string[] },
     page: number = 1,
     pageSize: number = 50
   ): Promise<any[]> {
     try {
-      const { category, productSource, tags, productName } = criteria;
+      const { category, productSource, tags } = criteria;
       if (!category) throw new HttpException("No category provided for search.", HttpStatus.BAD_REQUEST);
 
       const baseUrl = "https://fr.openfoodfacts.org/cgi/search.pl?";
@@ -143,5 +143,35 @@ export class OpenFoodFactsService {
       }
     }
     return results;
+  }
+
+  // ========================================================================
+  // ======================== SEARCH ONLY FOOD ===========================
+  // ========================================================================
+  /**
+   * @brief Searches for food product
+   * @param page The page number for paginated results (default: 1).
+   * @param pageSize The number of results per page (default: 20).
+   * @returns {Promise<any[]>} The list of food products from Open Food Facts.
+   */
+  async searchFoodProducts(
+    page: number = 1,
+    pageSize: number = 20
+  ): Promise<any[]> {
+    try {
+      const baseUrl = "https://fr.openfoodfacts.org/cgi/search.pl?";
+
+      // Create a query to retrieve all products
+      const query = `action=process&page=${page}&page_size=${pageSize}&json=true`;
+      const url = `${baseUrl}${query}`;
+
+      // Recover all products
+      const products = await this.fetchProducts(url);
+
+      // Return the first 20 from Open Food Facts
+      return products.slice(0, 20);
+    } catch (error) {
+      throw new HttpException("Error fetching food products from Open Food Facts.", HttpStatus.BAD_GATEWAY);
+    }
   }
 }

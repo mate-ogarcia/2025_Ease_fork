@@ -395,7 +395,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const conditions: string[] = [];
 
     if (filters.name) conditions.push(`name = $filterName`);
-    if (filters.brand) conditions.push(`brand = $filterBrand`);
+    if (filters.brand) conditions.push(`FK_Brands = $brandFK`);
     if (filters.category) conditions.push(`category = $filterCategory`);
     if (filters.tags?.length) conditions.push(`ANY tag IN tags SATISFIES tag IN $filterTags END`);
 
@@ -418,7 +418,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @param brandBucketName Name of the Couchbase bucket containing brand documents.
    * @returns {Promise<string>} A string containing filter conditions.
    */
-  async buildFilterConditions(filters: any, brandBucketName: string): Promise<string> {
+  async buildFilterConditions(filters: any): Promise<string> {
     const conditions: string[] = [];
 
     if (filters.category) conditions.push(`category = $filterCategory`);
@@ -436,12 +436,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // Optimization: SQL query to find `FK_Brands`.
     if (filters.brand) {
-      conditions.push(`FK_Brands = (
-        SELECT RAW META(b).id 
-        FROM \`${brandBucketName}\` b 
-        WHERE b.name = $filterBrandName 
-        LIMIT 1
-      )`);
+      conditions.push(`FK_Brands = $brandFK`);
     }
 
     // Exclude unwanted statuses only for internal products
@@ -599,9 +594,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * - If `productId` is provided and `productSource` is `OpenFoodFacts`, the function only applies **filter-based conditions**.
    * - Uses **parameterized placeholders** (e.g., `$filterCategory`, `$filterMinPrice`) to prevent SQL injection.
    */
-  async getProductsWithFilters(this: any, filters: any): Promise<any[]> {
+  async getProductsWithFilters(filters: any): Promise<any[]> {
     const bucketName = this.productsBucket.name;
-    const brandBucketName = this.brandBucket.name;
     const { currentRoute, productId, productSource } = filters;
 
     if (!Object.keys(filters).length) {
@@ -620,7 +614,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       : this.buildSimilarityConditionsFromExternalProduct(filters);
 
     // Step 3: Build filter-based conditions, including brand subqueries
-    const filtersClause = await this.buildFilterConditions.call(this, filters, brandBucketName);
+    const filtersClause = await this.buildFilterConditions.call(this, filters);
 
     // Step 4: Build the final query
     // Check if both conditions are identical and avoid duplicates
@@ -630,18 +624,23 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const queryWithJoin = this.buildQuery(similarityClause, filtersClause, currentRoute, bucketName);
     if (!queryWithJoin) return [];
 
+    // Retrieve FK_Brand before building parameters
+    let brandFK : string;
+    if (filters.brand) {
+       brandFK = selectedProduct?.FK_Brands ?? await this.checkBrand(filters.brand);
+    }
+
     // Step 5: Prepare parameters for query execution
     const parameters = {
       category: selectedProduct?.category ?? filters.category,
       tags: selectedProduct?.tags?.map(tag => tag.toLowerCase()) ?? filters.tags ?? [],
       minPrice: selectedProduct?.price ? selectedProduct.price * 0.8 : filters.minPrice,
       maxPrice: selectedProduct?.price ? selectedProduct.price * 1.2 : filters.maxPrice,
-      brandFK: selectedProduct?.FK_Brands ?? filters.brand,
+      brandFK,
       filterCategory: filters.category,
       filterCountry: filters.country,
       filterMinPrice: filters.minPrice,
       filterMaxPrice: filters.maxPrice,
-      filterBrandName: filters.brand,
       filterName: filters.name ?? "",
       filterBrand: filters.brand,
       filterTags: filters.tags ?? [],
