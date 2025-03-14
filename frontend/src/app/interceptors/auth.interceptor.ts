@@ -33,12 +33,8 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
       console.log('📤 Request headers set:', newReq.headers.get('Authorization')?.substring(0, 20) + '...');
     } else {
       console.log('⚠️ No token available for API request');
-
-      // Si c'est un rechargement de page et qu'on n'est pas déjà sur login
-      if (document.readyState === 'complete' && !window.location.pathname.includes('/login')) {
-        console.log('🔄 Page reload detected without token - staying on current page');
-        return next(newReq); // Continue sans redirection
-      }
+      // Toujours continuer sans redirection
+      return next(newReq);
     }
   }
 
@@ -53,17 +49,9 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401) {
         console.log('🔒 Authentication error detected');
 
-        // Ne pas rediriger si c'est un rechargement de page et qu'on n'est pas sur login
-        const isPageReload = document.readyState === 'complete';
-        const isLoginPage = window.location.pathname.includes('/login');
-
-        if (!isPageReload || isLoginPage) {
-          console.log('🚀 Redirecting to login page');
-          cookieService.delete('accessToken', '/');
-          router.navigate(['/login']);
-        } else {
-          console.log('🔄 Keeping user on current page despite 401');
-        }
+        // Ne jamais rediriger vers la page de login lors d'un rechargement de page
+        // Laisser l'utilisateur sur la page actuelle
+        console.log('🔄 Keeping user on current page despite 401');
       }
       return throwError(() => error);
     })

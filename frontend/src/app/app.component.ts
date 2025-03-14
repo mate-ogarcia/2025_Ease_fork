@@ -27,7 +27,8 @@ import { switchMap, tap } from 'rxjs/operators';
 export class AppComponent implements OnInit {
   title = 'Ease';
   isAppReady = new BehaviorSubject<boolean>(false);
-  private readonly MIN_LOADING_TIME = 400; // Temps minimum d'affichage du chargement en ms
+  isAppReadyStarted = false;
+  private readonly MIN_LOADING_TIME = 500; // Temps minimum d'affichage du chargement en ms
 
   /**
    * @brief Constructor for AppComponent.
@@ -48,23 +49,50 @@ export class AppComponent implements OnInit {
    * before displaying the application content.
    */
   ngOnInit(): void {
+    // Masquer l'écran de chargement initial
+    this.hideInitialLoadingScreen();
+
     // Précharger les données essentielles
     this.dataCacheService.loadData();
 
     // Créer un timer pour assurer un temps minimum d'affichage du chargement
     const startTime = Date.now();
 
-    // Initialiser l'état d'authentification
+    // Initialiser l'état d'authentification avec un timeout pour éviter un blocage
+    const authTimeout = setTimeout(() => {
+      console.log('⚠️ Timeout lors de l\'initialisation de l\'état d\'authentification');
+      this.completeInitialization(startTime);
+    }, 3000); // 3 secondes maximum pour l'authentification
+
     this.authService.refreshAuthState().subscribe({
       next: () => {
+        clearTimeout(authTimeout);
         console.log('✅ État d\'authentification initialisé');
         this.completeInitialization(startTime);
       },
       error: () => {
-        console.log('❌ Erreur lors de l\'initialisation de l\'état d\'authentification');
+        clearTimeout(authTimeout);
+        console.log('❌ Erreur lors de l\'initialisation de l\'état d\'authentification - Continuer sans redirection');
+        // Continuer sans redirection, juste terminer l'écran de chargement
         this.completeInitialization(startTime);
       }
     });
+  }
+
+  /**
+   * @brief Masque l'écran de chargement initial.
+   * 
+   * Cette méthode masque l'écran de chargement initial qui est défini dans index.html.
+   */
+  private hideInitialLoadingScreen(): void {
+    const initialLoading = document.getElementById('initial-loading');
+    if (initialLoading) {
+      initialLoading.style.opacity = '0';
+      initialLoading.style.transition = 'opacity 0.5s ease-in-out';
+      setTimeout(() => {
+        initialLoading.style.display = 'none';
+      }, 500);
+    }
   }
 
   /**
@@ -78,6 +106,9 @@ export class AppComponent implements OnInit {
   private completeInitialization(startTime: number): void {
     const elapsedTime = Date.now() - startTime;
     const remainingTime = Math.max(0, this.MIN_LOADING_TIME - elapsedTime);
+
+    // Déclencher l'animation de transition
+    this.isAppReadyStarted = true;
 
     // Attendre le temps restant si nécessaire
     setTimeout(() => {
