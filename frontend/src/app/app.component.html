@@ -1,14 +1,2 @@
-<!-- Écran de chargement qui s'affiche pendant l'initialisation de l'application -->
-<div class="app-loading" [class.fade-out]="isAppReadyStarted" [class.hidden]="isAppReady | async">
-  <div class="loading-container">
-    <div class="loading-spinner">
-      <span></span>
-    </div>
-    <p>Initialisation de l'application...</p>
-  </div>
-</div>
-
-<!-- Contenu de l'application qui s'affiche une fois l'initialisation terminée -->
-<div [class.hidden]="!(isAppReady | async)">
-  <router-outlet></router-outlet>
-</div>
+<!-- Contenu de l'application -->
+<router-outlet></router-outlet>

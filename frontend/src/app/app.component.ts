@@ -6,13 +6,18 @@
  * data is loaded at startup. It also sets up the router module for navigation.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataCacheService } from '../services/cache/data-cache.service';
 import { AuthService } from '../services/auth/auth.service';
-import { BehaviorSubject, timer } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { timer } from 'rxjs';
+
+declare global {
+  interface Window {
+    domLoaded: boolean;
+  }
+}
 
 @Component({
   selector: 'app-root',
@@ -26,9 +31,7 @@ import { switchMap, tap } from 'rxjs/operators';
 })
 export class AppComponent implements OnInit {
   title = 'Ease';
-  isAppReady = new BehaviorSubject<boolean>(false);
-  isAppReadyStarted = false;
-  private readonly MIN_LOADING_TIME = 500; // Temps minimum d'affichage du chargement en ms
+  private readonly MIN_LOADING_TIME = 2000; // Temps minimum d'affichage du chargement en ms
 
   /**
    * @brief Constructor for AppComponent.
@@ -36,10 +39,12 @@ export class AppComponent implements OnInit {
    * Initializes services required at the root level.
    * @param dataCacheService Service for preloading and caching data from the backend.
    * @param authService Service for managing authentication state.
+   * @param renderer Renderer2 pour manipuler le DOM de manière sécurisée.
    */
   constructor(
     private dataCacheService: DataCacheService,
-    private authService: AuthService
+    private authService: AuthService,
+    private renderer: Renderer2
   ) { }
 
   /**
@@ -49,9 +54,6 @@ export class AppComponent implements OnInit {
    * before displaying the application content.
    */
   ngOnInit(): void {
-    // Masquer l'écran de chargement initial
-    this.hideInitialLoadingScreen();
-
     // Précharger les données essentielles
     this.dataCacheService.loadData();
 
@@ -80,26 +82,11 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * @brief Masque l'écran de chargement initial.
-   * 
-   * Cette méthode masque l'écran de chargement initial qui est défini dans index.html.
-   */
-  private hideInitialLoadingScreen(): void {
-    const initialLoading = document.getElementById('initial-loading');
-    if (initialLoading) {
-      initialLoading.style.opacity = '0';
-      initialLoading.style.transition = 'opacity 0.5s ease-in-out';
-      setTimeout(() => {
-        initialLoading.style.display = 'none';
-      }, 500);
-    }
-  }
-
-  /**
    * @brief Complète l'initialisation en respectant un temps minimum d'affichage.
    * 
    * Cette méthode calcule le temps écoulé depuis le début de l'initialisation
    * et attend le temps restant si nécessaire avant de marquer l'application comme prête.
+   * Elle gère également la transition entre l'écran de chargement et le contenu de l'application.
    * 
    * @param startTime Timestamp du début de l'initialisation
    */
@@ -107,12 +94,30 @@ export class AppComponent implements OnInit {
     const elapsedTime = Date.now() - startTime;
     const remainingTime = Math.max(0, this.MIN_LOADING_TIME - elapsedTime);
 
-    // Déclencher l'animation de transition
-    this.isAppReadyStarted = true;
-
     // Attendre le temps restant si nécessaire
     setTimeout(() => {
-      this.isAppReady.next(true);
+      // Étape 1: Rendre le composant app-root visible mais garder l'écran de chargement
+      const appRoot = document.querySelector('app-root');
+      if (appRoot) {
+        this.renderer.addClass(appRoot, 'ready');
+      }
+
+      // Étape 2: Après un court délai, commencer à masquer l'écran de chargement
+      setTimeout(() => {
+        const initialLoading = document.getElementById('initial-loading');
+        if (initialLoading) {
+          this.renderer.setStyle(initialLoading, 'opacity', '0');
+
+          // Étape 3: Une fois l'animation de fondu terminée, masquer complètement l'écran de chargement
+          setTimeout(() => {
+            this.renderer.setStyle(initialLoading, 'display', 'none');
+
+            // Étape 4: Ajouter une classe 'loaded' au body pour les animations
+            this.renderer.addClass(document.body, 'loaded');
+          }, 800); // Durée de l'animation de fondu
+        }
+      }, 300); // Délai pour s'assurer que le contenu est prêt
     }, remainingTime);
   }
 }
+

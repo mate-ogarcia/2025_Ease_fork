@@ -224,7 +224,7 @@ button i,
   font-size: 0.9rem;
 }
 
-/* Animation pour le spinner de chargement */
+/* Animation pour le spinner de chargement - version améliorée */
 @keyframes rotate {
   0% {
     transform: rotate(0deg);
@@ -238,6 +238,14 @@ button i,
 .spinner-rotate {
   animation: rotate 1s linear infinite;
   display: inline-block;
+  /* Forcer le rendu hardware pour améliorer les performances */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  will-change: transform;
+  /* Assurer que l'animation est toujours visible */
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 /* Styles pour le conteneur de chargement */
@@ -255,7 +263,7 @@ button i,
 
 .loading-spinner {
   font-size: 2rem;
-  color: #1976d2;
+  color: #007bff;
   margin-bottom: 1rem;
 }
 

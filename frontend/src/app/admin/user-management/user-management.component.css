@@ -90,6 +90,30 @@ h2 {
   color: #1976d2;
 }
 
+/* Animation pour le spinner de chargement - version améliorée */
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-rotate {
+  animation: rotate 1s linear infinite;
+  display: inline-block;
+  /* Forcer le rendu hardware pour améliorer les performances */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  will-change: transform;
+  /* Assurer que l'animation est toujours visible */
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
 /* Table des utilisateurs */
 .users-table-container {
   overflow-x: auto;
