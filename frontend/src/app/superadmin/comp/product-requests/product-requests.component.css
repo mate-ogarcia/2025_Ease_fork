@@ -345,3 +345,95 @@ body {
   margin: 1rem 0;
   color: #6c757d;
 }
+
+/** Filters */
+/* Styles pour les contrôles de filtrage */
+.filter-controls {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-controls h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #495057;
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-btn {
+  padding: 8px 12px;
+  background-color: #e9ecef;
+  border: none;
+  border-radius: 4px;
+  color: #495057;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background-color: #dee2e6;
+}
+
+.filter-btn.active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Styles pour les indicateurs de statut sur les cartes */
+.request-card {
+  position: relative;
+  padding-left: 15px;
+  border-left: 4px solid transparent;
+}
+
+.status-add {
+  border-left-color: #28a745;
+}
+
+.status-edit {
+  border-left-color: #fd7e14;
+}
+
+.status-delete {
+  border-left-color: #dc3545;
+}
+
+/* Styles pour les badges de type de demande */
+.request-type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge-add {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.badge-edit {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.badge-delete {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.badge-default {
+  background-color: #e9ecef;
+  color: #495057;
+}
