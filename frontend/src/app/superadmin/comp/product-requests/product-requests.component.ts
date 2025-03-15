@@ -73,14 +73,14 @@ export class ProductRequestsComponent implements OnInit {
       next: (data) => {
         // Extract product requests
         this.productRequests = data
-          .filter(item => item.status === "add-product")  // Identifies products
+          .filter(item => ['add-product', 'edit-product', 'delete-product'].includes(item.status))
           .map(req => ({ ...req, type: 'product' }));     // Assigns the type
-
+  
         // Extract brand requests
         this.brandRequests = data
-          .filter(item => item.status === "add-brand")  // Identifies brands
+          .filter(item => ['add-brand', 'edit-brand', 'delete-brand'].includes(item.status))
           .map(req => ({ ...req, type: 'brand' }));     // Assigns the type
-
+  
         this.isLoadingRequests = false;
       },
       error: (error) => {
