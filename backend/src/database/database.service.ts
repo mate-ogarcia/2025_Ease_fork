@@ -1051,6 +1051,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return result[0];
   }
 
+  // TODO 
+  async getProductByLocation(location: string): Promise<any> {
+    
+  }
   // ========================================================================
   // ======================== BRANDS FUNCTIONS
   // ========================================================================

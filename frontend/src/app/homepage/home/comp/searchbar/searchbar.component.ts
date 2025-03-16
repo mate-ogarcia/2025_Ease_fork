@@ -67,7 +67,7 @@ export class SearchbarComponent implements OnInit {
   filterDropdownOpen: boolean = false; // Indicates if the filter dropdown is open.
   // Location
   locationDropdownOpen: boolean = false; // Indicates if the filter dropdown is open.
-  userLocation = '';
+  userLocation: string = '';
   recentLocations: string[] = [];
   // Wait time
   isLoading: boolean = false; // Display a message while search is in progress
@@ -246,7 +246,6 @@ export class SearchbarComponent implements OnInit {
   }
 
   // ======================== RESEARCH FUNCTIONS
-
   /**
    * @function hasSuggestions
    * @description A getter that returns whether there are any search results to display.
@@ -462,7 +461,21 @@ export class SearchbarComponent implements OnInit {
 
       // Call the search service with the location
       // TODO
-      // this.productService.searchByLocation(this.userLocation);
+      this.apiService.getProductsAround(this.userLocation)
+      .subscribe({
+        next: (products) => {
+          // this.nearbyProducts = products;
+          this.isLoading = false;
+          
+          // Vous pouvez maintenant afficher les produits ou mettre à jour d'autres composants
+          // via un service de partage d'état ou un événement
+        },
+        error: (error) => {
+          console.error('Erreur lors de la récupération des produits:', error);
+          this.isLoading = false;
+          // Gérer l'erreur (afficher un message à l'utilisateur, etc.)
+        }
+      });
 
       // Close the dropdown after searching
       this.locationDropdownOpen = false;
@@ -498,5 +511,4 @@ export class SearchbarComponent implements OnInit {
       localStorage.setItem('recentLocations', JSON.stringify(this.recentLocations));
     }
   }
-
 }

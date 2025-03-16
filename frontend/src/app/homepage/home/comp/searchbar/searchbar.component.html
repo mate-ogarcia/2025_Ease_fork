@@ -166,14 +166,19 @@
         <div class="location-input-container">
           <div class="location-input-wrapper">
             <i class="location-icon fas fa-map-marker-alt"></i>
-            <input 
-              type="text" 
-              class="location-input" 
-              placeholder="Entrez votre ville/pays" 
+            <input
+              type="text"
+              class="location-input"
+              placeholder="Entrez votre pays"
+              title="(Ville/département seront implémentés plus tard)"
               [(ngModel)]="userLocation"
               (input)="onLocationChange()"
             />
-            <button class="clear-button" *ngIf="userLocation" (click)="clearLocation()">
+            <button
+              class="clear-button"
+              *ngIf="userLocation"
+              (click)="clearLocation()"
+            >
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -185,7 +190,10 @@
         <div class="recent-locations" *ngIf="recentLocations.length > 0">
           <h4>Localisations récentes</h4>
           <ul>
-            <li *ngFor="let location of recentLocations" (click)="selectLocation(location)">
+            <li
+              *ngFor="let location of recentLocations"
+              (click)="selectLocation(location)"
+            >
               <i class="fas fa-history"></i>
               {{ location }}
             </li>

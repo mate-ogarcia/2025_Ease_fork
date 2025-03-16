@@ -75,6 +75,33 @@ export class ProductsService {
     }
   }
 
+  
+  /**
+   * @brief Retrieves products by its location.
+   */
+  // TODO 
+  // 1. get internal products
+  // 2. get external products
+  async getProductByLocation(location: string) {
+    try {
+      const products = await this.databaseService.getProductByLocation(location);
+      
+      if (!products || products.length === 0) {
+        throw new NotFoundException(`⚠️ No products found around: "${location}".`);
+      }
+      
+      return products;
+    } catch (error) {
+      // Propagate NotFoundException if it's already thrown
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      
+      console.error("❌ Error retrieving products by location:", error);
+      throw new InternalServerErrorException("Error retrieving products by location.");
+    }
+  }
+
   // ========================================================================
   // ======================== ALTERNATIVE PRODUCT SEARCH
   // ========================================================================

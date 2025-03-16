@@ -132,4 +132,26 @@ export class ProductsController {
       throw new InternalServerErrorException("Error adding product.");
     }
   }
+
+
+  // TODO
+  
+/**
+ * @brief Retrieves products based on location.
+ * 
+ * @param location The location identifier for which to retrieve products.
+ * @returns {Promise<any>} A promise that resolves to products available in the specified location.
+ * 
+ * @throws {InternalServerErrorException} If an error occurs during the retrieval process.
+ */
+@Get("location/:location")
+async getProductByLocation(@Param("location") location: string) {
+  try {
+    console.log('Location controller:', location);
+    // return await this.productsService.getProductByLocation(location);
+  } catch (error) {
+    console.error("❌ Error retrieving products by location:", error);
+    throw new InternalServerErrorException("Error retrieving products by location.");
+  }
+}
 }
