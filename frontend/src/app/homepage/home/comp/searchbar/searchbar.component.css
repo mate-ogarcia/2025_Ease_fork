@@ -64,7 +64,8 @@
 
 /* Boutons Filtre et Ajout */
 .filter-btn,
-.add-btn {
+.add-btn,
+.products-around-me-btn {
   border: none;
   border-left: 1px solid rgba(64, 60, 60, 0.2);
   margin-left: 10px;
@@ -76,7 +77,8 @@
 }
 
 .filter-btn:hover,
-.add-btn:hover {
+.add-btn:hover,
+.products-around-me-btn:hover {
   color: #007bff;
 }
 
@@ -156,7 +158,8 @@
 }
 
 /* Dropdown des filtres intégré à la searchbar */
-.filter-dropdown {
+.filter-dropdown, 
+.location-dropdown {
   position: absolute;
   top: 110%;
   right: 0;
@@ -189,7 +192,8 @@
   }
 }
 
-.filter-dropdown-menu h3 {
+.filter-dropdown-menu h3,
+.location-dropdown-menu h3 {
   margin-top: 0;
   margin-bottom: 15px;
   font-size: 1.4em;
@@ -350,5 +354,95 @@
   .filter-buttons button {
     padding: 8px;
     font-size: 0.9em;
+  }
+
+  /* ==================== locations ==================== */  
+  .location-dropdown-menu {
+    padding: 15px;
+  }
+  
+  .location-input-container {
+    margin-bottom: 15px;
+  }
+  
+  .location-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0 10px;
+    margin-bottom: 10px;
+  }
+  
+  .location-icon {
+    color: #666;
+    margin-right: 8px;
+  }
+  
+  .location-input {
+    flex: 1;
+    border: none;
+    padding: 12px 0;
+    font-size: 14px;
+    outline: none;
+  }
+  
+  .clear-button {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 5px;
+  }
+  
+  .search-location-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .search-location-button:hover {
+    background-color: #3367d6;
+  }
+  
+  .recent-locations {
+    margin-top: 15px;
+  }
+  
+  .recent-locations h4 {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  .recent-locations ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .recent-locations li {
+    padding: 8px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #333;
+  }
+  
+  .recent-locations li:hover {
+    color: #4285f4;
+  }
+  
+  .recent-locations li i {
+    margin-right: 8px;
+    color: #999;
   }
 }

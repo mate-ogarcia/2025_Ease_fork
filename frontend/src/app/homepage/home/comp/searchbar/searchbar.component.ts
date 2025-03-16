@@ -65,6 +65,10 @@ export class SearchbarComponent implements OnInit {
   private CACHE_DURATION = 5 * 60 * 1000; // Cache expiration time (5 minutes).
   // Dropdown for filters (renamed for cohérence with the new design)
   filterDropdownOpen: boolean = false; // Indicates if the filter dropdown is open.
+  // Location
+  locationDropdownOpen: boolean = false; // Indicates if the filter dropdown is open.
+  userLocation = '';
+  recentLocations: string[] = [];
   // Wait time
   isLoading: boolean = false; // Display a message while search is in progress
 
@@ -221,6 +225,12 @@ export class SearchbarComponent implements OnInit {
       this.dataCacheService.refreshBrands();
     }, 10 * 60 * 1000);
 
+    // Retrieve recent locations from localStorage
+    const savedLocations = localStorage.getItem('recentLocations');
+    if (savedLocations) {
+      this.recentLocations = JSON.parse(savedLocations);
+    }
+
     // Get the cookie's info
     const userRole = this.usersService.getUserRole();
     // Check if the role allows you to add a product
@@ -372,7 +382,6 @@ export class SearchbarComponent implements OnInit {
   }
 
   // ======================== FILTER FUNCTIONS
-
   /**
    * @function onCountryChange
    * @description Called when a country is selected.
@@ -413,4 +422,81 @@ export class SearchbarComponent implements OnInit {
       Object.entries(filters).filter(([_, value]) => value !== null && value !== '')
     );
   }
+
+  // ======================== FILTER FUNCTIONS
+  /**
+  * @function toggleLocationDropdown
+  * @description Toggles the visibility of the products around me dropdown.
+  */
+  toggleLocationDropdown() {
+    this.locationDropdownOpen = !this.locationDropdownOpen;
+  }
+
+  /**
+   * @brief Handles location input changes.
+   * @details This function can be used to suggest locations dynamically as the user types,
+   * potentially integrating with an autocomplete service.
+   */
+  onLocationChange(): void {
+    // Logic for suggesting locations during input
+    // Can be implemented with an autocomplete service
+  }
+
+  /**
+   * @brief Clears the current location input.
+   * @details This function resets the user's location input field.
+   */
+  clearLocation(): void {
+    this.userLocation = '';
+  }
+
+  /**
+   * @brief Searches for products based on the entered location.
+   * @details If a valid location is entered, it is added to recent search history,
+   * and a search request can be triggered. The dropdown is also closed after the search.
+   */
+  searchByLocation(): void {
+    if (this.userLocation.trim()) {
+      // Add location to recent search history
+      this.addToRecentLocations(this.userLocation);
+
+      // Call the search service with the location
+      // TODO
+      // this.productService.searchByLocation(this.userLocation);
+
+      // Close the dropdown after searching
+      this.locationDropdownOpen = false;
+    }
+  }
+
+  /**
+   * @brief Selects a location from recent searches.
+   * @param location The selected location.
+   * @details Sets the selected location as input and triggers a search.
+   */
+  selectLocation(location: string): void {
+    this.userLocation = location;
+    this.searchByLocation();
+  }
+
+  /**
+   * @brief Adds a location to the list of recent searches.
+   * @param location The location to add.
+   * @details Avoids duplicate entries and limits the history to the five most recent locations.
+   * Saves the history in localStorage for persistence.
+   */
+  addToRecentLocations(location: string): void {
+    // Avoid duplicates
+    if (!this.recentLocations.includes(location)) {
+      // Limit to 5 recent locations
+      if (this.recentLocations.length >= 5) {
+        this.recentLocations.pop();
+      }
+      this.recentLocations.unshift(location);
+
+      // Save to localStorage
+      localStorage.setItem('recentLocations', JSON.stringify(this.recentLocations));
+    }
+  }
+
 }

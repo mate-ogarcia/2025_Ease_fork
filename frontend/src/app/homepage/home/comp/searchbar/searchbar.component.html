@@ -5,18 +5,33 @@
       🔄 Recherche en cours...
     </div>
 
-    <input type="text" placeholder="Rechercher..." [(ngModel)]="searchQuery" (keydown.enter)="onEnter($event)"
-      (input)="onInputChange($event)" />
-
+    <input
+      type="text"
+      placeholder="Rechercher..."
+      [(ngModel)]="searchQuery"
+      (keydown.enter)="onEnter($event)"
+      (input)="onInputChange($event)"
+    />
+    <!-- All buttons -->
     <button class="search-btn" (click)="clearSearch()">✖</button>
-    <button class="filter-btn" title="Add Product" (click)="toggleFilterDropdown()">
+    <button class="filter-btn" title="Filters" (click)="toggleFilterDropdown()">
       <i class="fa-solid fa-filter"></i>
+    </button>
+    <button
+      class="products-around-me-btn"
+      title="Products around me"
+      (click)="toggleLocationDropdown()"
+    >
+      <i class="fas fa-search-location"></i>
     </button>
 
     <!-- Liste des suggestions -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
       <ul>
-        <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
+        <li
+          *ngFor="let result of searchResults"
+          (click)="selectProduct(result)"
+        >
           {{ result.name }} - {{ result.description }}
         </li>
       </ul>
@@ -34,7 +49,11 @@
         <!-- Filtre Pays -->
         <div class="filter-group">
           <label for="country-select">Pays européen</label>
-          <select id="country-select" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
+          <select
+            id="country-select"
+            [(ngModel)]="selectedCountry"
+            (change)="onCountryChange()"
+          >
             <option value="">Sélectionnez un pays</option>
             <option *ngFor="let country of countries" [value]="country">
               {{ country }}
@@ -45,8 +64,12 @@
         <!-- Filtre Département (si un pays est sélectionné) -->
         <div class="filter-group" *ngIf="selectedCountry">
           <label for="department-input">Département</label>
-          <input id="department-input" type="text" [(ngModel)]="selectedDepartment"
-            placeholder="Entrez un département" />
+          <input
+            id="department-input"
+            type="text"
+            [(ngModel)]="selectedDepartment"
+            placeholder="Entrez un département"
+          />
         </div>
 
         <!-- Filtre Catégorie -->
@@ -69,7 +92,6 @@
               {{ brand }}
             </option>
           </select>
-
         </div>
 
         <!-- Filtre Prix -->
@@ -78,27 +100,53 @@
           <div class="price-filters">
             <div class="price-filter">
               <label for="min-price-range">Min</label>
-              <input id="min-price-range" type="range" [(ngModel)]="minPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" [step]="stepPrice" (input)="updateMinPrice()" />
+              <input
+                id="min-price-range"
+                type="range"
+                [(ngModel)]="minPrice"
+                [min]="minPriceRange"
+                [max]="maxPriceRange"
+                [step]="stepPrice"
+                (input)="updateMinPrice()"
+              />
               <span>{{ minPrice }} €</span>
             </div>
             <div class="price-filter">
               <label for="max-price-range">Max</label>
-              <input id="max-price-range" type="range" [(ngModel)]="maxPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" [step]="stepPrice" (input)="updateMaxPrice()" />
+              <input
+                id="max-price-range"
+                type="range"
+                [(ngModel)]="maxPrice"
+                [min]="minPriceRange"
+                [max]="maxPriceRange"
+                [step]="stepPrice"
+                (input)="updateMaxPrice()"
+              />
               <span>{{ maxPrice }} €</span>
             </div>
           </div>
           <div class="price-inputs">
             <div class="price-input">
               <label for="min-price-number">Prix min</label>
-              <input id="min-price-number" type="number" [(ngModel)]="minPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" (input)="updateMinPrice()" />
+              <input
+                id="min-price-number"
+                type="number"
+                [(ngModel)]="minPrice"
+                [min]="minPriceRange"
+                [max]="maxPriceRange"
+                (input)="updateMinPrice()"
+              />
             </div>
             <div class="price-input">
               <label for="max-price-number">Prix max</label>
-              <input id="max-price-number" type="number" [(ngModel)]="maxPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" (input)="updateMaxPrice()" />
+              <input
+                id="max-price-number"
+                type="number"
+                [(ngModel)]="maxPrice"
+                [min]="minPriceRange"
+                [max]="maxPriceRange"
+                (input)="updateMaxPrice()"
+              />
             </div>
           </div>
         </div>
@@ -106,9 +154,42 @@
         <!-- Boutons d'action sur les filtres -->
         <div class="filter-buttons">
           <button (click)="applyFilters()">Appliquer</button>
-          <button (click)="search(false)">
-            Chercher sans produits précis
+          <button (click)="search(false)">Chercher sans produits précis</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown of product menu around me integrated with Searchbar -->
+    <div class="location-dropdown" *ngIf="locationDropdownOpen">
+      <div class="location-dropdown-menu">
+        <h3>Produits autour de moi</h3>
+        <div class="location-input-container">
+          <div class="location-input-wrapper">
+            <i class="location-icon fas fa-map-marker-alt"></i>
+            <input 
+              type="text" 
+              class="location-input" 
+              placeholder="Entrez votre ville/pays" 
+              [(ngModel)]="userLocation"
+              (input)="onLocationChange()"
+            />
+            <button class="clear-button" *ngIf="userLocation" (click)="clearLocation()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <button class="search-location-button" (click)="searchByLocation()">
+            Rechercher
           </button>
+        </div>
+        <!-- Recents locations -->
+        <div class="recent-locations" *ngIf="recentLocations.length > 0">
+          <h4>Localisations récentes</h4>
+          <ul>
+            <li *ngFor="let location of recentLocations" (click)="selectLocation(location)">
+              <i class="fas fa-history"></i>
+              {{ location }}
+            </li>
+          </ul>
         </div>
       </div>
     </div>
