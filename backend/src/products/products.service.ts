@@ -80,8 +80,8 @@ export class ProductsService {
    * @brief Retrieves products by its location.
    */
   // TODO 
-  // 1. get internal products
-  // 2. get external products
+  // 1. get internal products   DONE
+  // 2. get external products   TODO
   async getProductByLocation(location: string) {
     try {
       const products = await this.databaseService.getProductByLocation(location);

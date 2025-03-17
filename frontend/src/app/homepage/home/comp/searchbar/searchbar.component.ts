@@ -459,23 +459,25 @@ export class SearchbarComponent implements OnInit {
       // Add location to recent search history
       this.addToRecentLocations(this.userLocation);
 
+      this.isLoading = true;
       // Call the search service with the location
-      // TODO
       this.apiService.getProductsAround(this.userLocation)
-      .subscribe({
-        next: (products) => {
-          // this.nearbyProducts = products;
-          this.isLoading = false;
-          
-          // Vous pouvez maintenant afficher les produits ou mettre à jour d'autres composants
-          // via un service de partage d'état ou un événement
-        },
-        error: (error) => {
-          console.error('Erreur lors de la récupération des produits:', error);
-          this.isLoading = false;
-          // Gérer l'erreur (afficher un message à l'utilisateur, etc.)
-        }
-      });
+        .subscribe({
+          next: (response) => {
+            // this.nearbyProducts = products;
+            this.isLoading = false;
+
+            // Navigate to results page with the response
+            this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+              this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
+            });
+          },
+          error: (error) => {
+            console.error('Erreur lors de la récupération des produits:', error);
+            this.isLoading = false;
+            // Gérer l'erreur (afficher un message à l'utilisateur, etc.)
+          }
+        });
 
       // Close the dropdown after searching
       this.locationDropdownOpen = false;
