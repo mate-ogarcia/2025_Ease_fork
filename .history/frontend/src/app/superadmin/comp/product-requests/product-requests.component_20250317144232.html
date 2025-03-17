@@ -7,7 +7,7 @@
     <p>Chargement des demandes de produits et de marques...</p>
   </div>
     <!-- Filters for product requests -->
-    <div class="filter-controls" *ngIf="!isLoadingRequests">
+    <div class="filter-controls">
       <h3>Filtres</h3>
       <div class="filter-buttons">
         <button class="filter-btn" [ngClass]="{'active': currentFilter === 'all'}" (click)="setFilter('all')">

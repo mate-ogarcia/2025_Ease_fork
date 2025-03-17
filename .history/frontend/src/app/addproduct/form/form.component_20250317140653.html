@@ -94,8 +94,11 @@
         </div>
 
   
-        <div class="card">  
-          <!-- Eco-score-->
+        <div class="card">
+           <!-- Bar Code-->
+        
+
+        <!-- Eco-score-->
         <label for="sku">Eco-score</label>
         <input
           id="sku"
@@ -103,29 +106,30 @@
           placeholder="Type a Eco-score and press Enter"
           [(ngModel)]="product.ecoscore"
         />
-          <!-- Tags affichés sous forme d'étiquettes intégrées dans l'input -->
-          <label for="tags">Tags</label>
-          <div class="tags-input-container">
-            <span class="tag" *ngFor="let tag of product.tags">
-              {{ tag }} <button type="button" (click)="removeTag(tag)">x</button>
-            </span>
-            <input
-              id="tags"
-              type="text"
-              placeholder="Type a tag and press Enter"
-              [(ngModel)]="tagInput"
-              (keydown)="addTag($event)"
-            />
-          </div>
 
-          <!-- Countries (Origin) -->
-          <label for="origin">Origin</label>
-          <select id="origin" [(ngModel)]="product.origin">
-            <option value="">Select a country</option>
-            <option *ngFor="let country of countries" [value]="country">
-              {{ country }}
-            </option>
-          </select>
+        <!-- Tags affichés sous forme d'étiquettes intégrées dans l'input -->
+        <label for="tags">Tags</label>
+        <div class="tags-input-container">
+          <span class="tag" *ngFor="let tag of product.tags">
+            {{ tag }} <button type="button" (click)="removeTag(tag)">x</button>
+          </span>
+          <input
+            id="tags"
+            type="text"
+            placeholder="Type a tag and press Enter"
+            [(ngModel)]="tagInput"
+            (keydown)="addTag($event)"
+          />
+        </div>
+
+        <!-- Countries (Origin) -->
+        <label for="origin">Origin</label>
+        <select id="origin" [(ngModel)]="product.origin">
+          <option value="">Select a country</option>
+          <option *ngFor="let country of countries" [value]="country">
+            {{ country }}
+          </option>
+        </select>
         </div>
       </div>
 

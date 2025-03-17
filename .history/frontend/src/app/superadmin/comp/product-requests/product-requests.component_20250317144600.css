@@ -163,7 +163,7 @@ body {
   box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
 }
 
-/* Bouton CANCEL */
+/* 🚫 Bouton CANCEL */
 .details-actions .cancel-btn {
   background: linear-gradient(135deg, #dc3545, #c82333);
   color: #fff;
@@ -176,7 +176,7 @@ body {
   box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
 }
 
-/* Amélioration des tags */
+/* 🏷️ Amélioration des tags */
 .tags-input-container {
   display: flex;
   flex-wrap: wrap;
@@ -194,7 +194,7 @@ body {
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
 }
 
-/* Style des tags */
+/* 💡 Style des tags */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -206,7 +206,7 @@ body {
   transition: background 0.3s ease-in-out;
 }
 
-/* Bouton de suppression des tags */
+/* ❌ Bouton de suppression des tags */
 .tag button {
   background: none;
   border: none;
@@ -221,7 +221,7 @@ body {
   color: #ffdddd;
 }
 
-/* Input des tags */
+/* ✏️ Input des tags */
 .tags-input-container input {
   flex: 1;
   min-width: 120px;
@@ -236,12 +236,12 @@ body {
   color: #333;
 }
 
-/* Effet sur l'ensemble */
+/* 🎯 Effet sur l'ensemble */
 .request-details:focus-within {
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
 }
 
-/* Alignement des boutons Validate & Refuse */
+/* 📌 Alignement des boutons Validate & Refuse */
 .validate-actions {
   display: flex;
   justify-content: center;
@@ -249,7 +249,7 @@ body {
   margin-top: 25px;
 }
 
-/* Bouton VALIDATE */
+/* 🟢 Bouton VALIDATE */
 .accept-btn {
   background: linear-gradient(135deg, #28a745, #218838);
   color: white;
@@ -442,30 +442,4 @@ body {
 .badge-default {
   background-color: #e9ecef;
   color: #495057;
-}
-@media (max-width: 1200px) {
-  .requests-content {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .requests-column {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    width: 100%;
-  }
-
-  .requests-list {
-    flex: 1;
-    min-width: 300px;
-  }
-
-  .request-details {
-    width: 100%;
-    min-width: auto;
-    max-width: 600px;
-  }
 }

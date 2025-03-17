@@ -6,24 +6,24 @@
     </div>
     <p>Chargement des demandes de produits et de marques...</p>
   </div>
-    <!-- Filters for product requests -->
-    <div class="filter-controls" *ngIf="!isLoadingRequests">
-      <h3>Filtres</h3>
-      <div class="filter-buttons">
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'all'}" (click)="setFilter('all')">
-          Toutes les demandes
-        </button>
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'add'}" (click)="setFilter('add')">
-          Ajouts
-        </button>
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'edit'}" (click)="setFilter('edit')">
-          Modifications
-        </button>
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'delete'}" (click)="setFilter('delete')">
-          Suppressions
-        </button>
-      </div>
-    </div>
+<!-- Filters for product requests -->
+<div class="filter-controls">
+  <h3>Filtres</h3>
+  <div class="filter-buttons">
+    <button class="filter-btn" [ngClass]="{'active': currentFilter === 'all'}" (click)="setFilter('all')">
+      Toutes les demandes
+    </button>
+    <button class="filter-btn" [ngClass]="{'active': currentFilter === 'add'}" (click)="setFilter('add')">
+      Ajouts
+    </button>
+    <button class="filter-btn" [ngClass]="{'active': currentFilter === 'edit'}" (click)="setFilter('edit')">
+      Modifications
+    </button>
+    <button class="filter-btn" [ngClass]="{'active': currentFilter === 'delete'}" (click)="setFilter('delete')">
+      Suppressions
+    </button>
+  </div>
+</div>
   <!-- Main content (displayed only when data is loaded) -->
   <div class="requests-content" *ngIf="!isLoadingRequests">
     <!-- Left column: Products + Brands -->
