@@ -26,10 +26,8 @@
 
 .app-navbar {
     width: 100%;
-    z-index: 1000000;
 }
 
 .app-super-admin-dashboard {
     width: 100%;
-    z-index: 800;
 }
