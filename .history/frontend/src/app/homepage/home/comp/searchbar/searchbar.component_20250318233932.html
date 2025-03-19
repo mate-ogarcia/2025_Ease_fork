@@ -1,11 +1,10 @@
 <div class="container">
   <div class="search-container" [class.has-suggestions]="hasSuggestions">
-    <!-- Message de chargement -->
+    <!-- Display a message while loading-->
     <div *ngIf="isLoading" class="loading-message">
       🔄 Recherche en cours...
     </div>
 
-    <!-- Champ de recherche -->
     <input
       type="text"
       placeholder="Rechercher..."
@@ -13,8 +12,7 @@
       (keydown.enter)="onEnter($event)"
       (input)="onInputChange($event)"
     />
-
-    <!-- Boutons -->
+    <!-- All buttons -->
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" title="Filters" (click)="toggleFilterDropdown()">
       <i class="fa-solid fa-filter"></i>
@@ -27,21 +25,24 @@
       <i class="fas fa-search-location"></i>
     </button>
 
-    <!-- Suggestions de recherche -->
+    <!-- Liste des suggestions -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
       <ul>
-        <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
+        <li
+          *ngFor="let result of searchResults"
+          (click)="selectProduct(result)"
+        >
           {{ result.name }} - {{ result.description }}
         </li>
       </ul>
     </div>
 
-    <!-- Message en cas d'absence de résultats -->
+    <!-- Message si aucun résultat -->
     <div *ngIf="noResultsMessage" class="no-results-message">
       <p>{{ noResultsMessage }}</p>
     </div>
 
-    <!-- Dropdown des filtres -->
+    <!-- Dropdown des filtres intégré à la Searchbar -->
     <div class="filter-dropdown" *ngIf="filterDropdownOpen">
       <div class="filter-dropdown-menu">
         <h3>Filtres</h3>
@@ -82,7 +83,7 @@
           </select>
         </div>
 
-        <!-- Filtre Marques -->
+        <!-- Brand Filter  -->
         <div class="filter-group">
           <label for="brand-select">Marques</label>
           <select id="brand-select" [(ngModel)]="selectedBrand">
@@ -158,10 +159,47 @@
       </div>
     </div>
 
-    <!-- Intégration du composant de localisation -->
-    <app-location-dropdown
-      *ngIf="locationDropdownOpen"
-      (locationSelected)="handleLocationSelection($event)">
-    </app-location-dropdown>
+    <!-- Dropdown of product menu around me integrated with Searchbar -->
+    <div class="location-dropdown" *ngIf="locationDropdownOpen">
+      <div class="location-dropdown-menu">
+        <h3>Produits autour de moi</h3>
+        <div class="location-input-container">
+          <div class="location-input-wrapper">
+            <i class="location-icon fas fa-map-marker-alt"></i>
+            <input
+              type="text"
+              class="location-input"
+              placeholder="Entrez votre pays"
+              title="(Ville/département seront implémentés plus tard)"
+              [(ngModel)]="userLocation"
+              (input)="onLocationChange()"
+            />
+            <button
+              class="clear-button"
+              *ngIf="userLocation"
+              (click)="clearLocation()"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <button class="search-location-button" (click)="searchByLocation()">
+            Rechercher
+          </button>
+        </div>
+        <!-- Recents locations -->
+        <div class="recent-locations" *ngIf="recentLocations.length > 0">
+          <h4>Localisations récentes</h4>
+          <ul>
+            <li
+              *ngFor="let location of recentLocations"
+              (click)="selectLocation(location)"
+            >
+              <i class="fas fa-history"></i>
+              {{ location }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

@@ -23,13 +23,11 @@ import { UsersService } from '../../../../../services/users/users.service';
 import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
 // Cache API
 import { DataCacheService } from '../../../../../services/cache/data-cache.service';
-// Import du composant de localisation (assurez-vous que le chemin est correct)
-import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
 
 @Component({
   selector: 'app-searchbar',
   standalone: true,
-  imports: [FormsModule, CommonModule, LocationDropdownComponent],
+  imports: [FormsModule, CommonModule],
   templateUrl: './searchbar.component.html',
   styleUrls: ['./searchbar.component.css'],
 })
@@ -292,7 +290,7 @@ export class SearchbarComponent implements OnInit {
   
   handleLocationSelection(selectedLocation: string): void {
     console.log('Location selected:', selectedLocation);
-    // Vous pouvez déclencher ici une recherche par localisation ou mettre à jour l'état
+    // Ici, vous pouvez déclencher une recherche basée sur la localisation ou mettre à jour l'état.
     this.locationDropdownOpen = false;
   }
 }
