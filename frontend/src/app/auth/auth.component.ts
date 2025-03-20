@@ -247,7 +247,7 @@ export class AuthComponent implements AfterViewInit, OnInit {
         },
         error: (err) => {
           console.error("Login error:", err);
-          this.errorMessage = 'Email ou mot de passe invalide.';
+          this.errorMessage = 'Invalid email or password.';
         },
       });
     }
@@ -266,8 +266,8 @@ export class AuthComponent implements AfterViewInit, OnInit {
             this.processRegistration();
           },
           error: (error) => {
-            console.error('Erreur de validation :', error.message);
-            this.addressError = 'Adresse non reconnue. Veuillez sélectionner une suggestion.';
+            console.error('Validation error :', error.message);
+            this.addressError = 'Address not recognized. Please select a suggestion.';
             this.isAddressValid = false;
             const parentDiv = this.addressInput?.nativeElement.closest('.input-container');
             parentDiv?.classList.add('error-input');
@@ -280,43 +280,45 @@ export class AuthComponent implements AfterViewInit, OnInit {
   /**
    * Process the registration after address validation
    */
-  // TODO: include address in the user's DB
   private processRegistration() {
-    // TODO: TEST
-    console.log("Enregistrement avec:", {
-      username: this.username,
-      email: this.email,
-      password: this.password,
+    // Check data before sending
+    if (!this.username || !this.email || !this.password || !this.selectedAddress) {
+      this.errorMessage = 'Please fill in all fields.';
+      return;
+    }
+
+    // Create an address object with only relevant fields
+    const address = {
       postCode: this.selectedAddress.postcode,
       city: this.selectedAddress.city,
       country: this.selectedAddress.country
-    });
+    }
 
-    // Call register with the validated data
-    // this.authService.register(this.username, this.email, this.password, this.selectedAddress).subscribe({
-    //   next: (response) => {
-    //     console.log("Server response:", response);
-    //     // Navigate to the login page
-    //     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-    //       this.router.navigate(['/login']);
-    //     });
-    //   },
-    //   error: (err) => {
-    //     console.log("Register error:", err);
-    //     if (err.error && err.error.message) {
-    //       if (err.error.message.includes('email')) {
-    //         this.emailError = 'Cet email est déjà utilisé';
-    //       } else if (err.error.message.includes('username')) {
-    //         this.usernameError = 'Ce nom d\'utilisateur est déjà utilisé';
-    //       } else {
-    //         this.errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
-    //       }
-    //     } else {
-    //       this.errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
-    //     }
-    //   },
-    // });
+    this.authService.register(this.username, this.email, this.password, address).subscribe({
+      next: (response) => {
+        // Navigate to the login page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/login']);
+        });
+      },
+      error: (err) => {
+        console.error("Register error:", err);
+
+        if (err.error && typeof err.error.message === 'string') {
+          if (err.error.message.includes('email')) {
+            this.emailError = 'This email is already in use';
+          } else if (err.error.message.includes('username')) {
+            this.usernameError = 'This username is already in use';
+          } else {
+            this.errorMessage = 'An error has occurred. Please try again.';
+          }
+        } else {
+          this.errorMessage = 'An error has occurred. Please try again.';
+        }
+      },
+    });
   }
+
   // ===================================================================
   // ========================= ADDRESS FUNCTIONS =======================
   // ===================================================================

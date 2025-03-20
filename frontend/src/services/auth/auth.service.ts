@@ -207,15 +207,16 @@ export class AuthService {
    * @param {string} username - The username for the new account
    * @param {string} email - The email address for the new account
    * @param {string} password - The password for the new account
+   * @param {string} address - The address for the new account (only post code, city and country)
    * @returns {Observable<any>} An observable of the registration API response
    * @public
    */
-  // TODO: Add address
-  register(username: string, email: string, password: string, address?: any): Observable<any> {
+  register(username: string, email: string, password: string, address: any): Observable<any> {
     return this.http.post(`${this._authBackendUrl}/register`, {
       username,
       email,
       password,
+      address,
     });
   }
 
@@ -232,6 +233,7 @@ export class AuthService {
    * @returns {Observable<any>} An observable of the login API response
    * @public
    */
+  // TODO debug this
   login(email: string, password: string): Observable<any> {
     return this.http
       .post(`${this._authBackendUrl}/login`, { email, password }, { withCredentials: true })
@@ -244,7 +246,7 @@ export class AuthService {
           this.updateAuthState(true, newRole);
           this.user = response.user;
 
-          // Vérifier si l'utilisateur a été banni ou débanni
+          // Check if the user has been banned or unbanned
           if (previousRole === 'Banned' && newRole !== 'Banned') {
             this.notificationService.showSuccess('Votre compte a été débanni. Vous avez maintenant accès à toutes les fonctionnalités.');
           } else if (previousRole !== 'Banned' && newRole === 'Banned') {

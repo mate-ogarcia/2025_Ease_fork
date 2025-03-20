@@ -17,6 +17,7 @@ import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
 import { UserRole } from "./enums/roles.enum";
 import { LoginDto } from "./dto/login.dto";
+import { AddressDto } from "./dto/auth.dto";
 
 /**
  * @brief Service responsible for authentication operations.
@@ -58,10 +59,6 @@ export class AuthService {
       throw new UnauthorizedException("Invalid password");
     }
 
-    console.log('user :', user);
-
-    console.log('user :', user);
-
     return {
       email: user.email,
       username: user.username,
@@ -80,6 +77,8 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     try {
       const user = await this.validateUser(loginDto.email, loginDto.password);
+      // TODO return address
+      console.log('user login:', user);
       const payload = {
         email: user.email,
         role: user.role,
@@ -108,6 +107,7 @@ export class AuthService {
    * @param {string} username - The username of the new user.
    * @param {string} email - The email of the new user.
    * @param {string} password - The password of the new user.
+   * @param {string} address - The address for the new account (only post code, city and country)
    * @param {UserRole} role - The role of the new user, defaults to USER.
    * @returns {Promise<any>} The created user object without the password.
    * @throws {InternalServerErrorException} If an error occurs during user creation.
@@ -116,28 +116,25 @@ export class AuthService {
     username: string,
     email: string,
     password: string,
+    address: AddressDto,
     role: UserRole = UserRole.USER,
   ) {
-    console.log("📝 Registering a new user:", {
-      username,
-      email,
-      role,
-    });
-
+    // Create an hashed password and register with it
     const hashedPassword = await bcrypt.hash(password, 10);
-
     try {
       const user = await this.usersService.createUser({
         username,
         email,
         password: hashedPassword,
+        address,
         role,
       });
-      
+
       return {
         email: user.email,
         username: user.username,
         role: user.role,
+        address: user.address,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       };
