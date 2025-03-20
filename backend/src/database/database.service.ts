@@ -1044,6 +1044,39 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return result[0];
   }
 
+  /**
+   * @brief Retrieves products based on a specified location.
+   * 
+   * @param location The location to search for products (e.g., city or region).
+   * @return A promise resolving to an array of products matching the location.
+   * 
+   * @note If no products are found for the given location, an empty array is returned.
+   * @warning Ensure the `origin` field exists in the database schema.
+   */
+  async getProductByLocation(location: string): Promise<any[]> {
+    const lowercaseLocation = location.toLowerCase();
+   
+    const query = `
+      SELECT META(p).id AS id, p.*
+      FROM \`${this.productsBucket.name}\`._default._default p
+      WHERE LOWER(p.origin) = $location;
+    `;
+   
+    const result = await this.executeQuery(query, { location: lowercaseLocation });
+   
+    if (result.length === 0) {
+      console.log(`No products found for location: ${location}`);
+      return [];
+    }
+   
+    // Add default "source" field for products without one
+    return result.map(product => {
+      if (!product.source) {
+        return { ...product, source: "Internal" };
+      }
+      return product;
+    });
+  }
   // ========================================================================
   // ======================== BRANDS FUNCTIONS
   // ========================================================================
