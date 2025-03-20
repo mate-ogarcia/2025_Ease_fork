@@ -1,9 +1,7 @@
 <div class="container">
   <div class="search-container" [class.has-suggestions]="hasSuggestions">
-    <!-- Message de chargement -->
-    <div *ngIf="isLoading" class="loading-message">
-      🔄 Recherche en cours...
-    </div>
+    <!-- Barre de chargement animée -->
+    <div *ngIf="isLoading" class="loading-bar"></div>
 
     <!-- Champ de recherche -->
     <input
@@ -161,7 +159,8 @@
     <!-- Intégration du composant de localisation -->
     <app-location-dropdown
       *ngIf="locationDropdownOpen"
-      (locationSelected)="handleLocationSelection($event)">
+      (locationSelected)="handleLocationSelection($event)"
+    >
     </app-location-dropdown>
   </div>
 </div>
