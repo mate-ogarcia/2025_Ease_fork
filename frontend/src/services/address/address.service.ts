@@ -112,6 +112,7 @@ export class ApiAddress {
       houseNumber: response.address.house_number || '',
       postcode: response.address.postcode || '',
       city: response.address.city || response.address.town || response.address.village || '',
+      country: response.address.country || ''
       // Additional properties if needed
     };
   }

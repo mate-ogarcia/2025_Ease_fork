@@ -282,6 +282,16 @@ export class AuthComponent implements AfterViewInit, OnInit {
    */
   // TODO: include address in the user's DB
   private processRegistration() {
+    // TODO: TEST
+    console.log("Enregistrement avec:", {
+      username: this.username,
+      email: this.email,
+      password: this.password,
+      postCode: this.selectedAddress.postcode,
+      city: this.selectedAddress.city,
+      country: this.selectedAddress.country
+    });
+
     // Call register with the validated data
     // this.authService.register(this.username, this.email, this.password, this.selectedAddress).subscribe({
     //   next: (response) => {
@@ -306,14 +316,6 @@ export class AuthComponent implements AfterViewInit, OnInit {
     //     }
     //   },
     // });
-
-    // Pour test
-    console.log("Enregistrement avec:", {
-      username: this.username,
-      email: this.email,
-      password: this.password,
-      address: this.selectedAddress
-    });
   }
   // ===================================================================
   // ========================= ADDRESS FUNCTIONS =======================

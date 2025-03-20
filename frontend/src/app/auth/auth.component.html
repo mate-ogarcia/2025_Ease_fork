@@ -4,7 +4,7 @@
 
   <!-- Button to go back to the homepage -->
   <button class="back-btn" (click)="navigateToHome()">
-    <i class="fas fa-arrow-left"></i> Home
+    <i class="fas fa-arrow-left"></i> Page principale
   </button>
 
   <div class="container">
@@ -19,7 +19,7 @@
           [class.active]="isLoginMode"
           (click)="setLoginMode(true)"
         >
-          Login
+          Connexion
         </button>
         <button
           type="button"
@@ -27,7 +27,7 @@
           [class.active]="!isLoginMode"
           (click)="setLoginMode(false)"
         >
-          Register
+          Créer un compte
         </button>
       </div>
       <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
@@ -66,7 +66,7 @@
             <i class="fas fa-user"></i>
           </div>
           <div class="data">
-            <h5>Username</h5>
+            <h5>Nom d'utilisateur</h5>
             <input
               #usernameInput
               type="text"
@@ -91,7 +91,7 @@
             <i class="fas fa-map-marker-alt"></i>
           </div>
           <div class="data">
-            <h5>Address</h5>
+            <h5>Localisation(Pays, ville/Code postal)</h5>
             <input
               #addressInput
               type="text"
@@ -157,7 +157,7 @@
             <i class="fas fa-lock"></i>
           </div>
           <div class="data">
-            <h5>Password</h5>
+            <h5>Mot de passe</h5>
             <input
               #passwordInput
               [attr.type]="showPassword ? 'text' : 'password'"
@@ -181,12 +181,12 @@
         </div>
 
         <a href="#" *ngIf="isLoginMode" class="forgot-password"
-          >Forgot Password?</a
+          >Mot de passe oublié?</a
         >
         <input
           type="submit"
           class="btn"
-          [value]="isLoginMode ? 'LOGIN' : 'REGISTER'"
+          [value]="isLoginMode ? 'Connexion' : 'Créer un compte'"
         />
       </form>
     </div>

@@ -210,7 +210,8 @@ export class AuthService {
    * @returns {Observable<any>} An observable of the registration API response
    * @public
    */
-  register(username: string, email: string, password: string): Observable<any> {
+  // TODO: Add address
+  register(username: string, email: string, password: string, address?: any): Observable<any> {
     return this.http.post(`${this._authBackendUrl}/register`, {
       username,
       email,
