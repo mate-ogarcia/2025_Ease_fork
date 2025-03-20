@@ -8,6 +8,7 @@
   gap: 10px;
   position: relative;
   z-index: 10;
+  /* Valeur intermédiaire pour la barre de recherche */
 }
 
 /* Zone de recherche principale */
@@ -23,16 +24,18 @@
   padding: 5px 15px;
   transition: all 0.3s ease;
   z-index: 11;
+  /* Légèrement au-dessus du conteneur */
 }
 
 .search-container:hover {
   box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 /* Champ de saisie */
 .search-container input {
   border: none;
-  outline: none;/* Suppression de "outline: none" pour conserver le focus natif */
+  outline: none;
   width: 100%;
   font-size: 16px;
   padding: 15px;
@@ -49,7 +52,6 @@
   color: #13172e;
   margin-left: 8px;
   transition: transform 0.2s ease;
-  margin-right: 10px;
 }
 
 .search-btn:hover {
@@ -60,32 +62,33 @@
   font-size: 15px;
 }
 
-/* Boutons Filtre et Localisation */
-/* Les boutons affichent uniquement une bordure gauche noire et sont centrés */
+/* Boutons Filtre et Ajout */
 .filter-btn,
+.add-btn,
 .products-around-me-btn {
-  display: inline-flex;
-  background: none;
   border: none;
-  align-items: center;
-  outline: none;
-  justify-content: center;
-  padding: 6px 12px;
-  border-left: 1px solid black;  /* Bordure gauche noire */
-  background: #ffffff;
+  border-left: 1px solid rgba(64, 60, 60, 0.2);
+  margin-left: 10px;
   color: #333;
-  font-size: 18px;
+  background-color: transparent;
+  padding: 6px 12px;
   cursor: pointer;
-  height: 75%;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .filter-btn:hover,
+.add-btn:hover,
 .products-around-me-btn:hover {
-  color: #000000;
+  color: #007bff;
 }
 
-/* Suggestions de recherche */
+.add-btn {
+  border-left: none;
+  margin-left: 0;
+  padding-left: 5px;
+}
+
+/* Zone de suggestions */
 .suggestions {
   width: 100%;
   background: white;
@@ -97,6 +100,7 @@
   top: 100%;
   left: 0;
   z-index: 12;
+  /* Au-dessus de la barre de recherche */
   display: none;
   max-height: 300px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -131,8 +135,6 @@
 
 .has-suggestions input {
   border-radius: 25px 25px 0 0;
-  border: none;
-
 }
 
 .suggestions ul li {
@@ -166,6 +168,7 @@
   box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
   z-index: 13;
   min-width: 320px;
+  max-height: none;
   animation: slideDown 0.3s ease;
   max-width: 90vw;
   margin-right: 10px;
@@ -182,7 +185,8 @@
   }
 }
 
-.filter-dropdown-menu h3 {
+.filter-dropdown-menu h3,
+.location-dropdown-menu h3 {
   margin-top: 0;
   margin-bottom: 15px;
   font-size: 1.4em;
@@ -215,7 +219,7 @@
 .filter-group select:focus,
 .filter-group input[type="text"]:focus,
 .filter-group input[type="number"]:focus {
-  /* Retirer "outline: none" pour conserver le focus par défaut */
+  outline: none;
   border-color: #007bff;
 }
 
@@ -276,7 +280,6 @@
 
 .filter-buttons button {
   flex: 1;
-  outline: none;
   padding: 10px;
   font-size: 1em;
   border: none;
@@ -307,7 +310,138 @@
   color: black;
 }
 
-/* Styles responsives pour le filter-dropdown */
+/* Nouveau style pour le dropdown de localisation, positionné juste en dessous du bouton */
+.location-dropdown {
+  position: absolute;
+  top: 55px; /* Directement sous la searchbar où se trouve le bouton */
+  right: 15px; /* Aligné avec le padding droit de la searchbar */
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
+  z-index: 13;
+  min-width: 320px;
+  padding: 20px;
+  animation: slideDown 0.3s ease;
+}
+
+.location-dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.location-dropdown-menu h3 {
+  margin: 0;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+  color: #333;
+  text-align: center;
+}
+
+/* Conteneur de l’input de localisation */
+.location-input-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Conteneur de l’input et de l’icône */
+.location-input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  padding: 0 20px;
+  background: #f9f9f9;
+}
+
+/* Icône de localisation */
+.location-icon {
+  margin-right: 10px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* Champ de saisie */
+.location-input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 25px;
+  background: transparent;
+}
+
+.location-input:focus {
+  outline: none;
+}
+
+/* Bouton pour effacer la localisation */
+.clear-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 16px;
+}
+
+/* Bouton de recherche */
+.search-location-button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4285f4;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+}
+
+.search-location-button:hover {
+  background-color: #3367d6;
+}
+
+/* Section des localisations récentes */
+.recent-locations {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.recent-locations h4 {
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: #666;
+  text-align: center;
+}
+
+.recent-locations ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-locations li {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.recent-locations li:hover {
+  background-color: #f1f1f1;
+}
+
+.recent-locations li i {
+  margin-right: 10px;
+  color: #999;
+}
+
+/* Styles responsives pour le filtre */
 @media (max-width: 768px) {
   .filter-dropdown {
     right: 0;
@@ -316,6 +450,7 @@
     margin: 0 auto;
     max-width: none;
     margin-right: 15px;
+    /* Maintenir la marge à droite */
   }
 }
 
@@ -324,8 +459,11 @@
     width: 95%;
     padding: 15px;
     margin-right: 10px;
+    /* Réduire légèrement la marge sur très petits écrans */
     max-height: 80vh;
+    /* Limiter la hauteur sur mobile pour éviter qu'il prenne tout l'écran */
     overflow-y: auto;
+    /* Permettre le défilement à l'intérieur du filtre sur mobile */
   }
   
   .filter-group {
