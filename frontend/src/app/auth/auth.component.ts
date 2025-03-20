@@ -76,6 +76,8 @@ export class AuthComponent implements AfterViewInit, OnInit {
         this.addressSuggestions = [];
       }
     });
+    // TODO
+    this.getUserLocation();
   }
 
   /**
@@ -84,53 +86,6 @@ export class AuthComponent implements AfterViewInit, OnInit {
   ngAfterViewInit() {
     this.setupFocusBlurListeners();
     this.setupValidationListeners();
-  }
-
-  /**
-   * Handle address input and trigger the autocomplete
-   * 
-   * @param event - The input event from the address field
-   */
-  onAddressInput(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-
-    // Immediately triggers the search
-    this.addressInput$.next(value);
-
-    // Reset selected address when input changes
-    this.selectedAddress = null;
-  }
-
-  /**
-   * Fetch address suggestions from the API.
-   * 
-   * @param query - The address query entered by the user
-   */
-  fetchAddressSuggestions(query: string) {
-    if (query.trim() === '') {
-      this.addressSuggestions = [];
-      return;
-    }
-
-    this.apiAddress.autocompleteAddress(query).subscribe({
-      next: (suggestions) => {
-        this.addressSuggestions = suggestions;
-      },
-      error: (error) => {
-        console.error('Error fetching address suggestions:', error);
-        this.addressSuggestions = [];
-      }
-    });
-  }
-
-  /**
-   * Select an address from suggestions
-   */
-  selectAddress(suggestion: any) {
-    this.selectedAddress = suggestion;
-    this.address = this.formatSuggestionDisplay(suggestion);
-    this.addressSuggestions = []; // Clear suggestions after selection
-    this.validateAddress(); // Validate the selected address
   }
 
   /**
@@ -187,13 +142,6 @@ export class AuthComponent implements AfterViewInit, OnInit {
     this.emailError = '';
     this.passwordError = '';
     this.addressError = '';
-  }
-
-  /**
-   * @brief Toggles the application's dark mode.
-   */
-  toggleDarkMode(): void {
-    this.isDarkMode = !this.isDarkMode;
   }
 
   /**
@@ -273,6 +221,13 @@ export class AuthComponent implements AfterViewInit, OnInit {
    */
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  /**
+   * @brief Toggles the application's dark mode.
+   */
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
   }
 
   /**
@@ -360,7 +315,57 @@ export class AuthComponent implements AfterViewInit, OnInit {
       address: this.selectedAddress
     });
   }
+  // ===================================================================
+  // ========================= ADDRESS FUNCTIONS =======================
+  // ===================================================================
+  /**
+   * Handle address input and trigger the autocomplete
+   * 
+   * @param event - The input event from the address field
+   */
+  onAddressInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
 
+    // Immediately triggers the search
+    this.addressInput$.next(value);
+
+    // Reset selected address when input changes
+    this.selectedAddress = null;
+  }
+
+  /**
+   * Fetch address suggestions from the API.
+   * 
+   * @param query - The address query entered by the user
+   */
+  fetchAddressSuggestions(query: string) {
+    if (query.trim() === '') {
+      this.addressSuggestions = [];
+      return;
+    }
+
+    this.apiAddress.autocompleteAddress(query).subscribe({
+      next: (suggestions) => {
+        this.addressSuggestions = suggestions;
+      },
+      error: (error) => {
+        console.error('Error fetching address suggestions:', error);
+        this.addressSuggestions = [];
+      }
+    });
+  }
+
+  /**
+   * Select an address from suggestions
+   */
+  selectAddress(suggestion: any) {
+    this.selectedAddress = suggestion;
+    this.address = this.formatSuggestionDisplay(suggestion);
+    this.addressSuggestions = []; // Clear suggestions after selection
+    this.validateAddress(); // Validate the selected address
+  }
+
+  // ===================================================================
   // ========================= VALIDATE FIELDS =========================
   // ===================================================================
   /**
@@ -477,5 +482,63 @@ export class AuthComponent implements AfterViewInit, OnInit {
         parentDiv?.classList.remove('error-input');
       }
     }
+  }
+
+  // ===================================================================
+  // ========================= LOCATION (BROWSER) ======================
+  // ===================================================================
+  // TODO
+  /**
+   * @brief Retrieves the user's current geographic location.
+   * 
+   * This function checks if the browser supports geolocation and, if so, 
+   * requests the user's current position. Upon success, it extracts the latitude 
+   * and longitude and calls the reverseGeocode method to fetch address suggestions.
+   * If geolocation is not supported or an error occurs, it logs an error message.
+   */
+  getUserLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          // Use these coordinates to find nearby addresses
+          this.reverseGeocode(latitude, longitude);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          // Handle the error (display a message to the user)
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser');
+      // Inform the user that geolocation is not available
+    }
+  }
+
+  /**
+   * @brief Performs a reverse geocoding lookup (coordinates → address).
+   * 
+   * This method takes a latitude and longitude as input and sends a request 
+   * to the API to retrieve a list of possible addresses for these coordinates. 
+   * If successful, it updates the addressSuggestions list with the results.
+   * 
+   * @param latitude The latitude coordinate of the user's location.
+   * @param longitude The longitude coordinate of the user's location.
+   */
+  reverseGeocode(latitude: number, longitude: number) {
+    this.apiAddress.reverseGeocode(latitude, longitude).subscribe({
+      next: (addresses) => {
+        if (addresses && addresses.length > 0) {
+          // Display the found addresses as suggestions
+          this.addressSuggestions = addresses;
+          console.log('User location:', addresses);
+        }
+      },
+      error: (error) => {
+        console.error('Reverse geocoding error:', error);
+      }
+    });
   }
 }
