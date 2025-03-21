@@ -235,7 +235,7 @@ export class AuthComponent implements AfterViewInit, OnInit {
    */
   async onSubmit(form: NgForm): Promise<void> {
     // Validate form inputs
-    if (!this.validateForm(form)) {
+    if (!this.validateForm(form, this.isLoginMode)) {
       return;
     }
 
@@ -376,17 +376,23 @@ export class AuthComponent implements AfterViewInit, OnInit {
    * @brief Validates the form fields for login or registration.
    * 
    * @param form - The form data to validate
+   * @param isLoginMode - Boolean flag indicating if it's login mode
    * @returns true if the form is valid, otherwise false
    */
-  validateForm(form: NgForm): boolean {
+  validateForm(form: NgForm, isLoginMode: boolean): boolean {
+    // Calls up validation methods that uncover errors
     this.validateUsername();
     this.validateEmail();
     this.validatePassword();
-    this.validateAddress();
-
-    return this.isUsernameValid && this.isEmailValid && this.isPasswordValid && this.isAddressValid;
+  
+    if (!isLoginMode) {
+      this.validateAddress();
+    }
+  
+    // Checks if at least one field is invalid
+    return this.isUsernameValid && this.isEmailValid && this.isPasswordValid && (isLoginMode || this.isAddressValid);
   }
-
+  
   /**
    * @brief Validates username in real time.
    */
