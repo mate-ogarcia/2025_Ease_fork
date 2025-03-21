@@ -56,28 +56,17 @@ interface AuthState {
   providedIn: 'root',
 })
 export class AuthService {
-  /**
-   * @property {string} _authBackendUrl - The base URL for authentication API endpoints
-   * @private
-   */
-  private _authBackendUrl = environment.authBackendUrl;
-
+  private _authBackendUrl = environment.authBackendUrl; // The base URL for authentication API endpoints
   /**
    * @property {BehaviorSubject<AuthState>} authState - Subject that broadcasts authentication state changes
-   * @private
    */
   private authState = new BehaviorSubject<AuthState>({
     isAuthenticated: false,
     role: null
   });
-
-  /**
-   * @property {JwtHelperService} jwtHelper - Service for JWT token operations
-   * @private
-   */
-  private jwtHelper = new JwtHelperService();
+  private jwtHelper = new JwtHelperService(); // Service for JWT token operations
   // store user info
-  private user: { email: string, role: string, username: string } | null = null;
+  private user: { email: string, role: string, username: string, address: any } | null = null;
 
   /**
    * @constructor
@@ -120,7 +109,8 @@ export class AuthService {
         this.user = {
           email: decodedToken.email,
           role: newRole,
-          username: decodedToken.username
+          username: decodedToken.username,
+          address: decodedToken.address
         };
 
         // Vérifier si l'utilisateur a été banni ou débanni
@@ -153,7 +143,6 @@ export class AuthService {
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
         tap(response => {
-          console.log('Profile response:', response);
           if (response && response.role) {
             this.updateAuthState(true, response.role);
             this.user = response;
@@ -186,7 +175,6 @@ export class AuthService {
    * @private
    */
   private updateAuthState(isAuthenticated: boolean, role: string | null): void {
-    console.log('Updating auth state:', { isAuthenticated, role });
     // Only update state if values actually change
     if (this.authState.value.isAuthenticated !== isAuthenticated ||
       this.authState.value.role !== role) {
@@ -233,7 +221,6 @@ export class AuthService {
    * @returns {Observable<any>} An observable of the login API response
    * @public
    */
-  // TODO debug this
   login(email: string, password: string): Observable<any> {
     return this.http
       .post(`${this._authBackendUrl}/login`, { email, password }, { withCredentials: true })
@@ -356,7 +343,13 @@ export class AuthService {
    * Retrieve user information
    * @returns User information
    */
-  getUserInfo(): { email: string, role: string, username: string } | null {
-    return this.user;
+  getUserInfo(): any | null {
+    return this.user ? {
+      email: this.user.email,
+      role: this.user.role,
+      username: this.user.username,
+      address: this.user.address
+    } : null;
   }
+
 }

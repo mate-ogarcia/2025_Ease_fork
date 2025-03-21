@@ -62,6 +62,7 @@ export class AuthService {
     return {
       email: user.email,
       username: user.username,
+      address: user.address,
       role: user.role,
     };
   }
@@ -77,8 +78,6 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     try {
       const user = await this.validateUser(loginDto.email, loginDto.password);
-      // TODO return address
-      console.log('user login:', user);
       const payload = {
         email: user.email,
         role: user.role,
@@ -91,6 +90,7 @@ export class AuthService {
           email: user.email,
           role: user.role,
           username: user.username,
+          address: user.address,
         },
       };
     } catch (error) {
@@ -161,4 +161,23 @@ export class AuthService {
       throw new InternalServerErrorException("Error retrieving users list.");
     }
   }
+
+  /**
+   * @brief Retrieves a user from the database by email.
+   * @details This method allows fetching a specific user's details by their email address.
+   *          It is intended for use by authorized users (such as admins) and returns the user data.
+   * 
+   * @param email The email address of the user to be retrieved.
+   * @returns {Promise<any>} A promise that resolves to the user data if found.
+   * @throws {InternalServerErrorException} If an error occurs while retrieving the user data.
+   */
+  async findUserByEmail(email: string): Promise<any> {
+    try {
+      return await this.usersService.findByEmail(email);
+    } catch (error) {
+      console.error("❌ Error retrieving users:", error);
+      throw new InternalServerErrorException("Error retrieving users list.");
+    }
+  }
+
 }

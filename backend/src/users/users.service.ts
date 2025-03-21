@@ -48,6 +48,7 @@ export class UsersService {
         email: user.email,
         username: user.username,
         password: user.password,
+        address: user.address,
         role: user.role,
       };
     } catch (error) {

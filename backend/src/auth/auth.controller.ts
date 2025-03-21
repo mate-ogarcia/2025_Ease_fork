@@ -68,8 +68,6 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<any> {
     const result = await this.authService.login(body);
-    console.log("✅ Login successful, setting cookie");
-
     // Set the cookie with more permissive options for development
     response.cookie("accessToken", result.access_token, {
       httpOnly: false, // Temporarily set to false for debugging
@@ -81,7 +79,6 @@ export class AuthController {
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 
-    console.log("🍪 Cookie set with token:", result.access_token.substring(0, 15) + "...");
     return result;
   }
 
@@ -98,7 +95,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get("profile")
   async getProfile(@Req() req): Promise<any> {
-    return req.user;
+    // Get the full user
+    const fullUser = await this.authService.findUserByEmail(req.user.email);
+    return {
+      email: fullUser.email,
+      role: fullUser.role,
+      username: fullUser.username,
+      address: fullUser.address
+    };
   }
 
   /**
