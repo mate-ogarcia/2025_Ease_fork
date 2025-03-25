@@ -1,0 +1,84 @@
+name: Sync Fork with Upstream
+
+on:
+  workflow_dispatch: # Lancement manuel uniquement
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ Récupérer le code du repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      # 2️⃣ Ajouter le repository principal en tant que "upstream"
+      - name: Add Upstream Repository
+        run: |
+          git remote add upstream https://github.com/CapgePau-Uppa/2025_Ease.git
+          git fetch upstream  # Récupère les dernières mises à jour du repository principal
+
+      # 3️⃣ Sauvegarder environment.ts AVANT la sync
+      - name: Preserve environment.ts file (protection)
+        run: |
+          mkdir -p /tmp/env_backup  # Crée un dossier temporaire pour stocker le fichier
+          if [ -f frontend/src/environments/environment.ts ]; then
+            cp -r frontend/src/environments/environment.ts /tmp/env_backup/
+            echo "environment.ts sauvegardé."
+          else
+            echo "environment.ts n'existe pas, rien à sauvegarder."
+          fi
+
+      # 4️⃣ Sauvegarder le dossier .github pour préserver les workflows
+      - name: Preserve .github directory
+        run: |
+          mkdir -p /tmp/github_backup
+          cp -r .github /tmp/github_backup/ || echo "Pas de .github à sauvegarder"
+
+      # 5️⃣ Synchronisation forcée avec le repository principal (upstream)
+      - name: Force Sync with Upstream
+        run: |
+          git checkout main  # Se positionner sur la branche principale (changer ici si on veut recup une autre branche)
+          git reset --hard upstream/main  
+
+      # 6️⃣ Restaurer le dossier .github pour conserver les workflows
+      - name: Restore .github directory
+        run: |
+          if [ -d /tmp/github_backup/.github ]; then
+            cp -r /tmp/github_backup/.github .
+            echo ".github restauré avec succès !"
+          else
+            echo "Aucune restauration nécessaire pour .github"
+          fi
+
+      # 7️⃣ Restaurer environment.ts APRÈS la synchronisation
+      - name: Restore environment.ts file
+        run: |
+          if [ -f /tmp/env_backup/environment.ts ]; then
+            cp -r /tmp/env_backup/environment.ts frontend/src/environments/
+            echo "environment.ts restauré avec succès !"
+          else
+            echo "environment.ts n'était pas sauvegardé, donc pas de restauration nécessaire."
+          fi
+          ls -l frontend/src/environments/  # Vérification
+
+      # 8️⃣ Exclure temporairement environment.ts de .gitignore et s'assurer qu'il est suivi
+      - name: Force Git to track environment.ts
+        run: |
+          echo "!frontend/src/environments/environment.ts" >> .gitignore
+          git add frontend/src/environments/environment.ts
+          git commit -m "Ensure Git tracks environment.ts after sync" || echo "No changes to commit"
+
+      # 9️⃣ Configurer l'identité Git pour permettre le commit automatique
+      - name: Configure Git Identity
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+
+      # 🔟 Pousser les modifications vers le fork si des changements ont eu lieu
+      - name: Push changes to Fork
+        run: |
+          git add .
+          git commit -m "Sync with upstream while preserving .github and environment.ts" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/mate-ogarcia/2025_Ease_fork.git main --force
