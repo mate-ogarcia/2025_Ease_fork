@@ -1,17 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HistoryComponent } from './history/history.component';
+import { BadgesComponent }  from './badges/badges.component';
 // Services
 import { AuthService } from '../../../services/auth/auth.service';
 import { LocationService } from '../../../services/location/location.service';
 @Component({
   selector: 'app-usercomp',
-  imports: [CommonModule, HistoryComponent],
+  imports: [CommonModule, HistoryComponent, BadgesComponent],
   templateUrl: './usercomp.component.html',
   styleUrl: './usercomp.component.css'
 })
 export class UsercompComponent implements OnInit {
-  activeTab: string = 'Work'; // By default, the “Work” tab is active
+  activeTab: string = 'Badges'; // By default, the “Work” tab is active
   // User management
   isAuthenticated = false; // Tracks user authentication status.
   userRole: string | null = null; // Stores the user role.
