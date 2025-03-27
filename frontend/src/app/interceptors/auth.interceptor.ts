@@ -1,59 +1,73 @@
+/**
+ * @file auth.interceptor.ts
+ * @description
+ * This file contains an HTTP interceptor that is responsible for adding authentication credentials to outgoing HTTP requests.
+ * It checks whether the request is targeting internal API endpoints or external services (like OpenStreetMap).
+ * For internal API requests, it adds an authorization token (if available) either from cookies or localStorage.
+ * For OpenStreetMap requests, it avoids adding any authentication credentials.
+ * The interceptor ensures that cross-site credentials are included where necessary.
+ * 
+ * It also prevents sending credentials with OpenStreetMap requests and selectively applies the authentication token
+ * to API requests that require it.
+ */
+
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
 
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const cookieService = inject(CookieService);
 
-  // Log tous les cookies au début de chaque requête
-  console.log('🔍 Interceptor - Available cookies:', cookieService.getAll());
+  // Retrieve environment information
+  const isLocalhost = window.location.hostname === 'localhost';
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
 
-  // Vérifier si la requête est vers l'API
-  const isApiRequest = req.url.includes('localhost:3000') || req.url.includes('api');
-  console.log(`📡 Request to: ${req.url} (isApiRequest: ${isApiRequest})`);
+  // Check if the request is for the internal API or OpenStreetMap
+  const isApiRequest = !req.url.includes('localhost:4200') &&
+    (req.url.includes('localhost:3000') ||
+      req.url.includes('api') ||
+      req.url.includes('render.com'));
 
-  // Clone la requête avec withCredentials pour tous les appels API
-  let newReq = req.clone({
-    withCredentials: true
-  });
+  const isOpenStreetMapRequest = req.url.includes('openstreetmap.org') ||
+    req.url.includes('nominatim') ||
+    req.url.includes('osm');
 
-  // Ajouter le token seulement pour les requêtes API
-  if (isApiRequest) {
-    const token = cookieService.get('accessToken');
-    if (token) {
-      console.log('🔑 Adding token to request headers');
-      newReq = newReq.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
+  // Do not add withCredentials for OpenStreetMap requests
+  let newReq;
+  if (isOpenStreetMapRequest) {
+    // For OpenStreetMap, do not add credentials
+    newReq = req.clone();
+  } else {
+    // For other requests, use withCredentials
+    newReq = req.clone({
+      withCredentials: true
+    });
+
+    // Add the token only for internal API requests
+    if (isApiRequest) {
+      // Existing code to add the token...
+      let token = cookieService.get('accessToken');
+
+      // If the token is not found in cookies, check localStorage
+      if (!token && localStorage.getItem('accessToken')) {
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+          token = storedToken;
         }
-      });
-      console.log('📤 Request headers set:', newReq.headers.get('Authorization')?.substring(0, 20) + '...');
-    } else {
-      console.log('⚠️ No token available for API request');
-      // Toujours continuer sans redirection
-      return next(newReq);
+      }
+
+      if (token) {
+        newReq = newReq.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
     }
   }
 
-  return next(newReq).pipe(
-    catchError((error: HttpErrorResponse) => {
-      console.log('❌ Request error:', {
-        status: error.status,
-        url: error.url,
-        message: error.message
-      });
-
-      if (error.status === 401) {
-        console.log('🔒 Authentication error detected');
-
-        // Ne jamais rediriger vers la page de login lors d'un rechargement de page
-        // Laisser l'utilisateur sur la page actuelle
-        console.log('🔄 Keeping user on current page despite 401');
-      }
-      return throwError(() => error);
-    })
-  );
-};  
+  return next(newReq);
+};
