@@ -56,28 +56,17 @@ interface AuthState {
   providedIn: 'root',
 })
 export class AuthService {
-  /**
-   * @property {string} _authBackendUrl - The base URL for authentication API endpoints
-   * @private
-   */
-  private _authBackendUrl = environment.authBackendUrl;
-
+  private _authBackendUrl = environment.authBackendUrl; // The base URL for authentication API endpoints
   /**
    * @property {BehaviorSubject<AuthState>} authState - Subject that broadcasts authentication state changes
-   * @private
    */
   private authState = new BehaviorSubject<AuthState>({
     isAuthenticated: false,
     role: null
   });
-
-  /**
-   * @property {JwtHelperService} jwtHelper - Service for JWT token operations
-   * @private
-   */
-  private jwtHelper = new JwtHelperService();
+  private jwtHelper = new JwtHelperService(); // Service for JWT token operations
   // store user info
-  private user: { email: string, role: string, username: string } | null = null;
+  private user: { email: string, role: string, username: string, address: any } | null = null;
 
   /**
    * @constructor
@@ -120,7 +109,8 @@ export class AuthService {
         this.user = {
           email: decodedToken.email,
           role: newRole,
-          username: decodedToken.username
+          username: decodedToken.username,
+          address: decodedToken.address
         };
 
         // Vérifier si l'utilisateur a été banni ou débanni
@@ -153,7 +143,6 @@ export class AuthService {
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
         tap(response => {
-          console.log('Profile response:', response);
           if (response && response.role) {
             this.updateAuthState(true, response.role);
             this.user = response;
@@ -186,7 +175,6 @@ export class AuthService {
    * @private
    */
   private updateAuthState(isAuthenticated: boolean, role: string | null): void {
-    console.log('Updating auth state:', { isAuthenticated, role });
     // Only update state if values actually change
     if (this.authState.value.isAuthenticated !== isAuthenticated ||
       this.authState.value.role !== role) {
@@ -207,14 +195,16 @@ export class AuthService {
    * @param {string} username - The username for the new account
    * @param {string} email - The email address for the new account
    * @param {string} password - The password for the new account
+   * @param {string} address - The address for the new account (only post code, city and country)
    * @returns {Observable<any>} An observable of the registration API response
    * @public
    */
-  register(username: string, email: string, password: string): Observable<any> {
+  register(username: string, email: string, password: string, address: any): Observable<any> {
     return this.http.post(`${this._authBackendUrl}/register`, {
       username,
       email,
       password,
+      address,
     });
   }
 
@@ -243,7 +233,7 @@ export class AuthService {
           this.updateAuthState(true, newRole);
           this.user = response.user;
 
-          // Vérifier si l'utilisateur a été banni ou débanni
+          // Check if the user has been banned or unbanned
           if (previousRole === 'Banned' && newRole !== 'Banned') {
             this.notificationService.showSuccess('Votre compte a été débanni. Vous avez maintenant accès à toutes les fonctionnalités.');
           } else if (previousRole !== 'Banned' && newRole === 'Banned') {
@@ -353,7 +343,13 @@ export class AuthService {
    * Retrieve user information
    * @returns User information
    */
-  getUserInfo(): { email: string, role: string, username: string } | null {
-    return this.user;
+  getUserInfo(): any | null {
+    return this.user ? {
+      email: this.user.email,
+      role: this.user.role,
+      username: this.user.username,
+      address: this.user.address
+    } : null;
   }
+
 }

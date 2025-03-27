@@ -3,7 +3,7 @@
     <!-- Barre de chargement animée -->
     <div *ngIf="isLoading" class="loading-bar"></div>
 
-    <!-- Champ de recherche -->
+    <!-- Search field -->
     <input
       type="text"
       placeholder="Rechercher..."
@@ -12,38 +12,34 @@
       (input)="onInputChange($event)"
     />
 
-    <!-- Boutons -->
+    <!-- Buttons -->
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" title="Filters" (click)="toggleFilterDropdown()">
       <i class="fa-solid fa-filter"></i>
     </button>
-    <button
-      class="products-around-me-btn"
-      title="Products around me"
-      (click)="toggleLocationDropdown()"
-    >
-      <i class="fas fa-search-location"></i>
-    </button>
 
-    <!-- Suggestions de recherche -->
+    <!-- Search suggestions -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
       <ul>
-        <li *ngFor="let result of searchResults" (click)="selectProduct(result)">
+        <li
+          *ngFor="let result of searchResults"
+          (click)="selectProduct(result)"
+        >
           {{ result.name }} - {{ result.description }}
         </li>
       </ul>
     </div>
 
-    <!-- Message en cas d'absence de résultats -->
+    <!-- No results message -->
     <div *ngIf="noResultsMessage" class="no-results-message">
       <p>{{ noResultsMessage }}</p>
     </div>
 
-    <!-- Dropdown des filtres -->
+    <!-- Filter dropdown -->
     <div class="filter-dropdown" *ngIf="filterDropdownOpen">
       <div class="filter-dropdown-menu">
         <h3>Filtres</h3>
-        <!-- Filtre Pays -->
+        <!-- Country filter -->
         <div class="filter-group">
           <label for="country-select">Pays européen</label>
           <select
@@ -58,7 +54,7 @@
           </select>
         </div>
 
-        <!-- Filtre Département (si un pays est sélectionné) -->
+        <!-- Department filter (if a country is selected) -->
         <div class="filter-group" *ngIf="selectedCountry">
           <label for="department-input">Département</label>
           <input
@@ -69,7 +65,7 @@
           />
         </div>
 
-        <!-- Filtre Catégorie -->
+        <!-- Category filter -->
         <div class="filter-group">
           <label for="category-select">Catégorie</label>
           <select id="category-select" [(ngModel)]="selectedCategory">
@@ -80,7 +76,7 @@
           </select>
         </div>
 
-        <!-- Filtre Marques -->
+        <!-- Brand filter -->
         <div class="filter-group">
           <label for="brand-select">Marques</label>
           <select id="brand-select" [(ngModel)]="selectedBrand">
@@ -91,7 +87,7 @@
           </select>
         </div>
 
-        <!-- Filtre Prix -->
+        <!-- Price filter -->
         <div class="filter-group">
           <label>Prix</label>
           <div class="price-filters">
@@ -148,7 +144,7 @@
           </div>
         </div>
 
-        <!-- Boutons d'action sur les filtres -->
+        <!-- Filter action buttons -->
         <div class="filter-buttons">
           <button (click)="applyFilters()">Appliquer</button>
           <button (click)="search(false)">Chercher sans produits précis</button>
@@ -156,11 +152,7 @@
       </div>
     </div>
 
-    <!-- Intégration du composant de localisation -->
-    <app-location-dropdown
-      *ngIf="locationDropdownOpen"
-      (locationSelected)="handleLocationSelection($event)"
-    >
-    </app-location-dropdown>
+    <!-- Integration of the localization component -->
+    <app-location-dropdown></app-location-dropdown>
   </div>
 </div>
