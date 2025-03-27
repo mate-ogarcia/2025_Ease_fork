@@ -1,8 +1,3 @@
-<!-- Get Lucky Button-->
-<button class="get-lucky-btn" title="Trouvez des produits autour de vous" (click)="getRandomProduct()">
-  <i class="fas fa-dice"></i> 
-</button>
-
 <div class="container">
   <div class="search-container" [class.has-suggestions]="hasSuggestions">
     <!-- Loading message -->
@@ -23,13 +18,6 @@
     <button class="search-btn" (click)="clearSearch()">✖</button>
     <button class="filter-btn" title="Filters" (click)="toggleFilterDropdown()">
       <i class="fa-solid fa-filter"></i>
-    </button>
-    <button
-      class="products-around-me-btn"
-      title="Products around me"
-      (click)="toggleLocationDropdown()"
-    >
-      <i class="fas fa-search-location"></i>
     </button>
 
     <!-- Search suggestions -->
@@ -167,10 +155,6 @@
     </div>
 
     <!-- Integration of the localization component -->
-    <app-location-dropdown
-      *ngIf="locationDropdownOpen"
-      (locationSelected)="handleLocationSelection($event)"
-    >
-    </app-location-dropdown>
+    <app-location-dropdown></app-location-dropdown>
   </div>
 </div>

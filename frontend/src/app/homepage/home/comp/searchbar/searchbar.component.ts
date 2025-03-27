@@ -29,7 +29,11 @@ import { LocationDropdownComponent } from '../location-dropdown/location-dropdow
 @Component({
   selector: 'app-searchbar',
   standalone: true,
-  imports: [FormsModule, CommonModule, LocationDropdownComponent],
+  imports: [
+    FormsModule, 
+    CommonModule, 
+    LocationDropdownComponent
+  ],
   templateUrl: './searchbar.component.html',
   styleUrls: ['./searchbar.component.css'],
 })
@@ -65,7 +69,6 @@ export class SearchbarComponent implements OnInit {
   private CACHE_DURATION = 5 * 60 * 1000; // Cache duration (5 minutes).
   // Dropdown control variables
   filterDropdownOpen: boolean = false; // Boolean indicating whether the filter dropdown is open.
-  locationDropdownOpen: boolean = false; // Boolean indicating whether the location dropdown is open.
 
   isLoading: boolean = false; // Boolean indicating whether the search results are being loaded.
 
@@ -380,26 +383,4 @@ export class SearchbarComponent implements OnInit {
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
   }
-
-  /**
-   * @function toggleLocationDropdown
-   * @description Toggles the visibility of the location dropdown.
-   */
-  toggleLocationDropdown() {
-    this.locationDropdownOpen = !this.locationDropdownOpen;
-  }
-
-  /**
-   * Handles the selection of a location from the location dropdown.
-   * 
-   * @method handleLocationSelection
-   * @param {string} selectedLocation - The location that was selected by the user from the dropdown.
-   */
-  handleLocationSelection(selectedLocation: string): void {
-    // Optionally, trigger a location-based search or update the state here
-    this.locationDropdownOpen = false;
-  }
-
-  // ======================== GET LUCKY BUTTON
-  getRandomProduct() { }
 }
