@@ -1,0 +1,81 @@
+/* Grille principale pour afficher tous les badges */
+.badges-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Carte individuelle du badge */
+.badge-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  padding: 1.5rem 1rem;
+  transition: transform 0.2s ease;
+  /* Utilisation de flex pour centrer verticalement et horizontalement */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.badge-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Conteneur rond pour l'emoji, centré sans marge basse */
+.badge-icon-container {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Emoji centré et agrandi */
+.badge-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Titre et description initialement cachés */
+.badge-title,
+.badge-description {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* Apparition du texte au hover, placé juste en dessous de l'emoji */
+.badge-card:hover .badge-title,
+.badge-card:hover .badge-description {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 50px; /* Ajustez cette valeur selon la taille de votre texte */
+  margin-top: 0.5rem;
+}
+
+/* Titre du badge */
+.badge-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Description du badge */
+.badge-description {
+  font-size: 0.9rem;
+  color: #666;
+}

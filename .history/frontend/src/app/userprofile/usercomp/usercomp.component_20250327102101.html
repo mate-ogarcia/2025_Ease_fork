@@ -1,0 +1,45 @@
+<div class="profile-container">
+  <!-- Section du profil -->
+  <div class="profile-header">
+    <img class="profile-image" src="rhinoceros.png" alt="Profile Picture" />
+    <div class="profile-info">
+      <h2 class="username">{{ userInfo?.username }}</h2>
+      <h5 class="email">{{ userInfo?.email }}</h5>
+      <p class="location">{{ location }}</p>
+      <div class="profile-actions">
+        <button class="edit-profile-btn">Edit Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation des onglets -->
+  <nav class="profile-nav">
+    <ul>
+      <li [class.active]="activeTab === 'Historique'" (click)="changeTab('Historique')">Historique</li>
+      <li [class.active]="activeTab === 'Favoris'" (click)="changeTab('Favoris')">Favoris</li>
+      <li [class.active]="activeTab === 'Badges'" (click)="changeTab('Badges')">Badges</li>
+    </ul>
+  </nav>
+
+  <!-- Contenu des onglets -->
+  <div class="content-section">
+    <!-- Onglet Historique -->
+    <div class="history" *ngIf="activeTab === 'Historique'">
+      <h3>Historique</h3>
+      <p>Voici votre historique d'activités.</p>
+      <app-historyl ></app-history>
+    </div>
+
+    <!-- Onglet Favoris -->
+    <div *ngIf="activeTab === 'Favoris'">
+      <h3>Favoris</h3>
+      <p>Voici vos éléments favoris.</p>
+    </div>
+
+    <!-- Onglet Badges -->
+    <div *ngIf="activeTab === 'Badges'">
+      <h3>Badges</h3>
+      <app-badges></app-badges>
+    </div>
+  </div>
+</div>

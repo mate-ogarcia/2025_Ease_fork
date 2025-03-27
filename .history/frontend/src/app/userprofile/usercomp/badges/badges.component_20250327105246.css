@@ -1,0 +1,95 @@
+/* Grid to display badges */
+.badges-grid {
+  display: grid;
+  height: fit-content;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Card container, centered in its grid cell */
+.badge-card {
+  position: relative;
+  width: 200px;         /* Fixed width */
+  height: 220px;        /* Fixed height */
+  margin: 0 auto;       /* Center within the grid cell */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  
+  /* Allows overlapping other cards on hover */
+  overflow: visible;
+  
+  /* Flex layout to center emoji and title */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  /* Transition for scaling and z-index on hover */
+  transition: transform 0.3s ease, z-index 0.3s ease;
+  transform-origin: center center;
+}
+
+/* On hover, enlarge and bring above other cards */
+.badge-card:hover {
+  z-index: 9999;
+  transform: scale(1.2);
+}
+
+/* Emoji container (round) */
+.badge-icon-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+/* Move the emoji upward on hover */
+.badge-card:hover .badge-icon-container {
+  transform: translateY(-15px);
+}
+
+/* Emoji styling */
+.badge-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Title is visible by default and centered */
+.badge-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 0.5rem;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Description is hidden by default, positioned absolutely at the bottom */
+.badge-description {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  right: 0;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+/* On hover, reveal the description with a sliding effect */
+.badge-card:hover .badge-description {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
