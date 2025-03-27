@@ -12,6 +12,10 @@
 /noteRU.txt
 /.vscode
 /.history
+/bucketsJSON/exportedBucketsJSON
 
 #node_modules
 node_modules
+
+# Logs
+/logs
