@@ -1,25 +1,25 @@
 <!-- Loading message -->
 <div *ngIf="isLoading" class="loading-message">🔄 Recherche en cours...</div>
-
+<div class="container">
 <!-- Get Lucky button always visible -->
-<button
-  class="get-lucky-btn"
-  title="Trouvez des produits autour de vous"
-  *ngIf="canGetLuckyButton"
-  (click)="getRandomProduct()"
->
-  <i class="fas fa-dice"></i>
-</button>
+  <button
+    class="get-lucky-btn"
+    title="Trouvez des produits autour de vous"
+    *ngIf="canGetLuckyButton"
+    (click)="getRandomProduct()"
+  >
+  <i class="fa-solid fa-shuffle"></i>
+  </button>
 
 <!-- Filter dropdown -->
-<button
-  class="products-around-me-btn"
-  title="Trouvez des produits dans une zone géographique"
-  (click)="toggleLocationDropdown()"
->
-  <i class="fas fa-search-location"></i>
-</button>
-
+  <button
+    class="products-around-me-btn"
+    title="Trouvez des produits dans une zone géographique"
+    (click)="toggleLocationDropdown()"
+  >
+  <i class="fa-solid fa-location-dot"></i>
+  </button>
+</div>
 <!-- Dropdown content displayed only if locationDropdownOpen is true -->
 <div class="location-dropdown" *ngIf="locationDropdownOpen">
   <div class="location-dropdown-menu">
