@@ -1,0 +1,64 @@
+groups:
+  - interval: '10s'
+    name: 'general'
+    rules:
+      - expr: '1 - (kv_dcp_items_remaining{connection_type=`replication`} / ignoring(name) irate(kv_dcp_items_sent{connection_type=`replication`}[30s]) > bool 1) * (max_over_time((kv_dcp_items_remaining{connection_type=`replication`} / ignoring(name) irate(kv_dcp_items_sent{connection_type=`replication`}[30s]))[60s:10s]) > bool 2)'
+        labels:
+          name: 'cm_failover_safeness_level'
+        record: 'cm_failover_safeness_level'
+      - expr: 'label_replace(kv_ep_db_file_size_bytes, `instance`, `ns_server`, ``, ``)'
+        labels:
+          name: 'couch_docs_actual_disk_size'
+        record: 'couch_docs_actual_disk_size'
+      - expr: '(irate(sysproc_cpu_seconds_total{mode=`user`}[30s]) + ignoring(mode) irate(sysproc_cpu_seconds_total{mode=`sys`}[30s])) * 100'
+        labels:
+          name: 'sysproc_cpu_utilization'
+        record: 'sysproc_cpu_utilization'
+      - expr: '100 - (irate(sys_cpu_host_seconds_total{mode=`idle`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100)'
+        labels:
+          name: 'sys_cpu_host_utilization_rate'
+        record: 'sys_cpu_host_utilization_rate'
+      - expr: 'irate(sys_cpu_host_seconds_total{mode=`user`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100'
+        labels:
+          name: 'sys_cpu_host_user_rate'
+        record: 'sys_cpu_host_user_rate'
+      - expr: 'irate(sys_cpu_host_seconds_total{mode=`sys`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100'
+        labels:
+          name: 'sys_cpu_host_sys_rate'
+        record: 'sys_cpu_host_sys_rate'
+      - expr: 'irate(sys_cpu_host_seconds_total{mode=`other`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100'
+        labels:
+          name: 'sys_cpu_host_other_rate'
+        record: 'sys_cpu_host_other_rate'
+      - expr: 'irate(sys_cpu_host_seconds_total{mode=`idle`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100'
+        labels:
+          name: 'sys_cpu_host_idle_rate'
+        record: 'sys_cpu_host_idle_rate'
+      - expr: 'irate(sys_cpu_host_seconds_total{mode=`irq`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100'
+        labels:
+          name: 'sys_cpu_irq_rate'
+        record: 'sys_cpu_irq_rate'
+      - expr: 'irate(sys_cpu_host_seconds_total{mode=`stolen`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100'
+        labels:
+          name: 'sys_cpu_stolen_rate'
+        record: 'sys_cpu_stolen_rate'
+      - expr: 'max(100 - (irate(sys_cpu_host_seconds_total{mode=`idle`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100) or irate(sys_cpu_cgroup_usage_seconds_total[30s]) / ignoring(name,mode) sys_cpu_cores_available * 100) without(mode, name)'
+        labels:
+          name: 'sys_cpu_utilization_rate'
+        record: 'sys_cpu_utilization_rate'
+      - expr: 'max(irate(sys_cpu_host_seconds_total{mode=`user`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100 or irate(sys_cpu_cgroup_seconds_total{mode=`user`}[30s]) / ignoring(name,mode) sys_cpu_cores_available * 100) without(mode, name)'
+        labels:
+          name: 'sys_cpu_user_rate'
+        record: 'sys_cpu_user_rate'
+      - expr: 'max(irate(sys_cpu_host_seconds_total{mode=`sys`}[30s]) / ignoring(name,mode) sys_cpu_host_cores_available * 100 or irate(sys_cpu_cgroup_seconds_total{mode=`sys`}[30s]) / ignoring(name,mode) sys_cpu_cores_available * 100) without(mode, name)'
+        labels:
+          name: 'sys_cpu_sys_rate'
+        record: 'sys_cpu_sys_rate'
+      - expr: 'irate(sys_cpu_cgroup_seconds_total{mode=`throttled`}[30s]) / ignoring(name,mode) sys_cpu_cores_available * 100'
+        labels:
+          name: 'sys_cpu_throttled_rate'
+        record: 'sys_cpu_throttled_rate'
+      - expr: 'irate(sys_cpu_cgroup_seconds_total{mode=`burst`}[30s]) / ignoring(name,mode) sys_cpu_cores_available * 100'
+        labels:
+          name: 'sys_cpu_burst_rate'
+        record: 'sys_cpu_burst_rate'

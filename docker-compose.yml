@@ -1,27 +1,30 @@
 ﻿services:
-  # Couchbase Server
   couchbase:
-    image: couchbase:7.1.1
+    image: couchbase:latest
+    container_name: couchbase
     ports:
-      - "${DB_PORT:-8091}:8091"     # Interface Web
-      - "8092:8092"                 # API
-      - "8093:8093"                 # Query Service
-      - "8094:8094"                 # Search Service
-      - "8095:8095"                 # Analytics
-      - "8096:8096"                 # Eventing Service
-      - "11210:11210"               # Data Service
-      - "11211:11211"               # Memcached port
+      - "8091:8091"  # Port d'administration
+      - "8092:8092"  # API
+      - "8093:8093"  # Service de requêtes
+      - "8094:8094"  # Recherche
+      - "8095:8095"  # Analytics
+      - "8096:8096"  # Eventing
+      - "11210:11210"  # Data service
     volumes:
-      - couchbase_data:/opt/couchbase/var
+      - ./couchbase-data/data:/opt/couchbase/var  # Dossier des données persistantes
+      - ./init-scripts:/etc/couchbase/init-scripts  # Dossier pour les scripts d'initialisation
     environment:
-      - COUCHBASE_ADMINISTRATOR_USERNAME=${DB_USER:-user1}
-      - COUCHBASE_ADMINISTRATOR_PASSWORD=${DB_PASSWORD:-password}
+      - COUCHBASE_ADMINISTRATOR_USERNAME=user1
+      - COUCHBASE_ADMINISTRATOR_PASSWORD=password
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8091/ui/index.html"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 120s
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/etc/couchbase/init-scripts/init.sh"]  # Exécuter le script d'initialisation
+
 
   # Backend NestJS
   backend:
@@ -35,7 +38,7 @@
       - BACKEND_PORT=3000
       - BASE_PATH=/app
       - DB_HOST=couchbase://couchbase
-      - DB_PORT=${DB_PORT:-8091}
+      - DB_PORT=${DB_DOCKER_PORT:-8092}
       - DB_USER=${DB_USER:-user1}
       - DB_PASSWORD=${DB_PASSWORD:-password}
       - BUCKET_NAME=${BUCKET_NAME:-ProductsBDD}

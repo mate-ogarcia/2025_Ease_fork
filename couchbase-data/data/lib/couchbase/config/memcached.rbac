@@ -1,0 +1,163 @@
+{
+  "@ns_server": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "BucketThrottleManagement",
+      "IdleConnection",
+      "Impersonate",
+      "NodeSupervisor",
+      "Stats",
+      "SystemSettings",
+      "Unmetered",
+      "Unthrottled"
+    ],
+    "domain": "local"
+  },
+  "@cbq-engine": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats"
+    ],
+    "domain": "local"
+  },
+  "@projector": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats",
+      "Unmetered",
+      "BucketThrottleManagement"
+    ],
+    "domain": "local"
+  },
+  "@goxdcr": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats"
+    ],
+    "domain": "local"
+  },
+  "@index": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats",
+      "Unmetered"
+    ],
+    "domain": "local"
+  },
+  "@fts": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats",
+      "Unmetered"
+    ],
+    "domain": "local"
+  },
+  "@eventing": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats",
+      "Unmetered"
+    ],
+    "domain": "local"
+  },
+  "@cbas": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats",
+      "Unmetered"
+    ],
+    "domain": "local"
+  },
+  "@backup": {
+    "buckets": {
+      "*": [
+        "all"
+      ]
+    },
+    "privileges": [
+      "Administrator",
+      "Audit",
+      "IdleConnection",
+      "Impersonate",
+      "SystemSettings",
+      "Stats"
+    ],
+    "domain": "local"
+  },
+  "@prometheus": {
+    "buckets": {},
+    "privileges": [
+      "Stats"
+    ],
+    "domain": "local"
+  }
+}
