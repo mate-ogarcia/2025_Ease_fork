@@ -12,7 +12,7 @@
 /noteRU.txt
 /.vscode
 /.history
-/bucketsJSON/exportedBucketsJSON
+/bucketsJSON/exportedBucketsData/*
 
 #node_modules
 node_modules

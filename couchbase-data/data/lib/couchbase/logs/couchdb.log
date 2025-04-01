@@ -1,7 +1,0 @@
-[couchdb:info,2025-03-28T10:13:34.131Z,couchdb_ns_1@cb.local:couch_audit<0.322.0>:couch_log:info:30]Couch audit settings changed <ud>[{audit_enabled,false},{disabled_users,[]},{enabled_events,[]}]</ud>
-[couchdb:info,2025-03-28T10:13:35.230Z,couchdb_ns_1@cb.local:couch_audit<0.322.0>:couch_log:info:30]Unable to connect to memcahced: {error,{badmatch,{error,econnrefused}}}.
-[couchdb:error,2025-03-28T10:13:35.230Z,couchdb_ns_1@cb.local:couch_audit<0.322.0>:couch_log:error:33]Error in sending log messsage to memcached Reason: no_socket
-[couchdb:info,2025-03-28T10:13:37.236Z,couchdb_ns_1@cb.local:couch_audit<0.322.0>:couch_log:info:30]Unable to connect to memcahced: {error,{badmatch,{error,econnrefused}}}.
-[couchdb:error,2025-03-28T10:13:37.236Z,couchdb_ns_1@cb.local:couch_audit<0.322.0>:couch_log:error:33]Error in sending log messsage to memcached Reason: no_socket
-[couchdb:info,2025-03-28T10:14:33.570Z,couchdb_ns_1@cb.local:couch_query_logger<0.264.0>:couch_log:info:30]Query-Volume
----

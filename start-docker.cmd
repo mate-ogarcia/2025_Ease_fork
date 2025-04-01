@@ -6,19 +6,6 @@ IF NOT EXIST .env.development (
   EXIT /B 1
 )
 
-REM Compilation du frontend Angular
-ECHO Verification du dossier node_modules...
-cd frontend
-IF NOT EXIST node_modules (
-  ECHO node_modules non trouve. Installation des dependances...
-  call npm install
-) ELSE (
-  ECHO node_modules deja present, pas besoin de reinstaller.
-)
-ECHO Compilation du frontend...
-call npm run build
-cd ..
-
 REM Arrêt des conteneurs precedents si necessaire
 docker-compose down
 
