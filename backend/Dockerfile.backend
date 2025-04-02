@@ -1,4 +1,4 @@
-﻿# Image Node.js de base
+# Image Node.js de base
 FROM node:18-alpine
 
 # Définir le dossier de travail
@@ -22,7 +22,7 @@ COPY ssl/ ./ssl/
 RUN npm run build
 
 # Exposer le port (utilise la variable d'environnement)
-EXPOSE 3000
+EXPOSE 3001
 
 # Utiliser une commande de démarrage qui respecte les variables d'environnement
 CMD ["node", "dist/main"]
