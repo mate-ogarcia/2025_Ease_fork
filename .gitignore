@@ -1,6 +1,7 @@
 # Environments files
 /.env.development
 /.env.production
+/.env.docker
 /frontend/src/environments/*
 
 # Do not ignore example .env
