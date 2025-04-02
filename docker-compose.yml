@@ -1,8 +1,6 @@
 ﻿services:
   couchbase:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: couchbase/server:latest
     container_name: couchbase
     ports:
       - "8091:8091" # Port d'administration
@@ -34,8 +32,7 @@
       - .env.docker
     environment:
       - DB_HOST=couchbase://couchbase
-      - URL_FRONTEND=http://frontend
-      - URL_BACKEND=http://backend:3000/data
+      - API_URL=http://backend:3000
     depends_on:
       couchbase:
         condition: service_healthy
@@ -50,9 +47,6 @@
       - "${FRONTEND_PORT:-4200}:80"
     env_file:
       - .env.docker
-    environment:
-      - URL_FRONTEND=http://localhost:8081
-      - URL_BACKEND=http://localhost:8081/data
     depends_on:
       - backend
     restart: unless-stopped

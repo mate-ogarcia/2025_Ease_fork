@@ -113,8 +113,8 @@ async function bootstrap() {
     credentials: true,
     allowedHeaders: "Content-Type, Accept, Authorization",
   });
-  
-  
+
+
   /**
    * Starts the NestJS server on the configured port.
    */

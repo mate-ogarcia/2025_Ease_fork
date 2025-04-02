@@ -1,11 +1,16 @@
 import os
 import json
 import time
+import sys
 from couchbase.cluster import Cluster
 from couchbase.options import ClusterOptions
 from couchbase.auth import PasswordAuthenticator
 from couchbase.management.buckets import CreateBucketSettings
 from couchbase.exceptions import BucketAlreadyExistsException, DocumentExistsException
+
+# Forcer l'encodage UTF-8 pour la sortie console
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # Configuration Couchbase
 COUCHBASE_HOST = "couchbase://localhost"
@@ -28,9 +33,9 @@ def load_json_data():
             try:
                 with open(file_path, "r", encoding="utf-8") as file:
                     bucket_data[bucket_name] = json.load(file)
-                print(f"📂 Données chargées depuis {file_name}")
+                print(f"[INFO] Données chargées depuis {file_name}")
             except Exception as e:
-                print(f"⚠️ Erreur lors de la lecture de {file_name} : {e}")
+                print(f"[ERREUR] Erreur lors de la lecture de {file_name} : {e}")
     return bucket_data
 
 # Fonction pour créer un bucket s'il n'existe pas
@@ -46,14 +51,14 @@ def create_bucket(cluster, bucket_name):
                     flush_enabled=True
                 )
             )
-            print(f"✅ Bucket '{bucket_name}' créé avec succès.")
+            print(f"[SUCCES] Bucket '{bucket_name}' créé avec succès.")
             time.sleep(5)  # Attendre que le bucket soit disponible
         else:
-            print(f"⚠️ Le bucket '{bucket_name}' existe déjà.")
+            print(f"[AVERTISSEMENT] Le bucket '{bucket_name}' existe déjà.")
     except BucketAlreadyExistsException:
-        print(f"⚠️ Le bucket '{bucket_name}' existe déjà.")
+        print(f"[AVERTISSEMENT] Le bucket '{bucket_name}' existe déjà.")
     except Exception as e:
-        print(f"❌ Erreur lors de la création du bucket '{bucket_name}' : {e}")
+        print(f"[ERREUR] Erreur lors de la création du bucket '{bucket_name}' : {e}")
 
 # Fonction pour insérer des documents dans un bucket
 def insert_documents(cluster, bucket_name, documents):
@@ -65,19 +70,19 @@ def insert_documents(cluster, bucket_name, documents):
         for doc in documents:
             doc_id = str(doc.get("id", doc.get("uuid", doc.get("_id", None))))  # Vérification de l'ID
             if not doc_id:
-                print(f"⚠️ Document sans identifiant ignoré : {doc}")
+                print(f"[AVERTISSEMENT] Document sans identifiant ignoré : {doc}")
                 continue
             
             try:
                 collection.upsert(doc_id, doc)
-                print(f"✅ Document inséré dans {bucket_name} avec ID : {doc_id}")
+                print(f"[SUCCES] Document inséré dans {bucket_name} avec ID : {doc_id}")
             except DocumentExistsException:
-                print(f"⚠️ Document avec ID {doc_id} existe déjà.")
+                print(f"[AVERTISSEMENT] Document avec ID {doc_id} existe déjà.")
             except Exception as e:
-                print(f"❌ Erreur lors de l'insertion dans {bucket_name} : {e}")
+                print(f"[ERREUR] Erreur lors de l'insertion dans {bucket_name} : {e}")
 
     except Exception as e:
-        print(f"❌ Impossible d'accéder au bucket '{bucket_name}' : {e}")
+        print(f"[ERREUR] Impossible d'accéder au bucket '{bucket_name}' : {e}")
 
 # Charger les fichiers JSON
 buckets_data = load_json_data()
@@ -87,4 +92,4 @@ for bucket_name, documents in buckets_data.items():
     create_bucket(cluster, bucket_name)  # Crée le bucket s'il n'existe pas
     insert_documents(cluster, bucket_name, documents)  # Insère les documents
 
-print("🎯 Importation terminée !")
+print("[TERMINE] Importation terminée !")
