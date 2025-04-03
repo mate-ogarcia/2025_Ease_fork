@@ -1,13 +1,13 @@
 @echo off
 ECHO Rebuilding all containers...
 
-REM Arrêt des conteneurs sauf couchbase pour préserver la configuration
+REM Stop containers except couchbase to preserve configuration
 docker-compose stop frontend backend nginx-proxy
 
-REM Reconstruction des images
+REM Rebuild images
 docker-compose build --no-cache frontend backend
 
-REM Redémarrage des conteneurs
+REM Restart containers
 docker-compose up -d
 
 ECHO.

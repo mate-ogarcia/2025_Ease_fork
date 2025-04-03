@@ -1,13 +1,13 @@
 @echo off
 ECHO Rebuilding frontend container...
 
-REM Arrêt du conteneur frontend
+REM Stop the frontend container
 docker-compose stop frontend nginx-proxy
 
-REM Reconstruction de l'image frontend
+REM Rebuild the frontend image
 docker-compose build --no-cache frontend
 
-REM Redémarrage des conteneurs
+REM Restart containers
 docker-compose up -d frontend nginx-proxy
 
 ECHO.

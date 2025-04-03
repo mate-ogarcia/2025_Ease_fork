@@ -1,103 +1,103 @@
 @echo off
-ECHO Lancement de Docker Compose avec le fichier .env.docker...
+ECHO Starting Docker Compose with .env.docker file...
 
 IF NOT EXIST .env.docker (
-  ECHO Erreur: Le fichier .env.docker n'a pas ete trouve.
+  ECHO Error: The .env.docker file was not found.
   EXIT /B 1
 )
 
-REM Variable pour savoir si Couchbase existe déjà
+REM Variable to check if Couchbase already exists
 SET COUCHBASE_EXISTS=0
 SET COUCHBASE_VOLUME_EXISTS=0
 
-REM Vérifier si le conteneur Couchbase existe déjà
+REM Check if Couchbase container already exists
 docker inspect couchbase >nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
   SET COUCHBASE_EXISTS=1
 )
 
-REM Vérifier si le volume Couchbase existe déjà
+REM Check if Couchbase volume already exists
 docker volume inspect projetcapg_couchbase_data >nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
   SET COUCHBASE_VOLUME_EXISTS=1
 )
 
-REM Décider de l'action en fonction des existences
+REM Decide action based on existence
 IF %COUCHBASE_EXISTS% EQU 1 (
   IF %COUCHBASE_VOLUME_EXISTS% EQU 1 (
-    ECHO Le conteneur Couchbase et ses donnees existent deja dans le volume, preservation...
+    ECHO Couchbase container and its data already exist in the volume, preserving...
     docker-compose stop frontend backend nginx-proxy
-    ECHO Si vous n'aviez pas de conteneurs, vous pouvez lancer la commande pour creer les buckets:
+    ECHO If you didn't have containers before, you can run the command to create buckets:
     ECHO python bucketsJSON/importBuckets.py
     ECHO.
   ) ELSE (
-    ECHO Le conteneur Couchbase existe mais son volume de donnees a ete supprime.
-    ECHO Une nouvelle configuration sera necessaire.
+    ECHO Couchbase container exists but its data volume has been deleted.
+    ECHO A new configuration will be required.
     docker-compose down
     ECHO.
     ECHO.
   )
 ) ELSE (
   IF %COUCHBASE_VOLUME_EXISTS% EQU 1 (
-    ECHO Le volume Couchbase existe mais le conteneur a ete supprime.
-    ECHO Les donnees seront preservees.
+    ECHO Couchbase volume exists but the container has been removed.
+    ECHO Data will be preserved.
     docker-compose stop frontend backend nginx-proxy
   ) ELSE (
-    ECHO Premier demarrage ou Couchbase completement supprime.
-    ECHO Une nouvelle configuration sera necessaire.
+    ECHO First startup or Couchbase completely removed.
+    ECHO A new configuration will be required.
     docker-compose down
   )
 )
 
-REM Demarrage des nouveaux conteneurs
+REM Start new containers
 docker-compose --env-file .env.docker up -d
 
-REM Si erreur, essayer de reconstruire
+REM If error, try to rebuild
 IF %ERRORLEVEL% NEQ 0 (
-  ECHO Une erreur s'est produite. Tentative de reconstruction forcee...
+  ECHO An error occurred. Attempting forced rebuild...
   docker-compose --env-file .env.docker build --no-cache
   docker-compose --env-file .env.docker up -d
 )
 
 ECHO.
-ECHO Services demarres:
+ECHO Services started:
 docker-compose ps
 ECHO.
 
 ECHO.
 ECHO.
 
-REM Vérifier à nouveau si le volume existe après le démarrage
+REM Check again if the volume exists after startup
 docker volume inspect projetcapg_couchbase_data >nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
-  REM Vérifier si c'est un nouveau volume ou un volume existant
+  REM Check if it's a new volume or an existing one
   IF %COUCHBASE_VOLUME_EXISTS% EQU 1 (
-    ECHO Couchbase est deja configure. Les donnees ont ete preservees.
-    ECHO Vous pouvez acceder à la console d'administration Couchbase:
+    ECHO Couchbase is already configured. Data has been preserved.
+    ECHO You can access the Couchbase admin console:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_PORT" .env.docker') DO ECHO   - Couchbase Admin: http://localhost:%%a
     ECHO.
-    ECHO Vous pouvez vous connecter au frontend:
+    ECHO You can connect to the frontend:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "FRONTEND_PORT" .env.docker') DO ECHO   - Frontend: http://localhost:%%a
     ECHO.
   ) ELSE (
-    ECHO Dans un premier temps, veuillez vous connecter à la base de donnees Couchbase:
+    ECHO First, please connect to the Couchbase database:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_PORT" .env.docker') DO ECHO   - Couchbase Admin: http://localhost:%%a
     ECHO.
-    ECHO Vous pouvez vous connecter en creant un nouveau cluster, rentrer les informations demandees et laisser la config du cluster par defaut.
-    ECHO Ensuite dans security, creez un utilisateur avec les droits necessaires en utilisant les informations suivantes:
+    ECHO You can connect by creating a new cluster, enter the requested information and leave the cluster config as default.
+    ECHO Then in security, create a user with the necessary rights using the following information:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_USER" .env.docker') DO ECHO   - User: %%a
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_PASSWORD" .env.docker') DO ECHO   - Password: %%a
-    ECHO Il faut aussi lui ajouter les droits administrateur sur le cluster. /!\
-    ECHO Si vous utilisez ces identifiants et mdp vous pourrez connecter le backend et la BDD facilement, sinon voir le readme.
+    ECHO You must also add administrator rights to the cluster for this user. /!\
+    ECHO If you use these credentials you can easily connect the backend and the database, otherwise see the readme.
     ECHO.
-    ECHO Lancer la commande suivante pour finaliser la configuration:
+    ECHO Run the following command to finalize the configuration:
     ECHO python bucketsJSON/importBuckets.py
     ECHO.
-    ECHO Une fois que le cluster est configure, vous pouvez vous connecter au frontend:
+    ECHO Once the cluster is configured, you can connect to the frontend:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "FRONTEND_PORT" .env.docker') DO ECHO   - Frontend: http://localhost:%%a
     ECHO.
   )
 ) ELSE (
-  ECHO Erreur: Le volume Couchbase n'a pas ete cree correctement.
-  ECHO Verifiez les logs Docker pour plus d'informations.
+  ECHO Error: The Couchbase volume was not created correctly.
+  ECHO Check Docker logs for more information.
 )

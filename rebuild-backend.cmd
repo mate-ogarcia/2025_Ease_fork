@@ -1,13 +1,13 @@
 @echo off
 ECHO Rebuilding backend container...
 
-REM Arrêt du conteneur backend
+REM Stop the backend container
 docker-compose stop backend
 
-REM Reconstruction de l'image backend
+REM Rebuild the backend image
 docker-compose build --no-cache backend
 
-REM Redémarrage des conteneurs
+REM Restart containers
 docker-compose up -d backend
 
 ECHO.
