@@ -14,7 +14,7 @@
 /.vscode
 /.history
 /bucketsJSON/exportedBucketsData/*
-
+!/bucketsJSON/exportedBucketsData/bucket.sample.json
 #node_modules
 node_modules
 
