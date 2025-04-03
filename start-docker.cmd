@@ -25,21 +25,26 @@ IF %ERRORLEVEL% EQU 0 (
 REM Décider de l'action en fonction des existences
 IF %COUCHBASE_EXISTS% EQU 1 (
   IF %COUCHBASE_VOLUME_EXISTS% EQU 1 (
-    ECHO Le conteneur Couchbase et ses données existent déjà, préservation...
+    ECHO Le conteneur Couchbase et ses donnees existent deja dans le volume, preservation...
     docker-compose stop frontend backend nginx-proxy
+    ECHO Si vous n'aviez pas de conteneurs, vous pouvez lancer la commande pour creer les buckets:
+    ECHO python bucketsJSON/importBuckets.py
+    ECHO.
   ) ELSE (
-    ECHO Le conteneur Couchbase existe mais son volume de données a été supprimé.
-    ECHO Une nouvelle configuration sera nécessaire.
+    ECHO Le conteneur Couchbase existe mais son volume de donnees a ete supprime.
+    ECHO Une nouvelle configuration sera necessaire.
     docker-compose down
+    ECHO.
+    ECHO.
   )
 ) ELSE (
   IF %COUCHBASE_VOLUME_EXISTS% EQU 1 (
-    ECHO Le volume Couchbase existe mais le conteneur a été supprimé.
-    ECHO Les données seront préservées.
+    ECHO Le volume Couchbase existe mais le conteneur a ete supprime.
+    ECHO Les donnees seront preservees.
     docker-compose stop frontend backend nginx-proxy
   ) ELSE (
-    ECHO Premier démarrage ou Couchbase complètement supprimé.
-    ECHO Une nouvelle configuration sera nécessaire.
+    ECHO Premier demarrage ou Couchbase completement supprime.
+    ECHO Une nouvelle configuration sera necessaire.
     docker-compose down
   )
 )
@@ -67,19 +72,19 @@ docker volume inspect projetcapg_couchbase_data >nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
   REM Vérifier si c'est un nouveau volume ou un volume existant
   IF %COUCHBASE_VOLUME_EXISTS% EQU 1 (
-    ECHO Couchbase est déjà configuré. Les données ont été préservées.
-    ECHO Vous pouvez accéder à la console d'administration Couchbase:
+    ECHO Couchbase est deja configure. Les donnees ont ete preservees.
+    ECHO Vous pouvez acceder à la console d'administration Couchbase:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_PORT" .env.docker') DO ECHO   - Couchbase Admin: http://localhost:%%a
     ECHO.
     ECHO Vous pouvez vous connecter au frontend:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "FRONTEND_PORT" .env.docker') DO ECHO   - Frontend: http://localhost:%%a
     ECHO.
   ) ELSE (
-    ECHO Dans un premier temps, veuillez vous connecter à la base de données Couchbase:
+    ECHO Dans un premier temps, veuillez vous connecter à la base de donnees Couchbase:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_PORT" .env.docker') DO ECHO   - Couchbase Admin: http://localhost:%%a
     ECHO.
-    ECHO Vous pouvez vous connecter en créant un nouveau cluster, rentrer les informations demandées et laisser la config du cluster par défaut.
-    ECHO Ensuite dans security, créez un utilisateur avec les droits nécessaires en utilisant les informations suivantes:
+    ECHO Vous pouvez vous connecter en creant un nouveau cluster, rentrer les informations demandees et laisser la config du cluster par defaut.
+    ECHO Ensuite dans security, creez un utilisateur avec les droits necessaires en utilisant les informations suivantes:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_USER" .env.docker') DO ECHO   - User: %%a
     FOR /F "tokens=2 delims==" %%a IN ('findstr "DB_PASSWORD" .env.docker') DO ECHO   - Password: %%a
     ECHO Il faut aussi lui ajouter les droits administrateur sur le cluster. /!\
@@ -88,11 +93,11 @@ IF %ERRORLEVEL% EQU 0 (
     ECHO Lancer la commande suivante pour finaliser la configuration:
     ECHO python bucketsJSON/importBuckets.py
     ECHO.
-    ECHO Une fois que le cluster est configuré, vous pouvez vous connecter au frontend:
+    ECHO Une fois que le cluster est configure, vous pouvez vous connecter au frontend:
     FOR /F "tokens=2 delims==" %%a IN ('findstr "FRONTEND_PORT" .env.docker') DO ECHO   - Frontend: http://localhost:%%a
     ECHO.
   )
 ) ELSE (
-  ECHO Erreur: Le volume Couchbase n'a pas été créé correctement.
-  ECHO Vérifiez les logs Docker pour plus d'informations.
+  ECHO Erreur: Le volume Couchbase n'a pas ete cree correctement.
+  ECHO Verifiez les logs Docker pour plus d'informations.
 )
