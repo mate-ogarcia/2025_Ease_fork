@@ -11,6 +11,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 // API
 import { AuthService } from '../../services/auth/auth.service';
 import { ApiAddress } from '../../services/address/address.service';
+import { NotificationService } from '../../services/notification/notification.service';
 
 @Component({
   selector: 'app-auth',
@@ -52,6 +53,7 @@ export class AuthComponent implements AfterViewInit, OnInit {
     private authService: AuthService,
     private router: Router,
     private apiAddress: ApiAddress,
+    private notif : NotificationService,
   ) { }
 
   @ViewChild('usernameInput', { static: false }) usernameInput!: ElementRef;
@@ -76,7 +78,6 @@ export class AuthComponent implements AfterViewInit, OnInit {
         this.addressSuggestions = [];
       }
     });
-    // TODO
     this.getUserLocation();
   }
 
@@ -243,9 +244,11 @@ export class AuthComponent implements AfterViewInit, OnInit {
     if (this.isLoginMode) {
       this.authService.login(this.username, this.password).subscribe({
         next: (response) => {
+          this.notif.showSuccess('Connexion réussie!');
           this.router.navigate(['/home']);
         },
         error: (err) => {
+          this.notif.showError('La connexion a échoué. Veuillez vérifier vos informations d\'identification.');
           console.error("Login error:", err);
           this.errorMessage = 'Invalid email or password.';
         },
@@ -296,12 +299,14 @@ export class AuthComponent implements AfterViewInit, OnInit {
 
     this.authService.register(this.username, this.email, this.password, address).subscribe({
       next: (response) => {
+        this.notif.showSuccess('Inscription réussie ! Vous pouvez maintenant vous connecter.');
         // Navigate to the login page
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate(['/login']);
         });
       },
       error: (err) => {
+        this.notif.showError('L\'enregistrement a échoué. Veuillez réessayer.');
         console.error("Register error:", err);
 
         if (err.error && typeof err.error.message === 'string') {
@@ -497,7 +502,6 @@ export class AuthComponent implements AfterViewInit, OnInit {
   // ===================================================================
   // ========================= LOCATION (BROWSER) ======================
   // ===================================================================
-  // TODO
   /**
    * @brief Retrieves the user's current geographic location.
    * 
