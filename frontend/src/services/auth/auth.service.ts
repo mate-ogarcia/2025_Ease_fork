@@ -21,7 +21,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { map, tap, catchError, finalize, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { JwtHelperService } from '@auth0/angular-jwt';
@@ -140,6 +140,18 @@ export class AuthService {
    * @public
    */
   public refreshAuthState(): Observable<any> {
+    // Vérifier si le cookie d'authentification existe avant de faire la requête
+    const accessToken = this.cookieService.get('accessToken');
+
+    if (!accessToken) {
+      // Si aucun token, mettre à jour l'état comme non authentifié sans faire de requête
+      this.updateAuthState(false, null);
+      this.user = null;
+      // Retourner un observable qui émet immédiatement pour respecter le contrat
+      return of({ authenticated: false });
+    }
+
+    // Si un token existe, faire la requête normalement
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
         tap(response => {
@@ -149,9 +161,12 @@ export class AuthService {
           }
         }),
         catchError(error => {
-          console.error('Error refreshing auth state:', error);
+          // Ignorer l'affichage de l'erreur dans la console pour les erreurs 401
+          if (error.status !== 401) {
+            console.error('Error refreshing auth state:', error);
+          }
+
           // En cas d'erreur, mettre à jour l'état d'authentification comme non authentifié
-          // mais ne pas rediriger l'utilisateur
           this.updateAuthState(false, null);
           this.user = null;
 
@@ -268,7 +283,7 @@ export class AuthService {
       .post(`${this._authBackendUrl}/logout`, {}, { withCredentials: true })
       .pipe(
         finalize(() => {
-          this.router.navigate(['/login']);
+          this.router.navigate(['/auth']);
         })
       );
   }

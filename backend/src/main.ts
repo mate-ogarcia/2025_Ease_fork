@@ -108,17 +108,17 @@ async function bootstrap() {
    */
   // TODO configure the CORS: all requets are accepeted for now
   app.enableCors({
-    origin: ["http://localhost:4200"],
+    origin: ['http://localhost:8081', 'http://localhost:4201', 'http://frontend', 'http://localhost:4200', 'http://nginx-proxy'],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
     allowedHeaders: "Content-Type, Accept, Authorization",
   });
-  
-  
+
+
   /**
    * Starts the NestJS server on the configured port.
    */
-  const port = process.env.BACKEND_PORT || 3000;
+  const port = process.env.BACKEND_PORT || 3001;
   await app.listen(port, "0.0.0.0");
   logger.log("info", `🚀 Application started at http://localhost:${port}`);
 }

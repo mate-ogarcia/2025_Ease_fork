@@ -9,7 +9,7 @@ def export_bucket(bucket_name):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     
     # Create the BucketJSON folder in the same directory as the script
-    bucket_json_dir = os.path.join(script_dir, 'exportedBucketsJSON')
+    bucket_json_dir = os.path.join(script_dir, 'exportedBucketsData')
     os.makedirs(bucket_json_dir, exist_ok=True)
     
     cluster = Cluster('couchbase://localhost',
