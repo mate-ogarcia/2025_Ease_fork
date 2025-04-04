@@ -203,7 +203,6 @@ export class ProdpageComponent implements OnInit {
    * If there is an error, an error message is shown.
    */
   onCommentSubmitted(comment: Comment) {
-    // TODO: Implement logic to add comment to list or database
     this.commentService.postAddComment(comment).subscribe({
       next: (response) => {
         this.notifService.showSuccess('Commentaire ajouté avec succès !');
@@ -216,7 +215,6 @@ export class ProdpageComponent implements OnInit {
       }
     });
   }
-
 
   /**
    * Handles the click event for adding a comment.
@@ -237,4 +235,6 @@ export class ProdpageComponent implements OnInit {
       this.showCommentForm = true;
     }
   }
+
+  // TODO Pagination Lazy Loading côté client
 }

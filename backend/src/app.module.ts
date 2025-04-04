@@ -7,6 +7,8 @@
  */
 
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+// Redis 
+import { CacheModule } from '@nestjs/cache-manager';
 // App component
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -35,6 +37,7 @@ import { AdminModule } from "./admin/admin.module";
  */
 @Module({
   imports: [
+    CacheModule.register(),
     DatabaseModule,
     DataModule,
     RequestHandlerModule,

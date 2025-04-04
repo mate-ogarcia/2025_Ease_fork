@@ -1,17 +1,10 @@
-/**
- * @file comments.service.ts
- * @brief Service for managing comment-related operations.
- * 
- * This service handles retrieving comments from the database.
- * It interacts with the `DatabaseService` to fetch all stored comments.
- * 
- * @module CommentsService
- */
-
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import { Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
 // Service
 import { DatabaseService } from "../database/database.service";
 import { CommentDto } from "./dto/comments.dto";
+// Cache
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 /**
  * @class CommentsService
@@ -25,23 +18,44 @@ export class CommentsService {
    * @param {DatabaseService} databaseService - Service for database interactions.
    */
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private databaseService: DatabaseService,
   ) { }
 
   /**
-   * @brief Retrieves all comments from the database.
+   * @brief Retrieves all comments from the cache or database.
    * @returns {Promise<any>} A promise containing the list of all comments.
    * @throws {InternalServerErrorException} If an error occurs while fetching comments.
    */
+  // TODO trying to use redis for the cache
   async getAllComments() {
+    const cacheKey = 'all_comments';
+
     try {
+      // Try to fetch comments from cache first
+      const cachedComments = await this.cacheManager.get(cacheKey);
+      if (cachedComments) {
+        console.log('🚀 Cache hit for comments');
+        return cachedComments;
+      }
+
+      console.log('🧐 Cache miss for comments, fetching from DB');
+      // If not in cache, fetch from database
       const comments = await this.databaseService.getAllComments();
+      
+      // Cache the comments for 10 minutes
+      await this.cacheManager.set(cacheKey, comments, 600); // 600 -> TTL in seconds
+
       return comments;
     } catch (error) {
       console.error("❌ Error retrieving comments:", error);
       throw new InternalServerErrorException("Error retrieving comments.");
     }
   }
+
+  // TODO fetch all the comments for a product
+  // async getCommentsForProduct(productId: string, page: number, pageSize: number): Promise<Comment[]> {
+
 
   /**
    * Creates a new comment and adds it to the database.
@@ -53,13 +67,16 @@ export class CommentsService {
   async createComment(commentDto: CommentDto): Promise<Comment> {
     try {
       // Add the comment using the database service
-      const comments = await this.databaseService.addComment(commentDto);
-      return comments;
+      const newComment = await this.databaseService.addComment(commentDto);
+
+      // Invalidate the cache so the new comment is fetched on the next request
+      await this.cacheManager.del('all_comments');
+
+      return newComment;
     } catch (error) {
       // Log error and throw an internal server error if adding comment fails
-      console.error("❌ Error retrieving comments:", error);
-      throw new InternalServerErrorException("Error retrieving comments.");
+      console.error("❌ Error adding comment:", error);
+      throw new InternalServerErrorException("Error adding comment.");
     }
   }
-
 }
