@@ -19,6 +19,8 @@ import { APIUnsplash } from '../../services/unsplash/unsplash.service';
 import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { NotificationService } from '../../services/notification/notification.service';
+import { CommentsService } from '../../services/comments/comments.service';
+import { Comment } from '../models/comments.model';
 
 /**
  * @class ProdpageComponent
@@ -57,6 +59,7 @@ export class ProdpageComponent implements OnInit {
     private authService: AuthService,
     private notifService: NotificationService,
     private router: Router,
+    private commentService: CommentsService,
   ) { }
 
   /**
@@ -194,15 +197,26 @@ export class ProdpageComponent implements OnInit {
   /**
    * @brief Handles the submission of a new comment.
    * 
-   * This method is triggered when a user submits a comment. It currently logs the new
-   * comment to the console and hides the comment form. You need to implement the logic
-   * to actually add the comment to the list or database.
+   * This method is triggered when a user submits a comment. It sends the comment
+   * to the backend service and updates the UI based on the success or failure 
+   * of the submission. If successful, the comment is added and a success message is displayed.
+   * If there is an error, an error message is shown.
    */
-  onCommentSubmitted(comment: any) {
-    // TODO
-    console.log('New comment:', comment);
-    this.showCommentForm = false;
+  onCommentSubmitted(comment: Comment) {
+    // TODO: Implement logic to add comment to list or database
+    this.commentService.postAddComment(comment).subscribe({
+      next: (response) => {
+        this.notifService.showSuccess('Commentaire ajouté avec succès !');
+        this.showCommentForm = false; // Hide the comment form after submission
+      },
+      error: (error) => {
+        this.notifService.showError('Problèmes lors de l\'ajout du commentaire, veuillez vérifiez que vous êtes connecté.');
+        console.error("❌ Error adding comment:", error);
+        alert("Error: Unable to add the comment.");
+      }
+    });
   }
+
 
   /**
    * Handles the click event for adding a comment.

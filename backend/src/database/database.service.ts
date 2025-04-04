@@ -35,6 +35,8 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { v4 as uuidv4 } from "uuid";  // Generate unique ID
 import { AddressDto } from "src/auth/dto/auth.dto"; // Check of the address
+import { CommentDto } from "src/comments/dto/comments.dto";
+
 // Definition of expected keys for Buckets and Collections
 type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "commentsBucket";
 type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "commentsCollection";
@@ -766,7 +768,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async addUser(username: string, email: string, password: string, address: AddressDto, role?: UserRole): Promise<any> {
     const bucketName = this.usersBucket.name;
     const userId = uuidv4();
-    
+
     const query = `
       INSERT INTO \`${bucketName}\`._default._default (KEY, VALUE)
       VALUES ($userId, {
@@ -784,21 +786,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       })
       RETURNING *;
     `;
-  
-    const result = await this.executeQuery(query, { 
-      userId, 
-      username, 
-      email, 
-      password, 
+
+    const result = await this.executeQuery(query, {
+      userId,
+      username,
+      email,
+      password,
       role: role || UserRole.USER,
-      postCode: address.postCode, 
-      city: address.city, 
-      country: address.country 
+      postCode: address.postCode,
+      city: address.city,
+      country: address.country
     });
-  
+
     return result.length ? result[0] : null; // Returns `null` if already existing
   }
-  
+
   /**
    * @brief Retrieves a user from Couchbase by their email.
    *
@@ -1071,20 +1073,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getProductByLocation(location: string): Promise<any[]> {
     const lowercaseLocation = location.toLowerCase();
-   
+
     const query = `
       SELECT META(p).id AS id, p.*
       FROM \`${this.productsBucket.name}\`._default._default p
       WHERE LOWER(p.origin) = $location;
     `;
-   
+
     const result = await this.executeQuery(query, { location: lowercaseLocation });
-   
+
     if (result.length === 0) {
       console.log(`No products found for location: ${location}`);
       return [];
     }
-   
+
     // Add default "source" field for products without one
     return result.map(product => {
       if (!product.source) {
@@ -1322,6 +1324,52 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.executeQuery(query);
   }
 
+  /**
+   * Adds a new comment to the database.
+   *
+   * @param {CommentDto} comment - The comment data to be added.
+   * @returns {Promise<any>} - A promise resolving with a success message and the created comment.
+   * @throws {BadRequestException} - If any required field is missing.
+   * @throws {InternalServerErrorException} - If there is an error accessing the database or inserting the comment.
+   */
+  async addComment(comment: CommentDto): Promise<any> {
+    // Check that all required fields are provided
+    if (!comment.contentCom || !comment.dateCom || !comment.userRatingCom ||
+      !comment.userId || !comment.productId || !comment.source) {
+      throw new BadRequestException("❌ All comment fields must be filled.");
+    }
+
+    // Retrieve the comments bucket from the Couchbase cluster
+    const commentsBucket = this.cluster.bucket(process.env.COMMENTS_BUCKET_NAME);
+    if (!commentsBucket) {
+      throw new InternalServerErrorException("❌ COMMENTS_BUCKET_NAME is not defined in environment variables.");
+    }
+
+    // Get the default collection from the bucket
+    const collection = commentsBucket.defaultCollection();
+
+    // Create a new comment object with a unique ID
+    const newComment = {
+      id: uuidv4(), // Generate a unique ID
+      dateCom: comment.dateCom,
+      contentCom: comment.contentCom,
+      userRatingCom: comment.userRatingCom,
+      userId: comment.userId,
+      productId: comment.productId,
+      source: comment.source,
+    };
+
+    try {
+      // Insert the new comment into the database
+      await collection.insert(newComment.id, newComment);
+      return { message: "Comment successfully added", comment: newComment };
+    } catch (error) {
+      console.error("❌ Error while adding the comment:", error);
+      throw new InternalServerErrorException("Error while adding the comment.");
+    }
+  }
+
+
   // ========================================================================
   // ======================== REQUESTS FUNCTIONS (FOR ADMIN MANAGEMENT)
   // ========================================================================
@@ -1412,7 +1460,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async deleteEntity(type: string, entityId: string): Promise<any> {
     if (!entityId) {
       throw new BadRequestException(`❌ Invalid parameters: ${type} ID is required.`);
-    }  
+    }
     // Determine which entity type to delete
     switch (type) {
       case 'product':
@@ -1420,22 +1468,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       case 'brand':
         try {
           // First get the brand to access its name
-          const brand = await this.getBrandById(entityId); 
+          const brand = await this.getBrandById(entityId);
           if (!brand) {
             console.warn(`⚠️ Brand with ID '${entityId}' not found. Nothing to delete.`);
             return { message: `Brand with ID '${entityId}' does not exist or was already deleted.` };
           }
-          
+
           const brandName = brand.name;
           // Get all products associated with this brand name
-          const productsByBrand = await this.getProductsByBrand(brandName);         
-          if (productsByBrand.length > 0) {            
+          const productsByBrand = await this.getProductsByBrand(brandName);
+          if (productsByBrand.length > 0) {
             // Update each product's status to 'edit-product'
             let updatedCount = 0;
             for (const product of productsByBrand) {
               // Use the productId field
               const productId = product.productId;
-              
+
               if (!productId) {
                 console.error(`❌ Missing productId for product:`, product);
                 continue;
@@ -1450,9 +1498,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           } else {
             console.warn(`ℹNo products found associated with brand "${brandName}"`);
           }
-          
+
           // Now delete the brand
-          return this.deleteBrand(entityId); 
+          return this.deleteBrand(entityId);
         } catch (error) {
           console.error(`❌ Error deleting brand: ${error.message}`, error);
           throw error;

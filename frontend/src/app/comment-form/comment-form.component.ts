@@ -2,6 +2,8 @@
 import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+// API
+import { AuthService } from '../../services/auth/auth.service';
 // Model
 import { Comment } from '../models/comments.model';
 
@@ -17,6 +19,11 @@ export class CommentFormComponent {
   @Output() cancel = new EventEmitter<void>();              // EventEmitter triggered when the form is canceled
   @Input() productId: number | undefined;                   // Optional Input for product ID
   @Input() productSource: string | undefined;               // Optional Input for product source
+  userInfo: any // User's infos
+
+  constructor (
+    private authService: AuthService,
+  ) {}
   
   /** Model for the comment data */
   comment: Comment = {
@@ -24,7 +31,7 @@ export class CommentFormComponent {
     contentCom: '',
     userRatingCom: 5,
     source: '',
-    userId: 0,    // TODO set from authentication service
+    userId: 0,
     productId: 0 // Will be updated in ngOnInit if productId input is provided
   };
 
@@ -33,7 +40,9 @@ export class CommentFormComponent {
    * Updates the productId in the comment object if it's provided as an input.
    * And retrieves user role
    */
-  ngOnInit() {
+  ngOnInit(): void {
+    // retrieves user info
+    this.userInfo = this.authService.getUserInfo();
     if (this.productId) {
       this.comment.productId = this.productId;
     }
@@ -48,8 +57,8 @@ export class CommentFormComponent {
    * This method emits the comment data when the user submits the form and resets the form fields.
    */
   submitComment() {
-    // Update the date to current date before submission
-    this.comment.dateCom = new Date().toISOString().split('T')[0];
+    this.comment.dateCom = new Date().toISOString().split('T')[0];  // Update the date to current date before submission
+    this.comment.userId = this.userInfo.email;    // Set tu current userId automatically
 
     // Emit the submitted comment to the parent component
     this.commentSubmitted.emit({ ...this.comment });
