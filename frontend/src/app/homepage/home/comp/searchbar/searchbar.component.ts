@@ -198,18 +198,7 @@ export class SearchbarComponent implements OnInit {
     // Get the cookie's info
     const userRole = this.usersService.getUserRole();
     // Check if the role allows you to add a product
-    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
-
-    // Test // TODO
-    this.commentsService.getAllComments().subscribe({
-      next: (comments) => {
-        console.log('Comments received:', comments);
-      },
-      error: (error) => {
-        console.error('Error:', error);
-      }
-    });
-    
+    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';    
   }
 
   // ======================== RESEARCH FUNCTIONS

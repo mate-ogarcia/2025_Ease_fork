@@ -1,58 +1,82 @@
 // comment-form.component.ts
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+// Model
+import { Comment } from '../models/comments.model';
 
 @Component({
   selector: 'app-comment-form',
   standalone: true,
-  imports: [FormsModule, CommonModule],  // Import FormsModule for handling form controls
+  imports: [FormsModule, CommonModule],
   templateUrl: './comment-form.component.html',
   styleUrls: ['./comment-form.component.css']
 })
 export class CommentFormComponent {
-  
-  /** EventEmitter triggered when a comment is submitted */
-  @Output() commentSubmitted = new EventEmitter<any>();
-  
-  /** EventEmitter triggered when the form is canceled */
-  @Output() cancel = new EventEmitter<void>();
+  @Output() commentSubmitted = new EventEmitter<Comment>(); // EventEmitter triggered when a comment is submitted 
+  @Output() cancel = new EventEmitter<void>();              // EventEmitter triggered when the form is canceled
+  @Input() productId: number | undefined;                   // Optional Input for product ID
+  @Input() productSource: string | undefined;               // Optional Input for product source
   
   /** Model for the comment data */
-  // TODO add A real model
-  comment = {
-    rating: 5,  // Default rating is set to 5
-    text: ''    // Initial text is empty
+  comment: Comment = {
+    dateCom: new Date().toISOString().split('T')[0], // Current date in format YYYY-MM-DD
+    contentCom: '',
+    userRatingCom: 5,
+    source: '',
+    userId: 0,    // TODO set from authentication service
+    productId: 0 // Will be updated in ngOnInit if productId input is provided
   };
- 
+
+  /**
+   * @brief Lifecycle hook that runs when the component is initialized.
+   * Updates the productId in the comment object if it's provided as an input.
+   * And retrieves user role
+   */
+  ngOnInit() {
+    if (this.productId) {
+      this.comment.productId = this.productId;
+    }
+    if (this.productSource) {
+      this.comment.source = this.productSource;
+    }
+  }
+
   /**
    * @brief Handles the submission of the comment form.
-   * 
+   *
    * This method emits the comment data when the user submits the form and resets the form fields.
    */
   submitComment() {
+    // Update the date to current date before submission
+    this.comment.dateCom = new Date().toISOString().split('T')[0];
+
     // Emit the submitted comment to the parent component
-    this.commentSubmitted.emit(this.comment);
-    
+    this.commentSubmitted.emit({ ...this.comment });
+
     // Reset the form fields after submission
     this.resetForm();
   }
- 
+
   /**
    * @brief Resets the form fields to their initial values.
-   * 
+   *
    * This method is called after a comment is submitted to clear the form.
    */
   resetForm() {
     this.comment = {
-      rating: 5,  // Reset rating to default value
-      text: ''    // Reset text to an empty string
+      dateCom: new Date().toISOString().split('T')[0],
+      contentCom: '',
+      userRatingCom: 5,
+      source: '',
+      userId: this.comment.userId, // Preserve the user ID
+      productId: this.comment.productId // Preserve the product ID
     };
   }
- 
+
   /**
    * @brief Cancels the comment form and emits a cancel event.
-   * 
+   *
    * This method is triggered when the user cancels the comment submission, and it emits a cancel event.
    */
   cancelForm() {

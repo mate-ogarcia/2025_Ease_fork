@@ -2,89 +2,105 @@
   <app-navbar class="app-navbar"></app-navbar>
 
   <div class="prod-container" *ngIf="product">
-      <div class="product-details">
-          <!-- Section Gauche : Image -->
-          <div class="image-gallery">
-                <div class="main-image-container">
-                    <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
-                </div>
-          </div>
-
-          <!-- Section Droite : Infos Produit -->
-          <div class="product-info">
-              <span class="category">{{product.category}}</span>
-              <h2 class="product-name">{{ product.name }}</h2>
-
-              <!-- Note + Avis -->
-              <div class="rating">
-                  <span class="stars">★★★★★</span>
-                  <span class="review-count">5.0 (245 Reviews)</span>
-              </div>
-
-              <!-- Description -->
-              <p class="product-description">
-                  {{ product.description }}
-              </p>
-
-              <!-- id & Tags -->
-              <div class="extra-info">
-                  <span class="id">ID product: {{productId}}</span>
-              </div>
-          </div>
+    <div class="product-details">
+      <!-- Section Gauche : Image -->
+      <div class="image-gallery">
+        <div class="main-image-container">
+          <img
+            class="product-image"
+            [src]="product.image || 'assets/placeholder.jpg'"
+            alt="{{ product.name }}"
+          />
+        </div>
       </div>
 
-      <!--  Onglets de navigation (PLACÉS SOUS LA SECTION PRODUIT) -->
-      <div class="tabs-container">
-          <div class="tabs">
-              <button 
-                  class="tab-btn" 
-                  [class.active]="selectedTab === 'description'" 
-                  (click)="selectTab('description')">
-                  Description
-              </button>
-              <button 
-                  class="tab-btn" 
-                  [class.active]="selectedTab === 'info'" 
-                  (click)="selectTab('info')">
-                  Additional Information
-              </button>
-              <button 
-                  class="tab-btn" 
-                  [class.active]="selectedTab === 'review'" 
-                  (click)="selectTab('review')">
-                  Review
-              </button>
-          </div>
+      <!-- Section Droite : Infos Produit -->
+      <div class="product-info">
+        <span class="category">{{ product.category }}</span>
+        <h2 class="product-name">{{ product.name }}</h2>
 
-          <!--  Contenu dynamique selon l'onglet -->
-          <div class="tab-content">
-              <div *ngIf="selectedTab === 'description'">
-                  <p>
-                    {{ product.description }}
-                  </p>
-              </div>
-              <div *ngIf="selectedTab === 'info'">
-                  <p>
-                    Origin : <b>{{ product.origin || "Inconnue" }}</b>
-                  </p>
-                  <span class="tags">Tags:  {{product.tags}}</span>
+        <!-- Note + Avis -->
+        <div class="rating">
+          <span class="stars">★★★★★</span>
+          <span class="review-count">5.0 (245 Reviews)</span>
+        </div>
 
-              </div>
-              <!-- Comments section -->
-              <div *ngIf="selectedTab === 'review'">
-                <button (click)="showCommentForm = true" class="add-comment" *ngIf="!showCommentForm">Ajoutez un commentaire</button>
-                
-                <app-comment-form 
-                  *ngIf="showCommentForm"
-                  (commentSubmitted)="onCommentSubmitted($event)"
-                  (cancel)="showCommentForm = false">
-                </app-comment-form>
-                
-                <!-- Liste des commentaires -->
-                <p>⭐⭐⭐⭐⭐ "Amazing quality and taste!"</p>
-                <p>⭐⭐⭐⭐ "Good but delivery was slow."</p>
-              </div>
-          </div>
+        <!-- Description -->
+        <p class="product-description">
+          {{ product.description }}
+        </p>
+
+        <!-- id & Tags -->
+        <div class="extra-info">
+          <span class="id">ID product: {{ productId }}</span>
+        </div>
       </div>
+    </div>
+
+    <!--  Onglets de navigation (PLACÉS SOUS LA SECTION PRODUIT) -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'description'"
+          (click)="selectTab('description')"
+        >
+          Description
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'info'"
+          (click)="selectTab('info')"
+        >
+          Additional Information
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'review'"
+          (click)="selectTab('review')"
+        >
+          Review
+        </button>
+      </div>
+
+      <!--  Contenu dynamique selon l'onglet -->
+      <div class="tab-content">
+        <div *ngIf="selectedTab === 'description'">
+          <p>
+            {{ product.description }}
+          </p>
+        </div>
+        <div *ngIf="selectedTab === 'info'">
+          <p>
+            Origin : <b>{{ product.origin || "Inconnue" }}</b>
+          </p>
+          <span class="tags">Tags: {{ product.tags }}</span>
+        </div>
+        <!-- Comments section -->
+        <div *ngIf="selectedTab === 'review'">
+            <!-- onClick check if the user is allowed to add a comment -->
+          <button
+            (click)="onAddCommentClick()"
+            class="add-comment"
+            *ngIf="!showCommentForm"
+          >
+            Ajoutez un commentaire
+          </button>
+
+          <app-comment-form
+            *ngIf="showCommentForm"
+            [productId]="productId"
+            [productSource]="productSource"
+            (commentSubmitted)="onCommentSubmitted($event)"
+            (cancel)="showCommentForm = false"
+          >
+          </app-comment-form>
+
+          <!-- Liste des commentaires -->
+          <p>⭐⭐⭐⭐⭐ "Amazing quality and taste!"</p>
+          <p>⭐⭐⭐⭐ "Good but delivery was slow."</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
