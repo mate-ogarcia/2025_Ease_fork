@@ -83,6 +83,7 @@
             (click)="onAddCommentClick()"
             class="add-comment"
             *ngIf="!showCommentForm"
+            [ngStyle]="!canAddComment ? {'background-color': '#ddd', 'color': '#888'} : {}"
           >
             Ajoutez un commentaire
           </button>

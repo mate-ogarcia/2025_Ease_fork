@@ -14,8 +14,9 @@
       </div>
       <div class="form-group">
         <label for="comment">Commentaire</label>
-        <textarea id="comment" [(ngModel)]="comment.contentCom" name="contentCom" required></textarea>
-      </div>
+        <textarea id="comment" [(ngModel)]="comment.contentCom" name="contentCom" required maxlength="500"></textarea>
+        <p class="char-count">{{ comment.contentCom?.length || 0 }}/500</p>
+      </div>      
       <div class="form-actions">
         <button type="submit">Soumettre</button>
         <button type="button" (click)="cancelForm()">Annuler</button>
