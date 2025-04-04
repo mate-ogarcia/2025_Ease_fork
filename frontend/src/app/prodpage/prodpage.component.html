@@ -70,10 +70,19 @@
                   <span class="tags">Tags:  {{product.tags}}</span>
 
               </div>
-
+              <!-- // TODO-->
               <div *ngIf="selectedTab === 'review'">
-                  <p>⭐⭐⭐⭐⭐ "Amazing quality and taste!"</p>
-                  <p>⭐⭐⭐⭐ "Good but delivery was slow."</p>
+                <button (click)="showCommentForm = true" class="add-comment" *ngIf="!showCommentForm">Ajoutez un commentaire</button>
+                
+                <app-comment-form 
+                  *ngIf="showCommentForm"
+                  (commentSubmitted)="onCommentSubmitted($event)"
+                  (cancel)="showCommentForm = false">
+                </app-comment-form>
+                
+                <!-- Liste des commentaires -->
+                <p>⭐⭐⭐⭐⭐ "Amazing quality and taste!"</p>
+                <p>⭐⭐⭐⭐ "Good but delivery was slow."</p>
               </div>
           </div>
       </div>

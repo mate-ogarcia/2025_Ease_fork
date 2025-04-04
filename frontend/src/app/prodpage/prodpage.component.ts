@@ -11,6 +11,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
+import { CommentFormComponent } from '../comment-form/comment-form.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
@@ -23,7 +24,7 @@ import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.ser
 @Component({
   selector: 'app-prodpage',
   standalone: true,
-  imports: [NavbarComponent, CommonModule],
+  imports: [NavbarComponent, CommonModule, CommentFormComponent],
   templateUrl: './prodpage.component.html',
   styleUrls: ['./prodpage.component.css']
 })
@@ -34,6 +35,7 @@ export class ProdpageComponent implements OnInit {
   isLoading: boolean = false;       // Loading state flag.
   errorMessage: string = '';        // Error message in case of failure.
   selectedTab: string = 'description'; // Selected tab for displaying product information.
+  showCommentForm = false;
 
   /**
    * @brief Constructor initializes dependencies.
@@ -174,4 +176,13 @@ export class ProdpageComponent implements OnInit {
   trackByProduct(index: number, product: any): any {
     return product.id;
   }
+
+// TODO
+onCommentSubmitted(comment: any) {
+  // Logique pour ajouter le commentaire
+  console.log('Nouveau commentaire:', comment);
+  this.showCommentForm = false;
+  
+  // Mise à jour de la liste des commentaires
+}
 }
