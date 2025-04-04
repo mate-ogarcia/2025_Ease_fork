@@ -3,11 +3,10 @@
   display: grid;
   /* Utiliser auto-fit pour éviter les colonnes vides
      et minmax pour définir la taille minimum et maximum de chaque colonne */
-  grid-template-columns: repeat(auto-fit, 220px);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px; /* Espace entre les cartes */
+  margin: 2rem auto; 
   padding: 0 1rem;
-  justify-content: center;
-  align-items: center;
 }
 
 /* Card container with flexible dimensions */
@@ -18,7 +17,7 @@
   justify-content: center;
   align-items: center;
   /* max-width: 220px;  <-- À retirer ou conserver selon vos besoins */
-   aspect-ratio: 1 / 1; 
+  /* aspect-ratio: 1 / 1; 
   background-color: #fff;
   border-radius: 15px;
   padding: 10px;

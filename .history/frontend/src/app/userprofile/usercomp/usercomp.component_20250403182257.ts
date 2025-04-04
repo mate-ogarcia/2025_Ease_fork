@@ -2,13 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HistoryComponent } from './history/history.component';
 import { BadgesComponent }  from './badges/badges.component';
-import { AchivementComponent } from './achivement/achivement.component';
+import { NgIf } from '@angular/common';
 // Services
 import { AuthService } from '../../../services/auth/auth.service';
 import { LocationService } from '../../../services/location/location.service';
 @Component({
   selector: 'app-usercomp',
-  imports: [CommonModule, HistoryComponent, BadgesComponent,AchivementComponent],
+  imports: [CommonModule, HistoryComponent, BadgesComponent],
   templateUrl: './usercomp.component.html',
   styleUrl: './usercomp.component.css'
 })

@@ -8,7 +8,7 @@ import { AuthService } from '../../../services/auth/auth.service';
 import { LocationService } from '../../../services/location/location.service';
 @Component({
   selector: 'app-usercomp',
-  imports: [CommonModule, HistoryComponent, BadgesComponent,AchivementComponent],
+  imports: [CommonModule, HistoryComponent, BadgesComponent,,AchivementComponent],
   templateUrl: './usercomp.component.html',
   styleUrl: './usercomp.component.css'
 })

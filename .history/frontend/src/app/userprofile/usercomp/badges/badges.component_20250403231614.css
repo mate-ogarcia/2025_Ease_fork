@@ -1,24 +1,23 @@
 /* Grid to display badges */
 .badges-grid {
   display: grid;
-  /* Utiliser auto-fit pour éviter les colonnes vides
-     et minmax pour définir la taille minimum et maximum de chaque colonne */
-  grid-template-columns: repeat(auto-fit, 220px);
-  gap: 20px; /* Espace entre les cartes */
+  height: fit-content;
+  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  margin: 2rem auto;
   padding: 0 1rem;
-  justify-content: center;
-  align-items: center;
 }
 
-/* Card container with flexible dimensions */
+/* Card container with fixed dimensions */
 .badge-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center ;
   align-items: center;
-  /* max-width: 220px;  <-- À retirer ou conserver selon vos besoins */
-   aspect-ratio: 1 / 1; 
+  width: 220px;
+  height: 220px;
+  margin: 0 auto;
   background-color: #fff;
   border-radius: 15px;
   padding: 10px;
@@ -33,7 +32,7 @@
   transform: scale(1.05);
 }
 
-/* Top container: groups emoji and title, centered */
+/* Top container: groups emoji and title, centered absolutely */
 .badge-top {
   display: flex;
   justify-content: center;

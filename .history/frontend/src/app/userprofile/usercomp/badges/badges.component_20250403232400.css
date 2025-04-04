@@ -1,13 +1,10 @@
 /* Grid to display badges */
 .badges-grid {
   display: grid;
-  /* Utiliser auto-fit pour éviter les colonnes vides
-     et minmax pour définir la taille minimum et maximum de chaque colonne */
-  grid-template-columns: repeat(auto-fit, 220px);
-  gap: 20px; /* Espace entre les cartes */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px; /* Gap augmenté pour un espacement plus marqué */
+  margin: 2rem auto;
   padding: 0 1rem;
-  justify-content: center;
-  align-items: center;
 }
 
 /* Card container with flexible dimensions */
@@ -17,8 +14,9 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* max-width: 220px;  <-- À retirer ou conserver selon vos besoins */
-   aspect-ratio: 1 / 1; 
+  width: 100%;
+  max-width: 220px; /* largeur maximale pour la carte */
+  aspect-ratio: 1 / 1; /* conserve une forme carrée */
   background-color: #fff;
   border-radius: 15px;
   padding: 10px;

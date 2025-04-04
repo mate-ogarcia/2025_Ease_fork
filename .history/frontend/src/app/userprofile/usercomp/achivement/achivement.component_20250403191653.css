@@ -1,0 +1,101 @@
+/* Container global pour aligner les cartes côte à côte */
+.achievements-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: ;
+  }
+  
+  /* Carte d'achievement horizontale */
+  .achievement-card {
+    display: flex;
+    align-items: center;
+    /* La couleur de fond est désormais définie dynamiquement via [style.background-color] */
+    border-radius: 10px;
+    padding: 1rem;
+    color: #333; /* Texte sombre pour le contraste */
+    width: 350px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease-in-out;
+  }
+  
+  .achievement-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Conteneur de l'emoji à gauche */
+  /* La couleur de fond est désormais définie dynamiquement via [style.background-color] */
+  .icon-container {
+    flex: 0 0 auto;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+  }
+  
+  .emoji {
+    font-size: 2rem;
+  }
+  
+  /* Conteneur des détails à droite */
+  .details-container {
+    flex: 1;
+  }
+  
+  /* Ligne pour le titre et le niveau */
+  .title-level {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  
+  .achievement-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  .achievement-level {
+    background-color: #00c853; /* Exemple de vert pour le niveau */
+    color: #fff;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  
+  /* Section de progression */
+  .progress-section {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+  
+  .progress-label {
+    margin-right: 0.5rem;
+    color: #666;
+  }
+  
+  /* Conteneur de la barre de progression */
+  .progress-bar-container {
+    flex: 1;
+    background-color: #ddd;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+    margin-right: 0.5rem;
+  }
+  
+  /* Barre de progression dynamique */
+  .progress-bar {
+    height: 100%;
+    background-color: #fbc02d; /* Couleur de la barre */
+    transition: width 0.3s ease-in-out;
+  }
+  
+  /* Valeur de progression */
+  .progress-value {
+    color: #666;
+  }
+  

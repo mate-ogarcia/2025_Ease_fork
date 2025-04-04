@@ -1,0 +1,27 @@
+<div class="achievements-wrapper">
+    <!-- Boucle sur le tableau d'achievements -->
+    <div class="achievement-card" *ngFor="let ach of achievements">
+      
+      <!-- Icône à gauche -->
+      <div class="icon-container">
+        <img [src]="ach.icon" [alt]="ach.title" />
+      </div>
+      
+      <!-- Détails (titre, niveau et barre de progression) à droite -->
+      <div class="details-container">
+        <div class="title-level">
+          <div class="achievement-title">{{ ach.title }}</div>
+          <div class="achievement-level">{{ ach.level }}</div>
+        </div>
+        <div class="progress-section">
+          <span class="progress-label">Next</span>
+          <div class="progress-bar-container">
+            <div class="progress-bar" [style.width.%]="ach.progress"></div>
+          </div>
+          <span class="progress-value">{{ ach.progress }}%</span>
+        </div>
+      </div>
+  
+    </div>
+  </div>
+  

@@ -1,12 +1,15 @@
-/* Grid to display badges */
+/* Conteneur parent pour centrer la grille inline */
+.grid-wrapper {
+  text-align: center;
+}
+
+/* Grid to display badges en mode inline-grid */
 .badges-grid {
-  display: grid;
-  /* Utiliser auto-fit pour éviter les colonnes vides
-     et minmax pour définir la taille minimum et maximum de chaque colonne */
+  display: inline-grid;
   grid-template-columns: repeat(auto-fit, 220px);
   gap: 20px; /* Espace entre les cartes */
   padding: 0 1rem;
-  justify-content: center;
+  justify-items: center; /* Centre le contenu de chaque cellule */
   align-items: center;
 }
 
@@ -17,8 +20,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* max-width: 220px;  <-- À retirer ou conserver selon vos besoins */
-   aspect-ratio: 1 / 1; 
+  aspect-ratio: 1 / 1; /* Conserve une forme carrée */
   background-color: #fff;
   border-radius: 15px;
   padding: 10px;

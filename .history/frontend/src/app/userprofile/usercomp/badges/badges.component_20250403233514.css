@@ -5,9 +5,8 @@
      et minmax pour définir la taille minimum et maximum de chaque colonne */
   grid-template-columns: repeat(auto-fit, 220px);
   gap: 20px; /* Espace entre les cartes */
+  margin: 2rem auto; 
   padding: 0 1rem;
-  justify-content: center;
-  align-items: center;
 }
 
 /* Card container with flexible dimensions */

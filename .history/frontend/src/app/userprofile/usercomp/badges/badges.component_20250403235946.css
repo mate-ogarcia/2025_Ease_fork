@@ -1,48 +1,47 @@
 /* Grid to display badges */
 .badges-grid {
   display: grid;
-  /* Utiliser auto-fit pour éviter les colonnes vides
-     et minmax pour définir la taille minimum et maximum de chaque colonne */
   grid-template-columns: repeat(auto-fit, 220px);
   gap: 20px; /* Espace entre les cartes */
+  justify-content: center; /* This centers the grid items */
+  margin: 0 auto;   /* Centre le conteneur de grille dans son parent */
   padding: 0 1rem;
-  justify-content: center;
-  align-items: center;
+  width: 100%; /* Allow the grid to take full width */
 }
 
-/* Card container with flexible dimensions */
+/* Card container with fixed dimensions */
 .badge-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  /* max-width: 220px;  <-- À retirer ou conserver selon vos besoins */
-   aspect-ratio: 1 / 1; 
+  width: 220px;   /* Largeur fixe pour chaque badge */
+  height: 220px;  /* Hauteur fixe pour un rendu carré */
   background-color: #fff;
   border-radius: 15px;
   padding: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   overflow: visible;
   transition: transform 0.3s ease;
+  position: relative; /* Added for absolute positioning context */
+ 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 /* On hover, enlarge the card and bring it to the front */
 .badge-card:hover {
-  z-index: 9999;
   transform: scale(1.05);
+  z-index: 9999;
 }
 
-/* Top container: groups emoji and title, centered */
+/* Top container: groups emoji and title */
 .badge-top {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
   transition: transform 0.3s ease;
 }
 
-/* On hover, move the top container further upward */
 .badge-card:hover .badge-top {
   transform: translateY(-30%);
 }
@@ -63,7 +62,7 @@
   line-height: 1;
 }
 
-/* Title styling: visible by default, centered below emoji */
+/* Title styling */
 .badge-title {
   font-size: 1rem;
   font-weight: 600;
@@ -75,22 +74,19 @@
 /* Bottom container for the description */
 .badge-bottom {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
   transition: transform 0.3s ease;
 }
 
 /* Description styling: hidden initially */
 .badge-description {
   position: absolute;
-  display: flex;
-  width: 100%;
   opacity: 0;
-  justify-items: center;
   font-size: 0.9rem;
   color: #666;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease;
   pointer-events: none;
   padding: 10px;
 }
@@ -98,6 +94,5 @@
 /* On hover, reveal the description */
 .badge-card:hover .badge-description {
   opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
 }
