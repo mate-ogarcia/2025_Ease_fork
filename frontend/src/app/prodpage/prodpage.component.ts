@@ -177,12 +177,16 @@ export class ProdpageComponent implements OnInit {
     return product.id;
   }
 
-// TODO
-onCommentSubmitted(comment: any) {
-  // Logique pour ajouter le commentaire
-  console.log('Nouveau commentaire:', comment);
-  this.showCommentForm = false;
-  
-  // Mise à jour de la liste des commentaires
-}
+  /**
+   * @brief Handles the submission of a new comment.
+   * 
+   * This method is triggered when a user submits a comment. It currently logs the new
+   * comment to the console and hides the comment form. You need to implement the logic
+   * to actually add the comment to the list or database.
+   */
+  onCommentSubmitted(comment: any) {
+    // TODO
+    console.log('Nouveau commentaire:', comment);
+    this.showCommentForm = false;
+  }
 }
