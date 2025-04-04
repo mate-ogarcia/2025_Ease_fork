@@ -36,8 +36,8 @@ dotenv.config();
 import { v4 as uuidv4 } from "uuid";  // Generate unique ID
 import { AddressDto } from "src/auth/dto/auth.dto"; // Check of the address
 // Definition of expected keys for Buckets and Collections
-type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket";
-type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection";
+type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "commentsBucket";
+type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "commentsCollection";
 
 /**
  * @brief Service responsible for database operations.
@@ -52,11 +52,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private usersBucket: Bucket;
   private categBucket: Bucket;
   private brandBucket: Bucket;
+  private commentsBucket: Bucket;
   // Collections
   private productsCollection: Collection;
   private usersCollection: Collection;
   private categCollection: Collection;
   private brandCollection: Collection;
+  private commentsCollection: Collection;
 
   /**
    * @brief Constructor for DatabaseService.
@@ -127,7 +129,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("BUCKET_NAME", "productsBucket", "productsCollection"),
         this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
         this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
-        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection")
+        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection"),
+        this.connectToBucket("COMMENTS_BUCKET_NAME", "commentsBucket", "commentsCollection")
       ]);
 
       console.log("Successfully connected to Couchbase!");
@@ -1289,6 +1292,31 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       SELECT DISTINCT c.name
       FROM \`${categBucketName}\`._default._default c
       ORDER BY c.name
+    `;
+
+    return this.executeQuery(query);
+  }
+
+  // ========================================================================
+  // ======================== COMMENTS FUNCTIONS
+  // ========================================================================
+  /**
+   * @brief Retrieves all comments from the database.
+   * 
+   * This method fetches all comments stored in the Couchbase database by executing
+   * a SELECT query on the comments bucket.
+   * 
+   * @throws Error If the `COMMENTS_BUCKET_NAME` is not defined in the environment variables.
+   * @return {Promise<any[]>} A promise that resolves to an array of comments.
+   */
+  async getAllComments(): Promise<any[]> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+    }
+
+    const query = `
+      SELECT * FROM \`${commentsBucketName}\`
     `;
 
     return this.executeQuery(query);

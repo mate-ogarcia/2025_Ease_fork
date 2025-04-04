@@ -21,6 +21,7 @@ import { Router } from '@angular/router';
 import { ApiService } from '../../../../../services/api.service';
 import { UsersService } from '../../../../../services/users/users.service';
 import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
+import { CommentsService } from '../../../../../services/comments/comments.service';
 // Cache API
 import { DataCacheService } from '../../../../../services/cache/data-cache.service';
 // Import du composant de localisation
@@ -92,6 +93,7 @@ export class SearchbarComponent implements OnInit {
     private usersService: UsersService,
     private apiOFF: ApiOpenFoodFacts,
     private dataCacheService: DataCacheService,
+    private commentsService: CommentsService,
   ) {
     this._searchSubject
       .pipe(
@@ -197,6 +199,17 @@ export class SearchbarComponent implements OnInit {
     const userRole = this.usersService.getUserRole();
     // Check if the role allows you to add a product
     this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
+
+    // Test // TODO
+    this.commentsService.getAllComments().subscribe({
+      next: (comments) => {
+        console.log('Comments received:', comments);
+      },
+      error: (error) => {
+        console.error('Error:', error);
+      }
+    });
+    
   }
 
   // ======================== RESEARCH FUNCTIONS

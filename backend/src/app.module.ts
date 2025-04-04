@@ -15,6 +15,7 @@ import { DatabaseModule } from "./database/database.module";
 import { DataModule } from "./data/data.module";
 import { AuthModule } from "./auth/auth.module";
 import { ProductsModule } from "./products/products.module";
+import { CommentsModule } from "./comments/comments.module";
 import { OpenFoodFactsModule } from "./apiServices/openFoodFacts/openFoodFacts.module";
 import { CountriesModule } from "./apiServices/countries/countries.module";
 import { UnsplashModule } from "./apiServices/unsplash/unsplash.module";
@@ -43,6 +44,7 @@ import { AdminModule } from "./admin/admin.module";
     OpenFoodFactsModule,
     CountriesModule,
     UnsplashModule,
+    CommentsModule,
     /**
      * @brief Loads environment variables and validates them with Joi.
      *
