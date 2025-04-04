@@ -11,11 +11,11 @@
  * @modified 2023-XX-XX
  */
 
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Subject, of, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first } from 'rxjs/operators';
+import { Subject, of, forkJoin, Subscription, timer } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first, throttleTime } from 'rxjs/operators';
 import { Router } from '@angular/router';
 // API
 import { ApiService } from '../../../../../services/api.service';
@@ -30,14 +30,14 @@ import { LocationDropdownComponent } from '../location-dropdown/location-dropdow
   selector: 'app-searchbar',
   standalone: true,
   imports: [
-    FormsModule, 
-    CommonModule, 
+    FormsModule,
+    CommonModule,
     LocationDropdownComponent
   ],
   templateUrl: './searchbar.component.html',
   styleUrls: ['./searchbar.component.css'],
 })
-export class SearchbarComponent implements OnInit {
+export class SearchbarComponent implements OnInit, OnDestroy {
   // Search state variables
   searchQuery: string = '';     // The search query entered by the user.
   searchResults: any[] = [];    // Array of search results based on the current query.
@@ -65,7 +65,7 @@ export class SearchbarComponent implements OnInit {
   stepPrice: number = 10; // Step value for price range adjustments.
   // Search & cache variables
   private _searchSubject = new Subject<string>(); // RxJS subject for debouncing search queries.
-  private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results.
+  private _cache = new Map<string, { data: any[]; timestamp: number; isLoading?: boolean }>(); // Cache to store search results.
   private CACHE_DURATION = 5 * 60 * 1000; // Cache duration (5 minutes).
   // Dropdown control variables
   filterDropdownOpen: boolean = false; // Boolean indicating whether the filter dropdown is open.
@@ -73,6 +73,12 @@ export class SearchbarComponent implements OnInit {
   isLoading: boolean = false; // Boolean indicating whether the search results are being loaded.
 
   @Output() searchExecuted = new EventEmitter<void>(); // Event emitter for search execution.
+
+  // Système de limitation des requêtes
+  private lastQueryTime: number = 0;
+  private readonly THROTTLE_TIME = 500; // ms entre les requêtes
+  private subscriptions: Subscription[] = [];
+  private cacheCleanupInterval?: Subscription;
 
   /**
    * @brief Constructs the SearchbarComponent and sets up search logic.
@@ -98,22 +104,33 @@ export class SearchbarComponent implements OnInit {
         debounceTime(200),        // Debounces input to reduce API calls.
         distinctUntilChanged(),   // Prevents repeated queries with the same value.
         filter((query) => query.trim() !== ''), // Ignores empty queries.
+        throttleTime(this.THROTTLE_TIME), // Limite le nombre de requêtes
         switchMap((query) => {
           const trimmedQuery = query.trim();
+
+          // Gestionnaire de cache amélioré
+          // Vérifier si les données sont dans le cache et valides
           const cachedData = this._cache.get(trimmedQuery);
-          // Use cached data if valid
+
+          // Si les données sont en cache et valides, utiliser le cache immédiatement
           if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_DURATION) {
-            const fullResults = cachedData.data.map((result: any) => ({
-              id: result.id,
-              name: result.fields?.name || 'Unknown name',
-              description: result.fields?.description || 'No description available',
-            }));
-            this.fullSearchResults = fullResults;
-            this.searchResults = fullResults.slice(0, 5); // Show top 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.isLoading = false;
+            this.updateResultsFromCache(cachedData.data);
             return of(null);
           }
+
+          // Ajouter un marqueur "loading" au cache pour éviter des requêtes parallèles identiques
+          if (!this._cache.has(trimmedQuery) ||
+            (cachedData && Date.now() - cachedData.timestamp >= this.CACHE_DURATION)) {
+            // Marquer cette requête comme étant en cours pour éviter les duplications
+            this._cache.set(trimmedQuery, { data: [], timestamp: Date.now(), isLoading: true });
+          } else if (cachedData && cachedData.isLoading) {
+            // Si une recherche identique est déjà en cours, ne pas dupliquer
+            return of(null);
+          }
+
           this.isLoading = true;  // Display a loading message
+
           // Launch parallel requests: Internal API + Open Food Facts
           return forkJoin({
             internalResults: this.apiService.sendSearchData({ search: trimmedQuery }),
@@ -121,13 +138,22 @@ export class SearchbarComponent implements OnInit {
           }).pipe(
             tap(({ internalResults, offResults }) => {
               this.isLoading = false;
+
               const combinedResults = [
                 ...(internalResults || []),
                 ...(offResults?.products || []),  // Include Open Food Facts products.
               ];
+
               if (combinedResults.length) {
-                this._cache.set(trimmedQuery, { data: [...combinedResults], timestamp: Date.now() });
+                // Stocker les résultats dans le cache avec les bonnes métadonnées
+                this._cache.set(trimmedQuery, {
+                  data: [...combinedResults],
+                  timestamp: Date.now(),
+                  isLoading: false
+                });
               }
+
+              this.updateResultsFromCache(combinedResults);
             })
           );
         })
@@ -141,34 +167,29 @@ export class SearchbarComponent implements OnInit {
          */
         next: (response: any) => {
           this.isLoading = false;
+          // Si la réponse est null, cela signifie que les résultats ont été traités
+          // dans le pipeline via updateResultsFromCache
           if (response) {
             const internalResults = response.internalResults || [];
             const offResults = response.offResults?.products || [];
-            // Merge results with a source identifier
+            // Combine les résultats
             const combinedResults = [
-              ...internalResults.map((result: any) => ({
-                id: result.id,
-                name: result.fields?.name || 'Unknown name',
-                description: result.fields?.description || 'No description available',
-                source: 'Internal',
-              })),
-              ...offResults.map((product: any) => ({
-                id: product.code,
-                name: product.product_name || 'Unknown product',
-                description: product.generic_name || 'No description available',
-                source: 'OpenFoodFacts',
-              })),
+              ...internalResults,
+              ...offResults,
             ];
-            this.fullSearchResults = combinedResults;
-            this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            // Mise à jour des résultats
+            this.updateResultsFromCache(combinedResults);
           }
         },
         error: (error) => {
           this.isLoading = false;
           console.error('❌ Error during search:', error);
+          this.noResultsMessage = 'Une erreur est survenue lors de la recherche.';
         },
       });
+
+    // Configurer le nettoyage périodique du cache
+    this.setupCacheCleanup();
   }
 
   /**
@@ -385,5 +406,56 @@ export class SearchbarComponent implements OnInit {
    */
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
+  }
+
+  // Helper method to update results from cache
+  private updateResultsFromCache(results: any[]): void {
+    const mappedResults = results.map((result: any) => ({
+      id: result.id,
+      name: result.fields?.name || result.product_name || 'Unknown name',
+      description: result.fields?.description || result.generic_name || 'No description available',
+      source: result.product_name ? 'OpenFoodFacts' : 'Internal',
+    }));
+
+    this.fullSearchResults = mappedResults;
+    this.searchResults = mappedResults.slice(0, 5); // Show top 5 suggestions.
+    this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+  }
+
+  /**
+   * @brief Configure le nettoyage périodique du cache pour éviter les fuites mémoire
+   */
+  private setupCacheCleanup(): void {
+    // Nettoyer le cache toutes les 15 minutes
+    this.cacheCleanupInterval = timer(15 * 60 * 1000, 15 * 60 * 1000).subscribe(() => {
+      const now = Date.now();
+      // Supprimer les entrées expirées du cache
+      this._cache.forEach((value, key) => {
+        if (now - value.timestamp > this.CACHE_DURATION) {
+          this._cache.delete(key);
+        }
+      });
+
+      // Limiter la taille du cache à 100 entrées maximum
+      if (this._cache.size > 100) {
+        // Convertir la Map en tableau pour pouvoir trier par timestamp
+        const cacheEntries = Array.from(this._cache.entries());
+        // Trier par timestamp (du plus ancien au plus récent)
+        cacheEntries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+        // Supprimer les entrées les plus anciennes jusqu'à atteindre 50 entrées
+        for (let i = 0; i < cacheEntries.length - 50; i++) {
+          this._cache.delete(cacheEntries[i][0]);
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Nettoyer toutes les souscriptions pour éviter les fuites mémoire
+    if (this.cacheCleanupInterval) {
+      this.cacheCleanupInterval.unsubscribe();
+    }
+
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }

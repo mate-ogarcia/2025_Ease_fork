@@ -21,8 +21,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
-import { map, tap, catchError, finalize, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, BehaviorSubject, throwError, of, interval } from 'rxjs';
+import { map, tap, catchError, finalize, distinctUntilChanged, switchMap, takeWhile } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { JwtHelperService } from '@auth0/angular-jwt';
 // Cookies
@@ -85,6 +85,9 @@ export class AuthService {
   ) {
     // Check initial authentication state on service initialization
     this.checkAuthState();
+
+    // Configurer le rafraîchissement périodique de l'état d'authentification
+    this.setupPeriodicAuthRefresh();
   }
 
   /**
@@ -161,17 +164,22 @@ export class AuthService {
           }
         }),
         catchError(error => {
-          // Ignorer l'affichage de l'erreur dans la console pour les erreurs 401
-          if (error.status !== 401) {
-            console.error('Error refreshing auth state:', error);
+          // Si l'erreur est 401 (non autorisé), c'est probablement un token expiré - déconnecter l'utilisateur
+          if (error.status === 401) {
+            this.updateAuthState(false, null);
+            this.user = null;
+            // Ne pas rediriger vers login pour permettre une reconnexion silencieuse si c'est juste un problème temporaire
           }
-
-          // En cas d'erreur, mettre à jour l'état d'authentification comme non authentifié
-          this.updateAuthState(false, null);
-          this.user = null;
-
-          // Ne pas supprimer le cookie pour éviter des redirections non désirées
-          // Ne pas rediriger vers la page de login
+          // Pour les erreurs de connexion (comme après un redémarrage du serveur), on ne fait rien immédiatement
+          else if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
+            console.warn('Le serveur backend est peut-être indisponible temporairement, essai de reconnexion en cours...');
+            // On garde l'état d'authentification précédent en attendant que le serveur revienne
+          } else {
+            // Pour les autres erreurs, consigner et mettre à jour l'état
+            console.error('Error refreshing auth state:', error);
+            this.updateAuthState(false, null);
+            this.user = null;
+          }
 
           return throwError(() => error);
         })
@@ -365,6 +373,42 @@ export class AuthService {
       username: this.user.username,
       address: this.user.address
     } : null;
+  }
+
+  /**
+   * @method setupPeriodicAuthRefresh
+   * @description Configure un rafraîchissement périodique de l'état d'authentification
+   * 
+   * Cette méthode établit un intervalle pour rafraîchir périodiquement l'état d'authentification,
+   * ce qui est utile pour maintenir l'état synchronisé avec le backend, notamment après
+   * des redémarrages de serveur ou des déconnexions temporaires.
+   * 
+   * @private
+   */
+  private setupPeriodicAuthRefresh(): void {
+    // Rafraîchir toutes les 2 minutes, mais seulement si l'utilisateur est authentifié
+    interval(120000) // 2 minutes
+      .pipe(
+        // Ne continuer que si l'utilisateur est authentifié
+        switchMap(() => this.isAuthenticated()),
+        // Seulement si l'utilisateur est authentifié
+        takeWhile(isAuth => isAuth, true),
+        // Si authentifié, tenter de rafraîchir l'état
+        switchMap(isAuth => {
+          if (isAuth) {
+            // Essayer de rafraîchir silencieusement, sans afficher d'erreurs à l'utilisateur
+            return this.refreshAuthState().pipe(
+              catchError(err => {
+                // En cas d'erreur, consigner mais ne pas perturber l'expérience utilisateur
+                console.warn('Échec de rafraîchissement périodique de l\'état d\'authentification:', err);
+                return of(null);
+              })
+            );
+          }
+          return of(null);
+        })
+      )
+      .subscribe();
   }
 
 }
