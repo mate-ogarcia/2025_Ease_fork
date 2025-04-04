@@ -14,6 +14,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 import { LikeBtnComponent } from '../like-btn/like-btn.component';
+import { InfoBtnComponent } from '../info-btn/info-btn.component';
+
 /**
  * @class DisplayResultsComponent
  * @brief Handles displaying search results with dynamic images and view mode toggling.
@@ -26,7 +28,7 @@ import { LikeBtnComponent } from '../like-btn/like-btn.component';
 @Component({
   selector: 'app-display-results',
   standalone: true,
-  imports: [CommonModule, LikeBtnComponent],
+  imports: [CommonModule, LikeBtnComponent, InfoBtnComponent],
   templateUrl: './display-results.component.html',
   styleUrls: ['./display-results.component.css'],
 })
@@ -71,7 +73,7 @@ export class DisplayResultsComponent implements OnInit {
         });
       }
     });
-  } 
+  }
 
   /**
    * @brief Sets the display mode for the results view.
@@ -97,10 +99,34 @@ export class DisplayResultsComponent implements OnInit {
       console.warn("⚠️ Invalid product or missing ID");
     }
   }
-  // Réception de l'événement "likeToggled" émis par le composant enfant
+
+  /**
+   * @brief Navigates to the selected product's page.
+   * @param product The selected product object.
+   */
+  goToInfoProduct(product: any) {
+    if (product?.id) {
+      this.router.navigate([`/product-page/${product.id}/${product.source}`]).catch(error => {
+        console.error("❌ Navigation error:", error);
+      });
+    } else {
+      console.warn("⚠️ Invalid product or missing ID");
+    }
+  }
+
+  /**
+   * @brief Handles the "likeToggled" event emitted by the child component.
+   * 
+   * This method updates the `liked` property of the given product based on the
+   * `liked` value received from the child component.
+   * 
+   * @param {any} product The product object whose `liked` status is being updated.
+   * @param {boolean} liked The new "liked" status of the product.
+   */
   onLikeToggled(product: any, liked: boolean): void {
     product.liked = liked;
   }
+
   /**
    * @brief Tracks products by their ID to optimize rendering in ngFor.
    * 
