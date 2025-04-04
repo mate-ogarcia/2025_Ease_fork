@@ -266,6 +266,9 @@ export class SearchbarComponent implements OnInit {
     this.wholeSelectedProduct = product;
     this.noResultsMessage = '';
     this.searchResults = []; // Hide suggestions after selection.
+
+    // Launch the research
+    this.search(true);
   }
 
 
