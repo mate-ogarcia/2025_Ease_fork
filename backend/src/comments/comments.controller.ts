@@ -12,13 +12,19 @@ import {
   Post,
   Query,
   Param,
+  UseInterceptors,
+  Inject,
 } from "@nestjs/common";
 import { CommentsService } from "./comments.service";
 import { CommentDto } from "./dto/comments.dto";
+import { CacheTTL, Cache } from "@nestjs/cache-manager";
+import { CustomCacheInterceptor } from "./CustomCacheInterceptor";
 
 /**
  * @class CommentsController
  * @brief Controller responsible for managing comment-related API endpoints.
+ * 
+ * This class contains methods to retrieve comments for a product, with pagination support, and add new comments to the database.
  */
 @Controller("comments")
 export class CommentsController {
@@ -26,42 +32,29 @@ export class CommentsController {
    * @constructor
    * @brief Initializes the CommentsController with the required services.
    * @param {CommentsService} commentsService - Service for handling comment-related operations.
+   * @param {Cache} cacheManager - Cache manager for managing comment data caching.
    */
-  constructor(private commentsService: CommentsService) { }
-
-  /**
-   * @brief Retrieves all comments from the database with pagination.
-   * @route GET /comments/GetAllComments
-   * @param {string} page - The page number to retrieve (optional, default: 1).
-   * @param {string} pageSize - Number of comments per page (optional, default: 10).
-   * @returns {Promise<any>} A promise containing the paginated list of comments.
-   * @throws {InternalServerErrorException} If an error occurs while fetching the comments.
-   */
-  @Get("GetAllComments")
-  async getAllComments(
-    @Query('page') page: string = '1',
-    @Query('pageSize') pageSize: string = '10'
-  ) {
-    try {
-      const pageNumber = parseInt(page, 10);
-      const pageSizeNumber = parseInt(pageSize, 10);
-      return await this.commentsService.getAllComments(pageNumber, pageSizeNumber);
-    } catch (error) {
-      console.error("❌ Error retrieving all comments:", error);
-      throw new InternalServerErrorException("Error retrieving all comments.");
-    }
-  }
+  constructor(
+    private commentsService: CommentsService,
+    @Inject('CACHE_MANAGER') private cacheManager: Cache,
+  ) { }
 
   /**
    * @brief Retrieves comments for a specific product with pagination.
+   * 
+   * This endpoint retrieves the paginated comments for a given product. It supports pagination
+   * via query parameters for the page number and page size.
+   * 
    * @route GET /comments/product/:productId
-   * @param {string} productId - The ID of the product.
+   * @param {string} productId - The ID of the product for which comments are retrieved.
    * @param {string} page - The page number to retrieve (optional, default: 1).
    * @param {string} pageSize - Number of comments per page (optional, default: 10).
    * @returns {Promise<any>} A promise containing the paginated list of comments for the product.
    * @throws {InternalServerErrorException} If an error occurs while fetching the comments.
    */
+  @CacheTTL(5 * 60 * 1000) // Cache expired after 5 minutes
   @Get("product/:productId")
+  @UseInterceptors(CustomCacheInterceptor) // Intercept the cache logic
   async getCommentsForProduct(
     @Param('productId') productId: string,
     @Query('page') page: string = '1',
@@ -79,15 +72,32 @@ export class CommentsController {
 
   /**
    * @brief Adds a new comment to the database.
+   * 
+   * This endpoint adds a new comment to the database. It also handles cache invalidation
+   * by deleting the cache associated with the product to ensure that the newly added comment
+   * is reflected in future requests.
+   * 
    * @route POST /comments/add
-   * @param {CommentDto} commentDto - The comment data.
+   * @param {CommentDto} commentDto - The comment data object containing the comment's details.
    * @returns {Promise<any>} A promise containing the created comment.
    * @throws {InternalServerErrorException} If an error occurs while adding the comment.
    */
   @Post("add")
   async addComment(@Body() commentDto: CommentDto) {
     try {
-      return await this.commentsService.createComment(commentDto);
+      // Add the comment to the database
+      const newComment = await this.commentsService.createComment(commentDto);
+
+      // Generate the cache key specific to the product (same logic as in the interceptor)
+      const cacheKey = `product_${commentDto.productId}`;
+
+      // Delete the cache to force refresh of the comments for the product
+      const cacheExists = await this.cacheManager.get(cacheKey);
+      if (cacheExists) {
+        await this.cacheManager.del(cacheKey);
+      }
+
+      return newComment;
     } catch (error) {
       console.error("❌ Error adding comment:", error);
       throw new InternalServerErrorException("Error adding comment.");

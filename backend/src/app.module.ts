@@ -9,7 +9,7 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 // Redis 
 import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'cache-manager-redis-store';
+import * as redisStore from 'cache-manager-redis-yet';
 // App component
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -41,13 +41,17 @@ dotenv.config();
  */
 @Module({
   imports: [
-    CacheModule.register({
+    CacheModule.registerAsync({
       isGlobal: true,
-      store: redisStore,
-      host: process.env.REDIS_HOST || 'localhost',
-      port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : 6379,
-      ttl: 600, // Time-to-live par défaut en secondes (10 minutes)
-    }),
+      useFactory: async () => ({
+          store: redisStore,
+          ttl: 5 * 60 * 1000, // 5 minutes TTL 
+          socket: {
+            host: process.env.REDIS_HOST,
+            port: process.env.REDIS_PORT,
+          }
+      }),
+  }),
     DatabaseModule,
     DataModule,
     RequestHandlerModule,
