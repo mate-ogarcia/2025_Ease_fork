@@ -7,7 +7,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Comment } from '../../app/models/comments.model';
@@ -35,11 +35,14 @@ export class CommentsService {
   ) {}
 
   /**
-   * @brief Retrieves all comments from the backend.
-   * @returns {Observable<any>} An observable containing the list of comments.
+   * Get all comments with pagination
    */
-  getAllComments(): Observable<any> {
-    return this.http.get<any[]>(`${this._commentsUrl}/GetAllComments`);
+  getAllComments(page: number = 1, pageSize: number = 10): Observable<any> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<any>(`${this._commentsUrl}/GetAllComments`, { params });
   }
 
   /**
@@ -51,5 +54,17 @@ export class CommentsService {
   postAddComment(comment: Comment): Observable<any[]> {
     return this.http.post<any[]>(`${this._commentsUrl}/add`, comment);
   }
+
+  /**
+   * Get comments for a specific product with pagination
+   */
+    getCommentsByProduct(productId: string, productSource: string, page: number = 1, pageSize: number = 10): Observable<any> {
+      const params = new HttpParams()
+        .set('page', page.toString())
+        .set('pageSize', pageSize.toString())
+        .set('source', productSource);
+  
+      return this.http.get<any>(`${this._commentsUrl}/product/${productId}`, { params });
+    }
 
 }

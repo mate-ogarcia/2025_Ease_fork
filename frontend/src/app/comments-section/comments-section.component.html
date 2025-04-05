@@ -1,0 +1,65 @@
+<!-- Comment-section.html -->
+<div>
+  <!-- onClick check if the user is allowed to add a comment -->
+  <button
+    (click)="onAddCommentClick()"
+    class="add-comment"
+    *ngIf="!showCommentForm"
+    [ngStyle]="
+      !canAddComment ? { 'background-color': '#ddd', color: '#888' } : {}
+    "
+  >
+    Ajoutez un commentaire
+  </button>
+
+  <app-comment-form
+    *ngIf="showCommentForm"
+    [productId]="productId"
+    [productSource]="productSource"
+    (commentSubmitted)="onCommentSubmitted($event)"
+    (cancel)="showCommentForm = false"
+  >
+  </app-comment-form>
+  
+  <!-- Comments list -->
+  <div class="comments-list">
+    <ng-container *ngIf="comments.length > 0; else noComments">
+      <div *ngFor="let comment of comments" class="comment">
+        <div class="comment-header">
+          <div class="rating-stars">
+            <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+              <span [class.filled]="comment.userRatingCom >= star">★</span>
+            </ng-container>
+          </div>
+          <span class="date">{{ comment.dateCom }}</span>
+        </div>
+        <div class="comment-content">{{ comment.contentCom }}</div>
+      </div>
+    </ng-container>
+
+    <ng-template #noComments>
+      <p class="no-comments">Pas encore de commentaires disponibles pour ce produit.</p>
+    </ng-template>
+  </div>
+
+  <!-- Loading indicator -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <span>Chargement des commentaires...</span>
+  </div>
+
+  <!-- Load more button -->
+  <button
+    *ngIf="pagination.hasNextPage"
+    (click)="handleLoadMore()"
+    [disabled]="loading"
+    class="load-more-btn"
+  >
+  Charger plus d'avis
+  </button>
+
+  <!-- Pagination info -->
+  <div *ngIf="comments.length > 0" class="pagination-info">
+    Affichage de {{ comments.length }} sur {{ pagination.totalCount }} commentaires
+  </div>
+</div>

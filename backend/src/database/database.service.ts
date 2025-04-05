@@ -1369,6 +1369,107 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // TODO
+/**
+   * @brief Retrieves paginated comments from the database.
+   *
+   * This method fetches comments with pagination support by executing
+   * a SELECT query on the comments bucket with LIMIT and OFFSET.
+   *
+   * @param {number} skip - Number of items to skip (for pagination).
+   * @param {number} take - Number of items to take per page.
+   * @returns {Promise<[any[], number]>} A promise that resolves to an array of comments and total count.
+   * @throws Error If the `COMMENTS_BUCKET_NAME` is not defined or if the query fails.
+   */
+async getPaginatedComments(skip: number, take: number): Promise<[any[], number]> {
+  const commentsBucketName = this.commentsBucket.name;
+  if (!commentsBucketName) {
+    throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+  }
+
+  // Query to get total count
+  const countQuery = `
+    SELECT COUNT(*) AS total 
+    FROM \`${commentsBucketName}\`
+  `;
+
+  // Query to get paginated comments
+  const query = `
+    SELECT * 
+    FROM \`${commentsBucketName}\` 
+    ORDER BY dateCom DESC 
+    LIMIT ${take} 
+    OFFSET ${skip}
+  `;
+
+  try {
+    // Execute both queries
+    const [countResult, comments] = await Promise.all([
+      this.executeQuery(countQuery),
+      this.executeQuery(query)
+    ]);
+
+    // Extract total count
+    const totalCount = countResult[0]?.total || 0;
+
+    return [comments, totalCount];
+  } catch (error) {
+    console.error("❌ Error retrieving paginated comments:", error);
+    throw new Error("Error retrieving paginated comments");
+  }
+}
+
+/**
+ * @brief Retrieves paginated comments for a specific product.
+ *
+ * This method fetches comments for a specific product with pagination support
+ * by executing a SELECT query on the comments bucket with filtering and pagination.
+ *
+ * @param {string} productId - The ID of the product to get comments for.
+ * @param {number} skip - Number of items to skip (for pagination).
+ * @param {number} take - Number of items to take per page.
+ * @returns {Promise<[any[], number]>} A promise that resolves to an array of comments and total count.
+ * @throws Error If the `COMMENTS_BUCKET_NAME` is not defined or if the query fails.
+ */
+async getProductComments(productId: string, skip: number, take: number): Promise<[any[], number]> {
+  const commentsBucketName = this.commentsBucket.name;
+  if (!commentsBucketName) {
+    throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+  }
+
+  // Query to get total count for this product
+  const countQuery = `
+    SELECT COUNT(*) AS total 
+    FROM \`${commentsBucketName}\` 
+    WHERE productId = "${productId}"
+  `;
+
+  // Query to get paginated comments for this product
+  const query = `
+    SELECT * 
+    FROM \`${commentsBucketName}\` 
+    WHERE productId = "${productId}" 
+    ORDER BY dateCom DESC 
+    LIMIT ${take} 
+    OFFSET ${skip}
+  `;
+
+  try {
+    // Execute both queries
+    const [countResult, comments] = await Promise.all([
+      this.executeQuery(countQuery),
+      this.executeQuery(query)
+    ]);
+
+    // Extract total count
+    const totalCount = countResult[0]?.total || 0;
+
+    return [comments, totalCount];
+  } catch (error) {
+    console.error(`❌ Error retrieving comments for product ${productId}:`, error);
+    throw new Error(`Error retrieving comments for product ${productId}`);
+  }
+}
 
   // ========================================================================
   // ======================== REQUESTS FUNCTIONS (FOR ADMIN MANAGEMENT)

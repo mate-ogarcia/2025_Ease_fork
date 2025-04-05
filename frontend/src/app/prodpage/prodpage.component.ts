@@ -11,8 +11,10 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+// Components
 import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
 import { CommentFormComponent } from '../comment-form/comment-form.component';
+import { CommentsSectionComponent } from '../comments-section/comments-section.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
@@ -20,6 +22,7 @@ import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.ser
 import { AuthService } from '../../services/auth/auth.service';
 import { NotificationService } from '../../services/notification/notification.service';
 import { CommentsService } from '../../services/comments/comments.service';
+// Models
 import { Comment } from '../models/comments.model';
 
 /**
@@ -29,7 +32,7 @@ import { Comment } from '../models/comments.model';
 @Component({
   selector: 'app-prodpage',
   standalone: true,
-  imports: [NavbarComponent, CommonModule, CommentFormComponent],
+  imports: [NavbarComponent, CommonModule, CommentsSectionComponent],
   templateUrl: './prodpage.component.html',
   styleUrls: ['./prodpage.component.css']
 })
@@ -57,9 +60,6 @@ export class ProdpageComponent implements OnInit {
     private apiUnsplash: APIUnsplash,
     private openFoodFactsService: ApiOpenFoodFacts,
     private authService: AuthService,
-    private notifService: NotificationService,
-    private router: Router,
-    private commentService: CommentsService,
   ) { }
 
   /**
@@ -192,49 +192,4 @@ export class ProdpageComponent implements OnInit {
   trackByProduct(index: number, product: any): any {
     return product.id;
   }
-
-  // ============================ COMMENTS
-  /**
-   * @brief Handles the submission of a new comment.
-   * 
-   * This method is triggered when a user submits a comment. It sends the comment
-   * to the backend service and updates the UI based on the success or failure 
-   * of the submission. If successful, the comment is added and a success message is displayed.
-   * If there is an error, an error message is shown.
-   */
-  onCommentSubmitted(comment: Comment) {
-    this.commentService.postAddComment(comment).subscribe({
-      next: (response) => {
-        this.notifService.showSuccess('Commentaire ajouté avec succès !');
-        this.showCommentForm = false; // Hide the comment form after submission
-      },
-      error: (error) => {
-        this.notifService.showError('Problèmes lors de l\'ajout du commentaire, veuillez vérifiez que vous êtes connecté.');
-        console.error("❌ Error adding comment:", error);
-        alert("Error: Unable to add the comment.");
-      }
-    });
-  }
-
-  /**
-   * Handles the click event for adding a comment.
-   * 
-   * If the user is not authenticated (i.e., they cannot add a comment),
-   * it shows an error notification and redirects to the login page.
-   * Otherwise, it displays the comment form.
-   */
-  onAddCommentClick(): void {
-    // Check if the user is allowed to add a comment
-    if (!this.canAddComment) {
-      // Show an error message if the user is not logged in
-      this.notifService.showError('Vous devez être connecté pour ajouter un commentaire!');
-      // Redirect the user to the login page
-      this.router.navigate(['/login']);
-    } else {
-      // If the user is allowed to add a comment, show the comment form
-      this.showCommentForm = true;
-    }
-  }
-
-  // TODO Pagination Lazy Loading côté client
 }

@@ -2,15 +2,16 @@
  * @file comments.controller.ts
  * @brief Controller for handling comment-related API endpoints.
  *
- * This controller provides an endpoint to retrieve all comments from the database.
+ * This controller provides endpoints to retrieve, search and add comments with pagination support.
  */
-
 import {
   Body,
   Controller,
   Get,
   InternalServerErrorException,
   Post,
+  Query,
+  Param,
 } from "@nestjs/common";
 import { CommentsService } from "./comments.service";
 import { CommentDto } from "./dto/comments.dto";
@@ -29,20 +30,50 @@ export class CommentsController {
   constructor(private commentsService: CommentsService) { }
 
   /**
-   * @brief Retrieves all comments from the database.
+   * @brief Retrieves all comments from the database with pagination.
    * @route GET /comments/GetAllComments
-   * @returns {Promise<any>} A promise containing the list of all comments.
+   * @param {string} page - The page number to retrieve (optional, default: 1).
+   * @param {string} pageSize - Number of comments per page (optional, default: 10).
+   * @returns {Promise<any>} A promise containing the paginated list of comments.
    * @throws {InternalServerErrorException} If an error occurs while fetching the comments.
    */
   @Get("GetAllComments")
-  async getAllComments() {
+  async getAllComments(
+    @Query('page') page: string = '1',
+    @Query('pageSize') pageSize: string = '10'
+  ) {
     try {
-      return await this.commentsService.getAllComments();
+      const pageNumber = parseInt(page, 10);
+      const pageSizeNumber = parseInt(pageSize, 10);
+      return await this.commentsService.getAllComments(pageNumber, pageSizeNumber);
     } catch (error) {
       console.error("❌ Error retrieving all comments:", error);
-      throw new InternalServerErrorException(
-        "Error retrieving all comments."
-      );
+      throw new InternalServerErrorException("Error retrieving all comments.");
+    }
+  }
+
+  /**
+   * @brief Retrieves comments for a specific product with pagination.
+   * @route GET /comments/product/:productId
+   * @param {string} productId - The ID of the product.
+   * @param {string} page - The page number to retrieve (optional, default: 1).
+   * @param {string} pageSize - Number of comments per page (optional, default: 10).
+   * @returns {Promise<any>} A promise containing the paginated list of comments for the product.
+   * @throws {InternalServerErrorException} If an error occurs while fetching the comments.
+   */
+  @Get("product/:productId")
+  async getCommentsForProduct(
+    @Param('productId') productId: string,
+    @Query('page') page: string = '1',
+    @Query('pageSize') pageSize: string = '10'
+  ) {
+    try {
+      const pageNumber = parseInt(page, 10);
+      const pageSizeNumber = parseInt(pageSize, 10);
+      return await this.commentsService.getCommentsForProduct(productId, pageNumber, pageSizeNumber);
+    } catch (error) {
+      console.error(`❌ Error retrieving comments for product ${productId}:`, error);
+      throw new InternalServerErrorException(`Error retrieving comments for product.`);
     }
   }
 

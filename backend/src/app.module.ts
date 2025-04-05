@@ -9,6 +9,7 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 // Redis 
 import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 // App component
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -30,6 +31,9 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
 import { AdminModule } from "./admin/admin.module";
+// .env
+import * as dotenv from "dotenv";
+dotenv.config();
 
 /**
  * @class AppModule
@@ -37,7 +41,13 @@ import { AdminModule } from "./admin/admin.module";
  */
 @Module({
   imports: [
-    CacheModule.register(),
+    CacheModule.register({
+      isGlobal: true,
+      store: redisStore,
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : 6379,
+      ttl: 600, // Time-to-live par défaut en secondes (10 minutes)
+    }),
     DatabaseModule,
     DataModule,
     RequestHandlerModule,
