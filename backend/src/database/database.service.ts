@@ -36,8 +36,8 @@ dotenv.config();
 import { v4 as uuidv4 } from "uuid";  // Generate unique ID
 import { AddressDto } from "src/auth/dto/auth.dto"; // Check of the address
 // Definition of expected keys for Buckets and Collections
-type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket";
-type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection";
+type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "favoritesBucket";
+type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "favoritesCollection";
 
 /**
  * @brief Service responsible for database operations.
@@ -52,11 +52,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private usersBucket: Bucket;
   private categBucket: Bucket;
   private brandBucket: Bucket;
+  private favoritesBucket: Bucket;
   // Collections
   private productsCollection: Collection;
   private usersCollection: Collection;
   private categCollection: Collection;
   private brandCollection: Collection;
+  private favoritesCollection: Collection;
 
   /**
    * @brief Constructor for DatabaseService.
@@ -127,7 +129,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("BUCKET_NAME", "productsBucket", "productsCollection"),
         this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
         this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
-        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection")
+        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection"),
+        this.connectToBucket("FAVORITES_BUCKET_NAME", "favoritesBucket", "favoritesCollection")
       ]);
 
       console.log("Successfully connected to Couchbase!");
@@ -209,6 +212,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.getBucket(this.brandBucket, "brands");
   }
 
+  /**
+   * @brief Retrieves the Couchbase bucket instance for favorites.
+   */
+  getFavoritesBucket(): Bucket {
+    return this.getBucket(this.favoritesBucket, "favorites");
+  }
+
   // ======================== COLLECTION METHODS
   /**
    * @brief Retrieves the products collection.
@@ -236,6 +246,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   getBrandCollection(): Collection {
     return this.getCollection(this.brandCollection, "brands");
+  }
+
+  /**
+   * @brief Retrieves the favorites collection.
+   */
+  getFavoritesCollection(): Collection {
+    return this.getCollection(this.favoritesCollection, "favorites");
   }
 
   // ========================================================================
@@ -763,7 +780,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async addUser(username: string, email: string, password: string, address: AddressDto, role?: UserRole): Promise<any> {
     const bucketName = this.usersBucket.name;
     const userId = uuidv4();
-    
+
     const query = `
       INSERT INTO \`${bucketName}\`._default._default (KEY, VALUE)
       VALUES ($userId, {
@@ -781,21 +798,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       })
       RETURNING *;
     `;
-  
-    const result = await this.executeQuery(query, { 
-      userId, 
-      username, 
-      email, 
-      password, 
+
+    const result = await this.executeQuery(query, {
+      userId,
+      username,
+      email,
+      password,
       role: role || UserRole.USER,
-      postCode: address.postCode, 
-      city: address.city, 
-      country: address.country 
+      postCode: address.postCode,
+      city: address.city,
+      country: address.country
     });
-  
+
     return result.length ? result[0] : null; // Returns `null` if already existing
   }
-  
+
   /**
    * @brief Retrieves a user from Couchbase by their email.
    *
@@ -1068,20 +1085,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getProductByLocation(location: string): Promise<any[]> {
     const lowercaseLocation = location.toLowerCase();
-   
+
     const query = `
       SELECT META(p).id AS id, p.*
       FROM \`${this.productsBucket.name}\`._default._default p
       WHERE LOWER(p.origin) = $location;
     `;
-   
+
     const result = await this.executeQuery(query, { location: lowercaseLocation });
-   
+
     if (result.length === 0) {
       console.log(`No products found for location: ${location}`);
       return [];
     }
-   
+
     // Add default "source" field for products without one
     return result.map(product => {
       if (!product.source) {
@@ -1384,7 +1401,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async deleteEntity(type: string, entityId: string): Promise<any> {
     if (!entityId) {
       throw new BadRequestException(`❌ Invalid parameters: ${type} ID is required.`);
-    }  
+    }
     // Determine which entity type to delete
     switch (type) {
       case 'product':
@@ -1392,22 +1409,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       case 'brand':
         try {
           // First get the brand to access its name
-          const brand = await this.getBrandById(entityId); 
+          const brand = await this.getBrandById(entityId);
           if (!brand) {
             console.warn(`⚠️ Brand with ID '${entityId}' not found. Nothing to delete.`);
             return { message: `Brand with ID '${entityId}' does not exist or was already deleted.` };
           }
-          
+
           const brandName = brand.name;
           // Get all products associated with this brand name
-          const productsByBrand = await this.getProductsByBrand(brandName);         
-          if (productsByBrand.length > 0) {            
+          const productsByBrand = await this.getProductsByBrand(brandName);
+          if (productsByBrand.length > 0) {
             // Update each product's status to 'edit-product'
             let updatedCount = 0;
             for (const product of productsByBrand) {
               // Use the productId field
               const productId = product.productId;
-              
+
               if (!productId) {
                 console.error(`❌ Missing productId for product:`, product);
                 continue;
@@ -1422,15 +1439,139 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           } else {
             console.warn(`ℹNo products found associated with brand "${brandName}"`);
           }
-          
+
           // Now delete the brand
-          return this.deleteBrand(entityId); 
+          return this.deleteBrand(entityId);
         } catch (error) {
           console.error(`❌ Error deleting brand: ${error.message}`, error);
           throw error;
         }
       default:
         throw new BadRequestException(`❌ Invalid entity type: ${type}`);
+    }
+  }
+
+  /**
+   * @brief Adds a product to a user's favorites.
+   * 
+   * @param userId The ID of the user.
+   * @param productId The ID of the product to add to favorites.
+   * @returns {Promise<any>} A promise resolving to the created favorite entry.
+   */
+  async addToFavorites(userId: string, productId: string): Promise<any> {
+    try {
+      const favoriteId = `favorite::${userId}::${productId}`;
+      const favoritesCollection = this.getFavoritesCollection();
+
+      // Check if the favorite already exists
+      try {
+        await favoritesCollection.get(favoriteId);
+        return { id: favoriteId, exists: true };
+      } catch (error) {
+        if (!(error instanceof DocumentNotFoundError)) {
+          throw error;
+        }
+      }
+
+      // Create the favorite
+      const favorite = {
+        type: 'favorite',
+        userId,
+        productId,
+        createdAt: new Date().toISOString()
+      };
+
+      await favoritesCollection.insert(favoriteId, favorite);
+      return { id: favoriteId, ...favorite, exists: false };
+    } catch (error) {
+      console.error('❌ Error adding to favorites:', error);
+      throw new InternalServerErrorException('Error adding product to favorites');
+    }
+  }
+
+  /**
+   * @brief Removes a product from a user's favorites.
+   * 
+   * @param userId The ID of the user.
+   * @param productId The ID of the product to remove from favorites.
+   * @returns {Promise<boolean>} A promise resolving to true if the favorite was removed.
+   */
+  async removeFromFavorites(userId: string, productId: string): Promise<boolean> {
+    try {
+      const favoriteId = `favorite::${userId}::${productId}`;
+      const favoritesCollection = this.getFavoritesCollection();
+
+      await favoritesCollection.remove(favoriteId);
+      return true;
+    } catch (error) {
+      if (error instanceof DocumentNotFoundError) {
+        return false;
+      }
+      console.error('❌ Error removing from favorites:', error);
+      throw new InternalServerErrorException('Error removing product from favorites');
+    }
+  }
+
+  /**
+   * @brief Gets all favorites for a user.
+   * 
+   * @param userId The ID of the user.
+   * @returns {Promise<any[]>} A promise resolving to an array of favorite products.
+   */
+  async getUserFavorites(userId: string): Promise<any[]> {
+    try {
+      // Vérifier que l'ID utilisateur est défini
+      if (!userId) {
+        console.error('❌ getUserFavorites appelé avec un ID utilisateur undefined');
+        return []; // Retourner un tableau vide plutôt que de lancer une erreur
+      }
+
+      console.log(`🔍 Récupération des favoris pour l'utilisateur: ${userId}`);
+
+      const query = `
+        SELECT f.*, p.*
+        FROM \`${process.env.FAVORITES_BUCKET_NAME}\` f
+        JOIN \`${process.env.BUCKET_NAME}\` p ON KEYS f.productId
+        WHERE f.type = 'favorite' AND f.userId = $userId
+        ORDER BY f.createdAt DESC
+      `;
+
+      // Afficher les paramètres pour déboguer
+      console.log(`📝 Paramètres de la requête:`, { userId });
+      console.log(`🔍 Buckets utilisés: FAVORITES=${process.env.FAVORITES_BUCKET_NAME}, PRODUCTS=${process.env.BUCKET_NAME}`);
+
+      const result = await this.executeQuery(query, { userId });
+      return result;
+    } catch (error) {
+      console.error('❌ Error getting user favorites:', error);
+      throw new InternalServerErrorException('Error retrieving user favorites');
+    }
+  }
+
+  /**
+   * @brief Checks if a product is in a user's favorites.
+   * 
+   * @param userId The ID of the user.
+   * @param productId The ID of the product to check.
+   * @returns {Promise<boolean>} A promise resolving to true if the product is in favorites.
+   */
+  async isProductInFavorites(userId: string, productId: string): Promise<boolean> {
+    try {
+      const favoriteId = `favorite::${userId}::${productId}`;
+      const favoritesCollection = this.getFavoritesCollection();
+
+      try {
+        await favoritesCollection.get(favoriteId);
+        return true;
+      } catch (error) {
+        if (error instanceof DocumentNotFoundError) {
+          return false;
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('❌ Error checking favorites status:', error);
+      throw new InternalServerErrorException('Error checking if product is in favorites');
     }
   }
 }

@@ -1,0 +1,88 @@
+<div class="favorites-container">
+  <!-- Indicateur de chargement -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>Chargement de vos favoris...</p>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div class="error-message" *ngIf="errorMessage">
+    <p>{{ errorMessage }}</p>
+    <button (click)="loadFavorites()">Réessayer</button>
+  </div>
+
+  <!-- Contenu des favoris -->
+  <div class="favorites-content" *ngIf="!isLoading && !errorMessage">
+    <!-- Aucun favori -->
+    <div class="no-favorites" *ngIf="favorites.length === 0">
+      <div class="empty-state-icon">❤️</div>
+      <h3>Vous n'avez pas encore de favoris</h3>
+      <p>Explorez les produits et ajoutez-les à vos favoris pour les retrouver ici</p>
+    </div>
+
+    <!-- En-tête et liste des favoris -->
+    <ng-container *ngIf="favorites.length > 0">
+      <div class="favorites-grid">
+        <div class="favorite-card" *ngFor="let favorite of paginatedFavorites"
+          (click)="viewProductDetails(favorite.productId)">
+          <div class="favorite-image">
+            <img [src]="favorite.image" [alt]="favorite.name" (error)="handleImageError($event)">
+          </div>
+
+          <div class="favorite-category-label" *ngIf="favorite.category">
+            {{ favorite.category }}
+          </div>
+
+          <button class="remove-favorite-btn" (click)="removeFromFavorites(favorite.productId, $event)"
+            title="Retirer des favoris">
+            ❌
+          </button>
+
+          <div class="favorite-info">
+            <h4 class="favorite-name">{{ favorite.name }}</h4>
+
+            <div class="favorite-details">
+              <p class="favorite-origin" *ngIf="favorite.origin">
+                <span class="detail-label">Origine:</span>
+                <span class="detail-value">{{ favorite.origin }}</span>
+              </p>
+
+              <p class="favorite-price" *ngIf="favorite.price">
+                <span class="price-value">{{ favorite.price }}€</span>
+              </p>
+
+              <p class="favorite-brand" *ngIf="favorite.brand">
+                <span class="detail-label">Marque:</span>
+                <span class="detail-value">{{ favorite.brand }}</span>
+              </p>
+            </div>
+
+            <p class="favorite-description" *ngIf="favorite.description">{{ favorite.description }}</p>
+
+            <div class="favorite-tags" *ngIf="favorite.tags && favorite.tags.length > 0">
+              <span class="favorite-tag" *ngFor="let tag of favorite.tags">{{ tag }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contrôles de pagination -->
+      <div class="pagination-controls" *ngIf="totalPages > 1">
+        <button class="pagination-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          ←
+        </button>
+
+        <div class="page-numbers">
+          <button *ngFor="let page of pages" class="page-number" [class.active]="page === currentPage"
+            (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </div>
+
+        <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          →
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>

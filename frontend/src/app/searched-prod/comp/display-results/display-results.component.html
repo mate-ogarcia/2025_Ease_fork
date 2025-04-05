@@ -13,14 +13,19 @@
     <div class="item-container">
       <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
       <ul class="items-list" [ngClass]="viewMode">
-        <li class="item"
-            *ngFor="let product of resultsArray; trackBy: trackByProduct"
-            (click)="goToProduct(product)"
-            tabindex="0"
-            [attr.aria-label]="'Voir le produit ' + product.name">
+        <li class="item" *ngFor="let product of resultsArray; trackBy: trackByProduct" (click)="goToProduct(product)"
+          tabindex="0" [attr.aria-label]="'Voir le produit ' + product.name">
 
           <div class="img-container">
-            <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
+            <ng-container *ngIf="product.image; else noImage">
+              <img class="product-image" [src]="product.image" alt="{{ product.name }}"
+                (error)="handleImageError($event)">
+            </ng-container>
+            <ng-template #noImage>
+              <div class="placeholder-image">
+                <div class="placeholder-icon">🖼️</div>
+              </div>
+            </ng-template>
           </div>
 
           <div class="product-details">
@@ -34,10 +39,7 @@
           <!-- Le bouton "like" -->
           <!-- On arrête la propagation pour éviter d'appeler goToProduct -->
           <div class="like-btn" (click)="$event.stopPropagation()">
-            <app-like-btn
-              class="app-like-btn"
-              [liked]="product.liked"
-              (likeToggled)="onLikeToggled(product, $event)">
+            <app-like-btn class="app-like-btn" [liked]="product.liked" (likeToggled)="onLikeToggled(product)">
             </app-like-btn>
           </div>
         </li>
