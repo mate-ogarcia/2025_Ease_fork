@@ -1473,7 +1473,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      // Create the favorite
+      // Vérifier que le produit existe
+      const productExists = await this.getProductById(productId);
+      if (!productExists) {
+        throw new NotFoundException(`Produit avec ID ${productId} non trouvé`);
+      }
+
+      // Créer un document favori simple sans inclure tous les détails du produit
       const favorite = {
         type: 'favorite',
         userId,
@@ -1482,6 +1488,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       };
 
       await favoritesCollection.insert(favoriteId, favorite);
+      console.log(`💾 Ajout aux favoris - userId: ${userId}, productId: ${productId}, favoriteId: ${favoriteId}`);
       return { id: favoriteId, ...favorite, exists: false };
     } catch (error) {
       console.error('❌ Error adding to favorites:', error);
@@ -1528,8 +1535,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       console.log(`🔍 Récupération des favoris pour l'utilisateur: ${userId}`);
 
+      // Requête optimisée avec USE KEYS pour la performance
       const query = `
-        SELECT f.*, p.*
+        SELECT 
+          f.userId, 
+          f.productId, 
+          f.createdAt,
+          p.* 
         FROM \`${process.env.FAVORITES_BUCKET_NAME}\` f
         JOIN \`${process.env.BUCKET_NAME}\` p ON KEYS f.productId
         WHERE f.type = 'favorite' AND f.userId = $userId
@@ -1557,18 +1569,24 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async isProductInFavorites(userId: string, productId: string): Promise<boolean> {
     try {
-      const favoriteId = `favorite::${userId}::${productId}`;
-      const favoritesCollection = this.getFavoritesCollection();
-
-      try {
-        await favoritesCollection.get(favoriteId);
-        return true;
-      } catch (error) {
-        if (error instanceof DocumentNotFoundError) {
-          return false;
-        }
-        throw error;
+      if (!userId || !productId) {
+        console.error('❌ isProductInFavorites appelé avec des paramètres invalides:', { userId, productId });
+        return false;
       }
+
+      const favoriteId = `favorite::${userId}::${productId}`;
+
+      // Méthode efficace avec EXISTS pour vérifier rapidement si le document existe
+      const query = `
+        SELECT EXISTS (
+          SELECT 1 
+          FROM \`${process.env.FAVORITES_BUCKET_NAME}\` 
+          WHERE META().id = $favoriteId
+        ) AS exists
+      `;
+
+      const result = await this.executeQuery(query, { favoriteId });
+      return result[0]?.exists ? true : false;
     } catch (error) {
       console.error('❌ Error checking favorites status:', error);
       throw new InternalServerErrorException('Error checking if product is in favorites');

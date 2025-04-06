@@ -80,37 +80,7 @@ export class FavoritesComponent implements OnInit {
    */
   loadFavorites(): void {
     this.isLoading = true;
-
-    try {
-      const storedFavorites = localStorage.getItem('app_user_favorites');
-      if (storedFavorites) {
-        const favoriteIds = JSON.parse(storedFavorites);
-        const productsDetails = this.favoritesService.getAllProductsDetails();
-
-        this.favorites = favoriteIds.map((id: string) => {
-          if (productsDetails[id]) {
-            return {
-              productId: id,
-              ...productsDetails[id]
-            };
-          } else {
-            return {
-              productId: id,
-              id: id,
-              name: `Produit ${id.substring(0, 8)}...`,
-              description: 'Détails du produit non disponibles en mode hors ligne'
-            };
-          }
-        });
-
-        this.loadProductImages();
-        this.updateTotalPages();
-        this.isLoading = false;
-        return;
-      }
-    } catch (error) {
-      console.error('Erreur lors de la lecture du localStorage:', error);
-    }
+    this.errorMessage = '';
 
     this.favoritesService.loadFavorites().subscribe({
       next: (favorites) => {
@@ -123,31 +93,6 @@ export class FavoritesComponent implements OnInit {
         console.error('Erreur lors du chargement des favoris:', error);
         this.errorMessage = 'Impossible de charger vos favoris. Veuillez réessayer plus tard.';
         this.isLoading = false;
-
-        this.favoritesService.favoriteProducts$.subscribe(favoriteIds => {
-          if (favoriteIds && favoriteIds.length > 0) {
-            const productsDetails = this.favoritesService.getAllProductsDetails();
-
-            this.favorites = favoriteIds.map(id => {
-              if (productsDetails[id]) {
-                return {
-                  productId: id,
-                  ...productsDetails[id]
-                };
-              } else {
-                return {
-                  productId: id,
-                  id: id,
-                  name: `Produit ${id.substring(0, 8)}...`,
-                  description: 'Détails du produit non disponibles en mode hors ligne'
-                };
-              }
-            });
-
-            this.loadProductImages();
-            this.updateTotalPages();
-          }
-        });
       }
     });
   }
@@ -158,7 +103,7 @@ export class FavoritesComponent implements OnInit {
   private loadProductImages(): void {
     this.favorites.forEach(product => {
       // Si le produit a un nom mais pas d'image
-      if (!product?.image && product?.name) {
+      if (!product?.image && !product?.imageUrl && product?.name) {
         this.apiUnsplash.searchPhotos(product.name).subscribe({
           next: (response) => {
             if (response.imageUrl) {
@@ -175,22 +120,8 @@ export class FavoritesComponent implements OnInit {
             product.image = null;
           }
         });
-      } else if (!product?.image) {
-        // Si on n'a pas de nom (produit du localStorage), utiliser l'ID
-        this.apiUnsplash.searchPhotos(`product ${product.id.substring(0, 8)}`).subscribe({
-          next: (response) => {
-            if (response.imageUrl) {
-              product.image = response.imageUrl;
-            } else {
-              console.warn(`🚫 Aucune image trouvée pour l'ID ${product.id}`);
-              product.image = null;
-            }
-          },
-          error: (err) => {
-            console.error(`❌ Erreur de récupération d'image pour l'ID ${product.id}:`, err);
-            product.image = null;
-          }
-        });
+      } else if (product?.imageUrl && !product?.image) {
+        product.image = product.imageUrl;
       }
     });
   }

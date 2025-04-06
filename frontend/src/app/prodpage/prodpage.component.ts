@@ -120,21 +120,7 @@ export class ProdpageComponent implements OnInit {
     }
 
     if (liked) {
-      // Sauvegarder les détails du produit pour les afficher dans les favoris
-      if (this.product) {
-        this.favoritesService.saveProductDetails(this.productId, {
-          id: this.product.id,
-          name: this.product.name,
-          description: this.product.description,
-          image: this.product.image || this.product.imageUrl,
-          category: this.product.category,
-          brand: this.product.brand,
-          price: this.product.price,
-          origin: this.product.origin,
-          tags: this.product.tags
-        });
-      }
-
+      // Sauvegarde des détails du produit automatiquement gérée par le backend
       this.favoritesService.addToFavorites(this.productId).subscribe({
         next: () => {
           this.isFavorite = true;

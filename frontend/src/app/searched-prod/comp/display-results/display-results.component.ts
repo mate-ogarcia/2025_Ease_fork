@@ -176,8 +176,8 @@ export class DisplayResultsComponent implements OnInit {
       newState: product.liked ? 'aimé' : 'non aimé'
     });
 
-    // Vérifier si l'utilisateur est connecté
-    if (!this.authService.isAuthenticated()) {
+    // Vérifier si l'utilisateur est connecté en utilisant la valeur actuelle
+    if (!this.isAuthenticated) {
       console.warn('⚠️ Utilisateur non connecté - Redirection vers la page de connexion');
       this.notificationService.showWarning('Veuillez vous connecter pour ajouter des favoris');
       product.liked = false; // Reset le statut visuel
@@ -225,19 +225,7 @@ export class DisplayResultsComponent implements OnInit {
       );
     } else {
       console.log(`✅ Ajout du produit ${product.id} (${product.name}) aux favoris`);
-      // Sauvegarder les détails complets du produit pour les afficher dans les favoris
-      this.favoritesService.saveProductDetails(product.id, {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        image: product.image,
-        category: product.category,
-        brand: product.brand,
-        price: product.price,
-        origin: product.origin,
-        tags: product.tags
-      });
-
+      // Les détails du produit sont automatiquement sauvegardés par le backend
       this.favoritesService.addToFavorites(product.id).subscribe(
         response => {
           console.log(`✅ Produit ${product.id} ajouté aux favoris avec succès`, response);
