@@ -1,38 +1,60 @@
 <div class="container">
-    <!-- Bouton pour changer de mode -->
-    <div class="grid-btn">
-      <button [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')">
-        <i class="fa-solid fa-list"></i>
-      </button>
-      <button [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')">
-        <i class="fa-solid fa-grip"></i>
-      </button>
-    </div>
-      
-    
-    <div class="result-container" *ngIf="resultsArray.length > 0; else noResults">
-      <div class="item-container">
-        <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
-        <ul class="items-list" [ngClass]="viewMode">
-          <li class="item" 
-              *ngFor="let product of resultsArray; trackBy: trackByProduct" 
-              (click)="goToProduct(product)"
-              tabindex="0" 
-              [attr.aria-label]="'Voir le produit ' + product.name">
-            <div class="img-container">
-              <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
-            </div> 
-            <div class="product-details">
-              <p class="categ">{{ product.category }}</p>
-              <h3 class="product-name">{{ product.name }}</h3>
-              <p class="product-description"><strong>Description :</strong> {{ product.description }}</p>
-            </div>
-          </li>
-        </ul>
+  <!-- Bouton pour changer de mode -->
+  <div class="header-actions">
+    <h2 class="history-title">Historique</h2>
+    <div class="action-buttons">
+      <div class="grid-btn">
+        <button [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')" aria-label="Mode liste">
+          <i class="fa-solid fa-list"></i>
+        </button>
+        <button [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')" aria-label="Mode grille">
+          <i class="fa-solid fa-grip"></i>
+        </button>
       </div>
+      <!-- Boutons d'action -->
+      <button class="refresh-btn" (click)="loadHistory()" aria-label="Actualiser">
+        <i class="fa-solid fa-refresh"></i> Actualiser
+      </button>
+      <button class="clear-btn" (click)="clearHistory()" aria-label="Effacer l'historique">
+        <i class="fa-solid fa-trash"></i> Effacer l'historique
+      </button>
     </div>
-  
+  </div>
+
+  <!-- Indicateur de chargement -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement de l'historique...</p>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="result-container" *ngIf="!isLoading">
+    <!-- Historique trouvé -->
+    <div class="item-container" *ngIf="resultsArray.length > 0; else noResults">
+      <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
+      <ul class="items-list" [ngClass]="viewMode">
+        <li class="search-item" *ngFor="let item of resultsArray; let i = index; trackBy: trackByProduct">
+          <div class="search-item-content" (click)="searchAgain(item)" tabindex="0">
+            <i class="fa-solid fa-history search-icon"></i>
+            <div class="search-details">
+              <h3 class="search-term">{{ getSearchTerm(item) }}</h3>
+              <p class="search-date" *ngIf="item.searchDate">{{ item.searchDate | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
+          <button class="delete-item-btn" (click)="deleteHistoryItem(item, $event)"
+            aria-label="Supprimer de l'historique">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Aucun résultat -->
     <ng-template #noResults>
-      <p>Aucun produit trouvé avec ces critères.</p>
+      <div class="no-results">
+        <p>Aucun historique de recherche trouvé.</p>
+        <p>Recherchez des produits pour les voir apparaître ici.</p>
+      </div>
     </ng-template>
   </div>
+</div>

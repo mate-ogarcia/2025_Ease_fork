@@ -23,6 +23,8 @@ import { UsersService } from '../../../../../services/users/users.service';
 import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
 // Cache API
 import { DataCacheService } from '../../../../../services/cache/data-cache.service';
+// History service
+import { HistoryService } from '../../../../../services/history/history.service';
 // Import du composant de localisation
 import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
 
@@ -30,8 +32,8 @@ import { LocationDropdownComponent } from '../location-dropdown/location-dropdow
   selector: 'app-searchbar',
   standalone: true,
   imports: [
-    FormsModule, 
-    CommonModule, 
+    FormsModule,
+    CommonModule,
     LocationDropdownComponent
   ],
   templateUrl: './searchbar.component.html',
@@ -85,6 +87,7 @@ export class SearchbarComponent implements OnInit {
    * @param usersService The service for handling user data.
    * @param apiOFF The service for interacting with OpenFoodFacts API.
    * @param dataCacheService The service for managing cached data.
+   * @param historyService The service for managing search history.
    */
   constructor(
     private apiService: ApiService,
@@ -92,6 +95,7 @@ export class SearchbarComponent implements OnInit {
     private usersService: UsersService,
     private apiOFF: ApiOpenFoodFacts,
     private dataCacheService: DataCacheService,
+    private historyService: HistoryService
   ) {
     this._searchSubject
       .pipe(
@@ -225,13 +229,15 @@ export class SearchbarComponent implements OnInit {
   /**
    * @function onEnter
    * @description Sends a search request when the Enter key is pressed.
-   * If a product is selected, it includes that product in the filters; otherwise, it performs a search
-   * using all the full search results (even those not displayed).
+   * Saves the exact search term to history and then performs the search.
    * @param event The keyboard event.
    */
   onEnter(event: any) {
     event as KeyboardEvent;
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
+      // Sauvegarder directement le terme de recherche dans l'historique
+      this.addToHistory(null);
+
       if (this.selectedProduct) {
         this.search(true);  // Search including the selected product
       } else {
@@ -261,24 +267,86 @@ export class SearchbarComponent implements OnInit {
    * @param product The product selected from suggestions.
    */
   selectProduct(product: any) {
+    // Mettre à jour le champ de recherche avec le nom du produit
     this.searchQuery = product.name;
     this.selectedProduct = product.id;
     this.wholeSelectedProduct = product;
     this.noResultsMessage = '';
     this.searchResults = []; // Hide suggestions after selection.
 
+    // Ajouter à l'historique le terme exact affiché dans la barre de recherche
+    this.addToHistory(null);
+
     // Launch the research
     this.search(true);
   }
 
+  /**
+   * @brief Ajoute le terme de recherche à l'historique
+   * @param product Le produit ou le terme recherché
+   */
+  private addToHistory(product: any): void {
+    console.log('🔍 searchbar.addToHistory appelé avec:', product);
+
+    // Si c'est une recherche directe (appui sur Entrée), utiliser le terme de recherche brut
+    if (this.searchQuery && this.searchQuery.trim() !== '') {
+      const searchTerm = this.searchQuery.trim();
+      console.log('🔍 Utilisation du terme de recherche direct:', searchTerm);
+
+      // Créer un objet simple pour l'historique
+      const historyItem = {
+        id: Date.now().toString(), // ID temporaire unique
+        name: searchTerm           // Le terme exact tapé par l'utilisateur
+      };
+
+      this.historyService.addToHistory(
+        historyItem.id,
+        searchTerm  // Utiliser directement le terme recherché
+      ).subscribe({
+        next: (response) => {
+          console.log(`✅ Terme "${searchTerm}" ajouté à l'historique:`, response);
+        },
+        error: (err) => {
+          console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
+        }
+      });
+
+      return;
+    }
+
+    // Comportement par défaut pour les sélections de produits
+    if (!product || !product.id) {
+      console.warn('⚠️ Produit invalide pour l\'historique:', product);
+      return;
+    }
+
+    // Simplifier les données envoyées à l'historique
+    const productName = product.name || '';
+
+    console.log('🔍 Envoi à l\'historique:', {
+      id: product.id,
+      name: productName
+    });
+
+    this.historyService.addToHistory(
+      product.id,
+      productName
+    ).subscribe({
+      next: (response) => {
+        console.log(`✅ Produit "${productName}" ajouté à l'historique:`, response);
+      },
+      error: (err) => {
+        console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
+      }
+    });
+  }
 
   /**
    * @brief Performs a search based on applied filters and optional selected product.
    * 
    * @details This method applies filters, validates if any filters are applied, 
-   * constructs the search request, and sends it to the API. The results are processed, 
-   * ensuring the selected product appears first if included, and then navigates 
-   * to the results page.
+   * constructs the search request, and sends it to the API. The results are processed 
+   * and then navigates to the results page.
    * 
    * @param {boolean} [includeSelectedProduct=false] - Whether to include the selected product in the search.
    * 
@@ -304,6 +372,8 @@ export class SearchbarComponent implements OnInit {
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
         this.isLoading = false;
+
+        // La sauvegarde dans l'historique est déjà faite dans onEnter
 
         // Ensure the selected product is at the first position
         if (includeSelectedProduct && this.selectedProduct) {

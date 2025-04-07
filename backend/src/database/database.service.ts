@@ -36,8 +36,8 @@ dotenv.config();
 import { v4 as uuidv4 } from "uuid";  // Generate unique ID
 import { AddressDto } from "src/auth/dto/auth.dto"; // Check of the address
 // Definition of expected keys for Buckets and Collections
-type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket";
-type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection";
+type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "historyBucket";
+type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "historyCollection";
 
 /**
  * @brief Service responsible for database operations.
@@ -52,11 +52,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private usersBucket: Bucket;
   private categBucket: Bucket;
   private brandBucket: Bucket;
+  private historyBucket: Bucket;
   // Collections
   private productsCollection: Collection;
   private usersCollection: Collection;
   private categCollection: Collection;
   private brandCollection: Collection;
+  private historyCollection: Collection;
 
   /**
    * @brief Constructor for DatabaseService.
@@ -127,7 +129,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("BUCKET_NAME", "productsBucket", "productsCollection"),
         this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
         this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
-        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection")
+        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection"),
+        this.connectToBucket("HISTORY_BUCKET_NAME", "historyBucket", "historyCollection")
       ]);
 
       console.log("Successfully connected to Couchbase!");
@@ -209,6 +212,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.getBucket(this.brandBucket, "brands");
   }
 
+  /**
+   * @brief Retrieves the Couchbase bucket instance for history.
+   */
+  getHistoryBucket(): Bucket {
+    return this.getBucket(this.historyBucket, "history");
+  }
+
   // ======================== COLLECTION METHODS
   /**
    * @brief Retrieves the products collection.
@@ -238,9 +248,33 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.getCollection(this.brandCollection, "brands");
   }
 
+  /**
+   * @brief Retrieves the history collection.
+   */
+  getHistoryCollection(): Collection {
+    return this.getCollection(this.historyCollection, "history");
+  }
+
   // ========================================================================
   // ======================== EXECUTE QUERY FUNCTIONS
   // ========================================================================
+  /**
+   * @brief Executes a Couchbase N1QL query with provided parameters (public method).
+   * 
+   * @details This public method exposes query execution for other services.
+   * It calls the private executeQuery method to run a given N1QL query against the Couchbase cluster.
+   * 
+   * @param {string} query - The N1QL query string to be executed.
+   * @param {any} [params={}] - An optional object containing query parameters.
+   * 
+   * @returns {Promise<any[]>} - A promise resolving to the query result rows.
+   * 
+   * @throws {InternalServerErrorException} If the query execution fails.
+   */
+  async executeN1qlQuery(query: string, params: any = {}): Promise<any[]> {
+    return this.executeQuery(query, params);
+  }
+
   /**
    * @brief Executes a Couchbase N1QL query with provided parameters.
    * 
@@ -763,7 +797,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async addUser(username: string, email: string, password: string, address: AddressDto, role?: UserRole): Promise<any> {
     const bucketName = this.usersBucket.name;
     const userId = uuidv4();
-    
+
     const query = `
       INSERT INTO \`${bucketName}\`._default._default (KEY, VALUE)
       VALUES ($userId, {
@@ -781,21 +815,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       })
       RETURNING *;
     `;
-  
-    const result = await this.executeQuery(query, { 
-      userId, 
-      username, 
-      email, 
-      password, 
+
+    const result = await this.executeQuery(query, {
+      userId,
+      username,
+      email,
+      password,
       role: role || UserRole.USER,
-      postCode: address.postCode, 
-      city: address.city, 
-      country: address.country 
+      postCode: address.postCode,
+      city: address.city,
+      country: address.country
     });
-  
+
     return result.length ? result[0] : null; // Returns `null` if already existing
   }
-  
+
   /**
    * @brief Retrieves a user from Couchbase by their email.
    *
@@ -1068,20 +1102,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getProductByLocation(location: string): Promise<any[]> {
     const lowercaseLocation = location.toLowerCase();
-   
+
     const query = `
       SELECT META(p).id AS id, p.*
       FROM \`${this.productsBucket.name}\`._default._default p
       WHERE LOWER(p.origin) = $location;
     `;
-   
+
     const result = await this.executeQuery(query, { location: lowercaseLocation });
-   
+
     if (result.length === 0) {
       console.log(`No products found for location: ${location}`);
       return [];
     }
-   
+
     // Add default "source" field for products without one
     return result.map(product => {
       if (!product.source) {
@@ -1384,7 +1418,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async deleteEntity(type: string, entityId: string): Promise<any> {
     if (!entityId) {
       throw new BadRequestException(`❌ Invalid parameters: ${type} ID is required.`);
-    }  
+    }
     // Determine which entity type to delete
     switch (type) {
       case 'product':
@@ -1392,22 +1426,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       case 'brand':
         try {
           // First get the brand to access its name
-          const brand = await this.getBrandById(entityId); 
+          const brand = await this.getBrandById(entityId);
           if (!brand) {
             console.warn(`⚠️ Brand with ID '${entityId}' not found. Nothing to delete.`);
             return { message: `Brand with ID '${entityId}' does not exist or was already deleted.` };
           }
-          
+
           const brandName = brand.name;
           // Get all products associated with this brand name
-          const productsByBrand = await this.getProductsByBrand(brandName);         
-          if (productsByBrand.length > 0) {            
+          const productsByBrand = await this.getProductsByBrand(brandName);
+          if (productsByBrand.length > 0) {
             // Update each product's status to 'edit-product'
             let updatedCount = 0;
             for (const product of productsByBrand) {
               // Use the productId field
               const productId = product.productId;
-              
+
               if (!productId) {
                 console.error(`❌ Missing productId for product:`, product);
                 continue;
@@ -1422,9 +1456,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           } else {
             console.warn(`ℹNo products found associated with brand "${brandName}"`);
           }
-          
+
           // Now delete the brand
-          return this.deleteBrand(entityId); 
+          return this.deleteBrand(entityId);
         } catch (error) {
           console.error(`❌ Error deleting brand: ${error.message}`, error);
           throw error;
