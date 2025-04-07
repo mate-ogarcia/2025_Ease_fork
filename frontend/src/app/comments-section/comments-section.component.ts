@@ -69,14 +69,20 @@ export class CommentsSectionComponent implements OnInit {
       console.error('Product ID or source missing to load comments.');
       return;
     }
-
+  
     this.loading = true;
     this.commentService.getCommentsByProduct(this.productId, this.productSource, this.pagination.currentPage).subscribe({
       next: (data) => {
-        this.comments.push(...data.comments);
+        // Clear this.comments then reload
+        this.comments = data.comments.map((c: Comment) => {
+          const commentWithNumericRating = {
+            ...c,
+            userRatingCom: Number(c.userRatingCom)  // Explicit conversion to number
+          };
+          return commentWithNumericRating;
+        });
         this.pagination.totalCount = data.pagination.totalCount;
         this.pagination.hasNextPage = data.pagination.hasNextPage;
-        console.log('Comments:', data);
       },
       error: () => this.notifService.showError('Erreur lors du chargement des commentaires.'),
       complete: () => this.loading = false

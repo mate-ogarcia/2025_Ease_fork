@@ -20,7 +20,7 @@
     (cancel)="showCommentForm = false"
   >
   </app-comment-form>
-  
+
   <!-- Comments list -->
   <div class="comments-list">
     <ng-container *ngIf="comments.length > 0; else noComments">
@@ -38,7 +38,9 @@
     </ng-container>
 
     <ng-template #noComments>
-      <p class="no-comments">Pas encore de commentaires disponibles pour ce produit.</p>
+      <p class="no-comments">
+        Pas encore de commentaires disponibles pour ce produit.
+      </p>
     </ng-template>
   </div>
 
@@ -55,11 +57,12 @@
     [disabled]="loading"
     class="load-more-btn"
   >
-  Charger plus d'avis
+    Charger plus d'avis
   </button>
 
   <!-- Pagination info -->
   <div *ngIf="comments.length > 0" class="pagination-info">
-    Affichage de {{ comments.length }} sur {{ pagination.totalCount }} commentaires
+    Affichage de {{ comments.length }} sur
+    {{ pagination.totalCount }} commentaires
   </div>
 </div>

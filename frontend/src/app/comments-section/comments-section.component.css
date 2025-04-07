@@ -1,0 +1,7 @@
+.rating-stars span {
+    color: #ddd; /* Étoiles vides */
+  }
+  
+  .rating-stars span.filled {
+    color: gold; /* Étoiles remplies */
+  }
