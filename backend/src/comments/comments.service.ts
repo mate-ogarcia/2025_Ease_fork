@@ -29,7 +29,7 @@ export class CommentsService {
    */
   constructor(
     private databaseService: DatabaseService,
-  ) {}
+  ) { }
 
   /**
    * @brief Retrieves comments for a specific product with pagination.
@@ -44,21 +44,21 @@ export class CommentsService {
    * @throws {InternalServerErrorException} If an error occurs while fetching the comments from the database.
    */
   async getCommentsForProduct(productId: string, page: number = 1, pageSize: number = 10) {
-    try {      
+    try {
       // Calculate the skip value for pagination
       const skip = (page - 1) * pageSize;
-      
+
       // Fetch comments and total count from the database
       const [comments, totalCount] = await this.databaseService.getProductComments(productId, skip, pageSize);
-      
+
       // Calculate pagination metadata
       const totalPages = Math.ceil(totalCount / pageSize);
       const hasNextPage = page < totalPages;
       const hasPrevPage = page > 1;
 
       // Extract only the comments from the data
-      const flatComments = comments.map((item: any) => item.CommentsBDD ?? item); 
-      
+      const flatComments = comments.map((item: any) => item.CommentsBDD ?? item);
+
       // Prepare the result object with comments and pagination info
       const result = {
         comments: flatComments,
@@ -70,7 +70,7 @@ export class CommentsService {
           hasNextPage,
           hasPrevPage
         }
-      };      
+      };
       return result;
     } catch (error) {
       // Log the error and throw an exception if something goes wrong
@@ -97,6 +97,26 @@ export class CommentsService {
       // Log the error and throw an exception if something goes wrong
       console.error("❌ Error adding comment:", error);
       throw new InternalServerErrorException("Error adding comment.");
+    }
+  }
+
+  /**
+   * @brief Retrieves the total count of comments for a specific product from the database.
+   * 
+   * This method interacts with the database to fetch the total count of comments for the product
+   * identified by the given `productId`. If an error occurs during the database query, an exception is thrown.
+   * 
+   * @param {string} productId - The ID of the product for which the comment count is retrieved.
+   * @returns {Promise<number>} A promise that resolves to the total comment count for the specified product.
+   * @throws {InternalServerErrorException} If an error occurs while querying the database for the comment count.
+   */
+  async getCommentsCount(productId: string): Promise<number> {
+    try {
+      // Call the method that queries the database to obtain the number of comments
+      return await this.databaseService.getCommentsCount(productId);
+    } catch (error) {
+      console.error(`❌ Error retrieving comments count for the product ${productId}:`, error);
+      throw new InternalServerErrorException(`Error retrieving comments count for the product ${productId}.`);
     }
   }
 }

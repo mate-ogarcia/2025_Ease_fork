@@ -1448,6 +1448,40 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * @brief Retrieves the total count of comments for a specific product from the comments bucket.
+   * 
+   * @param {string} productId - The ID of the product for which the comment count is retrieved.
+   * @returns {Promise<number>} A promise that resolves to the total comment count for the specified product.
+   * @throws {Error} If the comments bucket name is not defined in the environment variables or if an error occurs while executing the query.
+   */
+  async getCommentsCount(productId: string): Promise<number> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+    }
+
+    // Query to count the total number of comments for the product
+    const countQuery = `
+    SELECT COUNT(*) AS total 
+    FROM \`${commentsBucketName}\` 
+    WHERE productId = "${productId}"
+  `;
+
+    try {
+      // Execute the query to count the comments
+      const result = await this.executeQuery(countQuery);
+
+      // Extract the total count from the result
+      const totalCount = result[0]?.total || 0;
+
+      return totalCount;
+    } catch (error) {
+      console.error(`❌ Error retrieving comments count for product ${productId}:`, error);
+      throw new Error(`Error retrieving comments count for product ${productId}`);
+    }
+  }
+
   // ========================================================================
   // ======================== REQUESTS FUNCTIONS (FOR ADMIN MANAGEMENT)
   // ========================================================================

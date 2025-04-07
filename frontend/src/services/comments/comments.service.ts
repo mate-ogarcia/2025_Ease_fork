@@ -7,7 +7,7 @@
  */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Comment } from '../../app/models/comments.model';
 
@@ -32,7 +32,7 @@ export class CommentsService {
    */
   constructor(
     private http: HttpClient
-  ) {}
+  ) { }
 
   /**
    * @brief Sends a request to add a comment to the backend.
@@ -66,5 +66,23 @@ export class CommentsService {
       .set('source', productSource);
 
     return this.http.get<any>(`${this._commentsUrl}/product/${productId}`, { params });
+  }
+
+  /**
+   * @brief Retrieves the total comment count for a specific product.
+   * 
+   * This method makes an HTTP request to the backend API to fetch the total count of comments 
+   * for the product identified by the given `productId`. The response contains the comment count, 
+   * which is returned by this method.
+   * 
+   * @param {string} productId - The ID of the product for which the comment count is retrieved.
+   * @returns {Promise<number>} A promise that resolves to the total comment count for the specified product.
+   * @throws {Error} If an error occurs while making the HTTP request or retrieving the comment count.
+   */
+  async getCommentCountForProduct(productId: string): Promise<number> {
+    const response = await lastValueFrom(
+      this.http.get<{ count: number }>(`${this._commentsUrl}/product/${productId}/count`)
+    );
+    return response.count;
   }
 }

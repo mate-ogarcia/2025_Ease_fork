@@ -10,20 +10,16 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 // Components
 import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
-import { CommentFormComponent } from '../comment-form/comment-form.component';
 import { CommentsSectionComponent } from '../comments-section/comments-section.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
 import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { NotificationService } from '../../services/notification/notification.service';
 import { CommentsService } from '../../services/comments/comments.service';
-// Models
-import { Comment } from '../models/comments.model';
+import { catchError, from } from 'rxjs';
 
 /**
  * @class ProdpageComponent
@@ -46,6 +42,7 @@ export class ProdpageComponent implements OnInit {
   showCommentForm = false;
   canAddComment: boolean = false;   // Determines if the user can add a comment.
   userRole: string | null = null;   // Stores the user role.
+  commentCount: number = 0;         // Number of comments for a product
 
   /**
    * @brief Constructor initializes dependencies.
@@ -60,6 +57,7 @@ export class ProdpageComponent implements OnInit {
     private apiUnsplash: APIUnsplash,
     private openFoodFactsService: ApiOpenFoodFacts,
     private authService: AuthService,
+    private commentsService: CommentsService,
   ) { }
 
   /**
@@ -74,8 +72,19 @@ export class ProdpageComponent implements OnInit {
       if (this.productId) {
         this.loadProduct(this.productId, this.productSource);
       }
+      // Get the number of comments
+      from(this.commentsService.getCommentCountForProduct(this.productId)).pipe(
+        catchError((error) => {
+          console.error("❌ Error fetching comment count", error);
+          return []; // Returns an empty array or another default value in case of error
+        })
+      ).subscribe(
+        (count) => {
+          this.commentCount = count; // Stores the number of comments
+        }
+      );
     });
-
+    // Get the user's info
     this.authService.getUserRole().subscribe((role) => {
       this.userRole = role;
       this.canAddComment = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'superadmin';

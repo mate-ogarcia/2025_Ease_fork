@@ -76,6 +76,7 @@ export class CommentsSectionComponent implements OnInit {
         this.comments.push(...data.comments);
         this.pagination.totalCount = data.pagination.totalCount;
         this.pagination.hasNextPage = data.pagination.hasNextPage;
+        console.log('Comments:', data);
       },
       error: () => this.notifService.showError('Erreur lors du chargement des commentaires.'),
       complete: () => this.loading = false

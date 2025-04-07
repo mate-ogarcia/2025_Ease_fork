@@ -103,4 +103,31 @@ export class CommentsController {
       throw new InternalServerErrorException("Error adding comment.");
     }
   }
+
+
+  /**
+   * @brief Retrieves the total count of comments for a specific product.
+   * 
+   * This method queries the `CommentsService` to retrieve the total number of comments for a product 
+   * identified by the given `productId`. The count is returned as part of the response. 
+   * If an error occurs while fetching the count, an `InternalServerErrorException` is thrown.
+   * 
+   * @route GET /comments/product/:productId/count
+   * @param {string} productId - The ID of the product for which the comment count is retrieved.
+   * @returns {Promise<any>} A promise containing the total count of comments for the product.
+   * @throws {InternalServerErrorException} If an error occurs while retrieving the comment count.
+   */
+  @Get("product/:productId/count")
+  async getCommentsCount(@Param("productId") productId: string) {
+    try {
+      // Call the service method to get the total comment count for this product
+      const commentCount = await this.commentsService.getCommentsCount(productId);
+
+      // Return the comment count
+      return { count: commentCount };
+    } catch (error) {
+      console.error(`❌ Error retrieving comments count for the product ${productId}:`, error);
+      throw new InternalServerErrorException(`Error retrieving comments count for the product ${productId}.`);
+    }
+  }
 }
