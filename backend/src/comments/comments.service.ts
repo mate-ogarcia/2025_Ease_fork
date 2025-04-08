@@ -119,4 +119,20 @@ export class CommentsService {
       throw new InternalServerErrorException(`Error retrieving comments count for the product ${productId}.`);
     }
   }
+
+  /**
+   * @brief Retrieves the average user rating for a specific product.
+   * 
+   * @param productId - The ID of the product whose average rating is to be calculated.
+   * @returns A promise resolving to the average rating as a number.
+   * @throws InternalServerErrorException if an error occurs while fetching the average rating.
+   */
+  async getCommentsAverageRate(productId: string): Promise<number> {
+    try {
+      return await this.databaseService.getAverageRating(productId);
+    } catch (error) {
+      console.error(`❌ Error retrieving comments average rate for the product ${productId}:`, error);
+      throw new InternalServerErrorException(`Error retrieving comments average rate for the product ${productId}.`);
+    }
+  }
 }

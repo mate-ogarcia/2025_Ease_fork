@@ -85,4 +85,18 @@ export class CommentsService {
     );
     return response.count;
   }
+
+  /**
+   * @brief Retrieves the average rating for a specific product.
+   * 
+   * @param productId - The unique identifier of the product.
+   * @returns A promise resolving to the average rating as a number.
+   * @throws If the request fails, the error will be propagated to the caller.
+   */
+  async getAverageRateForProduct(productId: string): Promise<number> {
+    const response = await lastValueFrom(
+      this.http.get<{ avg: number }>(`${this._commentsUrl}/product/${productId}/average`)
+    );
+    return response.avg;
+  }
 }

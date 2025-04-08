@@ -1482,6 +1482,40 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * @brief Retrieves the average rating for a specific product from the Couchbase database.
+   *
+   * @param productId - The ID of the product whose average rating should be calculated.
+   * @returns A promise resolving to the average rating rounded to two decimal places.
+   *          Returns 0 if no comments are found.
+   * @throws Error if an issue occurs during query execution or if the bucket name is missing.
+   */
+  async getAverageRating(productId: string): Promise<number> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+    }
+
+    // Query to calculate the average score
+    const avgQuery = `
+    SELECT AVG(TO_NUMBER(userRatingCom)) AS averageRating
+    FROM \`${commentsBucketName}\`
+    WHERE productId = "${productId}"
+  `;
+
+    try {
+      const result = await this.executeQuery(avgQuery);
+
+      // Extract average (may be null if no comments)
+      const average = result[0]?.averageRating ?? 0;
+
+      return Number(average.toFixed(2)); // Rounded to 2 decimal places
+    } catch (error) {
+      console.error(`❌ Error retrieving average rating for product ${productId}:`, error);
+      throw new Error(`Error retrieving average rating for product ${productId}`);
+    }
+  }
+
   // ========================================================================
   // ======================== REQUESTS FUNCTIONS (FOR ADMIN MANAGEMENT)
   // ========================================================================

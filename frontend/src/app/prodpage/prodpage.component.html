@@ -21,8 +21,11 @@
 
         <!-- Rating + Reviews -->
         <div class="rating">
-          <span class="stars">★★★★★</span>
-          <span class="review-count">5.0 ({{ commentCount }} Commentaires)</span>
+          <div class="stars-container">
+            <div class="stars-background">★★★★★</div>
+            <div class="stars-filled" [style.width.%]="(avgRate/5)*100">★★★★★</div>
+          </div>
+          <span class="review-count">{{ avgRate }} ({{ commentCount }} Commentaires)</span>
         </div>
 
         <!-- Description -->

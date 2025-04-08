@@ -217,3 +217,24 @@
         max-height: 300px;
     }
 }
+
+/* ========== Rating */
+.stars-container {
+    position: relative;
+    display: inline-block;
+    font-size: 24px; /* Ajuster selon vos besoins */
+    line-height: 1;
+  }
+  
+  .stars-background {
+    color: #ddd; /* Étoiles vides */
+  }
+  
+  .stars-filled {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: gold; /* Étoiles pleines */
+    overflow: hidden;
+    white-space: nowrap;
+  }

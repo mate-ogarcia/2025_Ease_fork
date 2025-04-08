@@ -130,4 +130,25 @@ export class CommentsController {
       throw new InternalServerErrorException(`Error retrieving comments count for the product ${productId}.`);
     }
   }
+
+  /**
+   * @brief Retrieves the average user rating for a specific product.
+   *
+   * This route handler calls the service to compute the average rating (`userRatingCom`)
+   * of all comments associated with the given product ID.
+   *
+   * @param productId - The unique identifier of the product (from route parameter).
+   * @returns An object containing the average rating as `count`.
+   * @throws InternalServerErrorException if an error occurs during the operation.
+   */
+  @Get("product/:productId/average")
+  async getCommentsAverageRate(@Param("productId") productId: string) {
+    try {
+      const commentAvg = await this.commentsService.getCommentsAverageRate(productId);
+      return { avg: commentAvg };
+    } catch (error) {
+      console.error(`❌ Error retrieving average rate for the product ${productId}:`, error);
+      throw new InternalServerErrorException(`Error retrieving average rate for the product ${productId}.`);
+    }
+  }
 }

@@ -43,6 +43,7 @@ export class ProdpageComponent implements OnInit {
   canAddComment: boolean = false;   // Determines if the user can add a comment.
   userRole: string | null = null;   // Stores the user role.
   commentCount: number = 0;         // Number of comments for a product
+  avgRate: number = 0;              // Average rate for a product
 
   /**
    * @brief Constructor initializes dependencies.
@@ -81,6 +82,17 @@ export class ProdpageComponent implements OnInit {
       ).subscribe(
         (count) => {
           this.commentCount = count; // Stores the number of comments
+        }
+      );
+      // Get the average rating for the product 
+      from(this.commentsService.getAverageRateForProduct(this.productId)).pipe(
+        catchError((error) => {
+          console.error("❌ Error fetching comment avg rate", error);
+          return []; // Returns an empty array or another default value in case of error
+        })
+      ).subscribe(
+        (count) => {
+          this.avgRate = count;
         }
       );
     });
