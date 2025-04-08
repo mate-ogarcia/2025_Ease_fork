@@ -3,10 +3,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
     width: 100%;
     min-height: 100vh;
-    padding: 10px;
     background-color: #023436;
 }
 
@@ -14,7 +12,12 @@
 .app-navbar {
     width: 100%;
 }
+.general-container {
+    width: 100%;
+    padding: 20px;
+    border-top: 1px solid #ddd;
 
+}
 /* Conteneur produit */
 .prod-container {
     display: flex;
@@ -22,7 +25,8 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 95%;
+    padding: 20px;
+    width: 100%;
     background-color: #f9ebde;
     border-radius: 15px;
     gap: 20px;
