@@ -42,9 +42,6 @@ export class CommentsController {
   /**
    * @brief Retrieves comments for a specific product with pagination.
    * 
-   * This endpoint retrieves the paginated comments for a given product. It supports pagination
-   * via query parameters for the page number and page size.
-   * 
    * @route GET /comments/product/:productId
    * @param {string} productId - The ID of the product for which comments are retrieved.
    * @param {string} page - The page number to retrieve (optional, default: 1).
@@ -56,14 +53,11 @@ export class CommentsController {
   @Get("product/:productId")
   @UseInterceptors(CustomCacheInterceptor) // Intercept the cache logic
   async getCommentsForProduct(
-    @Param('productId') productId: string,
-    @Query('page') page: string = '1',
-    @Query('pageSize') pageSize: string = '10'
+    @Param('productId') productId: string
   ) {
     try {
-      const pageNumber = parseInt(page, 10);
-      const pageSizeNumber = parseInt(pageSize, 10);
-      return await this.commentsService.getCommentsForProduct(productId, pageNumber, pageSizeNumber);
+      // Call the service function to retrieve all comments
+      return await this.commentsService.getCommentsForProduct(productId);
     } catch (error) {
       console.error(`❌ Error retrieving comments for product ${productId}:`, error);
       throw new InternalServerErrorException(`Error retrieving comments for product.`);
@@ -103,7 +97,6 @@ export class CommentsController {
       throw new InternalServerErrorException("Error adding comment.");
     }
   }
-
 
   /**
    * @brief Retrieves the total count of comments for a specific product.

@@ -29,51 +29,29 @@ export class CommentsService {
    */
   constructor(
     private databaseService: DatabaseService,
-  ) { }
+  ) {}
 
   /**
-   * @brief Retrieves comments for a specific product with pagination.
+   * @brief Retrieves all comments for a specific product from the database.
    * 
-   * This method fetches comments for a product from the database and returns them with pagination metadata.
-   * If there is an error while fetching the comments, an `InternalServerErrorException` is thrown.
+   * This method fetches all comments for a given product from the database.
+   * It processes the data to extract only the comments and returns them in a flat structure.
+   * If an error occurs during the database query, an `InternalServerErrorException` is thrown.
    * 
    * @param {string} productId - The ID of the product for which comments are retrieved.
-   * @param {number} page - The page number to retrieve (starting from 1). Default is 1.
-   * @param {number} pageSize - The number of comments to retrieve per page. Default is 10.
-   * @returns {Promise<any>} A promise containing an object with the comments and pagination metadata.
-   * @throws {InternalServerErrorException} If an error occurs while fetching the comments from the database.
+   * @returns {Promise<any[]>} A promise containing an array of comments for the specified product.
+   * @throws {InternalServerErrorException} If an error occurs while querying the database for the comments.
    */
-  async getCommentsForProduct(productId: string, page: number = 1, pageSize: number = 10) {
+  async getCommentsForProduct(productId: string) {
     try {
-      // Calculate the skip value for pagination
-      const skip = (page - 1) * pageSize;
-
-      // Fetch comments and total count from the database
-      const [comments, totalCount] = await this.databaseService.getProductComments(productId, skip, pageSize);
-
-      // Calculate pagination metadata
-      const totalPages = Math.ceil(totalCount / pageSize);
-      const hasNextPage = page < totalPages;
-      const hasPrevPage = page > 1;
+      // Retrieve all comments for the product
+      const comments = await this.databaseService.getProductComments(productId);
 
       // Extract only the comments from the data
       const flatComments = comments.map((item: any) => item.CommentsBDD ?? item);
 
-      // Prepare the result object with comments and pagination info
-      const result = {
-        comments: flatComments,
-        pagination: {
-          page,
-          pageSize,
-          totalCount,
-          totalPages,
-          hasNextPage,
-          hasPrevPage
-        }
-      };
-      return result;
+      return flatComments;
     } catch (error) {
-      // Log the error and throw an exception if something goes wrong
       console.error(`❌ Error retrieving comments for product ${productId}:`, error);
       throw new InternalServerErrorException("Error retrieving product comments.");
     }

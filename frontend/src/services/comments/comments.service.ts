@@ -50,22 +50,11 @@ export class CommentsService {
   /**
    * @brief Get comments for a specific product with pagination.
    * 
-   * This method retrieves comments for a specific product, supporting pagination.
-   * It sends an HTTP GET request to the backend API with pagination parameters.
-   * 
    * @param {string} productId - The ID of the product for which comments are retrieved.
-   * @param {string} productSource - The source of the product (e.g., "shop" or "catalog").
-   * @param {number} [page=1] - The page number to retrieve (optional, default: 1).
-   * @param {number} [pageSize=10] - Number of comments per page (optional, default: 10).
    * @returns {Observable<any>} An observable that emits the response containing the comments.
    */
-  getCommentsByProduct(productId: string, productSource: string, page: number = 1, pageSize: number = 10): Observable<any> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('pageSize', pageSize.toString())
-      .set('source', productSource);
-
-    return this.http.get<any>(`${this._commentsUrl}/product/${productId}`, { params });
+  getCommentsByProduct(productId: string): Observable<any> {
+    return this.http.get<any>(`${this._commentsUrl}/product/${productId}`);
   }
 
   /**

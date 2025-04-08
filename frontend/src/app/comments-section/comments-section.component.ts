@@ -19,7 +19,7 @@ import { NotificationService } from '../../services/notification/notification.se
   templateUrl: './comments-section.component.html',
   styleUrls: ['./comments-section.component.css']
 })
-export class CommentsSectionComponent implements OnInit {  
+export class CommentsSectionComponent implements OnInit {
   @Input() productId!: string;  // ID of the product for which to display comments  
   @Input() productSource!: string;  // Source of the product (e.g., "Internal", "External")  
   comments: Comment[] = []; // Array to store fetched comments
@@ -28,8 +28,9 @@ export class CommentsSectionComponent implements OnInit {
     currentPage: 1,
     totalPages: 0,
     totalCount: 0,
+    pageSize: 10,
     hasNextPage: false
-  };  
+  };
   loading = false;  // Indicates if the component is currently loading data  
   showCommentForm = false;  // Flag to show or hide the comment form  
   canAddComment = false;  // Flag to determine if the user is allowed to add comments
@@ -44,14 +45,23 @@ export class CommentsSectionComponent implements OnInit {
     private commentService: CommentsService,
     private authService: AuthService,
     private notifService: NotificationService
-  ) {}
+  ) { }
 
   /**
    * @brief Lifecycle hook - called after component initialization.
    * Loads comments and determines if the user can post comments.
    */
   ngOnInit(): void {
-    this.loadComments();
+    // Réinitialiser la pagination
+    this.pagination = {
+      currentPage: 1,
+      totalCount: 0,
+      totalPages: 0,
+      pageSize: 10,
+      hasNextPage: false
+    };
+
+    this.loadComments(false); // ou simplement this.loadComments();
     this.authService.getUserRole().subscribe((role) => {
       if (role) {
         this.canAddComment = ['user', 'admin', 'superadmin'].includes(role.toLowerCase());
@@ -64,27 +74,43 @@ export class CommentsSectionComponent implements OnInit {
   /**
    * @brief Loads comments for the current product and updates pagination.
    */
-  loadComments(): void {
+  loadComments(append: boolean = false): void {
     if (!this.productId || !this.productSource) {
       console.error('Product ID or source missing to load comments.');
       return;
     }
-  
+
     this.loading = true;
-    this.commentService.getCommentsByProduct(this.productId, this.productSource, this.pagination.currentPage).subscribe({
+
+    // Load all comments from the API
+    this.commentService.getCommentsByProduct(this.productId).subscribe({
       next: (data) => {
-        // Clear this.comments then reload
-        this.comments = data.comments.map((c: Comment) => {
-          const commentWithNumericRating = {
-            ...c,
-            userRatingCom: Number(c.userRatingCom)  // Explicit conversion to number
-          };
-          return commentWithNumericRating;
-        });
-        this.pagination.totalCount = data.pagination.totalCount;
-        this.pagination.hasNextPage = data.pagination.hasNextPage;
+        // Convert the new comments
+        const allComments = data.map((c: Comment) => ({
+          ...c,
+          userRatingCom: Number(c.userRatingCom),
+        }));
+
+        // Apply frontend pagination
+        const start = (this.pagination.currentPage - 1) * this.pagination.pageSize;
+        const end = start + this.pagination.pageSize;
+        const paginatedComments = allComments.slice(start, end);
+
+        if (append) {
+          const existingIds = new Set(this.comments.map(c => c.id));
+          const uniqueNewComments = paginatedComments.filter((c: Comment) => !existingIds.has(c.id));
+
+          this.comments = [...this.comments, ...uniqueNewComments];
+        } else {
+          this.comments = paginatedComments;
+        }
+
+        // Update pagination (no need to recalculate totalCount)
+        this.pagination.totalCount = allComments.length;
+        this.pagination.totalPages = Math.ceil(this.pagination.totalCount / this.pagination.pageSize);
+        this.pagination.hasNextPage = this.pagination.currentPage < this.pagination.totalPages;
       },
-      error: () => this.notifService.showError('Erreur lors du chargement des commentaires.'),
+      error: () => this.notifService.showError('Error loading comments.'),
       complete: () => this.loading = false
     });
   }
@@ -95,7 +121,7 @@ export class CommentsSectionComponent implements OnInit {
   handleLoadMore(): void {
     if (this.pagination.hasNextPage && !this.loading) {
       this.pagination.currentPage++;
-      this.loadComments();
+      this.loadComments(true); // Passer true pour ajouter les nouveaux commentaires aux existants
     }
   }
 
