@@ -18,13 +18,13 @@ import { Subject, of, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first } from 'rxjs/operators';
 import { Router } from '@angular/router';
 // API
-import { ApiService } from '../../../../../services/api.service';
-import { UsersService } from '../../../../../services/users/users.service';
-import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
+import { ApiService } from '../../../../services/api.service';
+import { UsersService } from '../../../../services/users/users.service';
+import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 // Cache API
-import { DataCacheService } from '../../../../../services/cache/data-cache.service';
+import { DataCacheService } from '../../../../services/cache/data-cache.service';
 // History service
-import { HistoryService } from '../../../../../services/history/history.service';
+import { HistoryService } from '../../../../services/history/history.service';
 // Import du composant de localisation
 import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
 
@@ -275,33 +275,33 @@ export class SearchbarComponent implements OnInit {
     this.searchResults = []; // Hide suggestions after selection.
 
     // Ajouter à l'historique le terme exact affiché dans la barre de recherche
-    this.addToHistory(null);
+    this.addToHistory(product);
 
     // Launch the research
     this.search(true);
   }
 
   /**
-   * @brief Ajoute le terme de recherche à l'historique
-   * @param product Le produit ou le terme recherché
+   * @brief Adds the search term to history
+   * @param product The product or search term
    */
   private addToHistory(product: any): void {
     console.log('🔍 searchbar.addToHistory appelé avec:', product);
 
-    // Si c'est une recherche directe (appui sur Entrée), utiliser le terme de recherche brut
-    if (this.searchQuery && this.searchQuery.trim() !== '') {
+    // If it's a direct search (Enter key press), use the raw search term
+    if (!product && this.searchQuery && this.searchQuery.trim() !== '') {
       const searchTerm = this.searchQuery.trim();
       console.log('🔍 Utilisation du terme de recherche direct:', searchTerm);
 
-      // Créer un objet simple pour l'historique
+      // Create a simple object for history
       const historyItem = {
-        id: Date.now().toString(), // ID temporaire unique
-        name: searchTerm           // Le terme exact tapé par l'utilisateur
+        id: Date.now().toString(), // Unique temporary ID
+        name: searchTerm           // The exact term typed by the user
       };
 
       this.historyService.addToHistory(
         historyItem.id,
-        searchTerm  // Utiliser directement le terme recherché
+        searchTerm  // Use the search term directly
       ).subscribe({
         next: (response) => {
           console.log(`✅ Terme "${searchTerm}" ajouté à l'historique:`, response);
@@ -314,26 +314,29 @@ export class SearchbarComponent implements OnInit {
       return;
     }
 
-    // Comportement par défaut pour les sélections de produits
+    // Default behavior for product selections
     if (!product || !product.id) {
       console.warn('⚠️ Produit invalide pour l\'historique:', product);
       return;
     }
 
-    // Simplifier les données envoyées à l'historique
+    // Simplify data sent to history
     const productName = product.name || '';
+    // No longer add source information
+    // const sourceInfo = product.source ? ` (${product.source})` : '';
+    const fullProductName = productName; // Just the product name
 
     console.log('🔍 Envoi à l\'historique:', {
       id: product.id,
-      name: productName
+      name: fullProductName
     });
 
     this.historyService.addToHistory(
       product.id,
-      productName
+      fullProductName
     ).subscribe({
       next: (response) => {
-        console.log(`✅ Produit "${productName}" ajouté à l'historique:`, response);
+        console.log(`✅ Produit "${fullProductName}" ajouté à l'historique:`, response);
       },
       error: (err) => {
         console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
@@ -354,6 +357,22 @@ export class SearchbarComponent implements OnInit {
    */
   search(includeSelectedProduct: boolean = false): void {
     this.applyFilters(); // Apply filters before performing the search.
+
+    // If searching with filters only and filters are applied, save the search
+    if (!includeSelectedProduct && Object.keys(this.appliedFilters).length > 0) {
+      // Create a descriptive term based on applied filters
+      const filterDescription = this.createFilterDescription();
+      const filterId = `filter-${Date.now()}`; // Unique ID for this filter search
+
+      this.historyService.addToHistory(
+        filterId,
+        filterDescription
+      ).subscribe({
+        next: (response) => console.log('✅ Recherche par filtres ajoutée à l\'historique:', response),
+        error: (err) => console.error('❌ Erreur lors de l\'ajout à l\'historique:', err)
+      });
+    }
+
     // Warn if no filters or selected product is present
     if (!includeSelectedProduct && !Object.keys(this.appliedFilters).length) {
       console.warn('⚠️ No filters applied.');
@@ -373,7 +392,7 @@ export class SearchbarComponent implements OnInit {
       next: (response) => {
         this.isLoading = false;
 
-        // La sauvegarde dans l'historique est déjà faite dans onEnter
+        // History saving is already done in onEnter
 
         // Ensure the selected product is at the first position
         if (includeSelectedProduct && this.selectedProduct) {
@@ -387,6 +406,33 @@ export class SearchbarComponent implements OnInit {
       },
       error: (error) => console.error('❌ Search error:', error),
     });
+  }
+
+  /**
+   * @brief Creates a human-readable description of the applied filters.
+   * @returns {string} A description of the applied filters.
+   */
+  private createFilterDescription(): string {
+    const parts = [];
+
+    if (this.appliedFilters.country)
+      parts.push(`Pays: ${this.appliedFilters.country}`);
+
+    if (this.appliedFilters.department)
+      parts.push(`Département: ${this.appliedFilters.department}`);
+
+    if (this.appliedFilters.category)
+      parts.push(`Catégorie: ${this.appliedFilters.category}`);
+
+    if (this.appliedFilters.brand)
+      parts.push(`Marque: ${this.appliedFilters.brand}`);
+
+    if (this.appliedFilters.price) {
+      const { min, max } = this.appliedFilters.price;
+      parts.push(`Prix: ${min}€-${max}€`);
+    }
+
+    return parts.length ? parts.join(', ') : 'Recherche avec filtres';
   }
 
   /**
@@ -456,4 +502,4 @@ export class SearchbarComponent implements OnInit {
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
   }
-}
+} 

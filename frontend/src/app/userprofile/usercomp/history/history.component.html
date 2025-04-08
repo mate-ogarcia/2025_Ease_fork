@@ -1,5 +1,5 @@
 <div class="container">
-  <!-- Bouton pour changer de mode -->
+  <!-- Button to change view mode -->
   <div class="header-actions">
     <h2 class="history-title">Historique</h2>
     <div class="action-buttons">
@@ -11,7 +11,7 @@
           <i class="fa-solid fa-grip"></i>
         </button>
       </div>
-      <!-- Boutons d'action -->
+      <!-- Action buttons -->
       <button class="refresh-btn" (click)="loadHistory()" aria-label="Actualiser">
         <i class="fa-solid fa-refresh"></i> Actualiser
       </button>
@@ -21,17 +21,17 @@
     </div>
   </div>
 
-  <!-- Indicateur de chargement -->
+  <!-- Loading indicator -->
   <div class="loading-container" *ngIf="isLoading">
     <div class="spinner"></div>
     <p>Chargement de l'historique...</p>
   </div>
 
-  <!-- Contenu principal -->
+  <!-- Main content -->
   <div class="result-container" *ngIf="!isLoading">
-    <!-- Historique trouvé -->
+    <!-- History found -->
     <div class="item-container" *ngIf="resultsArray.length > 0; else noResults">
-      <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
+      <!-- Add conditional class based on view mode -->
       <ul class="items-list" [ngClass]="viewMode">
         <li class="search-item" *ngFor="let item of resultsArray; let i = index; trackBy: trackByProduct">
           <div class="search-item-content" (click)="searchAgain(item)" tabindex="0">
@@ -49,7 +49,7 @@
       </ul>
     </div>
 
-    <!-- Aucun résultat -->
+    <!-- No results -->
     <ng-template #noResults>
       <div class="no-results">
         <p>Aucun historique de recherche trouvé.</p>

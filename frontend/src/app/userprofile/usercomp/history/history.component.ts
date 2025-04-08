@@ -124,30 +124,25 @@ export class HistoryComponent implements OnInit {
   getSearchTerm(item: any): string {
     console.log('🔍 Analyse de l\'élément d\'historique:', item);
 
-    // Essayer différentes propriétés où le terme de recherche pourrait être stocké
+    // Check if this is a filter search (special ID format starting with 'filter-')
+    if (item.id && typeof item.id === 'string' && item.id.startsWith('filter-')) {
+      console.log('  ✓ Recherche par filtres détectée');
+      // For filter searches, productName contains the filter description
+      if (item.productName) {
+        console.log('  ✓ Description des filtres trouvée:', item.productName);
+        return this.cleanHtmlTags(item.productName);
+      }
+    }
+
+    // Try different properties where the search term might be stored
     if (typeof item === 'object' && item) {
-      // Chercher d'abord dans les propriétés standard
+      // Look first in standard properties
       if (item.productName) {
         console.log('  ✓ Trouvé dans productName:', item.productName);
         return this.cleanHtmlTags(item.productName);
       }
 
-      // Vérifier les données Elasticsearch
-      if (item._source && item._source.productName) {
-        console.log('  ✓ Trouvé dans _source.productName:', item._source.productName);
-        return this.cleanHtmlTags(item._source.productName);
-      }
-
-      // Chercher dans fragments si c'est un objet de type elasticSearch
-      if (item.fragments && Array.isArray(item.fragments)) {
-        const nameFragment = item.fragments.find((f: any) => f.field === 'name' || f.field === 'productName');
-        if (nameFragment && nameFragment.term) {
-          console.log('  ✓ Trouvé dans fragments:', nameFragment.term);
-          return this.cleanHtmlTags(nameFragment.term);
-        }
-      }
-
-      // Vérifier spécifiquement le scénario ElasticSearch
+      // Check in productData
       if (item.productData && typeof item.productData === 'object') {
         if (item.productData.name) {
           console.log('  ✓ Trouvé dans productData.name:', item.productData.name);
@@ -159,7 +154,15 @@ export class HistoryComponent implements OnInit {
         }
       }
 
-      // Recherche dans les valeurs directes au niveau supérieur
+      // Check in _default (specific to Couchbase's structure)
+      if (item._default && typeof item._default === 'object') {
+        if (item._default.productName) {
+          console.log('  ✓ Trouvé dans _default.productName:', item._default.productName);
+          return this.cleanHtmlTags(item._default.productName);
+        }
+      }
+
+      // Search in direct values at the top level
       for (const key of ['name', 'term', 'query', 'searchText', 'title']) {
         if (item[key] && typeof item[key] === 'string') {
           console.log(`  ✓ Trouvé dans ${key}:`, item[key]);
@@ -167,7 +170,7 @@ export class HistoryComponent implements OnInit {
         }
       }
 
-      // Recherche dans les valeurs de second niveau
+      // Search in second-level values
       for (const prop in item) {
         const value = item[prop];
         if (typeof value === 'object' && value !== null) {
@@ -186,20 +189,20 @@ export class HistoryComponent implements OnInit {
   }
 
   /**
-   * @brief Nettoie les balises HTML d'une chaîne de caractères.
-   * @param text Le texte à nettoyer.
-   * @return Le texte nettoyé.
+   * @brief Cleans HTML tags from a string.
+   * @param text The text to clean.
+   * @return The cleaned text.
    */
   cleanHtmlTags(text: string): string {
     if (!text || typeof text !== 'string') return '';
 
-    // Enlever les balises HTML
+    // Remove HTML tags
     let cleanText = text.replace(/<\/?[^>]+(>|$)/g, '');
 
-    // Enlever les caractères spéciaux HTML
+    // Remove HTML special characters
     cleanText = cleanText.replace(/&[^;]+;/g, '');
 
-    // Trim et normalisation des espaces
+    // Trim and normalize spaces
     cleanText = cleanText.trim().replace(/\s+/g, ' ');
 
     console.log('  🧹 Texte nettoyé:', cleanText);
@@ -213,10 +216,10 @@ export class HistoryComponent implements OnInit {
   searchAgain(historyItem: any): void {
     console.log('🔍 Recherche à partir de l\'historique:', historyItem);
 
-    // Afficher l'indicateur de chargement
+    // Show loading indicator
     this.isLoading = true;
 
-    // Extraire le terme de recherche
+    // Extract search term
     const searchTerm = this.getSearchTerm(historyItem);
 
     if (!searchTerm || searchTerm === "Recherche") {
@@ -228,15 +231,23 @@ export class HistoryComponent implements OnInit {
 
     console.log('🔍 Terme de recherche extrait:', searchTerm);
 
-    // Extraire l'ID du produit (prend en compte la structure nestée)
+    // Check if this is a filter search
+    if (historyItem.id && typeof historyItem.id === 'string' && historyItem.id.startsWith('filter-')) {
+      this.handleFilterSearch(historyItem, searchTerm);
+      return;
+    }
+
+    // Extract product ID (accounting for nested structure)
     let productId = historyItem.productId;
+
+    // Check for ID in _default structure (standard for Couchbase)
     if (!productId && historyItem._default) {
       productId = historyItem._default.productId;
     }
 
     console.log('🔍 ID du produit extrait:', productId);
 
-    // Construire la requête de recherche
+    // Build search request
     const searchRequest = {
       productId: productId || "",
       productName: searchTerm,
@@ -245,20 +256,20 @@ export class HistoryComponent implements OnInit {
 
     console.log('🔍 Envoi de la requête de recherche:', searchRequest);
 
-    // Envoyer la requête au service API
+    // Send request to API service
     this.apiService.postProductsWithFilters(searchRequest).subscribe({
       next: (results) => {
         console.log('✅ Résultats de recherche reçus:', results.length || 0, 'produits');
         this.isLoading = false;
 
-        // Si on a un ID de produit valide et un seul résultat, on peut naviguer directement vers la page du produit
+        // If we have a valid product ID and only one result, we can navigate directly to the product page
         if (productId && results.length === 1) {
           console.log('✅ Navigation directe vers la page du produit:', productId);
           this.router.navigate(['/prodpage', productId]);
           return;
         }
 
-        // Sinon, naviguer vers la page des résultats de recherche
+        // Otherwise, navigate to the search results page
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate(['/searched-prod'], {
             state: { resultsArray: results }
@@ -274,21 +285,96 @@ export class HistoryComponent implements OnInit {
   }
 
   /**
+   * @brief Handles a search using filters from the history.
+   * @param historyItem The history item containing filter information.
+   * @param filterDescription The human-readable description of the filters.
+   */
+  private handleFilterSearch(historyItem: any, filterDescription: string): void {
+    console.log('🔍 Recherche par filtres depuis l\'historique:', filterDescription);
+
+    // Try to extract filter information from the description
+    const filters: any = {};
+
+    // Parse the filter description to reconstruct filter values
+    if (filterDescription.includes('Pays:')) {
+      const match = filterDescription.match(/Pays: ([^,]+)/);
+      if (match && match[1]) filters.country = match[1].trim();
+    }
+
+    if (filterDescription.includes('Département:')) {
+      const match = filterDescription.match(/Département: ([^,]+)/);
+      if (match && match[1]) filters.department = match[1].trim();
+    }
+
+    if (filterDescription.includes('Catégorie:')) {
+      const match = filterDescription.match(/Catégorie: ([^,]+)/);
+      if (match && match[1]) filters.category = match[1].trim();
+    }
+
+    if (filterDescription.includes('Marque:')) {
+      const match = filterDescription.match(/Marque: ([^,]+)/);
+      if (match && match[1]) filters.brand = match[1].trim();
+    }
+
+    if (filterDescription.includes('Prix:')) {
+      const match = filterDescription.match(/Prix: (\d+)€-(\d+)€/);
+      if (match && match[1] && match[2]) {
+        filters.price = {
+          min: parseInt(match[1]),
+          max: parseInt(match[2])
+        };
+      }
+    }
+
+    console.log('🔍 Filtres extraits:', filters);
+
+    // Build search request with extracted filters
+    const searchRequest = {
+      ...filters,
+      currentRoute: '/home'
+    };
+
+    console.log('🔍 Envoi de la requête de recherche avec filtres:', searchRequest);
+
+    this.apiService.postProductsWithFilters(searchRequest).subscribe({
+      next: (results) => {
+        console.log('✅ Résultats de recherche par filtres reçus:', results.length || 0, 'produits');
+        this.isLoading = false;
+
+        // Navigate to the search results page
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/searched-prod'], {
+            state: { resultsArray: results }
+          });
+        });
+      },
+      error: (err) => {
+        console.error('❌ Erreur lors de la recherche par filtres:', err);
+        this.isLoading = false;
+        this.error = 'Erreur lors de la recherche. Veuillez réessayer.';
+      }
+    });
+  }
+
+  /**
    * @brief Tracks history items for *ngFor to optimize rendering.
    * @param index The index of the history item.
    * @param item The history item.
    * @return The unique history ID or product ID.
    */
   trackByProduct(index: number, item: any): any {
-    // Utiliser l'ID de l'historique, qui est unique même pour les entrées dupliquées
-    return item.id || `${item.productId}-${index}`;
+    // Use the history ID, which is unique even for duplicate entries
+    const defaultId = item._default ? item._default.id : undefined;
+    return item.id || defaultId || `${item.productId}-${index}`;
   }
 
-  // Ajouter une méthode pour effacer l'historique
+  /**
+   * @brief Method to clear the entire history
+   */
   clearHistory(): void {
     console.log('🧹 Tentative de suppression de l\'historique complet');
 
-    // Demander confirmation avant de supprimer tout l'historique
+    // Ask for confirmation before deleting the entire history
     if (!confirm('Êtes-vous sûr de vouloir supprimer tout votre historique de recherche ?')) {
       console.log('❌ Suppression de l\'historique annulée par l\'utilisateur');
       return;
@@ -298,7 +384,7 @@ export class HistoryComponent implements OnInit {
     this.error = null;
     this.successMessage = null;
 
-    // Log détaillé pour comprendre ce qui se passe
+    // Detailed log to understand what's happening
     console.log('🧹 Appel de clearUserHistory...');
 
     this.historyService.clearUserHistory()
@@ -307,7 +393,7 @@ export class HistoryComponent implements OnInit {
         next: (response) => {
           console.log('✅ Historique effacé avec succès:', response);
 
-          // Analyser la réponse
+          // Analyze the response
           if (response.deleted === 0 && response.failed === 0) {
             console.log('ℹ️ Aucun élément n\'était présent dans l\'historique');
           } else if (response.failed && response.failed > 0) {
@@ -316,13 +402,13 @@ export class HistoryComponent implements OnInit {
 
           this.isLoading = false;
 
-          // Vider l'array local immédiatement pour mise à jour visuelle instantanée
+          // Empty the local array immediately for instant visual update
           this.resultsArray = [];
 
-          // Recharger l'historique vide pour vérification
+          // Reload empty history for verification
           setTimeout(() => this.loadHistory(), 500);
 
-          // Essayer également de supprimer le cache local
+          // Also try to remove local cache
           try {
             localStorage.removeItem('searchHistory');
             sessionStorage.removeItem('searchHistory');
@@ -330,7 +416,7 @@ export class HistoryComponent implements OnInit {
             console.error('❌ Erreur lors de la suppression du cache:', e);
           }
 
-          // Message approprié selon le résultat
+          // Appropriate message according to the result
           if (response.deleted > 0) {
             this.notificationService.showSuccess(`Votre historique a été effacé avec succès (${response.deleted} élément${response.deleted > 1 ? 's' : ''})`);
           } else {
@@ -341,7 +427,7 @@ export class HistoryComponent implements OnInit {
           console.error('❌ Erreur lors de la suppression de l\'historique:', err);
           this.isLoading = false;
 
-          // Extraire le message d'erreur détaillé si disponible
+          // Extract detailed error message if available
           let errorMessage = 'Erreur lors de la suppression de l\'historique.';
 
           if (err.error && err.error.message) {
@@ -352,19 +438,19 @@ export class HistoryComponent implements OnInit {
 
           console.error('Message d\'erreur détaillé:', errorMessage);
 
-          // Afficher une notification d'erreur avec détails
+          // Display error notification with details
           this.notificationService.showError(errorMessage);
         }
       });
   }
 
   /**
-   * @brief Supprime un élément spécifique de l'historique.
-   * @param historyItem L'élément d'historique à supprimer.
-   * @param event L'événement de clic pour éviter la propagation.
+   * @brief Deletes a specific item from the history.
+   * @param historyItem The history item to delete.
+   * @param event The click event to prevent propagation.
    */
   deleteHistoryItem(historyItem: any, event: Event): void {
-    // Empêcher la propagation pour éviter de déclencher searchAgain()
+    // Prevent propagation to avoid triggering searchAgain()
     event.stopPropagation();
 
     console.log('🗑️ Suppression de l\'élément d\'historique complet:', historyItem);
@@ -373,11 +459,11 @@ export class HistoryComponent implements OnInit {
     console.log('🗑️ ID de l\'élément:', historyItem.id);
     console.log('🗑️ ID brut:', JSON.stringify(historyItem.id));
 
-    // Essayons de trouver un ID à partir des propriétés disponibles
+    // Try to find an ID from available properties
     let historyId = historyItem.id || historyItem._id;
 
-    // Si l'élément est enveloppé dans une structure _default, essayons de l'extraire
-    if (historyItem._default && typeof historyItem._default === 'object') {
+    // Check for ID in _default structure (Couchbase standard)
+    if (!historyId && historyItem._default && typeof historyItem._default === 'object') {
       historyId = historyItem._default.id || historyItem._default._id;
       console.log('🗑️ ID extrait de _default:', historyId);
     }
@@ -388,7 +474,7 @@ export class HistoryComponent implements OnInit {
       return;
     }
 
-    // Afficher l'indicateur de chargement
+    // Show loading indicator
     this.isLoading = true;
     this.error = null;
     this.successMessage = null;
@@ -401,13 +487,14 @@ export class HistoryComponent implements OnInit {
         next: (response) => {
           console.log('✅ Élément supprimé avec succès:', response);
 
-          // Mettre à jour l'affichage en retirant l'élément supprimé
+          // Update display by removing the deleted item
           this.resultsArray = this.resultsArray.filter(item => {
-            const itemId = item.id || (item._default && item._default.id);
+            const defaultId = item._default ? item._default.id : undefined;
+            const itemId = item.id || defaultId;
             return itemId !== historyId;
           });
 
-          // Afficher une notification de succès
+          // Display success notification
           this.notificationService.showSuccess('Élément supprimé avec succès');
         },
         error: (err) => {

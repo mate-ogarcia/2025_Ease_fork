@@ -6,16 +6,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 10px;
   background: transparent;
   width: 100%;
   height: 60px;
   color: #f9f9f9;
-  margin: 10px 0;
-}
-
-.app-searchbar {
-  width: 50%;
 }
 
 /* Logo */
@@ -30,13 +25,16 @@
   cursor: pointer;
 }
 
-picture {
-  height: 40px;
-}
-
 .easelogo {
   height: 100%;
   border-radius: 45px;
+}
+
+/* Style pour la barre de recherche dans la navbar */
+.navbar-searchbar {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 15px;
 }
 
 /* Menu */
@@ -45,12 +43,11 @@ picture {
   display: flex;
   align-items: center;
   flex: 1;
-  gap: 10px;
+  gap: 15px;
   padding-left: 20px;
   margin: 0;
   text-align: center;
   color: #f9f9f9;
-
 }
 
 .navbar ul li {
@@ -135,15 +132,10 @@ picture {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 10000;
+  z-index: 1000;
 }
 
 .profile-btn {
-  padding: 10px 15px;
-  color: black;
-}
-
-.admin-btn {
   padding: 10px 15px;
   color: black;
 }
@@ -162,7 +154,6 @@ picture {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  color: #011f20;
 }
 
 .admin-btn {
@@ -186,10 +177,11 @@ picture {
   align-items: center;
 }
 
-
 .logout-btn:hover {
   background-color: darkred;
 }
+
+
 
 .menu-toggle span {
   width: 25px;
@@ -200,15 +192,18 @@ picture {
 }
 
 /* Responsive */
-@media (max-width: 1100px) {
+@media (max-width: 850px) {
   .navbar {
     flex-direction: row;
   }
 
-  .app-searchbar {
+  /* Ajuster la barre de recherche en mode responsive */
+  .navbar-searchbar {
+    max-width: none;
+    margin: 0 10px;
+    order: 3;
     width: 100%;
-    padding: 0 20px;
-    border-left: 1px solid #f9f9f9;
+    margin-top: 10px;
   }
 
   .navbar ul {
@@ -223,15 +218,15 @@ picture {
     width: fit-content;
     padding: 10px 20px;
     gap: 5px;
-    border-radius: 5px;
+    border-radius: 15px;
   }
 
   .navbar ul.active {
-
     display: flex;
   }
 
   .nav-btn {
+    border-radius: 10px;
     color: black;
   }
 
@@ -269,30 +264,25 @@ picture {
   }
 
   .userprofile {
-    display: none;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
   }
 
   .profile-btn {
+    margin-top: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
-    padding-top: 10px;
-    border-top: 1px solid #778081;
   }
 
   .dropdown-menu {
-    position: relative;
-    display: flex !important;
-    /* Toujours visible */
-    visibility: visible !important;
-    opacity: 1 !important;
-    font-weight: 500;
+    position: static;
     border: none;
-    top: auto;
-    right: auto;
-    width: 100%;
-    text-align: center;
-    border-radius: 5px;
     box-shadow: none;
+    width: 100%;
+    background: none;
     padding: 0;
   }
-
 }
