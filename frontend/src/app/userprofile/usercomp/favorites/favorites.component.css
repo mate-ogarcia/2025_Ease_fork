@@ -36,6 +36,8 @@ html {
   padding: 20px;
   box-sizing: border-box;
   background: #f8f9fa;
+  border-radius: 0 0 20px 20px;
+
 }
 
 /* En-tête de la section favoris */
@@ -54,6 +56,18 @@ html {
   color: #64748b;
   margin: 8px 0 0 0;
 }
+.description-container{
+  display: flex;
+  justify-content: none;
+  align-items: none;
+  text-align: none;
+  flex-direction: column;
+  width: 100%;
+  height: fit-content;
+  padding: 0 20px;
+}
+
+
 
 /* Style pour le chargement */
 .loading-container {
@@ -263,18 +277,24 @@ html {
 /* Pagination */
 .pagination-controls {
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   gap: 8px;
   margin-top: auto;
   padding-top: 20px;
 }
-
+.page-numbers{
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
 .pagination-btn,
 .page-number {
   width: 36px;
   height: 36px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   border: none;

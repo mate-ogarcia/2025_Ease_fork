@@ -56,9 +56,9 @@
                 <span class="detail-value">{{ favorite.brand }}</span>
               </p>
             </div>
-
-            <p class="favorite-description" *ngIf="favorite.description">{{ favorite.description }}</p>
-
+            <div class="description-container">
+              <p class="favorite-description" *ngIf="favorite.description">{{ favorite.description }}</p>
+            </div>
             <div class="favorite-tags" *ngIf="favorite.tags && favorite.tags.length > 0">
               <span class="favorite-tag" *ngFor="let tag of favorite.tags">{{ tag }}</span>
             </div>
