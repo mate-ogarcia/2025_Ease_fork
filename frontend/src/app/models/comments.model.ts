@@ -8,6 +8,6 @@ export interface Comment {
     userRatingCom: number;  // User rating (1-5)   
     source: string;         // Where does the product come from
     userId: number;         // ID of the user who posted the comment    
-    productId: number;      // ID of the product being commented on    
+    productId:number | string;      // ID of the product being commented on    
     id?: number | string;   // Optional comment ID
   }
