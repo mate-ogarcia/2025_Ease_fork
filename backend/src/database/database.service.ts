@@ -130,7 +130,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
         this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
         this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection"),
-        this.connectToBucket("HISTORY_BUCKET_NAME", "historyBucket", "historyCollection")
+        this.connectToBucket("SEARCH_HISTORY_BUCKET_NAME", "historyBucket", "historyCollection")
       ]);
 
       console.log("Successfully connected to Couchbase!");
