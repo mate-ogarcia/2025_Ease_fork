@@ -1,8 +1,8 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterLink, Router } from '@angular/router';
-import { AuthService } from '../../../../../services/auth/auth.service';
-
+import { AuthService } from '../../../../services/auth/auth.service';
+import { SearchbarComponent } from '../searchbar/searchbar.component';
 
 /**
  * @brief Navbar component for handling navigation and user interactions.
@@ -13,7 +13,7 @@ import { AuthService } from '../../../../../services/auth/auth.service';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterLink],
+  imports: [CommonModule, RouterModule, RouterLink, SearchbarComponent],
 })
 export class NavbarComponent implements OnInit {
   menuOpen = false; // Controls the mobile menu state.
@@ -22,13 +22,16 @@ export class NavbarComponent implements OnInit {
   isMobile = false; // Detects if the screen is in mobile mode.
   userRole: string | null = null; // Stores the user role.
   canAddProduct: boolean = false; // Determines if the user can add a product.
+  isHomePage: boolean = false; // Determines if we're on the home page to hide search bar
 
   /**
    * @brief Constructor injecting authentication service.
    * @param authService Service for authentication management.
+   * @param router Router for navigation and URL checking.
    */
   constructor(
     private authService: AuthService,
+    private router: Router
   ) { }
 
   /**
@@ -44,8 +47,25 @@ export class NavbarComponent implements OnInit {
       this.canAddProduct = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'superadmin';
     });
 
+    // Check if we are on the home page
+    this.checkIfHomePage();
+
+    // Subscribe to URL changes to update isHomePage
+    this.router.events.subscribe(() => {
+      this.checkIfHomePage();
+    });
+
     this.checkScreenSize();
     this.loadFontAwesome();
+  }
+
+  /**
+   * @brief Checks if the current page is the home page
+   */
+  private checkIfHomePage(): void {
+    const currentUrl = this.router.url;
+    this.isHomePage = currentUrl === '/' || currentUrl === '/home';
+    console.log('Route actuelle:', currentUrl, 'isHomePage:', this.isHomePage);
   }
 
   /**

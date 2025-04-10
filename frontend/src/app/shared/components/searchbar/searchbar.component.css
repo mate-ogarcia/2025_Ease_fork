@@ -23,7 +23,8 @@
   padding: 5px 15px;
   transition: all 0.3s ease;
   z-index: 11;
-  overflow: visible; /* Permet à la loading bar de déborder */
+  overflow: visible;
+  /* Permet à la loading bar de déborder */
 }
 
 .search-container:hover {
@@ -33,7 +34,8 @@
 /* Champ de saisie */
 .search-container input {
   border: none;
-  outline: none; /* Conserver le focus natif */
+  outline: none;
+  /* Conserver le focus natif */
   width: 100%;
   font-size: 16px;
   padding: 15px;
@@ -71,7 +73,8 @@
   outline: none;
   justify-content: center;
   padding: 6px 12px;
-  border-left: 1px solid black;  /* Bordure gauche noire */
+  border-left: 1px solid black;
+  /* Bordure gauche noire */
   background: #ffffff;
   color: #333;
   font-size: 18px;
@@ -112,6 +115,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -175,6 +179,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -248,9 +253,10 @@
   margin-top: 5px;
 }
 
-/* Champs de saisie pour le prix */
+/* Inputs de prix numériques */
 .price-inputs {
   display: flex;
+  justify-content: space-between;
   gap: 10px;
 }
 
@@ -259,33 +265,34 @@
 }
 
 .price-input label {
+  display: block;
+  margin-bottom: 5px;
   font-size: 0.85em;
   color: #555;
-  margin-bottom: 5px;
-  display: block;
 }
 
-/* Boutons d'action sur les filtres */
+/* Boutons d'action du filtre */
 .filter-buttons {
   display: flex;
+  justify-content: space-between;
   gap: 10px;
   margin-top: 20px;
 }
 
 .filter-buttons button {
-  flex: 1;
-  outline: none;
-  padding: 10px;
-  font-size: 1em;
+  padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background 0.3s;
+  font-size: 0.95em;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  flex: 1;
 }
 
 .filter-buttons button:first-child {
   background-color: #007bff;
-  color: #fff;
+  color: white;
 }
 
 .filter-buttons button:first-child:hover {
@@ -293,70 +300,76 @@
 }
 
 .filter-buttons button:last-child {
-  background-color: #6c757d;
-  color: #fff;
+  background-color: #f2f2f2;
+  color: #333;
 }
 
 .filter-buttons button:last-child:hover {
-  background-color: #545b62;
+  background-color: #e6e6e6;
 }
 
-/* Barre de chargement animée sur la bordure inférieure */
+/* Loading bar animation */
 .loading-bar {
   position: absolute;
-  bottom: -4px;  /* Débordement vers l'extérieur */
+  top: 0;
   left: 0;
-  height: 4px;
-  width: 0%;
-  background: linear-gradient(90deg, #007bff, #0056b3);
-  border-radius: 0;  /* Barre rectangulaire */
-  animation: loadingAnim 2s infinite;
+  height: 3px;
+  background: linear-gradient(90deg, #007bff, #00e5ff, #007bff);
+  background-size: 200% 200%;
+  width: 100%;
+  animation: loadingAnim 1.5s ease-in-out infinite;
+  border-radius: 3px;
+  z-index: 100;
 }
 
 @keyframes loadingAnim {
   0% {
-    width: 0%;
+    background-position: 0% 50%;
   }
+
   50% {
-    width: 50%;
+    background-position: 100% 50%;
   }
+
   100% {
-    width: 100%;
+    background-position: 0% 50%;
   }
 }
 
-/* Styles responsives pour le filter-dropdown */
+/* Responsive pour tablettes */
 @media (max-width: 768px) {
   .filter-dropdown {
-    right: 0;
-    left: 0;
-    width: 90%;
-    margin: 0 auto;
+    right: -10px;
+    left: -10px;
+    width: calc(100% + 20px);
     max-width: none;
-    margin-right: 15px;
+    margin-right: 0;
+    top: calc(100% + 10px);
+    box-sizing: border-box;
   }
 }
 
+/* Responsive pour mobile */
 @media (max-width: 480px) {
   .filter-dropdown {
-    width: 95%;
+    right: -15px;
+    left: -15px;
+    width: calc(100% + 30px);
     padding: 15px;
-    margin-right: 10px;
-    max-height: 80vh;
-    overflow-y: auto;
+    border-radius: 10px;
   }
-  
+
   .filter-group {
     margin-bottom: 10px;
   }
-  
+
   .filter-dropdown-menu h3 {
     font-size: 1.2em;
     margin-bottom: 10px;
   }
-  
+
   .filter-buttons button {
-    padding: 8px;
+    padding: 8px 12px;
     font-size: 0.9em;
   }
 }

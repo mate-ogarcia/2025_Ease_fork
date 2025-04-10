@@ -18,7 +18,11 @@ export class NotificationService {
     this.showToast(message, 'success', duration);
   }
 
-  private showToast(message: string, type: 'error' | 'warning' | 'success', duration: number) {
+  showInfo(message: string, duration: number = 3000) {
+    this.showToast(message, 'info', duration);
+  }
+
+  private showToast(message: string, type: 'error' | 'warning' | 'success' | 'info', duration: number) {
     // Supprimer le toast précédent s'il existe
     if (this.toastElement) {
       document.body.removeChild(this.toastElement);
@@ -47,7 +51,8 @@ export class NotificationService {
     const typeStyles = {
       error: 'background-color: #f44336;',
       warning: 'background-color: #ff9800;',
-      success: 'background-color: #4caf50;'
+      success: 'background-color: #4caf50;',
+      info: 'background-color: #2196F3;'
     };
 
     this.toastElement.style.cssText = styles + typeStyles[type];

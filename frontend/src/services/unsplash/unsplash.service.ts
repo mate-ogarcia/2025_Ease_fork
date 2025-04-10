@@ -8,8 +8,12 @@
 
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, catchError, retry } from 'rxjs';
+
+export interface UnsplashResponse {
+  imageUrl: string | null;
+}
 
 /**
  * @class APIUnsplash
@@ -22,22 +26,49 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class APIUnsplash {
-    /** Base URL for the backend API handling Unsplash requests. */
-    private _unsplash = environment.apiUnsplashUrl;
+  /** Base URL for the backend API handling Unsplash requests. */
+  private _unsplash = environment.apiUnsplashUrl;
 
-    /**
-     * @brief Constructor that injects the HttpClient.
-     * @param http HttpClient for making HTTP requests.
-     */
-    constructor(private http: HttpClient) {}
+  /**
+   * @brief Constructor that injects the HttpClient.
+   * @param http HttpClient for making HTTP requests.
+   */
+  constructor(private http: HttpClient) {
+    console.log('🔍 Service API Unsplash initialisé - URL configurée:', this._unsplash);
+  }
 
-    /**
-     * @brief Searches for photos on Unsplash via the backend.
-     *
-     * @param query The search term used to find images.
-     * @returns An observable containing the image URL or null if not found.
-     */
-    searchPhotos(query: string): Observable<{ imageUrl: string | null }> {
-        return this.http.get<{ imageUrl: string | null }>(`${this._unsplash}/search?query=${query}`);
+  /**
+   * @brief Searches for photos on Unsplash via the backend.
+   *
+   * @param query The search term used to find images.
+   * @returns An observable containing the image URL or null if not found.
+   */
+  searchPhotos(query: string): Observable<UnsplashResponse> {
+    // Vérification du paramètre
+    if (!query || typeof query !== 'string' || query.trim() === '') {
+      console.warn('⚠️ Terme de recherche Unsplash invalide:', query);
+      return of({ imageUrl: null });
     }
+
+    // Nettoyage du terme de recherche
+    const cleanQuery = query.trim();
+
+    // Construction de l'URL
+    const searchUrl = `${this._unsplash}/search?query=${encodeURIComponent(cleanQuery)}`;
+    console.log(`🔍 Requête Unsplash: ${searchUrl}`);
+
+    // Exécution de la requête avec retry et gestion d'erreur
+    return this.http.get<UnsplashResponse>(searchUrl).pipe(
+      retry(1), // Retry once in case of network issues
+      catchError((error: HttpErrorResponse) => {
+        console.error('❌ Erreur API Unsplash:', error);
+        console.error(`   - Status: ${error.status}`);
+        console.error(`   - Message: ${error.message}`);
+        console.error(`   - URL: ${searchUrl}`);
+
+        // Return a fallback response
+        return of({ imageUrl: null });
+      })
+    );
+  }
 }

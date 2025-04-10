@@ -4,8 +4,8 @@
  */
 
 import { Component } from '@angular/core';
-import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
-import { ProdalternativeComponent } from './comp/prodalternative/prodalternative.component'; 
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
+import { ProdalternativeComponent } from './comp/prodalternative/prodalternative.component';
 import { ProdsearchComponent } from './comp/prodsearch/prodsearch.component';
 
 /**
