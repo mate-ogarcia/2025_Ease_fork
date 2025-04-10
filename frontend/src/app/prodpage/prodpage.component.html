@@ -1,20 +1,28 @@
 <div class="container">
-  <app-navbar class="app-navbar"></app-navbar>
-    <div class="general-container">
+    <app-navbar class="app-navbar"></app-navbar>
 
     <div class="prod-container" *ngIf="product">
         <div class="product-details">
             <!-- Section Gauche : Image -->
             <div class="image-gallery">
-                    <div class="main-image-container">
-                        <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
-                    </div>
+                <div class="main-image-container">
+                    <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'"
+                        alt="{{ product.name }}">
+                </div>
             </div>
 
             <!-- Section Droite : Infos Produit -->
             <div class="product-info">
                 <span class="category">{{product.category}}</span>
                 <h2 class="product-name">{{ product.name }}</h2>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <!-- Bouton favori/like -->
+                    <div class="favorite-button" *ngIf="isAuthenticated">
+                        <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
+                    </div>
+                </div>
 
                 <!-- Note + Avis -->
                 <div class="rating">
@@ -37,22 +45,14 @@
         <!--  Onglets de navigation (PLACÉS SOUS LA SECTION PRODUIT) -->
         <div class="tabs-container">
             <div class="tabs">
-                <button 
-                    class="tab-btn" 
-                    [class.active]="selectedTab === 'description'" 
+                <button class="tab-btn" [class.active]="selectedTab === 'description'"
                     (click)="selectTab('description')">
                     Description
                 </button>
-                <button 
-                    class="tab-btn" 
-                    [class.active]="selectedTab === 'info'" 
-                    (click)="selectTab('info')">
+                <button class="tab-btn" [class.active]="selectedTab === 'info'" (click)="selectTab('info')">
                     Additional Information
                 </button>
-                <button 
-                    class="tab-btn" 
-                    [class.active]="selectedTab === 'review'" 
-                    (click)="selectTab('review')">
+                <button class="tab-btn" [class.active]="selectedTab === 'review'" (click)="selectTab('review')">
                     Review
                 </button>
             </div>
@@ -68,7 +68,7 @@
                     <p>
                         Origin : <b>{{ product.origin || "Inconnue" }}</b>
                     </p>
-                    <span class="tags">Tags:  {{product.tags}}</span>
+                    <span class="tags">Tags: {{product.tags}}</span>
 
                 </div>
 
@@ -78,6 +78,5 @@
                 </div>
             </div>
         </div>
-    </div>
     </div>
 </div>
