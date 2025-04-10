@@ -11,18 +11,20 @@
  * @modified 2023-XX-XX
  */
 
-import { Component, EventEmitter, OnInit, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Subject, of, forkJoin, Subscription, timer } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first, throttleTime } from 'rxjs/operators';
+import { Subject, of, forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first } from 'rxjs/operators';
 import { Router } from '@angular/router';
 // API
-import { ApiService } from '../../../../../services/api.service';
-import { UsersService } from '../../../../../services/users/users.service';
-import { ApiOpenFoodFacts } from '../../../../../services/openFoodFacts/openFoodFacts.service';
+import { ApiService } from '../../../../services/api.service';
+import { UsersService } from '../../../../services/users/users.service';
+import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 // Cache API
-import { DataCacheService } from '../../../../../services/cache/data-cache.service';
+import { DataCacheService } from '../../../../services/cache/data-cache.service';
+// History service
+import { HistoryService } from '../../../../services/history/history.service';
 // Import du composant de localisation
 import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
 
@@ -37,7 +39,7 @@ import { LocationDropdownComponent } from '../location-dropdown/location-dropdow
   templateUrl: './searchbar.component.html',
   styleUrls: ['./searchbar.component.css'],
 })
-export class SearchbarComponent implements OnInit, OnDestroy {
+export class SearchbarComponent implements OnInit {
   // Search state variables
   searchQuery: string = '';     // The search query entered by the user.
   searchResults: any[] = [];    // Array of search results based on the current query.
@@ -65,7 +67,7 @@ export class SearchbarComponent implements OnInit, OnDestroy {
   stepPrice: number = 10; // Step value for price range adjustments.
   // Search & cache variables
   private _searchSubject = new Subject<string>(); // RxJS subject for debouncing search queries.
-  private _cache = new Map<string, { data: any[]; timestamp: number; isLoading?: boolean }>(); // Cache to store search results.
+  private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results.
   private CACHE_DURATION = 5 * 60 * 1000; // Cache duration (5 minutes).
   // Dropdown control variables
   filterDropdownOpen: boolean = false; // Boolean indicating whether the filter dropdown is open.
@@ -73,12 +75,6 @@ export class SearchbarComponent implements OnInit, OnDestroy {
   isLoading: boolean = false; // Boolean indicating whether the search results are being loaded.
 
   @Output() searchExecuted = new EventEmitter<void>(); // Event emitter for search execution.
-
-  // Système de limitation des requêtes
-  private lastQueryTime: number = 0;
-  private readonly THROTTLE_TIME = 500; // ms entre les requêtes
-  private subscriptions: Subscription[] = [];
-  private cacheCleanupInterval?: Subscription;
 
   /**
    * @brief Constructs the SearchbarComponent and sets up search logic.
@@ -91,6 +87,7 @@ export class SearchbarComponent implements OnInit, OnDestroy {
    * @param usersService The service for handling user data.
    * @param apiOFF The service for interacting with OpenFoodFacts API.
    * @param dataCacheService The service for managing cached data.
+   * @param historyService The service for managing search history.
    */
   constructor(
     private apiService: ApiService,
@@ -98,39 +95,29 @@ export class SearchbarComponent implements OnInit, OnDestroy {
     private usersService: UsersService,
     private apiOFF: ApiOpenFoodFacts,
     private dataCacheService: DataCacheService,
+    private historyService: HistoryService
   ) {
     this._searchSubject
       .pipe(
         debounceTime(200),        // Debounces input to reduce API calls.
         distinctUntilChanged(),   // Prevents repeated queries with the same value.
         filter((query) => query.trim() !== ''), // Ignores empty queries.
-        throttleTime(this.THROTTLE_TIME), // Limite le nombre de requêtes
         switchMap((query) => {
           const trimmedQuery = query.trim();
-
-          // Gestionnaire de cache amélioré
-          // Vérifier si les données sont dans le cache et valides
           const cachedData = this._cache.get(trimmedQuery);
-
-          // Si les données sont en cache et valides, utiliser le cache immédiatement
+          // Use cached data if valid
           if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_DURATION) {
-            this.isLoading = false;
-            this.updateResultsFromCache(cachedData.data);
+            const fullResults = cachedData.data.map((result: any) => ({
+              id: result.id,
+              name: result.fields?.name || 'Unknown name',
+              description: result.fields?.description || 'No description available',
+            }));
+            this.fullSearchResults = fullResults;
+            this.searchResults = fullResults.slice(0, 5); // Show top 5 suggestions.
+            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
             return of(null);
           }
-
-          // Ajouter un marqueur "loading" au cache pour éviter des requêtes parallèles identiques
-          if (!this._cache.has(trimmedQuery) ||
-            (cachedData && Date.now() - cachedData.timestamp >= this.CACHE_DURATION)) {
-            // Marquer cette requête comme étant en cours pour éviter les duplications
-            this._cache.set(trimmedQuery, { data: [], timestamp: Date.now(), isLoading: true });
-          } else if (cachedData && cachedData.isLoading) {
-            // Si une recherche identique est déjà en cours, ne pas dupliquer
-            return of(null);
-          }
-
           this.isLoading = true;  // Display a loading message
-
           // Launch parallel requests: Internal API + Open Food Facts
           return forkJoin({
             internalResults: this.apiService.sendSearchData({ search: trimmedQuery }),
@@ -138,22 +125,13 @@ export class SearchbarComponent implements OnInit, OnDestroy {
           }).pipe(
             tap(({ internalResults, offResults }) => {
               this.isLoading = false;
-
               const combinedResults = [
                 ...(internalResults || []),
                 ...(offResults?.products || []),  // Include Open Food Facts products.
               ];
-
               if (combinedResults.length) {
-                // Stocker les résultats dans le cache avec les bonnes métadonnées
-                this._cache.set(trimmedQuery, {
-                  data: [...combinedResults],
-                  timestamp: Date.now(),
-                  isLoading: false
-                });
+                this._cache.set(trimmedQuery, { data: [...combinedResults], timestamp: Date.now() });
               }
-
-              this.updateResultsFromCache(combinedResults);
             })
           );
         })
@@ -167,29 +145,34 @@ export class SearchbarComponent implements OnInit, OnDestroy {
          */
         next: (response: any) => {
           this.isLoading = false;
-          // Si la réponse est null, cela signifie que les résultats ont été traités
-          // dans le pipeline via updateResultsFromCache
           if (response) {
             const internalResults = response.internalResults || [];
             const offResults = response.offResults?.products || [];
-            // Combine les résultats
+            // Merge results with a source identifier
             const combinedResults = [
-              ...internalResults,
-              ...offResults,
+              ...internalResults.map((result: any) => ({
+                id: result.id,
+                name: result.fields?.name || 'Unknown name',
+                description: result.fields?.description || 'No description available',
+                source: 'Internal',
+              })),
+              ...offResults.map((product: any) => ({
+                id: product.code,
+                name: product.product_name || 'Unknown product',
+                description: product.generic_name || 'No description available',
+                source: 'OpenFoodFacts',
+              })),
             ];
-            // Mise à jour des résultats
-            this.updateResultsFromCache(combinedResults);
+            this.fullSearchResults = combinedResults;
+            this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
+            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
           }
         },
         error: (error) => {
           this.isLoading = false;
           console.error('❌ Error during search:', error);
-          this.noResultsMessage = 'Une erreur est survenue lors de la recherche.';
         },
       });
-
-    // Configurer le nettoyage périodique du cache
-    this.setupCacheCleanup();
   }
 
   /**
@@ -246,13 +229,15 @@ export class SearchbarComponent implements OnInit, OnDestroy {
   /**
    * @function onEnter
    * @description Sends a search request when the Enter key is pressed.
-   * If a product is selected, it includes that product in the filters; otherwise, it performs a search
-   * using all the full search results (even those not displayed).
+   * Saves the exact search term to history and then performs the search.
    * @param event The keyboard event.
    */
   onEnter(event: any) {
     event as KeyboardEvent;
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
+      // Sauvegarder directement le terme de recherche dans l'historique
+      this.addToHistory(null);
+
       if (this.selectedProduct) {
         this.search(true);  // Search including the selected product
       } else {
@@ -282,24 +267,89 @@ export class SearchbarComponent implements OnInit, OnDestroy {
    * @param product The product selected from suggestions.
    */
   selectProduct(product: any) {
+    // Mettre à jour le champ de recherche avec le nom du produit
     this.searchQuery = product.name;
     this.selectedProduct = product.id;
     this.wholeSelectedProduct = product;
     this.noResultsMessage = '';
     this.searchResults = []; // Hide suggestions after selection.
 
+    // Ajouter à l'historique le terme exact affiché dans la barre de recherche
+    this.addToHistory(product);
+
     // Launch the research
     this.search(true);
   }
 
+  /**
+   * @brief Adds the search term to history
+   * @param product The product or search term
+   */
+  private addToHistory(product: any): void {
+    console.log('🔍 searchbar.addToHistory appelé avec:', product);
+
+    // If it's a direct search (Enter key press), use the raw search term
+    if (!product && this.searchQuery && this.searchQuery.trim() !== '') {
+      const searchTerm = this.searchQuery.trim();
+      console.log('🔍 Utilisation du terme de recherche direct:', searchTerm);
+
+      // Create a simple object for history
+      const historyItem = {
+        id: Date.now().toString(), // Unique temporary ID
+        name: searchTerm           // The exact term typed by the user
+      };
+
+      this.historyService.addToHistory(
+        historyItem.id,
+        searchTerm  // Use the search term directly
+      ).subscribe({
+        next: (response) => {
+          console.log(`✅ Terme "${searchTerm}" ajouté à l'historique:`, response);
+        },
+        error: (err) => {
+          console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
+        }
+      });
+
+      return;
+    }
+
+    // Default behavior for product selections
+    if (!product || !product.id) {
+      console.warn('⚠️ Produit invalide pour l\'historique:', product);
+      return;
+    }
+
+    // Simplify data sent to history
+    const productName = product.name || '';
+    // No longer add source information
+    // const sourceInfo = product.source ? ` (${product.source})` : '';
+    const fullProductName = productName; // Just the product name
+
+    console.log('🔍 Envoi à l\'historique:', {
+      id: product.id,
+      name: fullProductName
+    });
+
+    this.historyService.addToHistory(
+      product.id,
+      fullProductName
+    ).subscribe({
+      next: (response) => {
+        console.log(`✅ Produit "${fullProductName}" ajouté à l'historique:`, response);
+      },
+      error: (err) => {
+        console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
+      }
+    });
+  }
 
   /**
    * @brief Performs a search based on applied filters and optional selected product.
    * 
    * @details This method applies filters, validates if any filters are applied, 
-   * constructs the search request, and sends it to the API. The results are processed, 
-   * ensuring the selected product appears first if included, and then navigates 
-   * to the results page.
+   * constructs the search request, and sends it to the API. The results are processed 
+   * and then navigates to the results page.
    * 
    * @param {boolean} [includeSelectedProduct=false] - Whether to include the selected product in the search.
    * 
@@ -307,6 +357,22 @@ export class SearchbarComponent implements OnInit, OnDestroy {
    */
   search(includeSelectedProduct: boolean = false): void {
     this.applyFilters(); // Apply filters before performing the search.
+
+    // If searching with filters only and filters are applied, save the search
+    if (!includeSelectedProduct && Object.keys(this.appliedFilters).length > 0) {
+      // Create a descriptive term based on applied filters
+      const filterDescription = this.createFilterDescription();
+      const filterId = `filter-${Date.now()}`; // Unique ID for this filter search
+
+      this.historyService.addToHistory(
+        filterId,
+        filterDescription
+      ).subscribe({
+        next: (response) => console.log('✅ Recherche par filtres ajoutée à l\'historique:', response),
+        error: (err) => console.error('❌ Erreur lors de l\'ajout à l\'historique:', err)
+      });
+    }
+
     // Warn if no filters or selected product is present
     if (!includeSelectedProduct && !Object.keys(this.appliedFilters).length) {
       console.warn('⚠️ No filters applied.');
@@ -326,6 +392,8 @@ export class SearchbarComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.isLoading = false;
 
+        // History saving is already done in onEnter
+
         // Ensure the selected product is at the first position
         if (includeSelectedProduct && this.selectedProduct) {
           response = this.reorderResults(response, this.selectedProduct);
@@ -338,6 +406,33 @@ export class SearchbarComponent implements OnInit, OnDestroy {
       },
       error: (error) => console.error('❌ Search error:', error),
     });
+  }
+
+  /**
+   * @brief Creates a human-readable description of the applied filters.
+   * @returns {string} A description of the applied filters.
+   */
+  private createFilterDescription(): string {
+    const parts = [];
+
+    if (this.appliedFilters.country)
+      parts.push(`Pays: ${this.appliedFilters.country}`);
+
+    if (this.appliedFilters.department)
+      parts.push(`Département: ${this.appliedFilters.department}`);
+
+    if (this.appliedFilters.category)
+      parts.push(`Catégorie: ${this.appliedFilters.category}`);
+
+    if (this.appliedFilters.brand)
+      parts.push(`Marque: ${this.appliedFilters.brand}`);
+
+    if (this.appliedFilters.price) {
+      const { min, max } = this.appliedFilters.price;
+      parts.push(`Prix: ${min}€-${max}€`);
+    }
+
+    return parts.length ? parts.join(', ') : 'Recherche avec filtres';
   }
 
   /**
@@ -407,55 +502,4 @@ export class SearchbarComponent implements OnInit, OnDestroy {
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
   }
-
-  // Helper method to update results from cache
-  private updateResultsFromCache(results: any[]): void {
-    const mappedResults = results.map((result: any) => ({
-      id: result.id,
-      name: result.fields?.name || result.product_name || 'Unknown name',
-      description: result.fields?.description || result.generic_name || 'No description available',
-      source: result.product_name ? 'OpenFoodFacts' : 'Internal',
-    }));
-
-    this.fullSearchResults = mappedResults;
-    this.searchResults = mappedResults.slice(0, 5); // Show top 5 suggestions.
-    this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
-  }
-
-  /**
-   * @brief Configure le nettoyage périodique du cache pour éviter les fuites mémoire
-   */
-  private setupCacheCleanup(): void {
-    // Nettoyer le cache toutes les 15 minutes
-    this.cacheCleanupInterval = timer(15 * 60 * 1000, 15 * 60 * 1000).subscribe(() => {
-      const now = Date.now();
-      // Supprimer les entrées expirées du cache
-      this._cache.forEach((value, key) => {
-        if (now - value.timestamp > this.CACHE_DURATION) {
-          this._cache.delete(key);
-        }
-      });
-
-      // Limiter la taille du cache à 100 entrées maximum
-      if (this._cache.size > 100) {
-        // Convertir la Map en tableau pour pouvoir trier par timestamp
-        const cacheEntries = Array.from(this._cache.entries());
-        // Trier par timestamp (du plus ancien au plus récent)
-        cacheEntries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-        // Supprimer les entrées les plus anciennes jusqu'à atteindre 50 entrées
-        for (let i = 0; i < cacheEntries.length - 50; i++) {
-          this._cache.delete(cacheEntries[i][0]);
-        }
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    // Nettoyer toutes les souscriptions pour éviter les fuites mémoire
-    if (this.cacheCleanupInterval) {
-      this.cacheCleanupInterval.unsubscribe();
-    }
-
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-  }
-}
+} 

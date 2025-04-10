@@ -36,8 +36,8 @@ dotenv.config();
 import { v4 as uuidv4 } from "uuid";  // Generate unique ID
 import { AddressDto } from "src/auth/dto/auth.dto"; // Check of the address
 // Definition of expected keys for Buckets and Collections
-type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "favoritesBucket";
-type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "favoritesCollection";
+type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "historyBucket" | "favoritesBucket";
+type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "historyCollection" | "favoritesCollection";
 
 /**
  * @brief Service responsible for database operations.
@@ -52,14 +52,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private usersBucket: Bucket;
   private categBucket: Bucket;
   private brandBucket: Bucket;
+  private historyBucket: Bucket;
   private favoritesBucket: Bucket;
   // Collections
   private productsCollection: Collection;
   private usersCollection: Collection;
   private categCollection: Collection;
   private brandCollection: Collection;
+  private historyCollection: Collection;
   private favoritesCollection: Collection;
-
   /**
    * @brief Constructor for DatabaseService.
    * @param {HttpService} httpService - Service for making HTTP requests.
@@ -130,10 +131,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
         this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
         this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection"),
+        this.connectToBucket("SEARCH_HISTORY_BUCKET_NAME", "historyBucket", "historyCollection"),
         this.connectToBucket("FAVORITES_BUCKET_NAME", "favoritesBucket", "favoritesCollection")
       ]);
 
-      console.log("Successfully connected to Couchbase!");
+      console.log("Connexion à Couchbase réussie !");
     } catch (error) {
       console.error("❌ Connection error to Couchbase:", error);
       setTimeout(() => this.initializeConnections(), 5000); // Retry after 5s
@@ -213,10 +215,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @brief Retrieves the Couchbase bucket instance for favorites.
+   * @brief Retrieves the Couchbase bucket instance for history.
    */
-  getFavoritesBucket(): Bucket {
-    return this.getBucket(this.favoritesBucket, "favorites");
+  getHistoryBucket(): Bucket {
+    return this.getBucket(this.historyBucket, "history");
   }
 
   // ======================== COLLECTION METHODS
@@ -249,15 +251,32 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * @brief Retrieves the favorites collection.
+   * @brief Retrieves the history collection.
    */
-  getFavoritesCollection(): Collection {
-    return this.getCollection(this.favoritesCollection, "favorites");
+  getHistoryCollection(): Collection {
+    return this.getCollection(this.historyCollection, "history");
   }
 
   // ========================================================================
   // ======================== EXECUTE QUERY FUNCTIONS
   // ========================================================================
+  /**
+   * @brief Executes a Couchbase N1QL query with provided parameters (public method).
+   * 
+   * @details This public method exposes query execution for other services.
+   * It calls the private executeQuery method to run a given N1QL query against the Couchbase cluster.
+   * 
+   * @param {string} query - The N1QL query string to be executed.
+   * @param {any} [params={}] - An optional object containing query parameters.
+   * 
+   * @returns {Promise<any[]>} - A promise resolving to the query result rows.
+   * 
+   * @throws {InternalServerErrorException} If the query execution fails.
+   */
+  async executeN1qlQuery(query: string, params: any = {}): Promise<any[]> {
+    return this.executeQuery(query, params);
+  }
+
   /**
    * @brief Executes a Couchbase N1QL query with provided parameters.
    * 
@@ -274,7 +293,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   private async executeQuery(query: string, params: any = {}): Promise<any[]> {
     try {
-      console.log(`Executing query:\n${query}\nParameters:`, params);
+      console.log(`Exécution de la requête:\n${query}\nParamètres:`, params);
 
       // Execute the Couchbase query with parameters and a timeout
       const result = await this.cluster.query(query, {
@@ -282,7 +301,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         timeout: 10000, // Timeout to prevent long-running queries
       });
 
-      console.log(`Query executed successfully. ${result.rows.length} rows returned.`);
+      console.log(`Requête exécutée avec succès. ${result.rows.length} lignes retournées.`);
       return result.rows || [];
     } catch (error) {
       console.error("❌ Couchbase Query Error:", error.message || error);
@@ -514,7 +533,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         throw new Error("❌ searchCriteria is empty");
       }
 
-      console.log(`🔹 Searching alternatives with criteria:`, searchCriteria);
+      console.log(`🔹 Recherche d'alternatives avec les critères:`, searchCriteria);
 
       // API call to fetch the list of European countries
       const response = await this.httpService.axiosRef.get(
@@ -1095,7 +1114,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const result = await this.executeQuery(query, { location: lowercaseLocation });
 
     if (result.length === 0) {
-      console.log(`No products found for location: ${location}`);
+      console.log(`Aucun produit trouvé pour l'emplacement: ${location}`);
       return [];
     }
 
@@ -1452,6 +1471,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+ * @brief Retrieves the Couchbase bucket instance for favorites.
+ */
+  getFavoritesBucket(): Bucket {
+    return this.getBucket(this.favoritesBucket, "favorites");
+  }
+
+  /**
+ * @brief Retrieves the favorites collection.
+ */
+  getFavoritesCollection(): Collection {
+    return this.getCollection(this.favoritesCollection, "favorites");
+  }
+
+  /**
    * @brief Adds a product to a user's favorites.
    * 
    * @param userId The ID of the user.
@@ -1473,13 +1506,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      // Vérifier que le produit existe
+      // Check if the product already exists
       const productExists = await this.getProductById(productId);
       if (!productExists) {
         throw new NotFoundException(`Produit avec ID ${productId} non trouvé`);
       }
 
-      // Créer un document favori simple sans inclure tous les détails du produit
+      // Create a simple favorite document without including all product details
       const favorite = {
         type: 'favorite',
         userId,
@@ -1576,7 +1609,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       const favoriteId = `favorite::${userId}::${productId}`;
 
-      // Méthode efficace avec EXISTS pour vérifier rapidement si le document existe
+      // Efficient method with EXISTS to quickly check if the document exists
       const query = `
         SELECT EXISTS (
           SELECT 1 

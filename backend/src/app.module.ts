@@ -28,6 +28,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
 import { AdminModule } from "./admin/admin.module";
+import { HistoryModule } from './history/history.module';
 
 /**
  * @class AppModule
@@ -44,6 +45,7 @@ import { AdminModule } from "./admin/admin.module";
     OpenFoodFactsModule,
     CountriesModule,
     UnsplashModule,
+    HistoryModule,
     FavoritesModule,
     /**
      * @brief Loads environment variables and validates them with Joi.

@@ -10,7 +10,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
 import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
 // API
 import { ApiService } from '../../services/api.service';
@@ -18,6 +17,7 @@ import { APIUnsplash } from '../../services/unsplash/unsplash.service';
 import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.service';
 import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 
 /**
  * @class ProdpageComponent

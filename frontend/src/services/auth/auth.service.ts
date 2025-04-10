@@ -74,7 +74,7 @@ export class AuthService {
    * 
    * @param {HttpClient} http - The Angular HttpClient for making HTTP requests
    * @param {Router} router - The Angular Router for navigation
-   * @param {CookieService} cookieService - Service for managing browser cookies
+   * @param {²Service} cookieService - Service for managing browser cookies
    * @param {NotificationService} notificationService - Service for showing notifications
    */
   constructor(
