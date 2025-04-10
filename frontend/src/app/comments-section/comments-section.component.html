@@ -2,7 +2,7 @@
   <!-- Global form (for ngSubmit) -->
   <!-- Pagination information -->
   <div *ngIf="comments.length > 0" class="pagination-info">
-    <h2>{{ pagination.totalCount }} Comments</h2>
+    <h2>{{ pagination.totalCount }} Commentaires</h2>
   </div>
 
   <form (ngSubmit)="onCommentSubmitted(comment)" #commentForm="ngForm">
@@ -15,7 +15,7 @@
         <input
           id="comment"
           type="text"
-          placeholder="Add a comment..."
+          placeholder="Ajouter un commentaire ..."
           [(ngModel)]="comment.contentCom"
           name="contentCom"
           required
@@ -50,8 +50,8 @@
     <!-- Rating + Submit/Cancel buttons: displayed only if showCommentForm = true -->
     <div class="rating-and-buttons" *ngIf="showCommentForm">
       <div class="form-actions">
-        <button type="submit">Submit</button>
-        <button type="button" (click)="cancelForm()">Cancel</button>
+        <button type="submit">Envoyer</button>
+        <button type="button" (click)="cancelForm()">Annuler</button>
       </div>
     </div>
   </form>
@@ -72,7 +72,7 @@
             </ng-container>
           </div>
           <!-- Date in YYYY-MM-DD format -->
-          <span class="date">Published on {{ item.dateCom | date:'yyyy-MM-dd' }}</span>
+          <span class="date">Publiée le {{ item.dateCom | date:'yyyy-MM-dd' }}</span>
         </div>
         <div class="comment-content">
           {{ item.contentCom }}
@@ -82,7 +82,7 @@
 
     <!-- Message if there are no comments -->
     <ng-template #noComments>
-      <p class="no-comments">Pas de produit disponible pour ce produit.</p>
+      <p class="no-comments">Pas de commentaire disponible pour ce produit.</p>
     </ng-template>
   </div>
 
