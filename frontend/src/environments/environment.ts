@@ -1,7 +1,4 @@
-// Environnement de développement (utilise localhost)
 const BASE_URL = 'https://two025-ease-fork.onrender.com';
-
-console.log(`🔧 Environnement de DÉVELOPPEMENT chargé avec BASE_URL: ${BASE_URL}`);
 
 export const environment = {
   production: false,
