@@ -2,6 +2,7 @@
 /.env.development
 /.env.production
 /.env.docker
+/.env.deploy
 /frontend/src/environments/*
 
 # Do not ignore example .env

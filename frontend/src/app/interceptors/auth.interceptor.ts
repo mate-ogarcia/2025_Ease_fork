@@ -49,39 +49,47 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
     // Add the token only for internal API requests
     if (isApiRequest) {
-      // Existing code to add the token...
+      // Vérifier d'abord les cookies
       let token = cookieService.get('accessToken');
+      let tokenSource = 'cookie';
 
-      // If the token is not found in cookies, check localStorage
-      if (!token && localStorage.getItem('accessToken')) {
+      // Log des cookies disponibles
+      const allCookies = cookieService.getAll();
+      console.log('🍪 Available cookies:', allCookies);
+
+      // Si le token n'est pas dans les cookies, vérifier le localStorage
+      if (!token) {
+        console.log('⚠️ No token found in cookies, checking localStorage...');
         const storedToken = localStorage.getItem('accessToken');
         if (storedToken) {
+          console.log('⚠️ Token found in localStorage (fallback)');
           token = storedToken;
+          tokenSource = 'localStorage';
         }
       }
 
       if (token) {
+        console.log(`✅ Token found in ${tokenSource}:`, token.substring(0, 20) + '...');
         newReq = newReq.clone({
           setHeaders: {
             Authorization: `Bearer ${token}`
           }
         });
+      } else {
+        console.log('❌ No token found in either cookies or localStorage');
       }
     }
   }
 
   return next(newReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Gestion des erreurs HTTP
-      if (error.status === 0) {
-        // Erreur de connexion (serveur indisponible)
-        console.warn('Erreur de connexion au serveur. Le serveur est peut-être en cours de redémarrage.');
-      } else if (error.status === 401) {
-        // Erreur d'authentification, mais ne pas supprimer les tokens - ce sera géré par le service d'authentification
-        console.warn('Erreur d\'authentification détectée par l\'intercepteur.');
+      if (error.status === 401) {
+        console.log('🔒 Unauthorized access - clearing tokens');
+        // Clear both cookie and localStorage
+        cookieService.delete('accessToken', '/');
+        localStorage.removeItem('accessToken');
+        router.navigate(['/auth']);
       }
-
-      // Propager l'erreur pour traitement ultérieur
       return throwError(() => error);
     })
   );
