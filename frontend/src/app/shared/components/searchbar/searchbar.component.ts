@@ -170,7 +170,6 @@ export class SearchbarComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          console.error('❌ Error during search:', error);
         },
       });
   }
@@ -201,7 +200,6 @@ export class SearchbarComponent implements OnInit {
     const userRole = this.usersService.getUserRole();
     // Check if the role allows you to add a product
     this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
-    console.log('📱 User Role:', userRole, 'Can Add Product:', this.canAddProduct);
   }
 
   // ======================== RESEARCH FUNCTIONS
@@ -294,12 +292,9 @@ export class SearchbarComponent implements OnInit {
    * @param product The product or search term
    */
   private addToHistory(product: any): void {
-    console.log('🔍 searchbar.addToHistory appelé avec:', product);
-
     // If it's a direct search (Enter key press), use the raw search term
     if (!product && this.searchQuery && this.searchQuery.trim() !== '') {
       const searchTerm = this.searchQuery.trim();
-      console.log('🔍 Utilisation du terme de recherche direct:', searchTerm);
 
       // Create a simple object for history
       const historyItem = {
@@ -310,21 +305,13 @@ export class SearchbarComponent implements OnInit {
       this.historyService.addToHistory(
         historyItem.id,
         searchTerm  // Use the search term directly
-      ).subscribe({
-        next: (response) => {
-          console.log(`✅ Terme "${searchTerm}" ajouté à l'historique:`, response);
-        },
-        error: (err) => {
-          console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
-        }
-      });
+      ).subscribe();
 
       return;
     }
 
     // Default behavior for product selections
     if (!product || !product.id) {
-      console.warn('⚠️ Produit invalide pour l\'historique:', product);
       return;
     }
 
@@ -334,22 +321,10 @@ export class SearchbarComponent implements OnInit {
     // const sourceInfo = product.source ? ` (${product.source})` : '';
     const fullProductName = productName; // Just the product name
 
-    console.log('🔍 Envoi à l\'historique:', {
-      id: product.id,
-      name: fullProductName
-    });
-
     this.historyService.addToHistory(
       product.id,
       fullProductName
-    ).subscribe({
-      next: (response) => {
-        console.log(`✅ Produit "${fullProductName}" ajouté à l'historique:`, response);
-      },
-      error: (err) => {
-        console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
-      }
-    });
+    ).subscribe();
   }
 
   /**
@@ -375,15 +350,11 @@ export class SearchbarComponent implements OnInit {
       this.historyService.addToHistory(
         filterId,
         filterDescription
-      ).subscribe({
-        next: (response) => console.log('✅ Recherche par filtres ajoutée à l\'historique:', response),
-        error: (err) => console.error('❌ Erreur lors de l\'ajout à l\'historique:', err)
-      });
+      ).subscribe();
     }
 
     // Warn if no filters or selected product is present
     if (!includeSelectedProduct && !Object.keys(this.appliedFilters).length) {
-      console.warn('⚠️ No filters applied.');
       return;
     }
     const filtersToSend = {
@@ -420,7 +391,6 @@ export class SearchbarComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        console.error('❌ Search error:', error);
         this.noResultsMessage = 'Erreur lors de la recherche. Veuillez réessayer.';
       },
     });
@@ -528,7 +498,6 @@ export class SearchbarComponent implements OnInit {
    */
   addNewProduct() {
     if (this.searchQuery.trim() !== '') {
-      console.log('➕ Redirection vers la page d\'ajout de produit avec:', this.searchQuery);
       this.router.navigate(['/add-product'], {
         state: {
           suggestedName: this.searchQuery.trim(),

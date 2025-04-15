@@ -34,7 +34,6 @@ export class APIUnsplash {
    * @param http HttpClient for making HTTP requests.
    */
   constructor(private http: HttpClient) {
-    console.log('🔍 Service API Unsplash initialisé - URL configurée:', this._unsplash);
   }
 
   /**
@@ -46,7 +45,6 @@ export class APIUnsplash {
   searchPhotos(query: string): Observable<UnsplashResponse> {
     // Vérification du paramètre
     if (!query || typeof query !== 'string' || query.trim() === '') {
-      console.warn('⚠️ Terme de recherche Unsplash invalide:', query);
       return of({ imageUrl: null });
     }
 
@@ -55,17 +53,11 @@ export class APIUnsplash {
 
     // Construction de l'URL
     const searchUrl = `${this._unsplash}/search?query=${encodeURIComponent(cleanQuery)}`;
-    console.log(`🔍 Requête Unsplash: ${searchUrl}`);
 
     // Exécution de la requête avec retry et gestion d'erreur
     return this.http.get<UnsplashResponse>(searchUrl).pipe(
       retry(1), // Retry once in case of network issues
       catchError((error: HttpErrorResponse) => {
-        console.error('❌ Erreur API Unsplash:', error);
-        console.error(`   - Status: ${error.status}`);
-        console.error(`   - Message: ${error.message}`);
-        console.error(`   - URL: ${searchUrl}`);
-
         // Return a fallback response
         return of({ imageUrl: null });
       })

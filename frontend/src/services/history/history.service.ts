@@ -52,7 +52,7 @@ export interface PaginatedHistory {
 export class HistoryService {
   private apiUrl = `${environment.globalBackendUrl}/history`;
 
-  // Données complètes et pagination
+  // Complete data and pagination
   private allHistoryItems: SearchHistoryItem[] = [];
   private historyItemsSubject = new BehaviorSubject<SearchHistoryItem[]>([]);
   private totalItemsSubject = new BehaviorSubject<number>(0);
@@ -73,20 +73,17 @@ export class HistoryService {
     private http: HttpClient,
     private authService: AuthService
   ) {
-    console.log('[HistoryService] Initialized - API URL:', this.apiUrl);
-
     // Load saved page size from localStorage if available
     try {
       const savedPageSize = localStorage.getItem('historyPageSize');
       if (savedPageSize) {
         const parsedSize = parseInt(savedPageSize, 10);
         if (!isNaN(parsedSize) && parsedSize > 0) {
-          console.log('[HistoryService] Loading saved page size from localStorage:', parsedSize);
           this.pageSizeSubject.next(parsedSize);
         }
       }
     } catch (error) {
-      console.error('[HistoryService] Error loading saved page size from localStorage:', error);
+      // Error handling silently fails, but service continues
     }
   }
 
@@ -97,25 +94,17 @@ export class HistoryService {
    * @returns Observable of the server response
    */
   addToHistory(productId: string, productName: string): Observable<any> {
-    console.log('[HistoryService] addToHistory called with:', { productId, productName });
-
     // Parameter validation
     if (!productId || !productName) {
-      console.warn('[HistoryService] productId or productName missing:', { productId, productName });
       return of(null);
     }
 
     const userInfo = this.authService.getUserInfo();
-    console.log('[HistoryService] User info retrieved:', userInfo);
-
     const userId = userInfo?.userId || userInfo?.id || userInfo?.email;
 
     if (!userId) {
-      console.warn('[HistoryService] User not logged in or ID missing:', userInfo);
       return of(null);
     }
-
-    console.log('[HistoryService] userId identified:', userId);
 
     const historyItem: SearchHistoryItem = {
       userId,
@@ -124,18 +113,12 @@ export class HistoryService {
       searchDate: new Date().toISOString()
     };
 
-    console.log('[HistoryService] Sending POST request to:', `${this.apiUrl}/add`);
-    console.log('[HistoryService] Data sent:', historyItem);
-
     return this.http.post(`${this.apiUrl}/add`, historyItem).pipe(
-      tap(response => {
-        console.log('[HistoryService] History successfully recorded. Response:', response);
+      tap(() => {
         // Refresh after adding
         this.loadUserHistory();
       }),
-      catchError(error => {
-        console.error('[HistoryService] Error adding to history:', error);
-        console.error('[HistoryService] Details:', error.status, error.message, error.error);
+      catchError(() => {
         return of(null);
       })
     );
@@ -146,15 +129,10 @@ export class HistoryService {
    * @returns Observable containing the paginated items
    */
   loadUserHistory(): Observable<PaginatedHistory> {
-    console.log('[HistoryService] loadUserHistory called');
-
     const userInfo = this.authService.getUserInfo();
-    console.log('[HistoryService] User info retrieved:', userInfo);
-
     const userId = userInfo?.userId || userInfo?.id || userInfo?.email;
 
     if (!userId) {
-      console.warn('[HistoryService] User not logged in or ID missing:', userInfo);
       this.allHistoryItems = [];
       this.updatePaginatedData();
       return of({ items: [], total: 0, page: 1, pageSize: 10 });
@@ -162,7 +140,6 @@ export class HistoryService {
 
     return this.http.get<SearchHistoryItem[]>(`${this.apiUrl}/user/${userId}`).pipe(
       tap(results => {
-        console.log('[HistoryService] All history retrieved:', results.length, 'items');
         this.allHistoryItems = results || [];
         this.totalItemsSubject.next(this.allHistoryItems.length);
         this.updatePaginatedData();
@@ -180,8 +157,7 @@ export class HistoryService {
           pageSize
         };
       }),
-      catchError(error => {
-        console.error('[HistoryService] Error retrieving history:', error);
+      catchError(() => {
         this.allHistoryItems = [];
         this.updatePaginatedData();
         return of({ items: [], total: 0, page: 1, pageSize: 10 });
@@ -201,9 +177,6 @@ export class HistoryService {
 
     // Slice the array to get only the items for current page
     const paginatedItems = this.allHistoryItems.slice(startIndex, endIndex);
-
-    console.log(`[HistoryService] Pagination: page=${page}, pageSize=${pageSize}, items=${paginatedItems.length}/${this.allHistoryItems.length}`);
-
     this.historyItemsSubject.next(paginatedItems);
   }
 
@@ -213,17 +186,14 @@ export class HistoryService {
    */
   setPage(page: number): void {
     if (page < 1) {
-      console.warn('[HistoryService] Invalid page number:', page);
       return;
     }
 
     const maxPage = Math.ceil(this.allHistoryItems.length / this.pageSizeSubject.value) || 1;
     if (page > maxPage) {
-      console.warn(`[HistoryService] Page ${page} exceeds max page ${maxPage}`);
       page = maxPage;
     }
 
-    console.log('[HistoryService] Changing to page:', page);
     this.currentPageSubject.next(page);
     this.updatePaginatedData();
   }
@@ -234,12 +204,8 @@ export class HistoryService {
    */
   setPageSize(pageSize: number): void {
     if (pageSize <= 0) {
-      console.error('[HistoryService] Invalid page size:', pageSize);
       return;
     }
-
-    const currentSize = this.pageSizeSubject.value;
-    console.log('[HistoryService] Changing page size from', currentSize, 'to', pageSize);
 
     // Update the page size subject
     this.pageSizeSubject.next(pageSize);
@@ -249,15 +215,14 @@ export class HistoryService {
   }
 
   /**
-   * @brief Pour compatibilité avec le code existant
+   * @brief For compatibility with existing code
    * @deprecated Use loadUserHistory instead
    */
   getUserHistoryPaginated(page: number = 1, pageSize: number = 10): Observable<PaginatedHistory> {
-    console.log('[HistoryService] getUserHistoryPaginated called - redirecting to loadUserHistory');
     this.currentPageSubject.next(page);
     this.pageSizeSubject.next(pageSize);
 
-    // Si on a déjà chargé les données, juste mettre à jour la pagination
+    // If we already have loaded data, just update the pagination
     if (this.allHistoryItems.length > 0) {
       this.updatePaginatedData();
       return of({
@@ -268,7 +233,7 @@ export class HistoryService {
       });
     }
 
-    // Sinon charger toutes les données
+    // Otherwise load all the data
     return this.loadUserHistory();
   }
 
@@ -278,16 +243,12 @@ export class HistoryService {
    * @returns Observable of the server response
    */
   deleteHistoryItem(historyId: string): Observable<any> {
-    console.log('[HistoryService] deleteHistoryItem called for ID:', historyId);
-
     return this.http.delete(`${this.apiUrl}/${historyId}`).pipe(
-      tap(response => {
-        console.log('[HistoryService] History item successfully deleted. Response:', response);
+      tap(() => {
         // Refresh data after deletion
         this.loadUserHistory().subscribe();
       }),
-      catchError(error => {
-        console.error('[HistoryService] Error deleting history item:', error);
+      catchError(() => {
         return of(null);
       })
     );
@@ -298,27 +259,22 @@ export class HistoryService {
    * @returns Observable of the server response
    */
   clearUserHistory(): Observable<any> {
-    console.log('[HistoryService] clearUserHistory called');
-
     const userInfo = this.authService.getUserInfo();
     const userId = userInfo?.userId || userInfo?.id || userInfo?.email;
 
     if (!userId) {
-      console.warn('[HistoryService] User not logged in or ID missing:', userInfo);
       return of(null);
     }
 
     return this.http.delete(`${this.apiUrl}/user/${userId}/clear`).pipe(
-      tap(response => {
-        console.log('[HistoryService] History completely deleted successfully. Response:', response);
+      tap(() => {
         // Reset local data
         this.allHistoryItems = [];
         this.historyItemsSubject.next([]);
         this.totalItemsSubject.next(0);
         this.currentPageSubject.next(1);
       }),
-      catchError(error => {
-        console.error('[HistoryService] Error deleting history:', error);
+      catchError(() => {
         return of(null);
       })
     );
@@ -333,7 +289,7 @@ export class HistoryService {
       localStorage.removeItem('searchHistory');
       sessionStorage.removeItem('searchHistory');
     } catch (e) {
-      console.error('[HistoryService] Error clearing local cache:', e);
+      // Silently fail
     }
   }
 }

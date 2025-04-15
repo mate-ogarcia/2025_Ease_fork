@@ -236,7 +236,6 @@ export class ProductRequestsComponent implements OnInit {
         { status }
       );
 
-      console.log(`Status successfully updated:`, response);
     } catch (error) {
       console.error("❌ Error updating status:", error);
     }

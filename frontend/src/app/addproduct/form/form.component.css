@@ -2,10 +2,10 @@
 .add-product-container {
   width: 100%;
   margin: 0 auto;
+  margin-top: 10px;
   padding: 10px 30px;
   font-family: 'Geologica', sans-serif;
   color: #333;
-  border-top: 1px solid #f9f9f9;
 }
 
 /* En-tête (titre + boutons) */

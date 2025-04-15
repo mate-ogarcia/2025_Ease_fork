@@ -63,7 +63,6 @@ export class AppComponent implements OnInit {
 
     // Initialiser l'état d'authentification avec un timeout pour éviter un blocage
     const authTimeout = setTimeout(() => {
-      console.log('⚠️ Timeout lors de l\'initialisation de l\'état d\'authentification');
       this.completeInitialization(startTime);
     }, 5000); // Augmenter le timeout à 5 secondes pour laisser le temps aux tentatives
 
@@ -74,7 +73,6 @@ export class AppComponent implements OnInit {
         catchError(error => {
           if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
             // Le serveur est peut-être en train de redémarrer, essayer à nouveau
-            console.log('🔄 Tentative de reconnexion au backend...');
             return throwError(() => error);
           }
           // Pour les autres erreurs (comme 401), ne pas réessayer
@@ -85,7 +83,6 @@ export class AppComponent implements OnInit {
           delay: (error, retryCount) => {
             // Délai exponentiel: 1s, 2s, 4s
             const delayTime = Math.pow(2, retryCount - 1) * 1000;
-            console.log(`⏱️ Nouvel essai dans ${delayTime / 1000}s...`);
             return timer(delayTime);
           }
         })
@@ -93,12 +90,10 @@ export class AppComponent implements OnInit {
       .subscribe({
         next: () => {
           clearTimeout(authTimeout);
-          console.log('✅ État d\'authentification initialisé');
           this.completeInitialization(startTime);
         },
         error: (err) => {
           clearTimeout(authTimeout);
-          console.log('❌ Erreur lors de l\'initialisation de l\'état d\'authentification après plusieurs tentatives', err);
           // Continuer sans redirection, juste terminer l'écran de chargement
           this.completeInitialization(startTime);
         }

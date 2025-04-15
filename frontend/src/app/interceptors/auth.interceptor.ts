@@ -52,28 +52,24 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
       // Log des cookies disponibles
       const allCookies = cookieService.getAll();
-      console.log('🍪 Available cookies:', allCookies);
 
       // Si le token n'est pas dans les cookies, vérifier le localStorage
       if (!token) {
-        console.log('⚠️ No token found in cookies, checking localStorage...');
         const storedToken = localStorage.getItem('accessToken');
         if (storedToken) {
-          console.log('⚠️ Token found in localStorage (fallback)');
           token = storedToken;
           tokenSource = 'localStorage';
         }
       }
 
       if (token) {
-        console.log(`✅ Token found in ${tokenSource}:`, token.substring(0, 20) + '...');
         newReq = newReq.clone({
           setHeaders: {
             Authorization: `Bearer ${token}`
           }
         });
       } else {
-        console.log('❌ No token found in either cookies or localStorage');
+        console.error('❌ No token found in either cookies or localStorage');
       }
     }
   }
@@ -81,7 +77,6 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   return next(newReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        console.log('🔒 Unauthorized access - clearing tokens');
         // Clear both cookie and localStorage
         cookieService.delete('accessToken', '/');
         localStorage.removeItem('accessToken');

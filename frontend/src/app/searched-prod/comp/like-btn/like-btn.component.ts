@@ -17,9 +17,6 @@ export class LikeBtnComponent {
   onCheckboxChange(): void {
     const oldState = this.liked;
     this.liked = !this.liked;
-    console.log(`💓 LikeBtnComponent - État changé: ${oldState} -> ${this.liked}`);
-
-    console.log(`💓 LikeBtnComponent - Émission de l'événement likeToggled:`, this.liked);
     this.likeToggled.emit(this.liked);
   }
 }

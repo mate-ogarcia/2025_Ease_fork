@@ -61,7 +61,6 @@ export class HistoryComponent implements OnInit {
    * @brief Lifecycle hook executed when the component is initialized.
    */
   ngOnInit(): void {
-    console.log('[HistoryComponent] ngOnInit');
     this.isLoading = true;
     this.error = null;
 
@@ -70,7 +69,6 @@ export class HistoryComponent implements OnInit {
     if (savedPageSize) {
       const parsedSize = parseInt(savedPageSize, 10);
       if (!isNaN(parsedSize) && this.pageSizes.includes(parsedSize)) {
-        console.log('[HistoryComponent] Restored page size from localStorage:', parsedSize);
         this.pageSize = parsedSize;
         this.historyService.setPageSize(parsedSize);
       }
@@ -79,7 +77,7 @@ export class HistoryComponent implements OnInit {
     // Subscribe to pagination updates
     this.historyService.historyItems$.subscribe(items => {
       this.resultsArray = items || [];
-      this.isLoading = false; // Fin du chargement quand les éléments sont reçus
+      this.isLoading = false; // End loading when items are received
     });
 
     this.historyService.totalItems$.subscribe(total => {
@@ -96,7 +94,7 @@ export class HistoryComponent implements OnInit {
       this.updatePages();
     });
 
-    // Chargement initial de l'historique
+    // Initial history loading
     this.loadHistory();
   }
 
@@ -113,21 +111,18 @@ export class HistoryComponent implements OnInit {
    * @brief Loads the user's search history.
    */
   loadHistory(): void {
-    console.log('[HistoryComponent] Loading history');
     this.isLoading = true;
     this.error = null;
 
-    // Utiliser la nouvelle méthode qui charge tout et pagine côté client
+    // Use the new method that loads everything and paginates client-side
     this.historyService.loadUserHistory().subscribe({
       next: () => {
-        console.log('[HistoryComponent] History loaded successfully');
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('[HistoryComponent] Error loading history:', err);
         this.isLoading = false;
-        this.error = 'Erreur lors du chargement de l\'historique. Veuillez réessayer.';
-        this.notificationService.showError('Erreur lors du chargement de l\'historique. Veuillez réessayer.');
+        this.error = 'Error loading history. Please try again.';
+        this.notificationService.showError('Error loading history. Please try again.');
       }
     });
   }
@@ -138,14 +133,10 @@ export class HistoryComponent implements OnInit {
    * @return The search term.
    */
   getSearchTerm(item: any): string {
-    console.log('🔍 Analyzing history item:', item);
-
     // Check if this is a filter search (special ID format starting with 'filter-')
     if (item.id && typeof item.id === 'string' && item.id.startsWith('filter-')) {
-      console.log('  ✓ Filter search detected');
       // For filter searches, productName contains the filter description
       if (item.productName) {
-        console.log('  ✓ Filter description found:', item.productName);
         return this.cleanHtmlTags(item.productName);
       }
     }
@@ -154,18 +145,15 @@ export class HistoryComponent implements OnInit {
     if (typeof item === 'object' && item) {
       // Look first in standard properties
       if (item.productName) {
-        console.log('  ✓ Found in productName:', item.productName);
         return this.cleanHtmlTags(item.productName);
       }
 
       // Check in productData
       if (item.productData && typeof item.productData === 'object') {
         if (item.productData.name) {
-          console.log('  ✓ Found in productData.name:', item.productData.name);
           return this.cleanHtmlTags(item.productData.name);
         }
         if (item.productData.productName) {
-          console.log('  ✓ Found in productData.productName:', item.productData.productName);
           return this.cleanHtmlTags(item.productData.productName);
         }
       }
@@ -173,7 +161,6 @@ export class HistoryComponent implements OnInit {
       // Check in _default (specific to Couchbase's structure)
       if (item._default && typeof item._default === 'object') {
         if (item._default.productName) {
-          console.log('  ✓ Found in _default.productName:', item._default.productName);
           return this.cleanHtmlTags(item._default.productName);
         }
       }
@@ -181,7 +168,6 @@ export class HistoryComponent implements OnInit {
       // Search in direct values at the top level
       for (const key of ['name', 'term', 'query', 'searchText', 'title']) {
         if (item[key] && typeof item[key] === 'string') {
-          console.log(`  ✓ Found in ${key}:`, item[key]);
           return this.cleanHtmlTags(item[key]);
         }
       }
@@ -192,7 +178,6 @@ export class HistoryComponent implements OnInit {
         if (typeof value === 'object' && value !== null) {
           for (const subProp of ['name', 'productName', 'query', 'searchText', 'term']) {
             if (value[subProp] && typeof value[subProp] === 'string') {
-              console.log(`  ✓ Found in ${prop}.${subProp}:`, value[subProp]);
               return this.cleanHtmlTags(value[subProp]);
             }
           }
@@ -200,8 +185,7 @@ export class HistoryComponent implements OnInit {
       }
     }
 
-    console.log('⚠️ No search term found, using default value');
-    return "Recherche";
+    return "Search";
   }
 
   /**
@@ -221,7 +205,6 @@ export class HistoryComponent implements OnInit {
     // Trim and normalize spaces
     cleanText = cleanText.trim().replace(/\s+/g, ' ');
 
-    console.log('  🧹 Cleaned text:', cleanText);
     return cleanText;
   }
 
@@ -230,22 +213,17 @@ export class HistoryComponent implements OnInit {
    * @param historyItem The selected history item.
    */
   searchAgain(historyItem: any): void {
-    console.log('🔍 Search from history:', historyItem);
-
     // Show loading indicator
     this.isLoading = true;
 
     // Extract search term
     const searchTerm = this.getSearchTerm(historyItem);
 
-    if (!searchTerm || searchTerm === "Recherche") {
-      console.error('❌ Invalid search term found');
+    if (!searchTerm || searchTerm === "Search") {
       this.isLoading = false;
-      this.error = 'Impossible de relancer cette recherche. Terme non valide.';
+      this.error = 'Unable to repeat this search. Invalid term.';
       return;
     }
-
-    console.log('🔍 Extracted search term:', searchTerm);
 
     // Check if this is a filter search
     if (historyItem.id && typeof historyItem.id === 'string' && historyItem.id.startsWith('filter-')) {
@@ -261,8 +239,6 @@ export class HistoryComponent implements OnInit {
       productId = historyItem._default.productId;
     }
 
-    console.log('🔍 Extracted product ID:', productId);
-
     // Build search request
     const searchRequest = {
       productId: productId || "",
@@ -270,17 +246,13 @@ export class HistoryComponent implements OnInit {
       currentRoute: '/home'
     };
 
-    console.log('🔍 Sending search request:', searchRequest);
-
     // Send request to API service
     this.apiService.postProductsWithFilters(searchRequest).subscribe({
       next: (results) => {
-        console.log('✅ Search results received:', results.length || 0, 'products');
         this.isLoading = false;
 
         // If we have a valid product ID and only one result, we can navigate directly to the product page
         if (productId && results.length === 1) {
-          console.log('✅ Direct navigation to product page:', productId);
           this.router.navigate(['/prodpage', productId]);
           return;
         }
@@ -293,9 +265,8 @@ export class HistoryComponent implements OnInit {
         });
       },
       error: (err) => {
-        console.error('❌ Erreur lors de la recherche:', err);
         this.isLoading = false;
-        this.error = 'Erreur lors de la recherche. Veuillez réessayer.';
+        this.error = 'Error during search. Please try again.';
       }
     });
   }
@@ -306,8 +277,6 @@ export class HistoryComponent implements OnInit {
    * @param filterDescription The human-readable description of the filters.
    */
   private handleFilterSearch(historyItem: any, filterDescription: string): void {
-    console.log('🔍 Recherche par filtres depuis l\'historique:', filterDescription);
-
     // Try to extract filter information from the description
     const filters: any = {};
 
@@ -342,19 +311,14 @@ export class HistoryComponent implements OnInit {
       }
     }
 
-    console.log('🔍 Filtres extraits:', filters);
-
     // Build search request with extracted filters
     const searchRequest = {
       ...filters,
       currentRoute: '/home'
     };
 
-    console.log('🔍 Envoi de la requête de recherche avec filtres:', searchRequest);
-
     this.apiService.postProductsWithFilters(searchRequest).subscribe({
       next: (results) => {
-        console.log('✅ Résultats de recherche par filtres reçus:', results.length || 0, 'produits');
         this.isLoading = false;
 
         // Navigate to the search results page
@@ -365,9 +329,8 @@ export class HistoryComponent implements OnInit {
         });
       },
       error: (err) => {
-        console.error('❌ Erreur lors de la recherche par filtres:', err);
         this.isLoading = false;
-        this.error = 'Erreur lors de la recherche. Veuillez réessayer.';
+        this.error = 'Error during search. Please try again.';
       }
     });
   }
@@ -388,34 +351,19 @@ export class HistoryComponent implements OnInit {
    * @brief Method to clear the entire history
    */
   clearHistory(): void {
-    console.log('🧹 Tentative de suppression de l\'historique complet');
-
     // Ask for confirmation before deleting the entire history
-    if (!confirm('Êtes-vous sûr de vouloir supprimer tout votre historique de recherche ?')) {
-      console.log('❌ Suppression de l\'historique annulée par l\'utilisateur');
+    if (!confirm('Are you sure you want to delete your entire search history?')) {
       return;
     }
 
     this.isLoading = true;
     this.error = null;
 
-    // Detailed log to understand what's happening
-    console.log('🧹 Appel de clearUserHistory...');
-
     this.historyService.clearUserHistory()
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (response) => {
-          console.log('✅ Historique effacé avec succès:', response);
-
-          // Analyze the response
-          if (response.deleted === 0 && response.failed === 0) {
-            console.log('ℹ️ Aucun élément n\'était présent dans l\'historique');
-          } else if (response.failed && response.failed > 0) {
-            console.warn(`⚠️ ${response.failed} éléments n'ont pas pu être supprimés`);
-          }
-
-          // Mise à jour locale des données
+          // Update local data
           this.resultsArray = [];
           this.totalItems = 0;
           this.updatePages();
@@ -425,29 +373,25 @@ export class HistoryComponent implements OnInit {
             localStorage.removeItem('searchHistory');
             sessionStorage.removeItem('searchHistory');
           } catch (e) {
-            console.error('❌ Erreur lors de la suppression du cache:', e);
+            // Silent error
           }
 
           // Appropriate message according to the result
-          if (response.deleted > 0) {
-            this.notificationService.showSuccess(`Votre historique a été effacé avec succès (${response.deleted} élément${response.deleted > 1 ? 's' : ''})`);
+          if (response && response.deleted > 0) {
+            this.notificationService.showSuccess(`Your history has been successfully cleared (${response.deleted} item${response.deleted > 1 ? 's' : ''})`);
           } else {
-            this.notificationService.showInfo('Aucun élément à supprimer dans l\'historique');
+            this.notificationService.showInfo('No items to delete in history');
           }
         },
         error: (err) => {
-          console.error('❌ Erreur lors de la suppression de l\'historique:', err);
-
           // Extract detailed error message if available
-          let errorMessage = 'Erreur lors de la suppression de l\'historique.';
+          let errorMessage = 'Error clearing history.';
 
           if (err.error && err.error.message) {
             errorMessage += ` ${err.error.message}`;
           } else if (err.message) {
             errorMessage += ` ${err.message}`;
           }
-
-          console.error('Message d\'erreur détaillé:', errorMessage);
 
           // Display error notification with details
           this.notificationService.showError(errorMessage);
@@ -464,34 +408,26 @@ export class HistoryComponent implements OnInit {
     // Prevent propagation to avoid triggering searchAgain()
     event.stopPropagation();
 
-    console.log('🗑️ Suppression de l\'élément d\'historique complet:', historyItem);
-
     // Try to find an ID from available properties
     let historyId = historyItem.id || historyItem._id;
 
     // Check for ID in _default structure (Couchbase standard)
     if (!historyId && historyItem._default && typeof historyItem._default === 'object') {
       historyId = historyItem._default.id || historyItem._default._id;
-      console.log('🗑️ ID extrait de _default:', historyId);
     }
 
     if (!historyId) {
-      console.error('❌ Impossible de supprimer un élément sans ID:', historyItem);
-      this.notificationService.showError('Impossible de supprimer cet élément. ID manquant.');
+      this.notificationService.showError('Unable to delete this item. Missing ID.');
       return;
     }
 
     // Show loading state only for this item
     historyItem.isDeleting = true;
 
-    console.log('🗑️ Tentative de suppression avec l\'ID:', historyId);
-
     this.historyService.deleteHistoryItem(historyId)
       .pipe(finalize(() => historyItem.isDeleting = false))
       .subscribe({
         next: (response) => {
-          console.log('✅ Élément supprimé avec succès:', response);
-
           // Update display by removing the deleted item
           this.resultsArray = this.resultsArray.filter(item => {
             const defaultId = item._default ? item._default.id : undefined;
@@ -504,11 +440,10 @@ export class HistoryComponent implements OnInit {
           this.updatePages();
 
           // Display success notification
-          this.notificationService.showSuccess('Élément supprimé avec succès');
+          this.notificationService.showSuccess('Item successfully deleted');
         },
         error: (err) => {
-          console.error('❌ Erreur lors de la suppression de l\'élément:', err);
-          this.notificationService.showError('Erreur lors de la suppression. Veuillez réessayer.');
+          this.notificationService.showError('Error during deletion. Please try again.');
         }
       });
   }
@@ -519,7 +454,6 @@ export class HistoryComponent implements OnInit {
    */
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.pages.length) {
-      console.log('[HistoryComponent] Changing to page:', page);
       this.historyService.setPage(page);
     }
   }
@@ -529,8 +463,6 @@ export class HistoryComponent implements OnInit {
    * @param size The new page size.
    */
   onPageSizeChange(size: number): void {
-    console.log('[HistoryComponent] Changing page size to:', size);
-
     // Save page size to localStorage for persistence between sessions
     localStorage.setItem('historyPageSize', size.toString());
 

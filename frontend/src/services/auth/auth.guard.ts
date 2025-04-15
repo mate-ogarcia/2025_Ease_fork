@@ -105,9 +105,6 @@ export class AuthGuard implements CanActivate {
           this.authService.isAuthenticated().pipe(take(1)),
           this.authService.getUserRole().pipe(take(1))
         ]).pipe(
-          tap(([isAuthenticated, role]) => {
-            console.log('🔒 État authentification:', { isAuthenticated, role });
-          }),
           switchMap(([isAuthenticated, role]) => {
             // Vérifier si la route actuelle est publique
             const isPublicRoute = this.publicRoutes.some(publicRoute =>
@@ -115,7 +112,6 @@ export class AuthGuard implements CanActivate {
             );
 
             if (!isAuthenticated) {
-              console.log('❌ Non authentifié');
               if (!isPublicRoute) {
                 this.notificationService.showWarning(
                   'Veuillez vous connecter pour accéder à cette page'
@@ -126,7 +122,6 @@ export class AuthGuard implements CanActivate {
             }
 
             if (!role) {
-              console.log('❌ Token invalide ou expiré');
               this.authService.logout();
               this.notificationService.showWarning(
                 'Votre session a expiré. Veuillez vous reconnecter.'
@@ -139,7 +134,6 @@ export class AuthGuard implements CanActivate {
 
             // Si l'utilisateur est banni
             if (currentRole === 'banned') {
-              console.log('❌ Utilisateur banni tentant d\'accéder à une fonctionnalité protégée');
               // Autoriser l'accès uniquement aux routes publiques
               if (!isPublicRoute) {
                 return this.handleBannedUser();
@@ -148,19 +142,12 @@ export class AuthGuard implements CanActivate {
             }
 
             const requiredRoles = route.data['roles'] as Array<string>;
-            console.log('🎯 Rôles requis:', requiredRoles);
 
             if (!requiredRoles || requiredRoles.length === 0) {
               return of(true);
             }
 
             const hasRequiredRole = requiredRoles.some(r => r.toLowerCase() === currentRole);
-
-            console.log('🔍 Vérification des rôles:', {
-              currentRole,
-              requiredRoles,
-              hasRequiredRole
-            });
 
             if (!hasRequiredRole) {
               const requiredRolesFrench = requiredRoles
@@ -169,17 +156,14 @@ export class AuthGuard implements CanActivate {
 
               const message = `Accès refusé : Cette fonctionnalité nécessite le rôle ${requiredRolesFrench}. Votre rôle actuel est ${this.getRoleFrench(currentRole)}.`;
 
-              console.log('❌ Accès refusé:', message);
               return this.handleAccessDenied(message);
             }
 
-            console.log('✅ Accès autorisé');
             return of(true);
           })
         );
       }),
       catchError(error => {
-        console.error('🔥 Erreur lors de la vérification des droits:', error);
         this.notificationService.showError('Une erreur est survenue lors de la vérification de vos droits d\'accès');
         return timer(2000).pipe(
           map(() => {

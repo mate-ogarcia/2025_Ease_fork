@@ -93,7 +93,6 @@ export class FavoritesComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des favoris:', error);
         this.errorMessage = 'Impossible de charger vos favoris. Veuillez réessayer plus tard.';
         this.isLoading = false;
       }
@@ -111,15 +110,12 @@ export class FavoritesComponent implements OnInit {
           next: (response) => {
             if (response.imageUrl) {
               product.image = response.imageUrl;
-              console.log(`✅ Image chargée pour ${product.name}`);
             } else {
-              console.warn(`🚫 Aucune image trouvée pour ${product.name}`);
               // Ne pas définir d'image par défaut qui n'existe pas
               product.image = null;
             }
           },
           error: (err) => {
-            console.error(`❌ Erreur de récupération d'image pour ${product.name}:`, err);
             product.image = null;
           }
         });
@@ -149,7 +145,6 @@ export class FavoritesComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Erreur lors de la suppression du favori:', error);
         this.notificationService.showError('Erreur lors de la suppression du favori');
       }
     });
@@ -173,6 +168,5 @@ export class FavoritesComponent implements OnInit {
     if (product) {
       product.image = null;
     }
-    console.log('❌ Erreur de chargement d\'image:', img.src);
   }
 } 

@@ -400,7 +400,6 @@ export class AuthService {
             return this.refreshAuthState().pipe(
               catchError(err => {
                 // En cas d'erreur, consigner mais ne pas perturber l'expérience utilisateur
-                console.warn('Échec de rafraîchissement périodique de l\'état d\'authentification:', err);
                 return of(null);
               })
             );

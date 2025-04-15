@@ -65,7 +65,6 @@ export class NavbarComponent implements OnInit {
   private checkIfHomePage(): void {
     const currentUrl = this.router.url;
     this.isHomePage = currentUrl === '/' || currentUrl === '/home';
-    console.log('Route actuelle:', currentUrl, 'isHomePage:', this.isHomePage);
   }
 
   /**
