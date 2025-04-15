@@ -7,7 +7,7 @@
  * and deleting history entries.
  */
 
-import { Controller, Get, Post, Delete, Body, Param, UseGuards, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards, HttpException, HttpStatus, Logger, Query, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -117,6 +117,46 @@ export class HistoryController {
         `Error clearing history: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
+    }
+  }
+
+  /**
+   * @brief Retrieves paginated search history of a specific user
+   * @param userId User ID
+   * @param page Page number (1-based)
+   * @param limit Number of items per page
+   * @returns Paginated list of user's history items
+   */
+  @Get('user/:userId/paginated')
+  @UseGuards(JwtAuthGuard)
+  async getPaginatedUserHistory(
+    @Param('userId') userId: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('pageSize', new DefaultValuePipe(0), ParseIntPipe) pageSize: number = 0,
+  ) {
+    // Si pageSize est spécifié et limit ne l'est pas, utiliser pageSize
+    if (pageSize > 0 && limit === 10) {
+      limit = pageSize;
+    }
+
+    this.logger.log(`🔍 GET request /history/user/${userId}/paginated received with page=${page}, limit=${limit}, pageSize=${pageSize}`);
+
+    try {
+      this.logger.log('🔍 Calling history service to retrieve paginated user history');
+      const result = await this.historyService.getPaginatedUserHistory(userId, page, limit);
+      this.logger.log(`✅ Paginated history successfully retrieved. ${result.items.length} items found.`);
+
+      // Ajouter explicitement les infos de pagination à la réponse pour le frontend
+      return {
+        items: result.items,
+        total: result.total,
+        page: page,
+        pageSize: limit
+      };
+    } catch (error) {
+      this.logger.error(`❌ Error retrieving paginated history: ${error.message}`, error.stack);
+      throw new HttpException('Error retrieving paginated history', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

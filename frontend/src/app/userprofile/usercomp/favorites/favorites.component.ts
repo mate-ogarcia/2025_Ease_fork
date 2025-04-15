@@ -7,10 +7,13 @@ import { FavoritesService } from '../../../../services/favorites/favorites.servi
 import { NotificationService } from '../../../../services/notification/notification.service';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 
+// Shared Components
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+
 @Component({
   selector: 'app-favorites',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingSpinnerComponent],
   templateUrl: './favorites.component.html',
   styleUrls: ['./favorites.component.css']
 })
@@ -166,24 +169,10 @@ export class FavoritesComponent implements OnInit {
    */
   handleImageError(event: any): void {
     const img = event.target;
-    img.style.display = 'none'; // Cache l'élément img qui a échoué
-
-    // On peut aussi ajouter un fond de couleur à l'élément parent
-    const parentDiv = img.parentElement;
-    if (parentDiv) {
-      parentDiv.style.backgroundColor = '#f0f0f0';
-
-      // Optionnellement, ajouter un texte ou une icône à la place
-      const placeholder = document.createElement('div');
-      placeholder.style.height = '100%';
-      placeholder.style.display = 'flex';
-      placeholder.style.alignItems = 'center';
-      placeholder.style.justifyContent = 'center';
-      placeholder.style.color = '#999';
-      placeholder.innerText = '🖼️';
-      parentDiv.appendChild(placeholder);
+    const product = this.favorites.find(p => p.image === img.src);
+    if (product) {
+      product.image = null;
     }
-
     console.log('❌ Erreur de chargement d\'image:', img.src);
   }
 } 

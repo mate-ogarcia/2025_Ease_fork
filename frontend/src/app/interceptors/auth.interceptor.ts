@@ -22,9 +22,6 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const cookieService = inject(CookieService);
 
   // Retrieve environment information
-  const isLocalhost = window.location.hostname === 'localhost';
-  const protocol = window.location.protocol;
-  const hostname = window.location.hostname;
 
   // Check if the request is for the internal API or OpenStreetMap
   const isApiRequest = !req.url.includes('localhost:4200') &&

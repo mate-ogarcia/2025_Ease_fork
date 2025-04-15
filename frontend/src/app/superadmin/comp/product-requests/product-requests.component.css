@@ -6,11 +6,12 @@ body {
   padding: 0;
 }
 
-.requests-content{
+.requests-content {
   display: flex;
   flex-direction: row;
   gap: 15px;
 }
+
 /* Conteneur principal */
 .product-requests-container {
   display: flex;
@@ -443,6 +444,7 @@ body {
   background-color: #e9ecef;
   color: #495057;
 }
+
 @media (max-width: 1200px) {
   .requests-content {
     flex-direction: column;
@@ -467,5 +469,23 @@ body {
     width: 100%;
     min-width: auto;
     max-width: 600px;
+  }
+}
+
+/* Style pour le spinner dans le bouton */
+.button-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

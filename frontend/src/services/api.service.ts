@@ -174,19 +174,47 @@ export class ApiService {
    * @throws {Error} If there is an issue with the API request, an error is thrown with a message indicating the failure.
    */
   postProductsWithFilters(filters: any): Observable<any> {
+    console.log('🔍 Calling API with filters:', filters);
+    console.log('🔍 URL:', `${this._productsUrl}/filteredProducts`);
+
     return this.http
       .post<any[]>(`${this._productsUrl}/filteredProducts`, filters)
       .pipe(
+        tap(response => console.log('✅ Filtered products retrieved:', response)),
         catchError((error) => {
           console.error('❌ API Error:', error);
+
+          // Plus de détails sur l'erreur
+          if (error.status === 404) {
+            console.error('❌ Endpoint not found (404). Verify backend route /products/filteredProducts exists');
+            // Fallback pour développement - récupérer des produits génériques
+            return this.getProductsWithFallback();
+          }
+
           return throwError(
             () =>
               new Error(
-                'API error: Unable to retrieve filtered products.'
+                `API error: Unable to retrieve filtered products. Status: ${error.status}`
               )
           );
         })
       );
+  }
+
+  /**
+   * @brief Fallback method to retrieve some products when the main endpoint fails
+   * @returns {Observable<any[]>} A limited set of products or empty array
+   */
+  private getProductsWithFallback(): Observable<any[]> {
+    console.log('⚠️ Using fallback to retrieve some products');
+    // Tenter de récupérer des produits génériques
+    return this.http.get<any[]>(`${this._productsUrl}`).pipe(
+      tap(products => console.log('✅ Fallback products retrieved:', products)),
+      catchError(error => {
+        console.error('❌ Even fallback failed:', error);
+        return throwError(() => new Error('Unable to retrieve any products'));
+      })
+    );
   }
 
   /**

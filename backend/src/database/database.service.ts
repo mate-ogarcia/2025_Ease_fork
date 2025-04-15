@@ -135,7 +135,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("FAVORITES_BUCKET_NAME", "favoritesBucket", "favoritesCollection")
       ]);
 
-      console.log("Connexion à Couchbase réussie !");
+      console.log("Connection to Couchbase successful!");
     } catch (error) {
       console.error("❌ Connection error to Couchbase:", error);
       setTimeout(() => this.initializeConnections(), 5000); // Retry after 5s
@@ -293,7 +293,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   private async executeQuery(query: string, params: any = {}): Promise<any[]> {
     try {
-      console.log(`Exécution de la requête:\n${query}\nParamètres:`, params);
+      console.log(`Executing query:\n${query}\nParameters:`, params);
 
       // Execute the Couchbase query with parameters and a timeout
       const result = await this.cluster.query(query, {
@@ -301,7 +301,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         timeout: 10000, // Timeout to prevent long-running queries
       });
 
-      console.log(`Requête exécutée avec succès. ${result.rows.length} lignes retournées.`);
+      console.log(`Query executed successfully. ${result.rows.length} rows returned.`);
       return result.rows || [];
     } catch (error) {
       console.error("❌ Couchbase Query Error:", error.message || error);
@@ -996,7 +996,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     // Check if the product exists
     const existingProduct = await this.getProductById(productId);
     if (!existingProduct) {
-      throw new NotFoundException(`❌ Product with ID '${productId}' not found.`);
+      throw new NotFoundException(`Product with ID ${productId} not found`);
     }
 
     // Delete the product
@@ -1114,7 +1114,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const result = await this.executeQuery(query, { location: lowercaseLocation });
 
     if (result.length === 0) {
-      console.log(`Aucun produit trouvé pour l'emplacement: ${location}`);
+      console.log(`No products found for location: ${location}`);
       return [];
     }
 
@@ -1509,7 +1509,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Check if the product already exists
       const productExists = await this.getProductById(productId);
       if (!productExists) {
-        throw new NotFoundException(`Produit avec ID ${productId} non trouvé`);
+        throw new NotFoundException(`Product with ID ${productId} not found`);
       }
 
       // Create a simple favorite document without including all product details
@@ -1521,7 +1521,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       };
 
       await favoritesCollection.insert(favoriteId, favorite);
-      console.log(`💾 Ajout aux favoris - userId: ${userId}, productId: ${productId}, favoriteId: ${favoriteId}`);
+      console.log(`💾 Adding to favorites - userId: ${userId}, productId: ${productId}, favoriteId: ${favoriteId}`);
       return { id: favoriteId, ...favorite, exists: false };
     } catch (error) {
       console.error('❌ Error adding to favorites:', error);
@@ -1560,15 +1560,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   async getUserFavorites(userId: string): Promise<any[]> {
     try {
-      // Vérifier que l'ID utilisateur est défini
+      // Check that the user ID is defined
       if (!userId) {
-        console.error('❌ getUserFavorites appelé avec un ID utilisateur undefined');
-        return []; // Retourner un tableau vide plutôt que de lancer une erreur
+        console.error('❌ getUserFavorites called with undefined user ID');
+        return []; // Return an empty array instead of throwing an error
       }
 
-      console.log(`🔍 Récupération des favoris pour l'utilisateur: ${userId}`);
+      console.log(`🔍 Retrieving favorites for user: ${userId}`);
 
-      // Requête optimisée avec USE KEYS pour la performance
+      // Optimized query with USE KEYS for performance
       const query = `
         SELECT 
           f.userId, 
@@ -1581,9 +1581,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         ORDER BY f.createdAt DESC
       `;
 
-      // Afficher les paramètres pour déboguer
-      console.log(`📝 Paramètres de la requête:`, { userId });
-      console.log(`🔍 Buckets utilisés: FAVORITES=${process.env.FAVORITES_BUCKET_NAME}, PRODUCTS=${process.env.BUCKET_NAME}`);
+      // Display parameters for debugging
+      console.log(`📝 Query parameters:`, { userId });
+      console.log(`🔍 Buckets used: FAVORITES=${process.env.FAVORITES_BUCKET_NAME}, PRODUCTS=${process.env.BUCKET_NAME}`);
 
       const result = await this.executeQuery(query, { userId });
       return result;
@@ -1603,7 +1603,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async isProductInFavorites(userId: string, productId: string): Promise<boolean> {
     try {
       if (!userId || !productId) {
-        console.error('❌ isProductInFavorites appelé avec des paramètres invalides:', { userId, productId });
+        console.error('❌ isProductInFavorites called with invalid parameters:', { userId, productId });
         return false;
       }
 

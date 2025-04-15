@@ -114,7 +114,7 @@ export class SearchbarComponent implements OnInit {
             }));
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5); // Show top 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length ? '' : 'Aucun produit trouvé';
             return of(null);
           }
           this.isLoading = true;  // Display a loading message
@@ -165,7 +165,7 @@ export class SearchbarComponent implements OnInit {
             ];
             this.fullSearchResults = combinedResults;
             this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length ? '' : 'Aucun produit trouvé';
           }
         },
         error: (error) => {
@@ -200,7 +200,8 @@ export class SearchbarComponent implements OnInit {
     // Get the cookie's info
     const userRole = this.usersService.getUserRole();
     // Check if the role allows you to add a product
-    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
+    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
+    console.log('📱 User Role:', userRole, 'Can Add Product:', this.canAddProduct);
   }
 
   // ======================== RESEARCH FUNCTIONS
@@ -258,7 +259,14 @@ export class SearchbarComponent implements OnInit {
   clearSearch() {
     this.searchQuery = '';
     this.searchResults = [];
+    this.fullSearchResults = [];
     this.noResultsMessage = '';
+    this.selectedProduct = '';
+    this.wholeSelectedProduct = null;
+    this.isLoading = false;
+
+    // Fermer le dropdown des filtres si ouvert
+    this.filterDropdownOpen = false;
   }
 
   /**
@@ -386,11 +394,17 @@ export class SearchbarComponent implements OnInit {
     };
 
     this.isLoading = true;
+    this.noResultsMessage = ''; // Réinitialiser le message d'erreur
 
     // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
         this.isLoading = false;
+
+        if (!response || response.length === 0) {
+          this.noResultsMessage = 'Aucun produit trouvé avec ces critères';
+          return;
+        }
 
         // History saving is already done in onEnter
 
@@ -404,7 +418,11 @@ export class SearchbarComponent implements OnInit {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
         });
       },
-      error: (error) => console.error('❌ Search error:', error),
+      error: (error) => {
+        this.isLoading = false;
+        console.error('❌ Search error:', error);
+        this.noResultsMessage = 'Erreur lors de la recherche. Veuillez réessayer.';
+      },
     });
   }
 
@@ -501,5 +519,22 @@ export class SearchbarComponent implements OnInit {
    */
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
+  }
+
+  /**
+   * @function addNewProduct
+   * @description Redirects to the product addition page with the current search query
+   * as a suggested product name when no results are found.
+   */
+  addNewProduct() {
+    if (this.searchQuery.trim() !== '') {
+      console.log('➕ Redirection vers la page d\'ajout de produit avec:', this.searchQuery);
+      this.router.navigate(['/add-product'], {
+        state: {
+          suggestedName: this.searchQuery.trim(),
+          source: 'search_not_found'
+        }
+      });
+    }
   }
 } 

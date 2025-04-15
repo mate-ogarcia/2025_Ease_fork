@@ -4,10 +4,6 @@
  * @details This controller handles various administrative operations such as 
  * user management, product request retrieval, and role management.
  * Authentication guards ensure that only authorized administrators can access these endpoints.
- * @brief Controller for administrative operations.
- * @details This controller handles various administrative operations such as 
- * user management, product request retrieval, and role management.
- * Authentication guards ensure that only authorized administrators can access these endpoints.
  */
 
 import {

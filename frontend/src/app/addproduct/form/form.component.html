@@ -28,40 +28,22 @@
 
         <!-- Brand -->
         <label for="brand">Brand</label>
-        <select
-          id="brand"
-          [(ngModel)]="selectedBrand"
-          (change)="onBrandChange($event)"
-        >
+        <select id="brand" [(ngModel)]="selectedBrand" (change)="onBrandChange($event)">
           <option value="">Select a brand</option>
           <option *ngFor="let b of brands" [value]="b">{{ b }}</option>
           <option value="other">Other (Add New)</option>
         </select>
-        
+
 
         <!-- Champ de saisie pour une nouvelle marque (affiché seulement si "Other" est sélectionné) -->
-        <input
-          *ngIf="isOtherBrand"
-          type="text"
-          [(ngModel)]="newBrand"
-          placeholder="Enter new brand name"
-        />
+        <input *ngIf="isOtherBrand" type="text" [(ngModel)]="newBrand" placeholder="Enter new brand name" />
 
         <!-- Add some brand's description -->
-        <textarea
-        *ngIf="isOtherBrand"
-        [(ngModel)]="newBrandDescription"
-        placeholder="Enter brand description"
-        rows="3"
-      ></textarea>
+        <textarea *ngIf="isOtherBrand" [(ngModel)]="newBrandDescription" placeholder="Enter brand description"
+          rows="3"></textarea>
 
-      <label for="sku">Bar Code</label>
-      <input
-        id="sku"
-        type="text"
-        placeholder="Type a bar code and press Enter"
-        [(ngModel)]="product.id"
-      />
+        <label for="sku">Bar Code</label>
+        <input id="sku" type="text" placeholder="Type a bar code and press Enter" [(ngModel)]="product.id" />
       </div>
     </div>
 
@@ -72,20 +54,11 @@
         <div class="card">
           <h2>General</h2>
           <label for="productName">Product Name</label>
-          <input
-            id="productName"
-            placeholder="Enter product name ..."
-            type="text"
-            [(ngModel)]="product.name"
-          />
+          <input id="productName" placeholder="Enter product name ..." type="text" [(ngModel)]="product.name" />
 
           <label for="description">Description</label>
-          <textarea
-            id="description"
-            placeholder="Write a description ..."
-            rows="4"
-            [(ngModel)]="product.description"
-          ></textarea>
+          <textarea id="description" placeholder="Write a description ..." rows="4"
+            [(ngModel)]="product.description"></textarea>
 
           <p class="note">
             Please make sure to carefully review your spelling and grammar to
@@ -93,29 +66,19 @@
           </p>
         </div>
 
-  
-        <div class="card">  
+
+        <div class="card">
           <!-- Eco-score-->
-        <label for="sku">Eco-score</label>
-        <input
-          id="sku"
-          type="text"
-          placeholder="Type a Eco-score and press Enter"
-          [(ngModel)]="product.ecoscore"
-        />
+          <label for="sku">Eco-score</label>
+          <input id="sku" type="text" placeholder="Type a Eco-score and press Enter" [(ngModel)]="product.ecoscore" />
           <!-- Tags affichés sous forme d'étiquettes intégrées dans l'input -->
           <label for="tags">Tags</label>
           <div class="tags-input-container">
             <span class="tag" *ngFor="let tag of product.tags">
               {{ tag }} <button type="button" (click)="removeTag(tag)">x</button>
             </span>
-            <input
-              id="tags"
-              type="text"
-              placeholder="Type a tag and press Enter"
-              [(ngModel)]="tagInput"
-              (keydown)="addTag($event)"
-            />
+            <input id="tags" type="text" placeholder="Type a tag and press Enter" [(ngModel)]="tagInput"
+              (keydown)="addTag($event)" />
           </div>
 
           <!-- Countries (Origin) -->
@@ -130,13 +93,18 @@
       </div>
 
       <div class="actions">
-        <button class="btn btn-cancel" (click)="onCancel()">
-          <strong>Cancel</strong>
+        <button class="btn btn-cancel" (click)="onCancel()" [disabled]="isSubmitting">
+          <strong>Annuler</strong>
         </button>
-        <button class="btn btn-save" (click)="onSave()">
-          <strong>Submit</strong>
+        <button class="btn btn-save" (click)="onSave()" [disabled]="isSubmitting">
+          <span *ngIf="isSubmitting" class="button-spinner"></span>
+          <strong>{{ isSubmitting ? 'Soumission en cours...' : 'Soumettre' }}</strong>
         </button>
       </div>
     </div>
   </div>
+
+  <!-- Spinner de chargement pendant la soumission -->
+  <app-loading-spinner *ngIf="isSubmitting" message="Soumission du produit en cours..." size="medium">
+  </app-loading-spinner>
 </div>

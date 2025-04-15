@@ -209,4 +209,53 @@ export class HistoryService {
       throw new InternalServerErrorException('Error deleting history');
     }
   }
+
+  /**
+   * @brief Retrieves paginated search history for a specific user
+   * @param userId User ID
+   * @param page Page number (starts at 1)
+   * @param limit Number of items per page
+   * @returns Object containing paginated history items and total count
+   */
+  async getPaginatedUserHistory(userId: string, page: number = 1, limit: number = 10): Promise<{ items: HistoryItem[], total: number }> {
+    this.logger.log(`🔍 Starting getPaginatedUserHistory for userId: ${userId}, page: ${page}, limit: ${limit}`);
+
+    try {
+      const historyBucketName = this.databaseService.getHistoryBucket().name;
+      const offset = (page - 1) * limit;
+
+      // First query to get total count
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM \`${historyBucketName}\`._default._default
+        WHERE userId = $userId
+      `;
+
+      // Second query to get paginated results
+      const dataQuery = `
+        SELECT *
+        FROM \`${historyBucketName}\`._default._default
+        WHERE userId = $userId
+        ORDER BY searchDate DESC
+        LIMIT $limit
+        OFFSET $offset
+      `;
+
+      const [countResult, items] = await Promise.all([
+        this.databaseService.executeN1qlQuery(countQuery, { userId }),
+        this.databaseService.executeN1qlQuery(dataQuery, { userId, limit, offset })
+      ]);
+
+      const total = countResult[0]?.total || 0;
+      this.logger.log(`✅ Retrieved ${items.length} items out of ${total} total items`);
+
+      return {
+        items,
+        total
+      };
+    } catch (error) {
+      this.logger.error(`❌ Error in getPaginatedUserHistory: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Error retrieving paginated search history');
+    }
+  }
 }

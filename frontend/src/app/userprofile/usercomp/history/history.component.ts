@@ -3,17 +3,20 @@
  * @brief Component for displaying the history of searched products.
  *
  * This component retrieves previously searched products from the history service
- * and displays them in either a list or grid view. It allows users to re-search
+ * and displays them in a list view. It allows users to re-search
  * items from their history by clicking on them.
  */
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Services
 import { HistoryService, SearchHistoryItem } from '../../../../services/history/history.service';
 import { ApiService } from '../../../../services/api.service';
 import { NotificationService } from '../../../../services/notification/notification.service';
+// Shared Components
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 // RxJS
 import { finalize } from 'rxjs/operators';
 
@@ -24,16 +27,21 @@ import { finalize } from 'rxjs/operators';
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './history.component.html',
   styleUrl: './history.component.css'
 })
 export class HistoryComponent implements OnInit {
   resultsArray: SearchHistoryItem[] = []; ///< Array to store history items.
-  viewMode: 'list' | 'grid' = 'list'; ///< Default display mode.
   isLoading: boolean = true; ///< Loading state flag.
   error: string | null = null; ///< Error message if present.
-  successMessage: string | null = null; ///< Success message if present.
+
+  // Pagination
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalItems: number = 0;
+  pageSizes: number[] = [5, 10, 20, 50];
+  pages: number[] = [];
 
   /**
    * @brief Constructor initializes dependencies.
@@ -53,54 +61,70 @@ export class HistoryComponent implements OnInit {
    * @brief Lifecycle hook executed when the component is initialized.
    */
   ngOnInit(): void {
-    console.log('🔍 history.component - ngOnInit');
+    console.log('[HistoryComponent] ngOnInit');
+    this.isLoading = true;
+    this.error = null;
 
-    // Vérifier si des données de test sont présentes
-    if (this.resultsArray && this.resultsArray.length > 0) {
-      console.warn('⚠️ Des données sont déjà présentes dans resultsArray:', this.resultsArray);
-    }
-
-    // Vérifier les données dans le localStorage
-    try {
-      const keys = Object.keys(localStorage);
-      console.log('🔍 Clés dans localStorage:', keys);
-
-      for (const key of keys) {
-        if (key.includes('history') || key.includes('search')) {
-          console.warn(`⚠️ Trouvé dans localStorage: ${key}:`, localStorage.getItem(key));
-        }
+    // Load saved page size from localStorage if available
+    const savedPageSize = localStorage.getItem('historyPageSize');
+    if (savedPageSize) {
+      const parsedSize = parseInt(savedPageSize, 10);
+      if (!isNaN(parsedSize) && this.pageSizes.includes(parsedSize)) {
+        console.log('[HistoryComponent] Restored page size from localStorage:', parsedSize);
+        this.pageSize = parsedSize;
+        this.historyService.setPageSize(parsedSize);
       }
-    } catch (e) {
-      console.error('❌ Erreur lors de la lecture du localStorage:', e);
     }
 
-    this.setViewMode('list'); // Set default view mode to list
+    // Subscribe to pagination updates
+    this.historyService.historyItems$.subscribe(items => {
+      this.resultsArray = items || [];
+      this.isLoading = false; // Fin du chargement quand les éléments sont reçus
+    });
+
+    this.historyService.totalItems$.subscribe(total => {
+      this.totalItems = total || 0;
+      this.updatePages();
+    });
+
+    this.historyService.currentPage$.subscribe(page => {
+      this.currentPage = page || 1;
+    });
+
+    this.historyService.pageSize$.subscribe(size => {
+      this.pageSize = size || 10;
+      this.updatePages();
+    });
+
+    // Chargement initial de l'historique
     this.loadHistory();
+  }
+
+  private updatePages(): void {
+    if (this.totalItems && this.pageSize) {
+      const pageCount = Math.ceil(this.totalItems / this.pageSize);
+      this.pages = Array.from({ length: pageCount }, (_, i) => i + 1);
+    } else {
+      this.pages = [];
+    }
   }
 
   /**
    * @brief Loads the user's search history.
    */
   loadHistory(): void {
-    console.log('🔍 Tentative de chargement de l\'historique...');
+    console.log('[HistoryComponent] Loading history');
     this.isLoading = true;
     this.error = null;
-    this.successMessage = null;
 
-    this.historyService.getUserHistory().subscribe({
-      next: (historyItems) => {
-        console.log('✅ Historique récupéré, nombre d\'éléments:', historyItems.length);
-        console.log('📋 Détails de l\'historique:', JSON.stringify(historyItems, null, 2));
-
-        if (historyItems.length === 0) {
-          console.log('ℹ️ Aucun élément d\'historique trouvé dans la BDD');
-        }
-
-        this.resultsArray = historyItems;
+    // Utiliser la nouvelle méthode qui charge tout et pagine côté client
+    this.historyService.loadUserHistory().subscribe({
+      next: () => {
+        console.log('[HistoryComponent] History loaded successfully');
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('❌ Erreur lors du chargement de l\'historique:', err);
+        console.error('[HistoryComponent] Error loading history:', err);
         this.isLoading = false;
         this.error = 'Erreur lors du chargement de l\'historique. Veuillez réessayer.';
         this.notificationService.showError('Erreur lors du chargement de l\'historique. Veuillez réessayer.');
@@ -109,27 +133,19 @@ export class HistoryComponent implements OnInit {
   }
 
   /**
-   * @brief Sets the display mode for the results.
-   * @param mode The desired view mode ('list' or 'grid').
-   */
-  setViewMode(mode: 'list' | 'grid'): void {
-    this.viewMode = mode;
-  }
-
-  /**
    * @brief Extracts the search term from a history item.
    * @param item The history item to extract the search term from.
    * @return The search term.
    */
   getSearchTerm(item: any): string {
-    console.log('🔍 Analyse de l\'élément d\'historique:', item);
+    console.log('🔍 Analyzing history item:', item);
 
     // Check if this is a filter search (special ID format starting with 'filter-')
     if (item.id && typeof item.id === 'string' && item.id.startsWith('filter-')) {
-      console.log('  ✓ Recherche par filtres détectée');
+      console.log('  ✓ Filter search detected');
       // For filter searches, productName contains the filter description
       if (item.productName) {
-        console.log('  ✓ Description des filtres trouvée:', item.productName);
+        console.log('  ✓ Filter description found:', item.productName);
         return this.cleanHtmlTags(item.productName);
       }
     }
@@ -138,18 +154,18 @@ export class HistoryComponent implements OnInit {
     if (typeof item === 'object' && item) {
       // Look first in standard properties
       if (item.productName) {
-        console.log('  ✓ Trouvé dans productName:', item.productName);
+        console.log('  ✓ Found in productName:', item.productName);
         return this.cleanHtmlTags(item.productName);
       }
 
       // Check in productData
       if (item.productData && typeof item.productData === 'object') {
         if (item.productData.name) {
-          console.log('  ✓ Trouvé dans productData.name:', item.productData.name);
+          console.log('  ✓ Found in productData.name:', item.productData.name);
           return this.cleanHtmlTags(item.productData.name);
         }
         if (item.productData.productName) {
-          console.log('  ✓ Trouvé dans productData.productName:', item.productData.productName);
+          console.log('  ✓ Found in productData.productName:', item.productData.productName);
           return this.cleanHtmlTags(item.productData.productName);
         }
       }
@@ -157,7 +173,7 @@ export class HistoryComponent implements OnInit {
       // Check in _default (specific to Couchbase's structure)
       if (item._default && typeof item._default === 'object') {
         if (item._default.productName) {
-          console.log('  ✓ Trouvé dans _default.productName:', item._default.productName);
+          console.log('  ✓ Found in _default.productName:', item._default.productName);
           return this.cleanHtmlTags(item._default.productName);
         }
       }
@@ -165,7 +181,7 @@ export class HistoryComponent implements OnInit {
       // Search in direct values at the top level
       for (const key of ['name', 'term', 'query', 'searchText', 'title']) {
         if (item[key] && typeof item[key] === 'string') {
-          console.log(`  ✓ Trouvé dans ${key}:`, item[key]);
+          console.log(`  ✓ Found in ${key}:`, item[key]);
           return this.cleanHtmlTags(item[key]);
         }
       }
@@ -176,7 +192,7 @@ export class HistoryComponent implements OnInit {
         if (typeof value === 'object' && value !== null) {
           for (const subProp of ['name', 'productName', 'query', 'searchText', 'term']) {
             if (value[subProp] && typeof value[subProp] === 'string') {
-              console.log(`  ✓ Trouvé dans ${prop}.${subProp}:`, value[subProp]);
+              console.log(`  ✓ Found in ${prop}.${subProp}:`, value[subProp]);
               return this.cleanHtmlTags(value[subProp]);
             }
           }
@@ -184,7 +200,7 @@ export class HistoryComponent implements OnInit {
       }
     }
 
-    console.log('⚠️ Aucun terme de recherche trouvé, utilisation de la valeur par défaut');
+    console.log('⚠️ No search term found, using default value');
     return "Recherche";
   }
 
@@ -205,7 +221,7 @@ export class HistoryComponent implements OnInit {
     // Trim and normalize spaces
     cleanText = cleanText.trim().replace(/\s+/g, ' ');
 
-    console.log('  🧹 Texte nettoyé:', cleanText);
+    console.log('  🧹 Cleaned text:', cleanText);
     return cleanText;
   }
 
@@ -214,7 +230,7 @@ export class HistoryComponent implements OnInit {
    * @param historyItem The selected history item.
    */
   searchAgain(historyItem: any): void {
-    console.log('🔍 Recherche à partir de l\'historique:', historyItem);
+    console.log('🔍 Search from history:', historyItem);
 
     // Show loading indicator
     this.isLoading = true;
@@ -223,13 +239,13 @@ export class HistoryComponent implements OnInit {
     const searchTerm = this.getSearchTerm(historyItem);
 
     if (!searchTerm || searchTerm === "Recherche") {
-      console.error('❌ Terme de recherche non valide trouvé');
+      console.error('❌ Invalid search term found');
       this.isLoading = false;
       this.error = 'Impossible de relancer cette recherche. Terme non valide.';
       return;
     }
 
-    console.log('🔍 Terme de recherche extrait:', searchTerm);
+    console.log('🔍 Extracted search term:', searchTerm);
 
     // Check if this is a filter search
     if (historyItem.id && typeof historyItem.id === 'string' && historyItem.id.startsWith('filter-')) {
@@ -245,7 +261,7 @@ export class HistoryComponent implements OnInit {
       productId = historyItem._default.productId;
     }
 
-    console.log('🔍 ID du produit extrait:', productId);
+    console.log('🔍 Extracted product ID:', productId);
 
     // Build search request
     const searchRequest = {
@@ -254,17 +270,17 @@ export class HistoryComponent implements OnInit {
       currentRoute: '/home'
     };
 
-    console.log('🔍 Envoi de la requête de recherche:', searchRequest);
+    console.log('🔍 Sending search request:', searchRequest);
 
     // Send request to API service
     this.apiService.postProductsWithFilters(searchRequest).subscribe({
       next: (results) => {
-        console.log('✅ Résultats de recherche reçus:', results.length || 0, 'produits');
+        console.log('✅ Search results received:', results.length || 0, 'products');
         this.isLoading = false;
 
         // If we have a valid product ID and only one result, we can navigate directly to the product page
         if (productId && results.length === 1) {
-          console.log('✅ Navigation directe vers la page du produit:', productId);
+          console.log('✅ Direct navigation to product page:', productId);
           this.router.navigate(['/prodpage', productId]);
           return;
         }
@@ -382,7 +398,6 @@ export class HistoryComponent implements OnInit {
 
     this.isLoading = true;
     this.error = null;
-    this.successMessage = null;
 
     // Detailed log to understand what's happening
     console.log('🧹 Appel de clearUserHistory...');
@@ -400,13 +415,10 @@ export class HistoryComponent implements OnInit {
             console.warn(`⚠️ ${response.failed} éléments n'ont pas pu être supprimés`);
           }
 
-          this.isLoading = false;
-
-          // Empty the local array immediately for instant visual update
+          // Mise à jour locale des données
           this.resultsArray = [];
-
-          // Reload empty history for verification
-          setTimeout(() => this.loadHistory(), 500);
+          this.totalItems = 0;
+          this.updatePages();
 
           // Also try to remove local cache
           try {
@@ -425,7 +437,6 @@ export class HistoryComponent implements OnInit {
         },
         error: (err) => {
           console.error('❌ Erreur lors de la suppression de l\'historique:', err);
-          this.isLoading = false;
 
           // Extract detailed error message if available
           let errorMessage = 'Erreur lors de la suppression de l\'historique.';
@@ -454,10 +465,6 @@ export class HistoryComponent implements OnInit {
     event.stopPropagation();
 
     console.log('🗑️ Suppression de l\'élément d\'historique complet:', historyItem);
-    console.log('🗑️ Type de l\'élément:', typeof historyItem);
-    console.log('🗑️ Clés disponibles:', Object.keys(historyItem));
-    console.log('🗑️ ID de l\'élément:', historyItem.id);
-    console.log('🗑️ ID brut:', JSON.stringify(historyItem.id));
 
     // Try to find an ID from available properties
     let historyId = historyItem.id || historyItem._id;
@@ -474,15 +481,13 @@ export class HistoryComponent implements OnInit {
       return;
     }
 
-    // Show loading indicator
-    this.isLoading = true;
-    this.error = null;
-    this.successMessage = null;
+    // Show loading state only for this item
+    historyItem.isDeleting = true;
 
     console.log('🗑️ Tentative de suppression avec l\'ID:', historyId);
 
     this.historyService.deleteHistoryItem(historyId)
-      .pipe(finalize(() => this.isLoading = false))
+      .pipe(finalize(() => historyItem.isDeleting = false))
       .subscribe({
         next: (response) => {
           console.log('✅ Élément supprimé avec succès:', response);
@@ -494,6 +499,10 @@ export class HistoryComponent implements OnInit {
             return itemId !== historyId;
           });
 
+          // Update total items count
+          this.totalItems--;
+          this.updatePages();
+
           // Display success notification
           this.notificationService.showSuccess('Élément supprimé avec succès');
         },
@@ -502,5 +511,33 @@ export class HistoryComponent implements OnInit {
           this.notificationService.showError('Erreur lors de la suppression. Veuillez réessayer.');
         }
       });
+  }
+
+  /**
+   * @brief Changes the current page.
+   * @param page The page to navigate to.
+   */
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.pages.length) {
+      console.log('[HistoryComponent] Changing to page:', page);
+      this.historyService.setPage(page);
+    }
+  }
+
+  /**
+   * @brief Handler for page size change event.
+   * @param size The new page size.
+   */
+  onPageSizeChange(size: number): void {
+    console.log('[HistoryComponent] Changing page size to:', size);
+
+    // Save page size to localStorage for persistence between sessions
+    localStorage.setItem('historyPageSize', size.toString());
+
+    // Update service
+    this.historyService.setPageSize(size);
+
+    // Reset to first page when changing page size
+    this.historyService.setPage(1);
   }
 }

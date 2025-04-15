@@ -4,12 +4,8 @@
 </div>
 
 <!-- Indicateur de chargement des utilisateurs -->
-<div class="loading-container" *ngIf="isLoadingUsers">
-  <div class="loading-spinner">
-    <i class="fas fa-spinner spinner-rotate"></i>
-  </div>
-  <p>Chargement des utilisateurs...</p>
-</div>
+<app-loading-spinner *ngIf="isLoadingUsers" message="Chargement des utilisateurs..." size="medium">
+</app-loading-spinner>
 
 <!-- Liste des cartes utilisateurs (filtrée) -->
 <div class="user-cards" *ngIf="!isLoadingUsers">
