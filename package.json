@@ -20,6 +20,10 @@
   "dependencies": {
     "@angular/animations": "^19.2.1",
     "animate.css": "^4.1.1",
-    "projet_tutore": "file:"
+    "axios": "^1.8.4",
+    "bcryptjs": "^3.0.2",
+    "node-fetch": "^3.3.2",
+    "projet_tutore": "file:",
+    "three": "^0.175.0"
   }
 }
