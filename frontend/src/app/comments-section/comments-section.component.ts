@@ -147,7 +147,9 @@ export class CommentsSectionComponent implements OnInit {
     this.commentService.postAddComment(comment).subscribe({
       next: () => {
         this.notifService.showSuccess('Commentaire ajouté !');
-        this.comments.unshift(comment);
+        // Réinitialiser la pagination et recharger les commentaires
+        this.pagination.currentPage = 1;
+        this.loadComments(false);
         this.showCommentForm = false;
       },
       error: () => this.notifService.showError('Échec lors de l\'ajout du commentaire.')
