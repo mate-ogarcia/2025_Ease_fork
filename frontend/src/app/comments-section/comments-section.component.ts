@@ -7,9 +7,15 @@
  * can submit new comments.
  */
 
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Required for [(ngModel)]
+import { FormsModule } from '@angular/forms';
 import { Comment } from '../models/comments.model';
 import { CommentsService } from '../../services/comments/comments.service';
 import { AuthService } from '../../services/auth/auth.service';
@@ -30,7 +36,7 @@ import { NotificationService } from '../../services/notification/notification.se
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './comments-section.component.html',
-  styleUrls: ['./comments-section.component.css']
+  styleUrls: ['./comments-section.component.css'],
 })
 export class CommentsSectionComponent implements OnInit, OnChanges {
   /**
@@ -67,7 +73,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
     totalPages: 0,
     totalCount: 0,
     pageSize: 10,
-    hasNextPage: false
+    hasNextPage: false,
   };
 
   /**
@@ -77,7 +83,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
 
   /**
    * @brief Controls whether the rating and the Submit/Cancel buttons are shown.
-   * @details The single <input> for the comment is always visible; 
+   * @details The single <input> for the comment is always visible;
    *          when the user clicks it, we set this to true to reveal rating + buttons.
    */
   showCommentForm = false;
@@ -103,7 +109,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
     userRatingCom: 5,
     source: '',
     userId: 0,
-    productId: ''
+    productId: '',
   };
 
   /**
@@ -117,7 +123,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
     private commentService: CommentsService,
     private authService: AuthService,
     private notifService: NotificationService
-  ) { }
+  ) {}
 
   /**
    * @brief Lifecycle hook called after the component's initialization.
@@ -134,7 +140,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
       totalCount: 0,
       totalPages: 0,
       pageSize: 10,
-      hasNextPage: false
+      hasNextPage: false,
     };
 
     this.resetForm();
@@ -143,7 +149,9 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
     // Check user role to enable or disable comments
     this.authService.getUserRole().subscribe((role) => {
       if (role) {
-        this.canAddComment = ['user', 'admin', 'superadmin'].includes(role.toLowerCase());
+        this.canAddComment = ['user', 'admin', 'superadmin'].includes(
+          role.toLowerCase()
+        );
         // In a real-world scenario, you'd set userId to the authenticated user's ID.
         if (this.canAddComment) {
           this.comment.userId = 1;
@@ -188,17 +196,17 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
    */
   onCommentSubmitted(newComment: Omit<Comment, 'id'>): void {
     // Build the payload for the API
-    const commentPayload: Omit<Comment, 'id'> = {
+    const commentPayload = {
       dateCom: newComment.dateCom,
       contentCom: newComment.contentCom,
       userRatingCom: newComment.userRatingCom,
       source: newComment.source,
-      userId: newComment.userId,
-      productId: this.productId
+      userId: newComment.userId.toString(),
+      productId: this.productId,
     };
 
     this.commentService.postAddComment(commentPayload).subscribe({
-      next: () => {
+      next: (response) => {
         this.notifService.showSuccess('Comment added!');
         // Reset pagination and reload comments
         this.pagination.currentPage = 1;
@@ -210,14 +218,14 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
       error: (err) => {
         console.error('Error adding comment:', err);
         this.notifService.showError('Failed to add comment.');
-      }
+      },
     });
   }
 
   /**
    * @brief Loads comments from the backend and applies pagination.
    *
-   * @param append If true, newly fetched comments are appended to the existing ones; 
+   * @param append If true, newly fetched comments are appended to the existing ones;
    *               otherwise, they replace the current list.
    *
    * @details
@@ -236,18 +244,21 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
       next: (data: Comment[]) => {
         const allComments = data.map((c: Comment) => ({
           ...c,
-          userRatingCom: Number(c.userRatingCom)
+          userRatingCom: Number(c.userRatingCom),
         }));
 
         // Manual pagination
-        const start = (this.pagination.currentPage - 1) * this.pagination.pageSize;
+        const start =
+          (this.pagination.currentPage - 1) * this.pagination.pageSize;
         const end = start + this.pagination.pageSize;
         const paginatedComments = allComments.slice(start, end);
 
         if (append) {
           // Avoid duplicates
-          const existingIds = new Set(this.comments.map(c => c.id));
-          const uniqueNewComments = paginatedComments.filter(c => !existingIds.has(c.id));
+          const existingIds = new Set(this.comments.map((c) => c.id));
+          const uniqueNewComments = paginatedComments.filter(
+            (c) => !existingIds.has(c.id)
+          );
           this.comments = [...this.comments, ...uniqueNewComments];
         } else {
           this.comments = paginatedComments;
@@ -255,15 +266,18 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
 
         // Update pagination info
         this.pagination.totalCount = allComments.length;
-        this.pagination.totalPages = Math.ceil(this.pagination.totalCount / this.pagination.pageSize);
-        this.pagination.hasNextPage = this.pagination.currentPage < this.pagination.totalPages;
+        this.pagination.totalPages = Math.ceil(
+          this.pagination.totalCount / this.pagination.pageSize
+        );
+        this.pagination.hasNextPage =
+          this.pagination.currentPage < this.pagination.totalPages;
       },
       error: () => {
         this.notifService.showError('Error loading comments.');
       },
       complete: () => {
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -302,7 +316,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
       userRatingCom: 5,
       source: this.productSource,
       userId: this.comment.userId, // Keep the userId if already set
-      productId: this.productId
+      productId: this.productId,
     };
   }
 }
