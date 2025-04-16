@@ -74,6 +74,7 @@ export class CommentsController {
   @Post("add")
   async addComment(@Body() commentDto: CommentDto) {
     try {
+      console.log(commentDto)
       // Add the comment to the database
       const newComment = await this.commentsService.createComment(commentDto);
 
