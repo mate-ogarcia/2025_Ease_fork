@@ -1,44 +1,53 @@
 <div class="container">
-  <app-navbar class="app-navbar"></app-navbar>
+    <app-navbar class="app-navbar"></app-navbar>
 
-  <div class="prod-container" *ngIf="product">
-    <div class="product-details">
-      <!-- Left Section: Image -->
-      <div class="image-gallery">
+    <div class="prod-container" *ngIf="product">
+      <div class="product-details">
+        <!-- Left Section: Image -->
+        <div class="image-gallery">
         <div class="main-image-container">
           <img
             class="product-image"
             [src]="product.image || 'assets/placeholder.jpg'"
+                       
             alt="{{ product.name }}"
           />
         </div>
-      </div>
+        </div>
 
-      <!-- Right Section: Product Info -->
-      <div class="product-info">
-        <span class="category">{{ product.category }}</span>
-        <h2 class="product-name">{{ product.name }}</h2>
+        <!-- Right Section: Product Info -->
+        <div class="product-info">
+          <span class="category">{{ product.category }}</span>
+          <h2 class="product-name">{{ product.name }}</h2>
 
-        <!-- Rating + Reviews -->
-        <div class="rating">
-          <div class="stars-container">
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <!-- Bouton favori/like -->
+                    <div class="favorite-button" *ngIf="isAuthenticated">
+                        <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
+                    </div>
+                </div>
+
+          <!-- Rating + Reviews -->
+          <div class="rating">
+            <div class="stars-container">
             <div class="stars-background">★★★★★</div>
-            <div class="stars-filled" [style.width.%]="(avgRate/5)*100">★★★★★</div>
+              <div class="stars-filled" [style.width.%]="(avgRate/5)*100">★★★★★</div>
           </div>
           <span class="review-count">{{ avgRate }} ({{ commentCount }} Commentaires)</span>
-        </div>
+          </div>
 
-        <!-- Description -->
-        <p class="product-description">
-          {{ product.description }}
-        </p>
+          <!-- Description -->
+          <p class="product-description">
+            {{ product.description }}
+          </p>
 
-        <!-- ID & Tags -->
-        <div class="extra-info">
-          <span class="id">ID du produit: {{ productId }}</span>
+          <!-- ID & Tags -->
+          <div class="extra-info">
+            <span class="id">ID du produit: {{ productId }}</span>
+          </div>
         </div>
       </div>
-    </div>
 
     <!-- Navigation Tabs (PLACED BELOW PRODUCT SECTION) -->
     <div class="tabs-container">

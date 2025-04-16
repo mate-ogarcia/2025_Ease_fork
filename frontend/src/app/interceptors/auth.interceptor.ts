@@ -15,6 +15,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
+import { catchError, throwError } from 'rxjs';
 
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -69,5 +70,19 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
     }
   }
 
-  return next(newReq);
+  return next(newReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      // Gestion des erreurs HTTP
+      if (error.status === 0) {
+        // Erreur de connexion (serveur indisponible)
+        console.warn('Erreur de connexion au serveur. Le serveur est peut-être en cours de redémarrage.');
+      } else if (error.status === 401) {
+        // Erreur d'authentification, mais ne pas supprimer les tokens - ce sera géré par le service d'authentification
+        console.warn('Erreur d\'authentification détectée par l\'intercepteur.');
+      }
+
+      // Propager l'erreur pour traitement ultérieur
+      return throwError(() => error);
+    })
+  );
 };

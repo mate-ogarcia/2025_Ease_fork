@@ -19,6 +19,7 @@ import { CommentsModule } from "./comments/comments.module";
 import { OpenFoodFactsModule } from "./apiServices/openFoodFacts/openFoodFacts.module";
 import { CountriesModule } from "./apiServices/countries/countries.module";
 import { UnsplashModule } from "./apiServices/unsplash/unsplash.module";
+import { FavoritesModule } from "./favorites/favorites.module";
 // Environment variables configuration
 import { ConfigModule } from "@nestjs/config";
 import * as Joi from "joi";
@@ -28,6 +29,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
 import { AdminModule } from "./admin/admin.module";
+import { HistoryModule } from './history/history.module';
 // .env
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -47,6 +49,8 @@ dotenv.config();
     OpenFoodFactsModule,
     CountriesModule,
     UnsplashModule,
+    HistoryModule,
+    FavoritesModule,
     CommentsModule,
     /**
      * @brief Loads environment variables and validates them with Joi.
@@ -62,6 +66,7 @@ dotenv.config();
         BUCKET_NAME: Joi.string().required(),
         URL_FRONTEND: Joi.string().uri().required(),
         BACKEND_PORT: Joi.number().required().default(3000),
+        FAVORITES_BUCKET_NAME: Joi.string().required(),
       }),
     }),
     /**

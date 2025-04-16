@@ -11,7 +11,8 @@ import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataCacheService } from '../services/cache/data-cache.service';
 import { AuthService } from '../services/auth/auth.service';
-import { timer } from 'rxjs';
+import { timer, of, from, throwError } from 'rxjs';
+import { retry, delay, catchError, mergeMap } from 'rxjs/operators';
 
 declare global {
   interface Window {
@@ -64,21 +65,44 @@ export class AppComponent implements OnInit {
     const authTimeout = setTimeout(() => {
       console.log('⚠️ Timeout lors de l\'initialisation de l\'état d\'authentification');
       this.completeInitialization(startTime);
-    }, 3000); // 3 secondes maximum pour l'authentification
+    }, 5000); // Augmenter le timeout à 5 secondes pour laisser le temps aux tentatives
 
-    this.authService.refreshAuthState().subscribe({
-      next: () => {
-        clearTimeout(authTimeout);
-        console.log('✅ État d\'authentification initialisé');
-        this.completeInitialization(startTime);
-      },
-      error: () => {
-        clearTimeout(authTimeout);
-        console.log('❌ Erreur lors de l\'initialisation de l\'état d\'authentification - Continuer sans redirection');
-        // Continuer sans redirection, juste terminer l'écran de chargement
-        this.completeInitialization(startTime);
-      }
-    });
+    // Essayer de récupérer l'état d'authentification avec plusieurs tentatives en cas d'échec
+    this.authService.refreshAuthState()
+      .pipe(
+        // Réessayer jusqu'à 3 fois avec un délai exponentiel entre les tentatives
+        catchError(error => {
+          if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
+            // Le serveur est peut-être en train de redémarrer, essayer à nouveau
+            console.log('🔄 Tentative de reconnexion au backend...');
+            return throwError(() => error);
+          }
+          // Pour les autres erreurs (comme 401), ne pas réessayer
+          return throwError(() => error);
+        }),
+        retry({
+          count: 3,
+          delay: (error, retryCount) => {
+            // Délai exponentiel: 1s, 2s, 4s
+            const delayTime = Math.pow(2, retryCount - 1) * 1000;
+            console.log(`⏱️ Nouvel essai dans ${delayTime / 1000}s...`);
+            return timer(delayTime);
+          }
+        })
+      )
+      .subscribe({
+        next: () => {
+          clearTimeout(authTimeout);
+          console.log('✅ État d\'authentification initialisé');
+          this.completeInitialization(startTime);
+        },
+        error: (err) => {
+          clearTimeout(authTimeout);
+          console.log('❌ Erreur lors de l\'initialisation de l\'état d\'authentification après plusieurs tentatives', err);
+          // Continuer sans redirection, juste terminer l'écran de chargement
+          this.completeInitialization(startTime);
+        }
+      });
   }
 
   /**

@@ -3,8 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 // Services
-import { ApiService } from '../../../../../services/api.service';
-import { AuthService } from '../../../../../services/auth/auth.service';
+import { ApiService } from '../../../../services/api.service';
+import { AuthService } from '../../../../services/auth/auth.service';
 
 /**
  * @class LocationDropdownComponent
@@ -155,4 +155,4 @@ export class LocationDropdownComponent implements OnInit {
       console.warn("No country address found for the user.");
     }
   }
-}
+} 

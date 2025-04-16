@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from '../services/auth/auth.guard';
+import { HistoryComponent } from './userprofile/usercomp/history/history.component';
 
 export const routes: Routes = [
   {
@@ -17,7 +18,7 @@ export const routes: Routes = [
   {
     path: 'home',
     loadComponent: () =>
-      import('./homepage/home/home.component').then((m) => m.HomeComponent),
+      import('./homepage/homepage.component').then((m) => m.HomepageComponent),
   },
   {
     path: 'category',
@@ -72,6 +73,11 @@ export const routes: Routes = [
   {
     path: 'product-page/:id/:source',
     loadComponent: () => import('./prodpage/prodpage.component').then(m => m.ProdpageComponent)
+  },
+  {
+    path: 'user/history',
+    component: HistoryComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: '',

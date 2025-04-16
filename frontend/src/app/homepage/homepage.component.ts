@@ -2,12 +2,12 @@ import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@ang
 import * as VANTA from 'vanta/src/vanta.birds';
 import * as THREE from 'three';
 // Component
-import { SearchbarComponent } from './comp/searchbar/searchbar.component';
-import { NavbarComponent } from './comp/navbar/navbar.component';
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
+import { SearchbarComponent } from '../shared/components/searchbar/searchbar.component';
 import { CommonModule } from '@angular/common';
 
 /**
- * @class HomeComponent
+ * @class HomepageComponent
  * @brief Handles the home page UI, Vanta.js background animation, dark mode, and user settings.
  *
  * @details
@@ -19,13 +19,13 @@ import { CommonModule } from '@angular/common';
  * - Retrieves and logs the user role from cookies.
  */
 @Component({
-  selector: 'app-home',
+  selector: 'app-homepage',
   standalone: true,
-  imports: [SearchbarComponent, NavbarComponent, CommonModule],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  imports: [NavbarComponent, SearchbarComponent, CommonModule],
+  templateUrl: './homepage.component.html',
+  styleUrl: './homepage.component.css'
 })
-export class HomeComponent implements AfterViewInit, OnDestroy {
+export class HomepageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('vantaBackground') vantaBackground!: ElementRef;
   isVantaActive: boolean = true;
   isDarkMode: boolean = false;
@@ -35,15 +35,15 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   private vantaContainer: HTMLElement | null = null;
 
   ngAfterViewInit(): void {
-    // Attendre que le DOM soit complètement chargé et rendu
+    // Wait for the DOM to be completely loaded and rendered
     setTimeout(() => {
-      // Accéder à l'élément via la référence ViewChild
+      // Access the element via the ViewChild reference
       this.vantaContainer = this.vantaBackground.nativeElement;
 
       if (this.isVantaActive && this.vantaContainer) {
         this.initVantaEffect();
       }
-    }, 100); // Un court délai pour s'assurer que le DOM est complètement rendu
+    }, 100); // A short delay to ensure the DOM is fully rendered
   }
 
   /**
@@ -53,14 +53,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
    * Configures various visual parameters such as background color, speed, and bird properties.
    */
   private initVantaEffect(): void {
-    // Détruire l'effet existant s'il y en a un
+    // Destroy existing effect if there is one
     if (this.vantaEffect) {
       this.vantaEffect.destroy();
     }
 
-    // S'assurer que le conteneur a les bonnes dimensions
+    // Ensure the container has the right dimensions
     if (this.vantaContainer) {
-      // Forcer le conteneur à prendre toute la hauteur et largeur de la fenêtre
+      // Force the container to take the full height and width of the window
       this.vantaContainer.style.width = '100%';
       this.vantaContainer.style.height = '100vh';
       this.vantaContainer.style.position = 'fixed';
@@ -89,7 +89,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       scale: 1.00
     });
 
-    // Ajouter un gestionnaire de redimensionnement pour s'assurer que l'animation s'adapte
+    // Add a resize handler to ensure the animation adapts
     window.addEventListener('resize', this.handleResize.bind(this));
   }
 
@@ -147,23 +147,23 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
    * @details
    * Updates the `isProjectInfoOpen` flag to show or hide the project information.
    * Prevents scrolling of the background when the panel is open.
-   * Ajoute des animations fluides pour l'apparition des cartes.
+   * Adds smooth animations for card appearance.
    */
   toggleProjectInfo(): void {
     this.isProjectInfoOpen = !this.isProjectInfoOpen;
 
-    // Si le panel est ouvert, ajouter une classe au body pour empêcher le défilement
+    // If the panel is open, add a class to the body to prevent scrolling
     if (this.isProjectInfoOpen) {
-      // Ne pas bloquer le défilement de la page principale
+      // Don't block scrolling of the main page
       // document.body.style.overflow = 'hidden';
 
-      // Animation améliorée pour les cartes avec un délai progressif
+      // Enhanced animation for cards with progressive delay
       setTimeout(() => {
         const cards = document.querySelectorAll('.info-card');
         const intro = document.querySelector('.info-intro');
         const footer = document.querySelector('.info-footer');
 
-        // Animation de l'intro
+        // Intro animation
         if (intro) {
           const introElement = intro as HTMLElement;
           introElement.style.opacity = '0';
@@ -175,7 +175,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           }, 200);
         }
 
-        // Animation des cartes avec un effet cascade
+        // Card animation with cascade effect
         cards.forEach((card, index) => {
           const cardElement = card as HTMLElement;
           cardElement.style.opacity = '0';
@@ -187,7 +187,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           }, 300 + (index * 150));
         });
 
-        // Animation du footer
+        // Footer animation
         if (footer) {
           const footerElement = footer as HTMLElement;
           footerElement.style.opacity = '0';
@@ -198,43 +198,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
             footerElement.style.transform = 'translateY(0)';
           }, 300 + (cards.length * 150) + 100);
         }
-      }, 300);
+      }, 100);
     } else {
-      // Animation de fermeture
-      const panel = document.querySelector('.info-panel');
-      if (panel) {
-        const panelElement = panel as HTMLElement;
-        panelElement.style.transition = 'all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)';
-
-        // Sur mobile, faire glisser vers le bas
-        if (window.innerWidth <= 480) {
-          panelElement.style.transform = 'translateY(100%)';
-        } else {
-          panelElement.style.opacity = '0';
-          panelElement.style.transform = 'translate(-50%, -50%) scale(0.9)';
-        }
-
-        // Restaurer le défilement après la fin de l'animation
-        setTimeout(() => {
-          // S'assurer que le défilement est toujours activé
-          document.body.style.overflow = '';
-
-          // Réinitialiser les styles pour permettre une réouverture correcte
-          panelElement.style.transition = '';
-          if (window.innerWidth <= 480) {
-            // Ne pas réinitialiser immédiatement pour éviter un flash visuel
-            setTimeout(() => {
-              panelElement.style.transform = '';
-            }, 50);
-          } else {
-            panelElement.style.opacity = '';
-            panelElement.style.transform = '';
-          }
-        }, 400);
-      } else {
-        // S'assurer que le défilement est toujours activé
-        document.body.style.overflow = '';
-      }
+      // If the panel is closed, restore scrolling
+      // document.body.style.overflow = 'auto';
     }
   }
 

@@ -3,13 +3,10 @@
     <h2>🔎 Produits similaires trouvés : 🔎</h2>
     <div class="item-container">
       <ul class="items-list">
-        <li class="item"
-            *ngFor="let product of productDetails; trackBy: trackByProduct"
-            (click)="goToProduct(product)"
-            tabindex="0"
-            [attr.aria-label]="'Voir le produit ' + product.name">
+        <li class="item" *ngFor="let product of productDetails; trackBy: trackByProduct" (click)="goToProduct(product)"
+          tabindex="0" [attr.aria-label]="'Voir le produit ' + product.name">
           <div class="img-container">
-            <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
+            <img class="product-image" [src]="product.image" alt="{{ product.name }}">
           </div>
           <div class="product-details">
             <div class="title-info">

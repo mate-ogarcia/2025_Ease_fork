@@ -8,18 +8,18 @@
  */
 
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 // Components
-import { NavbarComponent } from '../searched-prod/comp/navbar/navbar.component';
+import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
 import { CommentsSectionComponent } from '../comments-section/comments-section.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
 import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.service';
+import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { CommentsService } from '../../services/comments/comments.service';
-import { catchError, from } from 'rxjs';
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 
 /**
  * @class ProdpageComponent
@@ -28,7 +28,7 @@ import { catchError, from } from 'rxjs';
 @Component({
   selector: 'app-prodpage',
   standalone: true,
-  imports: [NavbarComponent, CommonModule, CommentsSectionComponent],
+  imports: [NavbarComponent, CommonModule, LikeBtnComponent, CommentsSectionComponent],
   templateUrl: './prodpage.component.html',
   styleUrls: ['./prodpage.component.css']
 })
@@ -39,6 +39,8 @@ export class ProdpageComponent implements OnInit {
   isLoading: boolean = false;       // Loading state flag.
   errorMessage: string = '';        // Error message in case of failure.
   selectedTab: string = 'description'; // Selected tab for displaying product information.
+  isAuthenticated: boolean = false; // L'utilisateur est-il authentifié
+  isFavorite: boolean = false;      // Le produit est-il dans les favoris
   showCommentForm = false;
   canAddComment: boolean = false;   // Determines if the user can add a comment.
   userRole: string | null = null;   // Stores the user role.
@@ -51,14 +53,18 @@ export class ProdpageComponent implements OnInit {
    * @param apiService ApiService to fetch internal product details.
    * @param apiUnsplash UnsplashService to fetch product images.
    * @param openFoodFactsService ApiOpenFoodFacts service to fetch external products.
+   * @param favoritesService Service for managing favorites
+   * @param authService Service for authentication state
+   * @param router Angular router for navigation
    */
   constructor(
     private route: ActivatedRoute,
     private apiService: ApiService,
     private apiUnsplash: APIUnsplash,
     private openFoodFactsService: ApiOpenFoodFacts,
+    private favoritesService: FavoritesService,
     private authService: AuthService,
-    private commentsService: CommentsService,
+    private router: Router
   ) { }
 
   /**
@@ -66,41 +72,82 @@ export class ProdpageComponent implements OnInit {
    * It retrieves the product ID and source from the route parameters.
    */
   ngOnInit() {
+    // Vérifier si l'utilisateur est connecté
+    this.authService.isAuthenticated().subscribe(isAuth => {
+      this.isAuthenticated = isAuth;
+    });
+
     this.route.paramMap.subscribe((params) => {
       this.productId = params.get('id') || '';
       this.productSource = params.get('source') || 'Internal';
 
       if (this.productId) {
         this.loadProduct(this.productId, this.productSource);
+
+        // Si l'utilisateur est authentifié, vérifier si le produit est dans les favoris
+        if (this.isAuthenticated) {
+          this.checkFavoriteStatus();
+        }
       }
-      // Get the number of comments
-      from(this.commentsService.getCommentCountForProduct(this.productId)).pipe(
-        catchError((error) => {
-          console.error("❌ Error fetching comment count", error);
-          return []; // Returns an empty array or another default value in case of error
-        })
-      ).subscribe(
-        (count) => {
-          this.commentCount = count; // Stores the number of comments
-        }
-      );
-      // Get the average rating for the product 
-      from(this.commentsService.getAverageRateForProduct(this.productId)).pipe(
-        catchError((error) => {
-          console.error("❌ Error fetching comment avg rate", error);
-          return []; // Returns an empty array or another default value in case of error
-        })
-      ).subscribe(
-        (count) => {
-          this.avgRate = count;
-        }
-      );
     });
-    // Get the user's info
-    this.authService.getUserRole().subscribe((role) => {
-      this.userRole = role;
-      this.canAddComment = role?.toLowerCase() === 'user' || role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'superadmin';
+
+    // S'abonner aux changements d'état d'authentification
+    this.authService.isAuthenticated().subscribe(isAuth => {
+      if (isAuth && this.productId) {
+        this.checkFavoriteStatus();
+      }
     });
+  }
+
+  /**
+   * @brief Vérifie si le produit actuel est dans les favoris de l'utilisateur
+   */
+  private checkFavoriteStatus(): void {
+    if (!this.productId) return;
+
+    this.favoritesService.isProductInFavorites(this.productId).subscribe({
+      next: (isFavorite) => {
+        this.isFavorite = isFavorite;
+      },
+      error: (error) => {
+        console.error('Erreur lors de la vérification des favoris:', error);
+      }
+    });
+  }
+
+  /**
+   * @brief Gère le changement d'état du bouton like
+   * @param liked Nouvel état du bouton (true = aimé, false = non aimé)
+   */
+  onLikeToggled(liked: boolean): void {
+    if (!this.isAuthenticated) {
+      // Si l'utilisateur n'est pas authentifié, rediriger vers la page de connexion
+      this.router.navigate(['/auth']);
+      return;
+    }
+
+    if (liked) {
+      // Sauvegarde des détails du produit automatiquement gérée par le backend
+      this.favoritesService.addToFavorites(this.productId).subscribe({
+        next: () => {
+          this.isFavorite = true;
+        },
+        error: (err) => {
+          this.isFavorite = false; // Réinitialiser l'état visuel en cas d'erreur
+          console.error('Erreur lors de l\'ajout aux favoris:', err);
+        }
+      });
+    } else {
+      this.favoritesService.removeFromFavorites(this.productId).subscribe({
+        next: () => {
+          this.isFavorite = false;
+        },
+        error: (err) => {
+          this.isFavorite = true; // Réinitialiser l'état visuel en cas d'erreur
+          console.error('Erreur lors de la suppression des favoris:', err);
+        }
+      });
+    }
   }
 
   /**

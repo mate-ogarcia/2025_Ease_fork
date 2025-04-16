@@ -71,10 +71,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException("User not found");
       }
 
+      // Debug - afficher l'utilisateur complet pour voir s'il contient un ID
+      console.log("👤 JWT Strategy - User object from database:", JSON.stringify(user));
+
       // Créer un objet utilisateur simplifié pour attacher à la requête
+      // Pour les favoris, nous avons besoin d'un identifiant "sub"
       const userInfo = {
         email: user.email,
         role: user.role,
+        // Pour les favoris, utiliser l'email comme ID s'il n'y a pas d'ID spécifique
+        // dans le format que la base de données Couchbase attend
+        sub: user.email
       };
 
       console.log("✅ JWT Strategy - User validated:", userInfo);
