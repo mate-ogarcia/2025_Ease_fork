@@ -9,11 +9,12 @@
   font-family: "Poppins", sans-serif;
   overflow: hidden;
   background-color: #d5f5ea;
-  transition: opacity 0.8s ease-in;
-  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+  min-height: 100vh;
+  position: relative;
 }
 
-/* Animation de fondu */
+/* Animations de base */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -26,31 +27,58 @@
   }
 }
 
-.container,
+/* Animations spécifiques pour les images */
 .wave,
 .wavetop,
-.login-content {
-  animation: fadeIn 1s ease-in-out;
+.header-form img {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
 }
 
-/* Positionnement des vagues */
+.wave.fade-in,
+.wavetop.fade-in,
+.header-form img.fade-in {
+  opacity: 1;
+}
+
+/* Positionnement des vagues avec animations améliorées */
 .wave,
 .wavetop {
-  height: auto;
   position: fixed;
   height: 100%;
   z-index: 0;
-  animation: fadeIn 1s ease-in-out;
+  pointer-events: none;
 }
 
 .wave {
   bottom: 0;
   left: 0;
+  transform: translateY(20px);
+}
+
+.wave.fade-in {
+  transform: translateY(0);
 }
 
 .wavetop {
   top: 0;
   right: 0;
+  transform: translateY(-20px);
+}
+
+.wavetop.fade-in {
+  transform: translateY(0);
+}
+
+/* Style du logo avec animation */
+.header-form img {
+  height: 100px;
+  transform: scale(0.95);
+  transition: transform 0.3s ease-in-out;
+}
+
+.header-form img.fade-in {
+  transform: scale(1);
 }
 
 /* Conteneur principal */

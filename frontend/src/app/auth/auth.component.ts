@@ -3,7 +3,7 @@
  * @brief Component for handling user authentication and address autocompletion.
  */
 
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -24,10 +24,16 @@ import { NotificationService } from '../../services/notification/notification.se
   ],
   providers: []
 })
-export class AuthComponent implements AfterViewInit, OnInit {
+export class AuthComponent implements AfterViewInit, OnInit, OnDestroy {
+  @ViewChild('waveImage') waveImage?: ElementRef;
+  @ViewChild('waveTopImage') waveTopImage?: ElementRef;
+  @ViewChild('bearImage') bearImage?: ElementRef;
+
   isLoginMode: boolean = true;
   isDarkMode: boolean = false;
   showPassword: boolean = false;
+  imagesLoaded: boolean = false;
+
   // User infos
   username: string = '';
   email: string = '';
@@ -53,7 +59,7 @@ export class AuthComponent implements AfterViewInit, OnInit {
     private authService: AuthService,
     private router: Router,
     private apiAddress: ApiAddress,
-    private notif : NotificationService,
+    private notif: NotificationService
   ) { }
 
   @ViewChild('usernameInput', { static: false }) usernameInput!: ElementRef;
@@ -79,6 +85,8 @@ export class AuthComponent implements AfterViewInit, OnInit {
       }
     });
     this.getUserLocation();
+    // Précharger les images
+    this.preloadImages();
   }
 
   /**
@@ -87,6 +95,61 @@ export class AuthComponent implements AfterViewInit, OnInit {
   ngAfterViewInit() {
     this.setupFocusBlurListeners();
     this.setupValidationListeners();
+    // Ajouter les classes d'animation une fois que les images sont chargées
+    this.checkImagesLoaded();
+  }
+
+  ngOnDestroy() {
+    // Nettoyer les animations et les images
+    if (this.waveImage?.nativeElement) {
+      this.waveImage.nativeElement.classList.remove('fade-in');
+    }
+    if (this.waveTopImage?.nativeElement) {
+      this.waveTopImage.nativeElement.classList.remove('fade-in');
+    }
+    if (this.bearImage?.nativeElement) {
+      this.bearImage.nativeElement.classList.remove('fade-in');
+    }
+  }
+
+  private preloadImages() {
+    const images = [
+      'wave.png',
+      'wavedark.png',
+      'wavetop.png',
+      'wavetopdark.png',
+      'ours.png'
+    ];
+
+    let loadedImages = 0;
+    images.forEach(src => {
+      const img = new Image();
+      img.onload = () => {
+        loadedImages++;
+        if (loadedImages === images.length) {
+          this.imagesLoaded = true;
+          this.checkImagesLoaded();
+        }
+      };
+      img.src = src;
+    });
+  }
+
+  private checkImagesLoaded() {
+    if (this.imagesLoaded && this.waveImage && this.waveTopImage && this.bearImage) {
+      // Ajouter les classes d'animation avec un léger délai
+      setTimeout(() => {
+        if (this.waveImage?.nativeElement) {
+          this.waveImage.nativeElement.classList.add('fade-in');
+        }
+        if (this.waveTopImage?.nativeElement) {
+          this.waveTopImage.nativeElement.classList.add('fade-in');
+        }
+        if (this.bearImage?.nativeElement) {
+          this.bearImage.nativeElement.classList.add('fade-in');
+        }
+      }, 100);
+    }
   }
 
   /**
@@ -389,15 +452,15 @@ export class AuthComponent implements AfterViewInit, OnInit {
     this.validateUsername();
     this.validateEmail();
     this.validatePassword();
-  
+
     if (!isLoginMode) {
       this.validateAddress();
     }
-  
+
     // Checks if at least one field is invalid
     return this.isUsernameValid && this.isEmailValid && this.isPasswordValid && (isLoginMode || this.isAddressValid);
   }
-  
+
   /**
    * @brief Validates username in real time.
    */
