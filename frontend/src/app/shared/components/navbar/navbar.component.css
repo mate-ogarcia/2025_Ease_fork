@@ -56,6 +56,11 @@
   height: fit-content;
 }
 
+/* Pour enlever l'espace quand un élément est masqué avec ngIf */
+.navbar ul li:empty {
+  display: none;
+}
+
 .nav-btn {
   text-decoration: none;
   display: flex;

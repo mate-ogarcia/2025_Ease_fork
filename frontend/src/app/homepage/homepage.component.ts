@@ -1,9 +1,10 @@
-import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild, OnInit } from '@angular/core';
 import * as VANTA from 'vanta/src/vanta.birds';
 import * as THREE from 'three';
 // Component
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { SearchbarComponent } from '../shared/components/searchbar/searchbar.component';
+import { SettingsButtonComponent } from '../shared/components/settings-button/settings-button.component';
 import { CommonModule } from '@angular/common';
 
 /**
@@ -17,15 +18,16 @@ import { CommonModule } from '@angular/common';
  * - Settings panel for user preferences.
  * - Project information modal with responsive design.
  * - Retrieves and logs the user role from cookies.
+ * - Persistent animation state using localStorage.
  */
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [NavbarComponent, SearchbarComponent, CommonModule],
+  imports: [NavbarComponent, SearchbarComponent, SettingsButtonComponent, CommonModule],
   templateUrl: './homepage.component.html',
   styleUrl: './homepage.component.css'
 })
-export class HomepageComponent implements AfterViewInit, OnDestroy {
+export class HomepageComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('vantaBackground') vantaBackground!: ElementRef;
   isVantaActive: boolean = true;
   isDarkMode: boolean = false;
@@ -34,16 +36,52 @@ export class HomepageComponent implements AfterViewInit, OnDestroy {
   private vantaEffect: any;
   private vantaContainer: HTMLElement | null = null;
 
-  ngAfterViewInit(): void {
-    // Wait for the DOM to be completely loaded and rendered
-    setTimeout(() => {
-      // Access the element via the ViewChild reference
-      this.vantaContainer = this.vantaBackground.nativeElement;
+  constructor() {
+    // Récupérer l'état sauvegardé de l'animation depuis le localStorage
+    const savedVantaState = localStorage.getItem('vantaActive');
+    if (savedVantaState !== null) {
+      this.isVantaActive = savedVantaState === 'true';
+    }
 
-      if (this.isVantaActive && this.vantaContainer) {
+    // Récupérer l'état du mode sombre (optionnel)
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode !== null) {
+      this.isDarkMode = savedDarkMode === 'true';
+      document.body.classList.toggle('dark-mode', this.isDarkMode);
+    }
+  }
+
+  ngOnInit(): void {
+    // Ajouter un écouteur d'événement pour les changements d'état de l'animation
+    document.addEventListener('vantaToggle', this.handleVantaToggle.bind(this));
+  }
+
+  ngAfterViewInit(): void {
+    // Initialiser l'effet Vanta immédiatement sans délai
+    this.vantaContainer = this.vantaBackground.nativeElement;
+
+    if (this.isVantaActive && this.vantaContainer) {
+      this.initVantaEffect();
+    }
+  }
+
+  /**
+   * @brief Handles the vantaToggle event from the settings button
+   * @param event Custom event with detail.isActive indicating the new state
+   */
+  private handleVantaToggle(event: any): void {
+    const isActive = event.detail?.isActive;
+
+    if (isActive !== undefined) {
+      this.isVantaActive = isActive;
+
+      if (this.isVantaActive) {
         this.initVantaEffect();
+      } else if (this.vantaEffect) {
+        this.vantaEffect.destroy();
+        this.vantaEffect = null;
       }
-    }, 100); // A short delay to ensure the DOM is fully rendered
+    }
   }
 
   /**
@@ -103,32 +141,18 @@ export class HomepageComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * @brief Toggles the Vanta.js effect on or off.
-   * 
-   * @details
-   * - If active, destroys the effect.
-   * - If inactive, reinitializes the animation.
-   */
-  toggleVantaEffect(): void {
-    this.isVantaActive = !this.isVantaActive;
-
-    if (this.isVantaActive) {
-      this.initVantaEffect();
-    } else if (this.vantaEffect) {
-      this.vantaEffect.destroy();
-      this.vantaEffect = null;
-    }
-  }
-
-  /**
-   * @brief Toggles the dark mode theme.
+   * @brief Toggles the dark mode theme and saves the state to localStorage.
    * 
    * @details
    * Adds or removes the `dark-mode` class from the document body to switch themes.
+   * Persists the state in browser's localStorage.
    */
   toggleDarkMode(): void {
     this.isDarkMode = !this.isDarkMode;
     document.body.classList.toggle('dark-mode', this.isDarkMode);
+
+    // Sauvegarder l'état du mode sombre dans le localStorage
+    localStorage.setItem('darkMode', this.isDarkMode.toString());
   }
 
   /**
@@ -266,14 +290,16 @@ export class HomepageComponent implements AfterViewInit, OnDestroy {
    * 
    * @details
    * Destroys the Vanta.js animation effect to prevent memory leaks.
+   * Removes event listeners.
    */
   ngOnDestroy(): void {
     if (this.vantaEffect) {
       this.vantaEffect.destroy();
     }
 
-    // Supprimer le gestionnaire d'événements de redimensionnement
+    // Supprimer les écouteurs d'événements
     window.removeEventListener('resize', this.handleResize.bind(this));
+    document.removeEventListener('vantaToggle', this.handleVantaToggle.bind(this));
 
     // Restaurer le défilement du body si nécessaire
     document.body.style.overflow = '';

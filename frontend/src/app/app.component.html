@@ -1,2 +1,5 @@
 <!-- Contenu de l'application -->
 <router-outlet></router-outlet>
+
+<!-- Bouton de paramètres global (sans contrôle des oiseaux) -->
+<app-settings-button *ngIf="!isHomePage"></app-settings-button>

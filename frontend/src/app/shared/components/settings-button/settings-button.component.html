@@ -1,0 +1,18 @@
+<!-- Container du bouton de paramètres -->
+<div class="settings-container">
+  <!-- Bouton principal engrenage -->
+  <div class="settings-icon" [class.open]="isSettingsOpen" (click)="toggleSettingsPanel()">
+    <i class="fas fa-cog"></i>
+  </div>
+
+  <!-- Menu des paramètres -->
+  <div class="settings-menu" [class.open]="isSettingsOpen">
+    <button class="settings-btn theme-btn" (click)="toggleDarkMode()" title="Mode Sombre">
+      <i class="fas" [ngClass]="isDarkMode ? 'fa-sun' : 'fa-moon'"></i>
+    </button>
+    <button *ngIf="isHomePage || showBirdControl" class="settings-btn birds-btn" (click)="toggleVantaEffect()"
+      title="Animation">
+      <i class="fas" [ngClass]="isVantaActive ? 'fa-feather-alt' : 'fa-paint-brush'"></i>
+    </button>
+  </div>
+</div>

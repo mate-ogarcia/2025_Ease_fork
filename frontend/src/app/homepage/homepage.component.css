@@ -50,8 +50,7 @@ body {
 .title,
 .app-searchbar,
 .project-info,
-.settings-icon,
-.settings-menu {
+.info-button {
   position: relative;
   z-index: 10;
 }
@@ -66,23 +65,28 @@ body {
   width: 70%;
   height: 50px;
   z-index: 10;
-  /* Valeur réduite pour être sous le panneau d'information */
+  margin-top: 5%;
 }
 
 /* Gestion du titre */
 .title {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  height: 50%;
+  position: relative;
   width: 80%;
-  /* Rend plus adaptable sur petits écrans */
   max-width: 600px;
-  /* Évite qu'il devienne trop large */
-  gap: 0;
+  margin-top: 30px;
   text-align: center;
-  z-index: 1;
+  z-index: 10;
+}
+
+.slogan,
+.explication {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.explication {
+  margin-top: 15px;
 }
 
 /* Gestion du texte */
@@ -138,107 +142,10 @@ h5 {
   }
 }
 
-/* Icône engrenage */
-.settings-icon {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #2DD096;
-  color: white;
-  font-size: 24px;
-  width: 55px;
-  height: 55px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-  /* Valeur la plus basse pour le bouton */
-}
-
-/* Animation rotation au survol */
-.settings-icon.open {
-  background-color: #1dd27b;
-  transform: rotate(180deg);
-}
-
-/* Menu des paramètres qui s'affiche sous l'engrenage */
-.settings-menu {
-  position: fixed;
-  bottom: 75px;
-  /* 🔥 Placé SOUS l'engrenage */
-  right: 23px;
-  width: 50px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-bottom: 30px;
-  border-radius: 20px 20px 0 0;
-  /* 🔥 Coins arrondis en bas */
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  transform: translateY(-20px) scale(0);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-  flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
-  z-index: 49;
-  /* Juste en-dessous du bouton */
-  /* Sous l'engrenage */
-  transform: translateY(50px);
-
-}
-
-/* Apparition fluide du menu */
-.settings-menu.open {
-  opacity: 1;
-  transform: translateY(20px);
-  pointer-events: all;
-}
-
-/* Style des boutons ronds */
-.settings-btn {
-  width: 50px;
-  height: 50px;
-  background-color: var(--primary-color);
-  color: white;
-  font-size: 24px;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
-}
-
-.settings-btn:hover {
-  background-color: var(--primary-hover);
-  transform: scale(1.1);
-}
-
-
 /* Mode sombre */
 .dark-mode {
   background-color: var(--background-dark);
   color: white;
-}
-
-.dark-mode .settings-menu {
-  background: rgba(50, 50, 50, 0.9);
-}
-
-.dark-mode .settings-btn {
-  background-color: #888;
-}
-
-.dark-mode .settings-btn:hover {
-  background-color: #666;
 }
 
 /* Background clair quand l'animation est désactivée */

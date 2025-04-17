@@ -7,12 +7,13 @@
  */
 
 import { Component, OnInit, Renderer2 } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataCacheService } from '../services/cache/data-cache.service';
 import { AuthService } from '../services/auth/auth.service';
 import { timer, of, from, throwError } from 'rxjs';
-import { retry, delay, catchError, mergeMap } from 'rxjs/operators';
+import { retry, delay, catchError, mergeMap, filter } from 'rxjs/operators';
+import { SettingsButtonComponent } from './shared/components/settings-button/settings-button.component';
 
 declare global {
   interface Window {
@@ -26,6 +27,7 @@ declare global {
   imports: [
     CommonModule,   // Provides Angular common directives.
     RouterModule,   // Enables navigation between application routes.
+    SettingsButtonComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -33,6 +35,7 @@ declare global {
 export class AppComponent implements OnInit {
   title = 'Ease';
   private readonly MIN_LOADING_TIME = 2000; // Temps minimum d'affichage du chargement en ms
+  isHomePage: boolean = false;
 
   /**
    * @brief Constructor for AppComponent.
@@ -41,11 +44,13 @@ export class AppComponent implements OnInit {
    * @param dataCacheService Service for preloading and caching data from the backend.
    * @param authService Service for managing authentication state.
    * @param renderer Renderer2 pour manipuler le DOM de manière sécurisée.
+   * @param router Router for navigation and route management.
    */
   constructor(
     private dataCacheService: DataCacheService,
     private authService: AuthService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private router: Router
   ) { }
 
   /**
@@ -98,6 +103,16 @@ export class AppComponent implements OnInit {
           this.completeInitialization(startTime);
         }
       });
+
+    // Vérification initiale si nous sommes sur la page d'accueil
+    this.checkIfHomePage();
+
+    // Surveille les changements de route
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkIfHomePage();
+    });
   }
 
   /**
@@ -137,6 +152,14 @@ export class AppComponent implements OnInit {
         }
       }, 300); // Délai pour s'assurer que le contenu est prêt
     }, remainingTime);
+  }
+
+  /**
+   * @brief Vérifie si la route actuelle est la page d'accueil
+   */
+  private checkIfHomePage(): void {
+    const currentUrl = this.router.url;
+    this.isHomePage = currentUrl === '/' || currentUrl === '/home';
   }
 }
 
