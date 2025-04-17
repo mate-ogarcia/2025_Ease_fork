@@ -26,7 +26,7 @@
         <!-- Character counter just below the input -->
         <div class="char-container" *ngIf="showCommentForm">
           <div class="form-group">
-            <label for="rating">Rating</label>
+            <label for="rating">Notes</label>
             <select
               id="rating"
               [(ngModel)]="comment.userRatingCom"
@@ -50,7 +50,7 @@
     <!-- Rating + Submit/Cancel buttons: displayed only if showCommentForm = true -->
     <div class="rating-and-buttons" *ngIf="showCommentForm">
       <div class="form-actions">
-        <button type="submit">Envoyer</button>
+        <button type="submit">{{ editingCommentId ? 'Update' : 'Send' }}</button>
         <button type="button" (click)="cancelForm()">Annuler</button>
       </div>
     </div>
@@ -73,6 +73,8 @@
           </div>
           <!-- Date in YYYY-MM-DD format -->
           <span class="date">Publiée le {{ item.dateCom | date:'yyyy-MM-dd' }}</span>
+          <button *ngIf="item.userId === currentUserEmail" class="delete-button" (click)="deleteComment(item.id?.toString())">Supprimer</button>
+          <button *ngIf="item.userId === currentUserEmail" class="edit-button" (click)="editComment(item.id?.toString())">Modifier</button>
         </div>
         <div class="comment-content">
           {{ item.contentCom }}
@@ -89,7 +91,7 @@
   <!-- Loading indicator -->
   <div *ngIf="loading" class="loading">
     <div class="spinner"></div>
-    <span>Loading comments...</span>
+    <span>Chargement des commentaires...</span>
   </div>
 
   <!-- Button to load more comments -->
@@ -99,6 +101,6 @@
     [disabled]="loading"
     class="load-more-btn"
   >
-    Load more comments
+    Charger plus de commentaires
   </button>
 </div>

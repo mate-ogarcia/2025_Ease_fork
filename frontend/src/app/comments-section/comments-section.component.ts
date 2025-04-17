@@ -47,6 +47,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
   canAddComment = false; // Whether user can add comments
   // Get current user's email for sorting
   currentUserEmail: string = '';
+  editingCommentId: string | null = null; // Add this line to track which comment is being edited
   // Object containing pagination-related data and state.
   pagination = {
     currentPage: 1, // Current page index
@@ -149,6 +150,108 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
   }
 
   /**
+   * @brief Deletes a comment if the current user is the owner.
+   *
+   * This method checks if the provided comment ID is valid, retrieves the comment,
+   * verifies ownership, and sends a DELETE request via the comment service.
+   * Displays appropriate success or error notifications based on the result.
+   *
+   * @param id The ID of the comment to delete.
+   */
+  deleteComment(id: string | undefined): void {
+    if (!id) {
+      this.notifService.showError('Cannot delete comment: Invalid comment ID');
+      return;
+    }
+
+    // Find the comment to check ownership
+    const commentToDelete = this.comments.find((c) => c.id?.toString() === id);
+    if (!commentToDelete) {
+      this.notifService.showError('Comment not found.');
+      return;
+    }
+
+    // Check if the current user is the owner of the comment
+    if (commentToDelete.userId !== this.currentUserEmail) {
+      this.notifService.showError('You can only delete your own comments.');
+      return;
+    }
+
+    this.commentService.deleteComment(id).subscribe({
+      next: () => {
+        this.loadComments(false);
+        this.notifService.showSuccess('Comment deleted successfully.');
+      },
+      error: () => {
+        this.notifService.showError('Failed to delete comment.');
+      },
+    });
+  }
+
+  /**
+   * @brief Prepares a comment for editing if the current user is the owner.
+   *
+   * This method retrieves the comment to be edited using its ID, verifies that the
+   * current user is the owner, pre-fills the comment form with its data, and displays
+   * the form for editing.
+   *
+   * @param id The ID of the comment to edit.
+   */
+  editComment(id: string | undefined): void {
+    if (!id) {
+      this.notifService.showError('Cannot edit comment: Invalid comment ID');
+      return;
+    }
+
+    // Get the comment to edit
+    const commentToEdit = this.comments.find((c) => c.id?.toString() === id);
+    if (!commentToEdit) {
+      this.notifService.showError('Comment not found.');
+      return;
+    }
+
+    // Check if the current user is the owner of the comment
+    if (commentToEdit.userId !== this.currentUserEmail) {
+      this.notifService.showError('You can only edit your own comments.');
+      return;
+    }
+
+    // Set the form values to the comment being edited
+    this.comment = {
+      dateCom: commentToEdit.dateCom,
+      contentCom: commentToEdit.contentCom,
+      userRatingCom: commentToEdit.userRatingCom,
+      source: commentToEdit.source,
+      userId: commentToEdit.userId,
+      productId: commentToEdit.productId,
+    };
+
+    // Set editing state
+    this.editingCommentId = id;
+    this.showCommentForm = true;
+
+    // Scroll to the form after a short delay to ensure it's rendered
+    setTimeout(() => {
+      this.scrollToCommentForm();
+    }, 100);
+  }
+
+  /**
+   * @brief Scrolls to the comment form when it's opened.
+   */
+  private scrollToCommentForm(): void {
+    const formElement = document.querySelector('.comment-input');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Focus the input field
+      const inputElement = formElement.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }
+  }
+
+  /**
    * @brief Triggered when the comment form is submitted.
    *
    * @param newComment The comment data without the "id" field.
@@ -162,25 +265,43 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
       contentCom: newComment.contentCom,
       userRatingCom: newComment.userRatingCom,
       source: newComment.source,
-      userId: newComment.userId, // This is already the email
+      userId: newComment.userId,
       productId: this.productId,
     };
 
-    this.commentService.postAddComment(commentPayload).subscribe({
-      next: (response) => {
-        this.notifService.showSuccess('Comment added!');
-        // Reset pagination and reload comments
-        this.pagination.currentPage = 1;
-        this.loadComments(false);
-        // Hide the rating + buttons, reset the form
-        this.showCommentForm = false;
-        this.resetForm();
-      },
-      error: (err) => {
-        console.error('Error adding comment:', err);
-        this.notifService.showError('Failed to add comment.');
-      },
-    });
+    if (this.editingCommentId) {
+      // If we're editing an existing comment
+      this.commentService
+        .editComment(this.editingCommentId, commentPayload)
+        .subscribe({
+          next: () => {
+            this.notifService.showSuccess('Comment updated successfully!');
+            this.loadComments(false);
+            this.showCommentForm = false;
+            this.resetForm();
+            this.editingCommentId = null;
+          },
+          error: (err) => {
+            console.error('Error updating comment:', err);
+            this.notifService.showError('Failed to update comment.');
+          },
+        });
+    } else {
+      // If we're adding a new comment
+      this.commentService.postAddComment(commentPayload).subscribe({
+        next: () => {
+          this.notifService.showSuccess('Comment added!');
+          this.pagination.currentPage = 1;
+          this.loadComments(false);
+          this.showCommentForm = false;
+          this.resetForm();
+        },
+        error: (err) => {
+          console.error('Error adding comment:', err);
+          this.notifService.showError('Failed to add comment.');
+        },
+      });
+    }
   }
 
   /**
@@ -208,13 +329,20 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
         const allComments = data
           .map((c: Comment) => ({
             ...c,
+            id: c.id,
             userRatingCom: Number(c.userRatingCom),
           }))
           .sort((a, b) => {
             // First sort by whether it's the user's comment
-            if (a.userId === this.currentUserEmail && b.userId !== this.currentUserEmail)
+            if (
+              a.userId === this.currentUserEmail &&
+              b.userId !== this.currentUserEmail
+            )
               return -1;
-            if (a.userId !== this.currentUserEmail && b.userId === this.currentUserEmail)
+            if (
+              a.userId !== this.currentUserEmail &&
+              b.userId === this.currentUserEmail
+            )
               return 1;
             // Then sort by date (newest first)
             return (
@@ -273,6 +401,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
    */
   cancelForm(): void {
     this.showCommentForm = false;
+    this.editingCommentId = null;
     this.resetForm();
   }
 
