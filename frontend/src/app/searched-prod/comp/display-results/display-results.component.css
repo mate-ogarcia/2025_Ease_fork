@@ -82,12 +82,10 @@
   background-color: #f9ebde;
   gap: 10px;
   padding: 15px;
-  padding-bottom: 70px;
   /* Espace réservé pour le bouton like */
   border-radius: 20px;
   cursor: pointer;
   transition: transform 0.3s ease-in-out;
-  max-height: 300px;
   overflow: hidden;
   z-index: 999;
   position: relative;
@@ -102,6 +100,15 @@
 .items-list.grid .item {
   flex-direction: column;
   max-height: none;
+}
+
+/* Positionnement du like-btn en mode grid : en flux normal, pas absolu */
+.items-list.grid .item .like-btn {
+  width: 100%;
+  position: static;
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* === Fixed Image Container === */
@@ -151,7 +158,6 @@
   background: #2980b9;
 }
 
-
 /* === Product Image === */
 .product-image {
   width: 100%;
@@ -181,11 +187,9 @@
   color: rgb(23, 241, 41);
 }
 
-/* Positionnement du bouton "like" en bas à droite */
-
+/* Positionnement du bouton "like" en mode liste */
 .like-btn {
   position: absolute;
-
   bottom: 15px;
   right: 15px;
   z-index: 1000;
@@ -195,6 +199,7 @@
 @media screen and (max-width: 768px) {
   .item {
     flex-direction: column;
+    height: fit-content;
   }
 
   .img-container {

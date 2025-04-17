@@ -16,7 +16,18 @@ html {
     font-weight: 400;
     line-height: 1.5;
     color: #333;
-    background-color: #f8f9fa;
+    background: linear-gradient(to bottom,
+            #023436 0%,
+            /* Vert profond */
+            #023436 50%,
+            /* Gardé longtemps pour éviter une transition brutale */
+            #046C63 65%,
+            /* Vert sarcelle moyen */
+            #64B69F 85%,
+            /* Vert doux */
+            #CDEAC0 100%
+            /* Vert pâle pastel */
+        );
     width: 100%;
 }
 

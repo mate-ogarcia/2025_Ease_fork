@@ -5,10 +5,8 @@
         <div class="product-details">
             <!-- Section Gauche : Image -->
             <div class="image-gallery">
-                <div class="main-image-container">
                     <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'"
                         alt="{{ product.name }}">
-                </div>
             </div>
 
             <!-- Section Droite : Infos Produit -->
@@ -16,13 +14,7 @@
                 <span class="category">{{product.category}}</span>
                 <h2 class="product-name">{{ product.name }}</h2>
 
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <!-- Bouton favori/like -->
-                    <div class="favorite-button" *ngIf="isAuthenticated">
-                        <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
-                    </div>
-                </div>
+               
 
                 <!-- Note + Avis -->
                 <div class="rating">
@@ -38,6 +30,13 @@
                 <!-- id & Tags -->
                 <div class="extra-info">
                     <span class="id">ID product: {{productId}}</span>
+                </div>
+                 <!-- Action Buttons -->
+                 <div class="action-buttons">
+                    <!-- Bouton favori/like -->
+                    <div class="favorite-button" *ngIf="isAuthenticated">
+                        <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
+                    </div>
                 </div>
             </div>
         </div>

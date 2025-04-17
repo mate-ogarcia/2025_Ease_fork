@@ -96,7 +96,7 @@ export class NavbarComponent implements OnInit {
    */
   @HostListener('window:resize', ['$event'])
   checkScreenSize() {
-    this.isMobile = window.innerWidth <= 850;
+    this.isMobile = window.innerWidth <= 1250;
   }
 
   /**
