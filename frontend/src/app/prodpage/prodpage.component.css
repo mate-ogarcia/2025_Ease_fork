@@ -1,247 +1,210 @@
-/* Conteneur principal */
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Container principal du composant */
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
-    background-color: #023436;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #023436; 
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  gap: 20px;
+  
 }
 
-/*Barre de navigation */
+/* (Optionnel) Navbar si nécessaire */
 .app-navbar {
-    width: 100%;
+  width: 100%;
+  border-bottom: 1px solid #ddd;
 }
-.general-container {
-    width: 100%;
-    padding: 20px;
-    border-top: 1px solid #ddd;
 
-}
 /* Conteneur produit */
 .prod-container {
-    display: flex;
-    border-radius: 20px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    width: 100%;
-    background-color: #f9ebde;
-    border-radius: 15px;
-    gap: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  width: 95%;
+  background-color: #ffffff;
+  border-radius: 15px;
+  gap: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Section Produit - Image + Infos */
 .product-details {
-    display: flex;
-    padding: 30px;
-    flex-direction: row;
-    gap: 40px;
-    width: 100%;
-    height: 70vh;
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  padding: 20px;
+  width: 100%;
+  height: fit-content;
+  
 }
 
 /* Galerie d'images */
 .image-gallery {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: fit-content;
+ width: 40%;
 }
 
-.main-image-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-}
 
-.main-image-container img {
-    max-width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: auto;
-    border-radius: 10px;
-    transition: all 0.3s ease-in-out;
-    /* Effet fluide d'agrandissement */
-}
 
+/* Image plus grande par défaut */
 .product-image {
-    width: 70%;
-    height: auto;
-    border-radius: 10px;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
 }
 
 /* Infos produit */
 .product-info {
-    width: 50%;
+  width: 60%;
 }
 
 .category {
-    font-size: 14px;
-    color: #38D39F;
-    font-weight: bold;
+  font-size: 14px;
+  color: #38D39F;
+  font-weight: bold;
 }
 
 .product-name {
-    font-size: 24px;
-    font-weight: bold;
-    margin: 5px 0;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 5px 0;
 }
 
 .product-description {
-    height: auto;
+  height: auto;
 }
 
-/*  Note et avis */
+/* Note et avis */
 .rating {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: gold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: gold;
 }
 
 .review-count {
-    font-size: 14px;
-    color: #777;
+  font-size: 14px;
+  color: #777;
 }
 
-/*  Infos supplémentaires */
+/* Infos supplémentaires */
 .extra-info {
-    display: flex;
-    flex-direction: column;
-    padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
 }
 
-/*  Onglets de navigation (RESTE FIXE & GARDÉ À LA BONNE HAUTEUR) */
+/* Onglets (Description, Info, Review) */
 .tabs-container {
-    width: 100%;
-    position: sticky;
-    top: 0;
-    background: #f9ebde;
-    z-index: 10;
-    padding: 10px 0;
-    border-radius: 20px;
-    min-height: 60vh;
-    /*  Fixe la hauteur */
-    max-height: 60vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow: hidden;
-    /*  Empêche le redimensionnement */
+  width: 100%;
+
+  background: #ffffff;
+  z-index: 10;
+  padding: 10px 0;
+  border-radius: 20px;
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
 }
 
-/*  Barre d'onglets */
 .tabs {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 10vh;
-    border-bottom: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 10vh;
+  border-bottom: 2px solid #ddd;
 }
 
 .tab-btn {
-    background: none;
-    border: none;
-    min-height: 100%;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 15px 20px;
-    cursor: pointer;
-    color: #777;
-    transition: color 0.3s ease-in-out;
+  background: none;
+  border: none;
+  min-height: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 15px 20px;
+  cursor: pointer;
+  color: #777;
+  transition: color 0.3s ease-in-out;
 }
 
 .tab-btn.active {
-    color: #38D39F;
-    border-bottom: 3px solid #38D39F;
+  color: #38D39F;
+  border-bottom: 3px solid #38D39F;
 }
 
-/*  Contenu des onglets (Scroll à l'intérieur) */
+/* Contenu des onglets */
 .tab-content {
-    width: 100%;
-    height: 100%;
-    /*  Prend toute la hauteur définie */
-    overflow-y: auto;
-    /*  Scroll interne */
-    padding: 10px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px;
 }
 
-/*  Liste avec icônes */
-.tab-content ul {
-    list-style: none;
-    padding: 0;
-}
-
-.tab-content ul li {
-    display: flex;
-    align-items: center;
-    margin: 5px 0;
-}
-
-.tab-content ul li::before {
-    content: "";
-    margin-right: 10px;
-    color: #38D39F;
-    font-size: 18px;
-}
-
-/*  Responsive : Augmenter la taille de l'image */
-@media (max-width: 800px) {
-    .container {
-        height: auto;
-    }
-
-    .product-details {
-        height: auto;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .image-gallery {
-        width: 100%;
-        /*  L'image prend toute la largeur */
-    }
-
-    .main-image-container {
-        height: 60vh;
-        /*  Augmente la hauteur pour occuper plus d'espace */
-    }
-
-    .main-image-container img {
-        width: 90;
-        /*  Image plus grande */
-        max-height: 500px;
-        /*  Hauteur max pour éviter qu'elle soit trop grande */
-        object-fit: contain;
-        /*  Garde les proportions sans déformation */
-    }
-
-    .product-info {
-        width: 100%;
-    }
-
-    .tabs-container {
-        min-height: 300px;
-        max-height: 300px;
-    }
-}
-
+/* Action Buttons */
 .action-buttons {
-    display: flex;
-    align-items: center;
-    margin: 10px 0;
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
 }
 
 .favorite-button {
-    margin-right: 15px;
-    display: flex;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+  .container {
+    height: auto; 
+  }
+
+  .product-details {
+    height: auto;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+  }
+
+  .image-gallery {
+    width: 100%;
+  }
+
+  .main-image-container {
+    height: 60vh;
+  }
+
+  .main-image-container img {
+    width: 90%;        /* Largeur accrue pour mobile */
+    max-height: 500px; /* Évite que l'image ne devienne trop haute */
+    object-fit: contain;
+  }
+
+  .product-info {
+    width: 100%;
+  }
+
+  .tabs-container {
+    min-height: 300px;
+    max-height: 300px;
+  }
 }

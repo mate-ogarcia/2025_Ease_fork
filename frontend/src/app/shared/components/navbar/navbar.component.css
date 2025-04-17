@@ -36,6 +36,7 @@
   flex: 1;
   max-width: 500px;
   margin: 0 15px;
+  z-index: 999;
 }
 
 /* Menu */
@@ -124,7 +125,6 @@
   top: 70px;
   gap: 10px;
   background: white;
-  border: 1px solid #ddd;
   border-radius: 5px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   padding: 10px;
@@ -193,7 +193,7 @@
 }
 
 /* Responsive */
-@media (max-width: 850px) {
+@media (max-width: 1250px) {
   .navbar {
     flex-direction: row;
   }
@@ -201,10 +201,7 @@
   /* Ajuster la barre de recherche en mode responsive */
   .navbar-searchbar {
     max-width: none;
-    margin: 0 10px;
-    order: 3;
     width: 100%;
-    margin-top: 10px;
   }
 
   .navbar ul {
@@ -212,8 +209,8 @@
     flex-direction: column;
     align-items: center;
     position: absolute;
-    top: 60px;
-    right: 0px;
+    top: 70px;
+    right: 5px;
     background: white;
     color: #2d2b27;
     width: fit-content;
@@ -224,6 +221,7 @@
 
   .navbar ul.active {
     display: flex;
+    z-index: 1000;
   }
 
   .nav-btn {
@@ -253,7 +251,6 @@
 
   .log-container {
     position: relative;
-    /* Permet à .dropdown-menu de se positionner par rapport à ce conteneur */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -262,12 +259,12 @@
     gap: 10px;
     margin-left: auto;
     flex-direction: column;
+    z-index: 1000;
+
   }
 
   .userprofile {
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
+    display: none;
   }
 
   .profile-btn {
@@ -280,10 +277,11 @@
 
   .dropdown-menu {
     position: static;
-    border: none;
+    border-radius: 0;
     box-shadow: none;
     width: 100%;
     background: none;
     padding: 0;
+    border-top: 1px solid #778081;
   }
 }

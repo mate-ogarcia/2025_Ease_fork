@@ -19,7 +19,6 @@ body {
     opacity: 0;
     transform: translateY(15px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -90,10 +89,6 @@ form {
   width: 360px;
 }
 
-/* Animation pour la barre d'erreur */
-
-
-
 /* Conteneurs des champs */
 .input-container {
   position: relative;
@@ -117,7 +112,7 @@ form {
   transition: 0.3s;
 }
 
-.input-container>div {
+.input-container > div {
   position: relative;
   height: 45px;
 }
@@ -135,8 +130,8 @@ h5 {
 
 /* Effets dynamiques des inputs */
 .input-container.focus h5,
-.input-log:focus+h5,
-.input-log:not(:placeholder-shown)+h5 {
+.input-log:focus + h5,
+.input-log:not(:placeholder-shown) + h5 {
   top: -10px;
   font-size: 15px;
   color: #38d39f;
@@ -166,7 +161,7 @@ h5 {
   width: 50%;
 }
 
-/* Styles pour les champs en erreur avec animation améliorée */
+/* Styles pour les champs en erreur */
 .input-container.error-input {
   border-bottom: 2px solid #ff4444;
   animation: errorPulse 2s infinite;
@@ -186,12 +181,12 @@ h5 {
 }
 
 /* Couleur de l'icône en focus */
-.input-container.focus>.icon-log i {
+.input-container.focus > .icon-log i {
   color: #38d39f;
 }
 
 /* Couleur de l'icône en focus et en erreur */
-.input-container.error-input.focus>.icon-log i {
+.input-container.error-input.focus > .icon-log i {
   color: #38d39f;
 }
 
@@ -328,7 +323,6 @@ a:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Boutons du switch */
 .switch-button {
   flex: 1;
   height: 100%;
@@ -343,41 +337,32 @@ a:hover {
   transition: all 0.3s ease-in-out;
 }
 
-/* Bouton actif */
 .switch-button.active {
   background-color: #17b317;
-  /* Couleur bleue pour le bouton actif */
   color: #fff;
-  /* Couleur blanche pour le texte */
   font-weight: 700;
   border-radius: 20px;
 }
 
-/* Bouton non actif (hover) */
 .switch-button:not(.active):hover {
   background-color: rgba(184, 206, 184, 0.2);
   border-radius: 20px;
 }
 
-/* Responsive */
-
+/* Responsive : ajustements pour petits écrans */
 @media screen and (max-width: 1230px) {
   .container {
     grid-template-columns: 1fr;
   }
-
   form {
     width: 290px;
   }
-
   .image {
     display: none;
   }
-
   .wave {
     height: 40%;
   }
-
   .wavetop {
     height: 60%;
   }
@@ -499,7 +484,6 @@ a:hover {
     opacity: 0;
     transform: translateY(-5px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -540,7 +524,7 @@ a:hover {
   font-weight: 500;
 }
 
-/* Mode sombre */
+/* Mode sombre pour les erreurs */
 .dark-mode .error-wrapper i,
 .dark-mode .error-message {
   color: #ff6b6b;
@@ -560,26 +544,7 @@ a:hover {
   margin-bottom: 35px;
 }
 
-/* Style pour l'autocomplétion spécifique au composant d'authentification */
-.input-log:-webkit-autofill,
-.input-log:-webkit-autofill:hover,
-.input-log:-webkit-autofill:focus,
-.input-log:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #d5f5ea inset !important;
-  -webkit-text-fill-color: #333 !important;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-/* Pour le mode sombre */
-.dark-mode .input-log:-webkit-autofill,
-.dark-mode .input-log:-webkit-autofill:hover,
-.dark-mode .input-log:-webkit-autofill:focus,
-.dark-mode .input-log:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #2c3e50 inset !important;
-  -webkit-text-fill-color: #fff !important;
-}
-
-/* Enhanced autocomplete styling with white background */
+/* Enhanced autocomplete styling with transparent background */
 .autocomplete-results {
   position: absolute;
   width: 100%;
@@ -588,11 +553,9 @@ a:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
   z-index: 1000;
-  background-color: white;
+  background-color: transparent !important;  /* Fond transparent en mode light */
   border: 1px solid #e0e0e0;
   padding: 5px 0;
-  
-  /* Position below the entire input container instead of just the input field */
   top: 100%;
   left: 0;
   margin-top: 10px;
@@ -608,39 +571,9 @@ a:hover {
   color: #333;
 }
 
-.autocomplete-item:not(:last-child) {
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.autocomplete-item:hover {
-  background-color: #f5f5f5;
-  border-left-color: #4caf50;
-}
-
-.autocomplete-item span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Animation for showing suggestions */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.autocomplete-results {
-  animation: fadeIn 0.2s ease-out;
-}
-
-/* Add address icon to suggestion items */
-.autocomplete-item::before {
-  content: '\f3c5'; /* Font Awesome map marker icon */
-  font-family: 'Font Awesome 5 Free';
-  font-weight: 900;
-  margin-right: 10px;
-  color: #4caf50;
-  font-size: 0.9em;
+/* Pour forcer le fond transparent en mode dark aussi */
+.dark-mode .autocomplete-results {
+  background-color: transparent !important;
 }
 
 /* Scrollbar styling for suggestions list */
@@ -662,11 +595,10 @@ a:hover {
   background: #aaa;
 }
 
-/* Media query for responsive adjustments */
+/* Media query for responsive adjustments for autocompletion */
 @media (max-width: 768px) {
   .autocomplete-results {
     max-height: 180px;
-    /* For small screens, always position below */
     left: 0;
     top: 100%;
     width: 100%;
