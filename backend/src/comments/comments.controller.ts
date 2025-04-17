@@ -11,6 +11,8 @@ import {
   InternalServerErrorException,
   Post,
   Param,
+  Delete,
+  Put,
 } from "@nestjs/common";
 import { CommentsService } from "./comments.service";
 import { CommentDto } from "./dto/comments.dto";
@@ -29,9 +31,7 @@ export class CommentsController {
    * @param {CommentsService} commentsService - Service for handling comment-related operations.
    * @param {Cache} cacheManager - Cache manager for managing comment data caching.
    */
-  constructor(
-    private commentsService: CommentsService,
-  ) {}
+  constructor(private commentsService: CommentsService) {}
 
   /**
    * @brief Retrieves comments for a specific product with pagination.
@@ -51,10 +51,10 @@ export class CommentsController {
     } catch (error) {
       console.error(
         `❌ Error retrieving comments for product ${productId}:`,
-        error,
+        error
       );
       throw new InternalServerErrorException(
-        `Error retrieving comments for product.`,
+        `Error retrieving comments for product.`
       );
     }
   }
@@ -74,7 +74,7 @@ export class CommentsController {
   @Post("add")
   async addComment(@Body() commentDto: CommentDto) {
     try {
-      console.log(commentDto)
+      console.log(commentDto);
       // Add the comment to the database
       const newComment = await this.commentsService.createComment(commentDto);
 
@@ -109,11 +109,49 @@ export class CommentsController {
     } catch (error) {
       console.error(
         `❌ Error retrieving comments count for the product ${productId}:`,
-        error,
+        error
       );
       throw new InternalServerErrorException(
-        `Error retrieving comments count for the product ${productId}.`,
+        `Error retrieving comments count for the product ${productId}.`
       );
+    }
+  }
+
+  /**
+   * @brief Deletes a comment from the database.
+   *
+   * This endpoint allows the deletion of a comment identified by its unique ID.
+   * It also handles cache invalidation by deleting the cache associated with the product
+   * to ensure that the deleted comment is not reflected in future requests.
+   */
+  @Delete(":id")
+  async deleteComment(@Param("id") id: string) {
+    try {
+      // Call the service method to delete the comment
+      const deletedComment =  await this.commentsService.deleteComment(id);
+      return deletedComment;
+    } catch (error) {
+      console.error("❌ Error deleting comment:", error);
+      throw new InternalServerErrorException("Error deleting comment.");
+    }
+  }
+
+  /**
+   * @brief Edits a comment in the database.
+   *
+   * This endpoint allows the editing of a comment identified by its unique ID.
+   * It also handles cache invalidation by deleting the cache associated with the product
+   * to ensure that the edited comment is not reflected in future requests.
+   */  
+  @Put(":id")
+  async editComment(@Param("id") id: string, @Body() commentDto: CommentDto) {
+    try {
+      // Call the service method to edit the comment
+      const editedComment = await this.commentsService.editComment(id, commentDto);
+      return editedComment;
+    } catch (error) {
+      console.error("❌ Error edited comment:", error);
+      throw new InternalServerErrorException("Error edited comment.");
     }
   }
 
@@ -136,10 +174,10 @@ export class CommentsController {
     } catch (error) {
       console.error(
         `❌ Error retrieving average rate for the product ${productId}:`,
-        error,
+        error
       );
       throw new InternalServerErrorException(
-        `Error retrieving average rate for the product ${productId}.`,
+        `Error retrieving average rate for the product ${productId}.`
       );
     }
   }

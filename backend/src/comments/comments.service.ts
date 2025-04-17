@@ -84,6 +84,49 @@ export class CommentsService {
   }
 
   /**
+   * @brief Edits a comment in the database.
+   *
+   * This method updates an existing comment in the database based on the provided comment data.
+   * If there is an error while editing the comment, an `InternalServerErrorException` is thrown.
+   *
+   * @param {string} id - The ID of the comment to be edited.
+   * @param {CommentDto} commentDto - The data for the updated comment.
+   * @returns {Promise<any>} A promise containing the updated comment.
+   * @throws {InternalServerErrorException} If an error occurs while editing the comment in the database.
+   */
+  async editComment(id: string, commentDto: CommentDto): Promise<any> {
+    try {
+      // Call the database service to update the comment
+      return await this.databaseService.updateComment(id, commentDto);
+    } catch (error) {
+      // Log the error and throw an exception if something goes wrong
+      console.error("❌ Error editing comment:", error);
+      throw new InternalServerErrorException("Error editing comment.");
+    }
+  }
+
+  /**
+   * @brief Deletes a comment from the database.
+   *
+   * This method deletes a comment from the database based on the provided comment ID.
+   * If there is an error while deleting the comment, an `InternalServerErrorException` is thrown.
+   *
+   * @param {string} id - The ID of the comment to be deleted.
+   * @returns {Promise<any>} A promise containing the deleted comment.
+   * @throws {InternalServerErrorException} If an error occurs while deleting the comment from the database.
+   */
+  async deleteComment(id: string): Promise<any> {
+    try {
+      // Call the database service to delete the comment
+      return await this.databaseService.deleteComment(id);
+    } catch (error) {
+      // Log the error and throw an exception if something goes wrong
+      console.error("❌ Error deleting comment:", error);
+      throw new InternalServerErrorException("Error deleting comment.");
+    }
+  }
+
+  /**
    * @brief Retrieves the total count of comments for a specific product from the database.
    *
    * This method interacts with the database to fetch the total count of comments for the product
