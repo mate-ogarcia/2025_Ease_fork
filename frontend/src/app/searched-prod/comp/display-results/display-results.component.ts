@@ -57,7 +57,7 @@ export class DisplayResultsComponent implements OnInit {
     private favoritesService: FavoritesService,
     private authService: AuthService,
     private notificationService: NotificationService
-  ) {}
+  ) { }
 
   /**
    * @brief Initializes the component and loads product results.
@@ -96,7 +96,6 @@ export class DisplayResultsComponent implements OnInit {
             if (response.imageUrl) {
               product.image = response.imageUrl;
             } else {
-              console.warn(`🚫 Aucune image trouvée pour ${product.name}`);
               // Ne pas définir d'image par défaut qui n'existe pas
               product.image = null;
             }
@@ -118,8 +117,6 @@ export class DisplayResultsComponent implements OnInit {
    * @brief Charge l'état des favoris pour tous les produits affichés
    */
   private loadFavoriteStates(): void {
-    console.log('🔄 Chargement des états de favoris pour les produits...');
-
     // Désactiver temporairement le chargement automatique des favoris pour éviter l'erreur 500
     // Nous simulerons comme si aucun favori n'était présent initialement
     this.resultsArray.forEach((product) => {
@@ -127,12 +124,9 @@ export class DisplayResultsComponent implements OnInit {
       product.liked = false;
     });
 
-    console.log('ℹ️ État initial des favoris défini par défaut comme non aimé');
-
     // Cette partie restera active pour mettre à jour l'UI quand les favoris changent
-    this.favoritesService.favoriteProducts$.subscribe((favoriteIds) => {
-      console.log('📋 Liste des IDs favoris mise à jour:', favoriteIds);
-      this.resultsArray.forEach((product) => {
+    this.favoritesService.favoriteProducts$.subscribe(favoriteIds => {
+      this.resultsArray.forEach(product => {
         const isLiked = favoriteIds.includes(product.id);
         if (product.liked !== isLiked) {
           console.log(
@@ -219,13 +213,11 @@ export class DisplayResultsComponent implements OnInit {
 
     // Obtenir l'état actuel si non défini
     if (product.liked === undefined) {
-      console.log('🔍 État du favori non défini, vérification...');
       this.favoritesService.isProductInFavorites(product.id).subscribe(
         (isLiked) => {
           product.liked = isLiked;
           console.log(
-            `📊 Produit ${product.id} - État favori initial: ${
-              isLiked ? 'aimé' : 'non aimé'
+            `📊 Produit ${product.id} - État favori initial: ${isLiked ? 'aimé' : 'non aimé'
             }`
           );
           this.toggleFavoriteState(product);
@@ -277,18 +269,12 @@ export class DisplayResultsComponent implements OnInit {
       );
       // Les détails du produit sont automatiquement sauvegardés par le backend
       this.favoritesService.addToFavorites(product.id).subscribe(
-        (response) => {
-          console.log(
-            `✅ Produit ${product.id} ajouté aux favoris avec succès`,
-            response
-          );
+        response => {
+          console.log(`✅ Produit ${product.id} ajouté aux favoris avec succès`, response);
           product.liked = true;
         },
-        (error) => {
-          console.error(
-            `❌ Erreur lors de l'ajout du produit ${product.id} aux favoris:`,
-            error
-          );
+        error => {
+          console.error(`❌ Erreur lors de l'ajout du produit ${product.id} aux favoris:`, error);
           if (error.status === 401) {
             console.warn('⚠️ Session expirée ou token invalide');
             this.notificationService.showWarning(
@@ -334,6 +320,6 @@ export class DisplayResultsComponent implements OnInit {
       parentDiv.appendChild(placeholder);
     }
 
-    console.log("❌ Erreur de chargement d'image:", img.src);
+    console.log('❌ Erreur de chargement d\'image:', img.src);
   }
 }

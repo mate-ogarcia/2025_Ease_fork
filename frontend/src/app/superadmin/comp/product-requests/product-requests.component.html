@@ -1,35 +1,32 @@
 <div class="product-requests-container">
   <!-- Global loading indicator -->
-  <div class="loading-container" *ngIf="isLoadingRequests">
-    <div class="loading-spinner">
-      <i class="fas fa-spinner spinner-rotate"></i>
+  <app-loading-spinner *ngIf="isLoadingRequests" message="Chargement des demandes de produits et de marques..."
+    size="medium">
+  </app-loading-spinner>
+  <!-- Filters for product requests -->
+  <div class="filter-controls" *ngIf="!isLoadingRequests">
+    <h3>Filtres</h3>
+    <div class="filter-buttons">
+      <button class="filter-btn" [ngClass]="{'active': currentFilter === 'all'}" (click)="setFilter('all')">
+        Toutes les demandes
+      </button>
+      <button class="filter-btn" [ngClass]="{'active': currentFilter === 'add'}" (click)="setFilter('add')">
+        Ajouts
+      </button>
+      <button class="filter-btn" [ngClass]="{'active': currentFilter === 'edit'}" (click)="setFilter('edit')">
+        Modifications
+      </button>
+      <button class="filter-btn" [ngClass]="{'active': currentFilter === 'delete'}" (click)="setFilter('delete')">
+        Suppressions
+      </button>
     </div>
-    <p>Chargement des demandes de produits et de marques...</p>
   </div>
-    <!-- Filters for product requests -->
-    <div class="filter-controls" *ngIf="!isLoadingRequests">
-      <h3>Filtres</h3>
-      <div class="filter-buttons">
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'all'}" (click)="setFilter('all')">
-          Toutes les demandes
-        </button>
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'add'}" (click)="setFilter('add')">
-          Ajouts
-        </button>
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'edit'}" (click)="setFilter('edit')">
-          Modifications
-        </button>
-        <button class="filter-btn" [ngClass]="{'active': currentFilter === 'delete'}" (click)="setFilter('delete')">
-          Suppressions
-        </button>
-      </div>
-    </div>
   <!-- Main content (displayed only when data is loaded) -->
   <div class="requests-content" *ngIf="!isLoadingRequests">
     <!-- Left column: Products + Brands -->
-    
+
     <div class="requests-column">
-      
+
 
       <!-- Product requests list -->
       <div class="requests-list">
@@ -135,7 +132,8 @@
       <!-- Action buttons for saving or canceling -->
       <div class="details-actions" *ngIf="selectedRequest.isEditing">
         <button class="save-btn" (click)="saveRequest()" [disabled]="isSavingRequest">
-          <i class="fas" [ngClass]="{'spinner-rotate fa-spinner': isSavingRequest, 'fa-check': !isSavingRequest}"></i>
+          <i class="fas" *ngIf="!isSavingRequest" class="fa-check"></i>
+          <span *ngIf="isSavingRequest" class="button-spinner"></span>
           {{ isSavingRequest ? 'Enregistrement...' : 'Enregistrer' }}
         </button>
         <button class="cancel-btn" (click)="cancelEdit()" [disabled]="isSavingRequest">

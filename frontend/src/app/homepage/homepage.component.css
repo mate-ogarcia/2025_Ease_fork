@@ -5,24 +5,6 @@
   margin: 0;
 }
 
-/* Style pour le body */
-body {
-  overflow-y: auto;
-  /* Utiliser auto au lieu de scroll pour n'afficher la barre que si nécessaire */
-  background-color: #023436;
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  /* Optimisations pour la fluidité */
-  will-change: transform;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  /* Éviter les saccades lors du défilement */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* Styles généraux */
 .container {
   display: flex;
@@ -37,21 +19,31 @@ body {
   overflow-y: auto;
   /* Optimisations pour la fluidité */
   will-change: transform;
-  /* Indique au navigateur que cet élément va changer, optimisant le rendu */
   -webkit-backface-visibility: hidden;
-  /* Améliore les performances de rendu */
   backface-visibility: hidden;
   transform: translateZ(0);
   /* Force l'accélération matérielle */
+}
+
+.container.vanta-box {
+  min-height: auto;
+  /* Annule le min-height de 100vh du container général */
+  width: 100%;
+  /* Largeur souhaitée pour l'animation Vanta */
+  height: 100vh;
+  /* Hauteur souhaitée pour l'animation Vanta */
+  position: relative;
+  overflow: visible;
+  /* Permet aux éléments débordants (ex. suggestions) de s'afficher */
+  z-index: 0;
+  /* Met un z-index faible afin que d'autres éléments apparaissent par-dessus */
 }
 
 /* Assurer que tous les éléments de l'interface sont au-dessus de l'animation */
 .app-navbar,
 .title,
 .app-searchbar,
-.project-info,
-.settings-icon,
-.settings-menu {
+.info-button {
   position: relative;
   z-index: 10;
 }
@@ -59,14 +51,18 @@ body {
 .app-navbar {
   width: 100%;
   z-index: 100;
-  /* Valeur basse pour la navbar */
 }
 
 .app-searchbar {
   width: 70%;
   height: 50px;
   z-index: 10;
-  /* Valeur réduite pour être sous le panneau d'information */
+  margin-top: 5%;
+}
+
+.app-info {
+  width: 100%;
+  z-index: 10;
 }
 
 /* Gestion du titre */
@@ -77,49 +73,47 @@ body {
   flex-direction: column;
   height: 50%;
   width: 80%;
-  /* Rend plus adaptable sur petits écrans */
   max-width: 600px;
-  /* Évite qu'il devienne trop large */
   gap: 0;
   text-align: center;
   z-index: 1;
 }
 
+.slogan,
+.explication {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.explication {
+  margin-top: 15px;
+}
+
 /* Gestion du texte */
 h1 {
   font-size: 3.6rem;
-  /* Taille fixe pour que le texte reste identique */
   font-weight: 900;
   text-align: center;
   color: #2dd096;
-  font-style: 800;
   line-height: 1.2;
-  /* Ajuste l'espacement entre les lignes */
   word-wrap: break-word;
-  /* Permet de couper le texte si nécessaire */
   max-width: 800px;
-  /* Évite que le texte s'étale trop */
   margin: 0 auto;
 }
 
 h5 {
   font-size: 1.5rem;
-  /* Taille plus petite pour le sous-titre */
   text-align: center;
   color: #ffffff;
   max-width: 700px;
   margin: 0 auto;
 }
 
-/* Lorsque les suggestions sont affichées, enlever le border-radius bas */
-
-
-
-/* Réduction de la taille pour les écrans très petits */
+/* Responsive */
 @media (max-width: 768px) {
   h1 {
     font-size: 2.5em;
-    /* Taille plus adaptée aux mobiles */
   }
 
   h5 {
@@ -127,7 +121,6 @@ h5 {
   }
 }
 
-/* Pour les très petits écrans */
 @media (max-width: 480px) {
   h1 {
     font-size: 2em;
@@ -156,20 +149,17 @@ h5 {
   transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   z-index: 50;
-  /* Valeur la plus basse pour le bouton */
 }
 
-/* Animation rotation au survol */
 .settings-icon.open {
   background-color: #1dd27b;
   transform: rotate(180deg);
 }
 
-/* Menu des paramètres qui s'affiche sous l'engrenage */
+/* Menu des paramètres */
 .settings-menu {
   position: fixed;
   bottom: 75px;
-  /* 🔥 Placé SOUS l'engrenage */
   right: 23px;
   width: 50px;
   height: 120px;
@@ -178,30 +168,24 @@ h5 {
   justify-content: center;
   padding-bottom: 30px;
   border-radius: 20px 20px 0 0;
-  /* 🔥 Coins arrondis en bas */
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   opacity: 0;
-  transform: translateY(-20px) scale(0);
+  transform: translateY(50px);
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
   flex-direction: column;
   gap: 10px;
   pointer-events: none;
   z-index: 49;
-  /* Juste en-dessous du bouton */
-  /* Sous l'engrenage */
-  transform: translateY(50px);
-
 }
 
-/* Apparition fluide du menu */
 .settings-menu.open {
   opacity: 1;
   transform: translateY(20px);
   pointer-events: all;
 }
 
-/* Style des boutons ronds */
+/* Boutons de paramètres */
 .settings-btn {
   width: 50px;
   height: 50px;
@@ -222,26 +206,13 @@ h5 {
   transform: scale(1.1);
 }
 
-
 /* Mode sombre */
 .dark-mode {
   background-color: var(--background-dark);
   color: white;
 }
 
-.dark-mode .settings-menu {
-  background: rgba(50, 50, 50, 0.9);
-}
-
-.dark-mode .settings-btn {
-  background-color: #888;
-}
-
-.dark-mode .settings-btn:hover {
-  background-color: #666;
-}
-
-/* Background clair quand l'animation est désactivée */
+/* Background alternatif */
 .light-gradient-background {
   background: linear-gradient(135deg, #a8e6cf, #d4fc79);
   width: 100%;
@@ -249,50 +220,36 @@ h5 {
   transition: background 0.5s ease-in-out;
 }
 
-/* Style général de la scrollbar */
+/* Styles scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
-  /* Légèrement plus large pour être plus visible */
   height: 10px;
-  /* Hauteur pour le scroll horizontal */
 }
 
-/* Style du "thumb" (la partie défilable) */
 ::-webkit-scrollbar-thumb {
   background: rgba(45, 208, 150, 0.4);
-  /* Couleur verte légère, assortie au thème */
   border-radius: 5px;
-  /* Arrondi modéré */
   border: 1px solid rgba(0, 0, 0, 0.1);
-  /* Bordure légère pour mieux voir la scrollbar */
 }
 
-/* Changement de couleur au survol */
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(45, 208, 150, 0.6);
-  /* Plus visible au survol */
 }
 
-/* Couleur de fond de la scrollbar */
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
-  /* Fond légèrement visible */
   border-radius: 5px;
 }
 
-/* Style spécifique pour Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(45, 208, 150, 0.4) rgba(0, 0, 0, 0.05);
 }
 
-/* Amélioration de la fluidité du défilement */
 html,
 body {
   scroll-behavior: smooth;
-  /* Défilement fluide */
   -webkit-overflow-scrolling: touch;
-  /* Défilement fluide sur iOS */
 }
 
 /* Styles pour la section d'explications du projet */

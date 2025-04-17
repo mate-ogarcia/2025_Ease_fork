@@ -7,8 +7,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, of, tap } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, catchError, of, tap, BehaviorSubject, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 
@@ -32,6 +32,17 @@ export interface SearchHistoryItem {
 }
 
 /**
+ * @interface PaginatedHistory
+ * @brief Interface for paginated history response
+ */
+export interface PaginatedHistory {
+  items: SearchHistoryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
  * @class HistoryService
  * @brief Service that manages user search history
  */
@@ -40,6 +51,18 @@ export interface SearchHistoryItem {
 })
 export class HistoryService {
   private apiUrl = `${environment.globalBackendUrl}/history`;
+
+  // Complete data and pagination
+  private allHistoryItems: SearchHistoryItem[] = [];
+  private historyItemsSubject = new BehaviorSubject<SearchHistoryItem[]>([]);
+  private totalItemsSubject = new BehaviorSubject<number>(0);
+  private currentPageSubject = new BehaviorSubject<number>(1);
+  private pageSizeSubject = new BehaviorSubject<number>(10);
+
+  historyItems$ = this.historyItemsSubject.asObservable();
+  totalItems$ = this.totalItemsSubject.asObservable();
+  currentPage$ = this.currentPageSubject.asObservable();
+  pageSize$ = this.pageSizeSubject.asObservable();
 
   /**
    * @brief Constructor for the history service
@@ -50,7 +73,18 @@ export class HistoryService {
     private http: HttpClient,
     private authService: AuthService
   ) {
-    console.log('🔍 HistoryService initialized - API URL:', this.apiUrl);
+    // Load saved page size from localStorage if available
+    try {
+      const savedPageSize = localStorage.getItem('historyPageSize');
+      if (savedPageSize) {
+        const parsedSize = parseInt(savedPageSize, 10);
+        if (!isNaN(parsedSize) && parsedSize > 0) {
+          this.pageSizeSubject.next(parsedSize);
+        }
+      }
+    } catch (error) {
+      // Error handling silently fails, but service continues
+    }
   }
 
   /**
@@ -60,25 +94,17 @@ export class HistoryService {
    * @returns Observable of the server response
    */
   addToHistory(productId: string, productName: string): Observable<any> {
-    console.log('🔍 addToHistory called with:', { productId, productName });
-
     // Parameter validation
     if (!productId || !productName) {
-      console.warn('⚠️ productId or productName missing:', { productId, productName });
       return of(null);
     }
 
     const userInfo = this.authService.getUserInfo();
-    console.log('🔍 User info retrieved:', userInfo);
-
     const userId = userInfo?.userId || userInfo?.id || userInfo?.email;
 
     if (!userId) {
-      console.warn('⚠️ User not logged in or ID missing:', userInfo);
       return of(null);
     }
-
-    console.log('🔍 userId identified:', userId);
 
     const historyItem: SearchHistoryItem = {
       userId,
@@ -87,74 +113,128 @@ export class HistoryService {
       searchDate: new Date().toISOString()
     };
 
-    console.log('🔍 Sending POST request to:', `${this.apiUrl}/add`);
-    console.log('🔍 Data sent:', historyItem);
-
     return this.http.post(`${this.apiUrl}/add`, historyItem).pipe(
-      tap(response => console.log('✅ History successfully recorded. Response:', response)),
-      catchError(error => {
-        console.error('❌ Error adding to history:', error);
-        console.error('❌ Details:', error.status, error.message, error.error);
+      tap(() => {
+        // Refresh after adding
+        this.loadUserHistory();
+      }),
+      catchError(() => {
         return of(null);
       })
     );
   }
 
   /**
-   * @brief Retrieves the search history of the current user
-   * @returns Observable containing history items
+   * @brief Loads all user history and applies client-side pagination
+   * @returns Observable containing the paginated items
    */
-  getUserHistory(): Observable<SearchHistoryItem[]> {
-    console.log('🔍 getUserHistory called - Debug logs start');
-
+  loadUserHistory(): Observable<PaginatedHistory> {
     const userInfo = this.authService.getUserInfo();
-    console.log('🔍 User info retrieved:', userInfo);
-
     const userId = userInfo?.userId || userInfo?.id || userInfo?.email;
 
     if (!userId) {
-      console.warn('⚠️ User not logged in or ID missing:', userInfo);
-      return of([]);
-    }
-
-    console.log('🔍 userId identified:', userId);
-    console.log('🔍 Sending GET request to:', `${this.apiUrl}/user/${userId}`);
-
-    // Check if there's history cached locally
-    const cachedHistory = localStorage.getItem('searchHistory');
-    if (cachedHistory) {
-      console.warn('⚠️ History found in localStorage:', cachedHistory);
-      try {
-        // Clear to avoid issues
-        localStorage.removeItem('searchHistory');
-      } catch (e) {
-        console.error('❌ Error removing cache:', e);
-      }
-    }
-
-    // Check sessionStorage as well
-    const sessionHistory = sessionStorage.getItem('searchHistory');
-    if (sessionHistory) {
-      console.warn('⚠️ History found in sessionStorage:', sessionHistory);
-      try {
-        // Clear to avoid issues
-        sessionStorage.removeItem('searchHistory');
-      } catch (e) {
-        console.error('❌ Error removing session cache:', e);
-      }
+      this.allHistoryItems = [];
+      this.updatePaginatedData();
+      return of({ items: [], total: 0, page: 1, pageSize: 10 });
     }
 
     return this.http.get<SearchHistoryItem[]>(`${this.apiUrl}/user/${userId}`).pipe(
-      tap(items => {
-        console.log('✅ API: History successfully retrieved. Number of items:', items.length);
-        console.log('✅ API: History content:', JSON.stringify(items, null, 2));
+      tap(results => {
+        this.allHistoryItems = results || [];
+        this.totalItemsSubject.next(this.allHistoryItems.length);
+        this.updatePaginatedData();
       }),
-      catchError(error => {
-        console.error('❌ Error retrieving history:', error);
-        console.error('❌ Details:', error.status, error.message, error.error);
-        return of([]);
+      map(results => {
+        const page = this.currentPageSubject.value;
+        const pageSize = this.pageSizeSubject.value;
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+
+        return {
+          items: this.allHistoryItems.slice(startIndex, endIndex),
+          total: this.allHistoryItems.length,
+          page,
+          pageSize
+        };
+      }),
+      catchError(() => {
+        this.allHistoryItems = [];
+        this.updatePaginatedData();
+        return of({ items: [], total: 0, page: 1, pageSize: 10 });
       })
     );
+  }
+
+  /**
+   * @brief Updates the paginated data based on current page and size
+   * @private
+   */
+  private updatePaginatedData(): void {
+    const page = this.currentPageSubject.value;
+    const pageSize = this.pageSizeSubject.value;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    // Slice the array to get only the items for current page
+    const paginatedItems = this.allHistoryItems.slice(startIndex, endIndex);
+    this.historyItemsSubject.next(paginatedItems);
+  }
+
+  /**
+   * @brief Updates the current page without making an API call
+   * @param page The page number (starts at 1)
+   */
+  setPage(page: number): void {
+    if (page < 1) {
+      return;
+    }
+
+    const maxPage = Math.ceil(this.allHistoryItems.length / this.pageSizeSubject.value) || 1;
+    if (page > maxPage) {
+      page = maxPage;
+    }
+
+    this.currentPageSubject.next(page);
+    this.updatePaginatedData();
+  }
+
+  /**
+   * @brief Updates the page size without making an API call
+   * @param pageSize The new page size
+   */
+  setPageSize(pageSize: number): void {
+    if (pageSize <= 0) {
+      return;
+    }
+
+    // Update the page size subject
+    this.pageSizeSubject.next(pageSize);
+
+    // Update pagination data with new page size
+    this.updatePaginatedData();
+  }
+
+  /**
+   * @brief For compatibility with existing code
+   * @deprecated Use loadUserHistory instead
+   */
+  getUserHistoryPaginated(page: number = 1, pageSize: number = 10): Observable<PaginatedHistory> {
+    this.currentPageSubject.next(page);
+    this.pageSizeSubject.next(pageSize);
+
+    // If we already have loaded data, just update the pagination
+    if (this.allHistoryItems.length > 0) {
+      this.updatePaginatedData();
+      return of({
+        items: this.historyItemsSubject.value,
+        total: this.allHistoryItems.length,
+        page,
+        pageSize
+      });
+    }
+
+    // Otherwise load all the data
+    return this.loadUserHistory();
   }
 
   /**
@@ -163,14 +243,12 @@ export class HistoryService {
    * @returns Observable of the server response
    */
   deleteHistoryItem(historyId: string): Observable<any> {
-    console.log('🔍 deleteHistoryItem called for ID:', historyId);
-    console.log('🔍 Sending DELETE request to:', `${this.apiUrl}/${historyId}`);
-
     return this.http.delete(`${this.apiUrl}/${historyId}`).pipe(
-      tap(response => console.log('✅ History item successfully deleted. Response:', response)),
-      catchError(error => {
-        console.error('❌ Error deleting history item:', error);
-        console.error('❌ Details:', error.status, error.message, error.error);
+      tap(() => {
+        // Refresh data after deletion
+        this.loadUserHistory().subscribe();
+      }),
+      catchError(() => {
         return of(null);
       })
     );
@@ -181,28 +259,37 @@ export class HistoryService {
    * @returns Observable of the server response
    */
   clearUserHistory(): Observable<any> {
-    console.log('🔍 clearUserHistory called');
-
     const userInfo = this.authService.getUserInfo();
-    console.log('🔍 User info retrieved:', userInfo);
-
     const userId = userInfo?.userId || userInfo?.id || userInfo?.email;
 
     if (!userId) {
-      console.warn('⚠️ User not logged in or ID missing:', userInfo);
       return of(null);
     }
 
-    console.log('🔍 userId identified:', userId);
-    console.log('🔍 Sending DELETE request to:', `${this.apiUrl}/user/${userId}/clear`);
-
     return this.http.delete(`${this.apiUrl}/user/${userId}/clear`).pipe(
-      tap(response => console.log('✅ History completely deleted successfully. Response:', response)),
-      catchError(error => {
-        console.error('❌ Error deleting history:', error);
-        console.error('❌ Details:', error.status, error.message, error.error);
+      tap(() => {
+        // Reset local data
+        this.allHistoryItems = [];
+        this.historyItemsSubject.next([]);
+        this.totalItemsSubject.next(0);
+        this.currentPageSubject.next(1);
+      }),
+      catchError(() => {
         return of(null);
       })
     );
+  }
+
+  /**
+   * @brief Clears any locally cached history data
+   * @private
+   */
+  private clearLocalCache(): void {
+    try {
+      localStorage.removeItem('searchHistory');
+      sessionStorage.removeItem('searchHistory');
+    } catch (e) {
+      // Silently fail
+    }
   }
 }

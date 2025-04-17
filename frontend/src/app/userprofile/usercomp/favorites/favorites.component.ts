@@ -7,10 +7,13 @@ import { FavoritesService } from '../../../../services/favorites/favorites.servi
 import { NotificationService } from '../../../../services/notification/notification.service';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 
+// Shared Components
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+
 @Component({
   selector: 'app-favorites',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingSpinnerComponent],
   templateUrl: './favorites.component.html',
   styleUrls: ['./favorites.component.css']
 })
@@ -90,7 +93,6 @@ export class FavoritesComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des favoris:', error);
         this.errorMessage = 'Impossible de charger vos favoris. Veuillez réessayer plus tard.';
         this.isLoading = false;
       }
@@ -108,15 +110,12 @@ export class FavoritesComponent implements OnInit {
           next: (response) => {
             if (response.imageUrl) {
               product.image = response.imageUrl;
-              console.log(`✅ Image chargée pour ${product.name}`);
             } else {
-              console.warn(`🚫 Aucune image trouvée pour ${product.name}`);
               // Ne pas définir d'image par défaut qui n'existe pas
               product.image = null;
             }
           },
           error: (err) => {
-            console.error(`❌ Erreur de récupération d'image pour ${product.name}:`, err);
             product.image = null;
           }
         });
@@ -146,7 +145,6 @@ export class FavoritesComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Erreur lors de la suppression du favori:', error);
         this.notificationService.showError('Erreur lors de la suppression du favori');
       }
     });
@@ -166,24 +164,9 @@ export class FavoritesComponent implements OnInit {
    */
   handleImageError(event: any): void {
     const img = event.target;
-    img.style.display = 'none'; // Cache l'élément img qui a échoué
-
-    // On peut aussi ajouter un fond de couleur à l'élément parent
-    const parentDiv = img.parentElement;
-    if (parentDiv) {
-      parentDiv.style.backgroundColor = '#f0f0f0';
-
-      // Optionnellement, ajouter un texte ou une icône à la place
-      const placeholder = document.createElement('div');
-      placeholder.style.height = '100%';
-      placeholder.style.display = 'flex';
-      placeholder.style.alignItems = 'center';
-      placeholder.style.justifyContent = 'center';
-      placeholder.style.color = '#999';
-      placeholder.innerText = '🖼️';
-      parentDiv.appendChild(placeholder);
+    const product = this.favorites.find(p => p.image === img.src);
+    if (product) {
+      product.image = null;
     }
-
-    console.log('❌ Erreur de chargement d\'image:', img.src);
   }
 } 

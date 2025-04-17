@@ -19,8 +19,8 @@
         <i class="fa-solid fa-tags"></i>Catégories
       </a>
     </li>
-    <li>
-      <a class="nav-btn" routerLink="/add-product" *ngIf="canAddProduct">
+    <li *ngIf="canAddProduct">
+      <a class="nav-btn" routerLink="/add-product">
         <i class="fa-solid fa-plus"></i>Add Product
       </a>
     </li>

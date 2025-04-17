@@ -1,9 +1,7 @@
 <div class="favorites-container">
   <!-- Indicateur de chargement -->
-  <div class="loading-container" *ngIf="isLoading">
-    <div class="loading-spinner"></div>
-    <p>Chargement de vos favoris...</p>
-  </div>
+  <app-loading-spinner *ngIf="isLoading" message="Chargement de vos favoris..." size="medium">
+  </app-loading-spinner>
 
   <!-- Message d'erreur -->
   <div class="error-message" *ngIf="errorMessage">
@@ -25,8 +23,16 @@
       <div class="favorites-grid">
         <div class="favorite-card" *ngFor="let favorite of paginatedFavorites"
           (click)="viewProductDetails(favorite.productId)">
-          <div class="favorite-image">
-            <img [src]="favorite.image" [alt]="favorite.name" (error)="handleImageError($event)">
+          <div class="img-container">
+            <ng-container *ngIf="favorite.image; else noImage">
+              <img class="product-image" [src]="favorite.image" [alt]="favorite.name"
+                (error)="handleImageError($event)">
+            </ng-container>
+            <ng-template #noImage>
+              <div class="placeholder-image">
+                <div class="placeholder-icon">🖼️</div>
+              </div>
+            </ng-template>
           </div>
 
           <div class="favorite-category-label" *ngIf="favorite.category">

@@ -12,11 +12,12 @@ import { DataCacheService } from '../../../services/cache/data-cache.service';
 import { ApiService } from '../../../services/api.service';
 import { Product } from '../../models/product.model';
 import { first, forkJoin } from 'rxjs';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './form.component.html',
   styleUrls: ['./form.component.css']
 })
@@ -29,6 +30,7 @@ export class FormComponent implements OnInit {
   selectedBrand: string = '';     // Stores selected brand.
   isOtherBrand: boolean = false;  // Flag to check if a new brand is being added.
   newBrand: string = '';          // Stores the new brand name entered by the user.
+  isSubmitting: boolean = false;  // Flag to track form submission state
   // Product object model.
   product: Product = {
     id: '',
@@ -112,6 +114,8 @@ export class FormComponent implements OnInit {
       return;
     }
 
+    this.isSubmitting = true;
+
     let newBrandInfo = null;
     if (this.isOtherBrand && this.newBrand.trim() !== '') {
       newBrandInfo = {
@@ -128,11 +132,13 @@ export class FormComponent implements OnInit {
 
     this.apiService.postAddProduct(payload).subscribe({
       next: () => {
+        this.isSubmitting = false;
         alert("Product submitted for admin review!");
         this.dataCacheService.refreshBrands();
         this.onCancel();
       },
       error: (err) => {
+        this.isSubmitting = false;
         console.error("❌ API Error:", err);
 
         if (err.status === 400) {
@@ -143,7 +149,6 @@ export class FormComponent implements OnInit {
           alert("An unknown error has occurred.");
         }
       }
-
     });
   }
 

@@ -6,10 +6,10 @@ import { OpenFoodFactsModule } from "src/apiServices/openFoodFacts/openFoodFacts
 @Module({
   providers: [ProductsService],
   imports: [
-    DatabaseModule, 
+    DatabaseModule,
     OpenFoodFactsModule
   ],
   controllers: [ProductsController],
   exports: [ProductsService],
 })
-export class ProductsModule {}
+export class ProductsModule { }

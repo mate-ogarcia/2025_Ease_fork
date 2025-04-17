@@ -22,9 +22,6 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const cookieService = inject(CookieService);
 
   // Retrieve environment information
-  const isLocalhost = window.location.hostname === 'localhost';
-  const protocol = window.location.protocol;
-  const hostname = window.location.hostname;
 
   // Check if the request is for the internal API or OpenStreetMap
   const isApiRequest = !req.url.includes('localhost:4200') &&
@@ -49,14 +46,19 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
     // Add the token only for internal API requests
     if (isApiRequest) {
-      // Existing code to add the token...
+      // Vérifier d'abord les cookies
       let token = cookieService.get('accessToken');
+      let tokenSource = 'cookie';
 
-      // If the token is not found in cookies, check localStorage
-      if (!token && localStorage.getItem('accessToken')) {
+      // Log des cookies disponibles
+      const allCookies = cookieService.getAll();
+
+      // Si le token n'est pas dans les cookies, vérifier le localStorage
+      if (!token) {
         const storedToken = localStorage.getItem('accessToken');
         if (storedToken) {
           token = storedToken;
+          tokenSource = 'localStorage';
         }
       }
 
@@ -66,22 +68,20 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
             Authorization: `Bearer ${token}`
           }
         });
+      } else {
+        console.error('❌ No token found in either cookies or localStorage');
       }
     }
   }
 
   return next(newReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Gestion des erreurs HTTP
-      if (error.status === 0) {
-        // Erreur de connexion (serveur indisponible)
-        console.warn('Erreur de connexion au serveur. Le serveur est peut-être en cours de redémarrage.');
-      } else if (error.status === 401) {
-        // Erreur d'authentification, mais ne pas supprimer les tokens - ce sera géré par le service d'authentification
-        console.warn('Erreur d\'authentification détectée par l\'intercepteur.');
+      if (error.status === 401) {
+        // Clear both cookie and localStorage
+        cookieService.delete('accessToken', '/');
+        localStorage.removeItem('accessToken');
+        router.navigate(['/auth']);
       }
-
-      // Propager l'erreur pour traitement ultérieur
       return throwError(() => error);
     })
   );

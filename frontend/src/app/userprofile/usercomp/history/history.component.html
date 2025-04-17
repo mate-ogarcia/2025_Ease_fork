@@ -1,60 +1,66 @@
-<div class="container">
-  <!-- Button to change view mode -->
-  <div class="header-actions">
-    <h2 class="history-title">Historique</h2>
-    <div class="action-buttons">
-      <div class="grid-btn">
-        <button [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')" aria-label="Mode liste">
-          <i class="fa-solid fa-list"></i>
-        </button>
-        <button [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')" aria-label="Mode grille">
-          <i class="fa-solid fa-grip"></i>
-        </button>
-      </div>
-      <!-- Action buttons -->
-      <button class="refresh-btn" (click)="loadHistory()" aria-label="Actualiser">
-        <i class="fa-solid fa-refresh"></i> Actualiser
-      </button>
-      <button class="clear-btn" (click)="clearHistory()" aria-label="Effacer l'historique">
-        <i class="fa-solid fa-trash"></i> Effacer l'historique
-      </button>
+<div class="history-container">
+  <div class="history-header">
+    <h2>Historique de recherche</h2>
+    <button class="btn-clear" (click)="clearHistory()" [disabled]="isLoading || totalItems === 0">
+      <i class="fas fa-trash-alt"></i> Effacer tout l'historique
+    </button>
+  </div>
+
+  <div class="history-content">
+    <!-- Utilisation du composant LoadingSpinner -->
+    <app-loading-spinner *ngIf="isLoading" message="Chargement de votre historique..."
+      size="medium"></app-loading-spinner>
+
+    <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+    <div *ngIf="!isLoading && (!resultsArray || resultsArray.length === 0)" class="no-history">
+      <p>Aucun historique de recherche disponible.</p>
     </div>
-  </div>
 
-  <!-- Loading indicator -->
-  <div class="loading-container" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Chargement de l'historique...</p>
-  </div>
-
-  <!-- Main content -->
-  <div class="result-container" *ngIf="!isLoading">
-    <!-- History found -->
-    <div class="item-container" *ngIf="resultsArray.length > 0; else noResults">
-      <!-- Add conditional class based on view mode -->
-      <ul class="items-list" [ngClass]="viewMode">
-        <li class="search-item" *ngFor="let item of resultsArray; let i = index; trackBy: trackByProduct">
-          <div class="search-item-content" (click)="searchAgain(item)" tabindex="0">
-            <i class="fa-solid fa-history search-icon"></i>
-            <div class="search-details">
-              <h3 class="search-term">{{ getSearchTerm(item) }}</h3>
-              <p class="search-date" *ngIf="item.searchDate">{{ item.searchDate | date:'dd/MM/yyyy HH:mm' }}</p>
-            </div>
+    <ul *ngIf="!isLoading && resultsArray && resultsArray.length > 0" class="history-list">
+      <li class="history-item" *ngFor="let item of resultsArray; trackBy: trackByProduct" (click)="searchAgain(item)">
+        <div class="item-content">
+          <div class="item-details">
+            <h3 class="item-name">{{ getSearchTerm(item) }}</h3>
+            <p class="item-date">{{ item.searchDate | date:'dd/MM/yyyy HH:mm' }}</p>
           </div>
-          <button class="delete-item-btn" (click)="deleteHistoryItem(item, $event)"
-            aria-label="Supprimer de l'historique">
-            <i class="fa-solid fa-times"></i>
+          <button class="btn-delete" [disabled]="item.isDeleting" (click)="deleteHistoryItem(item, $event)">
+            <i *ngIf="!item.isDeleting" class="fas fa-times"></i>
+            <!-- On garde le mini-loader en CSS pour la cohérence visuelle -->
+            <div *ngIf="item.isDeleting" class="mini-loader"></div>
           </button>
-        </li>
-      </ul>
-    </div>
+        </div>
+      </li>
+    </ul>
 
-    <!-- No results -->
-    <ng-template #noResults>
-      <div class="no-results">
-        <p>Aucun historique de recherche trouvé.</p>
-        <p>Recherchez des produits pour les voir apparaître ici.</p>
+    <!-- Pagination controls -->
+    <div class="pagination-controls" *ngIf="totalItems > 0">
+      <div class="page-size-selector">
+        <label for="pageSize">Éléments par page:</label>
+        <select id="pageSize" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+          <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
+        </select>
       </div>
-    </ng-template>
+
+      <nav aria-label="Pagination de l'historique" *ngIf="pages.length > 1">
+        <ul class="pagination">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1">
+              <span aria-hidden="true">&laquo;</span> Précédent
+            </button>
+          </li>
+
+          <li class="page-item" *ngFor="let page of pages" [class.active]="page === currentPage">
+            <button class="page-link" (click)="onPageChange(page)">{{ page }}</button>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage === pages.length">
+            <button class="page-link" (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === pages.length">
+              Suivant <span aria-hidden="true">&raquo;</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
   </div>
 </div>

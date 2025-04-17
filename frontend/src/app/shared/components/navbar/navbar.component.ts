@@ -65,7 +65,6 @@ export class NavbarComponent implements OnInit {
   private checkIfHomePage(): void {
     const currentUrl = this.router.url;
     this.isHomePage = currentUrl === '/' || currentUrl === '/home';
-    console.log('Route actuelle:', currentUrl, 'isHomePage:', this.isHomePage);
   }
 
   /**
@@ -97,7 +96,7 @@ export class NavbarComponent implements OnInit {
    */
   @HostListener('window:resize', ['$event'])
   checkScreenSize() {
-    this.isMobile = window.innerWidth <= 850;
+    this.isMobile = window.innerWidth <= 1250;
   }
 
   /**

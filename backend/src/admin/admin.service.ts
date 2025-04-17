@@ -11,7 +11,7 @@ import { DatabaseService } from "src/database/database.service";
  * @brief Service responsible for handling administrative operations.
  * 
  * This service interacts with the database layer to retrieve product requests 
- * that require administrative review.
+ * that require administrative review and manage entity updates.
  */
 export class AdminService {
   constructor(
@@ -21,10 +21,10 @@ export class AdminService {
   /**
    * @brief Retrieves product requests from the database.
    * 
-   * @return {Promise<any>} - A promise resolving to an array of product requests.
+   * @returns {Promise<any[]>} - A promise resolving to an array of product requests.
    * @throws {InternalServerErrorException} - If an error occurs during retrieval.
    */
-  async getRequestsProduct(): Promise<any> {
+  async getRequestsProduct(): Promise<any[]> {
     try {
       // Fetch product requests from the database service
       const requests = await this.databaseService.getRequests();
@@ -69,5 +69,4 @@ export class AdminService {
       throw new Error(`Error updating the ${type}`);
     }
   }
-
 }

@@ -1,17 +1,33 @@
 <div class="container">
   <div class="search-container" [class.has-suggestions]="hasSuggestions">
-    <!-- Barre de chargement animée -->
-    <div *ngIf="isLoading" class="loading-bar"></div>
-
-    <!-- Search field -->
+    <!-- Search field with loading and no results indicators inside -->
     <input type="text" placeholder="Rechercher..." [(ngModel)]="searchQuery" (keydown.enter)="onEnter($event)"
       (input)="onInputChange($event)" />
 
+    <!-- No results message inside search bar -->
+    <div *ngIf="noResultsMessage && !isLoading" class="search-status-indicator no-results-indicator">
+      <span>{{ noResultsMessage }}</span>
+      <span *ngIf="canAddProduct" class="add-product-hint">Cliquez sur <i class="fa-solid fa-plus"></i> pour
+        l'ajouter</span>
+      <button *ngIf="canAddProduct" class="add-product-btn" (click)="addNewProduct()" title="Ajouter ce produit">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+
     <!-- Buttons -->
-    <button class="search-btn" (click)="clearSearch()">✖</button>
-    <button class="filter-btn" title="Filters" (click)="toggleFilterDropdown()">
-      <i class="fa-solid fa-filter"></i>
-    </button>
+    <div class="action-buttons">
+      <!-- Loading indicator or clear button - taking exactly the same position -->
+      <div class="search-btn-container">
+        <button *ngIf="!isLoading" class="search-btn" (click)="clearSearch()" title="Effacer la recherche">✖</button>
+        <div *ngIf="isLoading" class="search-status-indicator loading-indicator">
+          <div class="search-spinner"></div>
+        </div>
+      </div>
+
+      <button class="filter-btn" title="Filtres" (click)="toggleFilterDropdown()">
+        <i class="fa-solid fa-filter"></i>
+      </button>
+    </div>
 
     <!-- Search suggestions -->
     <div class="suggestions" [class.show]="searchResults.length > 0">
@@ -20,11 +36,6 @@
           {{ result.name }} - {{ result.description }}
         </li>
       </ul>
-    </div>
-
-    <!-- No results message -->
-    <div *ngIf="noResultsMessage" class="no-results-message">
-      <p>{{ noResultsMessage }}</p>
     </div>
 
     <!-- Filter dropdown -->

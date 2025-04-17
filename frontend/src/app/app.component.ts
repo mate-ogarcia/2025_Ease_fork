@@ -7,12 +7,13 @@
  */
 
 import { Component, OnInit, Renderer2 } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataCacheService } from '../services/cache/data-cache.service';
 import { AuthService } from '../services/auth/auth.service';
 import { timer, of, from, throwError } from 'rxjs';
-import { retry, delay, catchError, mergeMap } from 'rxjs/operators';
+import { retry, delay, catchError, mergeMap, filter } from 'rxjs/operators';
+import { SettingsButtonComponent } from './shared/components/settings-button/settings-button.component';
 
 declare global {
   interface Window {
@@ -26,6 +27,7 @@ declare global {
   imports: [
     CommonModule,   // Provides Angular common directives.
     RouterModule,   // Enables navigation between application routes.
+    SettingsButtonComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -33,6 +35,7 @@ declare global {
 export class AppComponent implements OnInit {
   title = 'Ease';
   private readonly MIN_LOADING_TIME = 2000; // Temps minimum d'affichage du chargement en ms
+  isHomePage: boolean = false;
 
   /**
    * @brief Constructor for AppComponent.
@@ -41,11 +44,13 @@ export class AppComponent implements OnInit {
    * @param dataCacheService Service for preloading and caching data from the backend.
    * @param authService Service for managing authentication state.
    * @param renderer Renderer2 pour manipuler le DOM de manière sécurisée.
+   * @param router Router for navigation and route management.
    */
   constructor(
     private dataCacheService: DataCacheService,
     private authService: AuthService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private router: Router
   ) { }
 
   /**
@@ -63,7 +68,6 @@ export class AppComponent implements OnInit {
 
     // Initialiser l'état d'authentification avec un timeout pour éviter un blocage
     const authTimeout = setTimeout(() => {
-      console.log('⚠️ Timeout lors de l\'initialisation de l\'état d\'authentification');
       this.completeInitialization(startTime);
     }, 5000); // Augmenter le timeout à 5 secondes pour laisser le temps aux tentatives
 
@@ -74,7 +78,6 @@ export class AppComponent implements OnInit {
         catchError(error => {
           if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
             // Le serveur est peut-être en train de redémarrer, essayer à nouveau
-            console.log('🔄 Tentative de reconnexion au backend...');
             return throwError(() => error);
           }
           // Pour les autres erreurs (comme 401), ne pas réessayer
@@ -85,7 +88,6 @@ export class AppComponent implements OnInit {
           delay: (error, retryCount) => {
             // Délai exponentiel: 1s, 2s, 4s
             const delayTime = Math.pow(2, retryCount - 1) * 1000;
-            console.log(`⏱️ Nouvel essai dans ${delayTime / 1000}s...`);
             return timer(delayTime);
           }
         })
@@ -93,16 +95,24 @@ export class AppComponent implements OnInit {
       .subscribe({
         next: () => {
           clearTimeout(authTimeout);
-          console.log('✅ État d\'authentification initialisé');
           this.completeInitialization(startTime);
         },
         error: (err) => {
           clearTimeout(authTimeout);
-          console.log('❌ Erreur lors de l\'initialisation de l\'état d\'authentification après plusieurs tentatives', err);
           // Continuer sans redirection, juste terminer l'écran de chargement
           this.completeInitialization(startTime);
         }
       });
+
+    // Vérification initiale si nous sommes sur la page d'accueil
+    this.checkIfHomePage();
+
+    // Surveille les changements de route
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkIfHomePage();
+    });
   }
 
   /**
@@ -142,6 +152,14 @@ export class AppComponent implements OnInit {
         }
       }, 300); // Délai pour s'assurer que le contenu est prêt
     }, remainingTime);
+  }
+
+  /**
+   * @brief Vérifie si la route actuelle est la page d'accueil
+   */
+  private checkIfHomePage(): void {
+    const currentUrl = this.router.url;
+    this.isHomePage = currentUrl === '/' || currentUrl === '/home';
   }
 }
 

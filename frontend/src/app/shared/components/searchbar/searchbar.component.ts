@@ -114,7 +114,7 @@ export class SearchbarComponent implements OnInit {
             }));
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5); // Show top 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length ? '' : 'Aucun produit trouvé';
             return of(null);
           }
           this.isLoading = true;  // Display a loading message
@@ -165,12 +165,11 @@ export class SearchbarComponent implements OnInit {
             ];
             this.fullSearchResults = combinedResults;
             this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found.';
+            this.noResultsMessage = this.searchResults.length ? '' : 'Aucun produit trouvé';
           }
         },
         error: (error) => {
           this.isLoading = false;
-          console.error('❌ Error during search:', error);
         },
       });
   }
@@ -200,7 +199,7 @@ export class SearchbarComponent implements OnInit {
     // Get the cookie's info
     const userRole = this.usersService.getUserRole();
     // Check if the role allows you to add a product
-    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin';
+    this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
   }
 
   // ======================== RESEARCH FUNCTIONS
@@ -258,7 +257,14 @@ export class SearchbarComponent implements OnInit {
   clearSearch() {
     this.searchQuery = '';
     this.searchResults = [];
+    this.fullSearchResults = [];
     this.noResultsMessage = '';
+    this.selectedProduct = '';
+    this.wholeSelectedProduct = null;
+    this.isLoading = false;
+
+    // Fermer le dropdown des filtres si ouvert
+    this.filterDropdownOpen = false;
   }
 
   /**
@@ -286,12 +292,9 @@ export class SearchbarComponent implements OnInit {
    * @param product The product or search term
    */
   private addToHistory(product: any): void {
-    console.log('🔍 searchbar.addToHistory appelé avec:', product);
-
     // If it's a direct search (Enter key press), use the raw search term
     if (!product && this.searchQuery && this.searchQuery.trim() !== '') {
       const searchTerm = this.searchQuery.trim();
-      console.log('🔍 Utilisation du terme de recherche direct:', searchTerm);
 
       // Create a simple object for history
       const historyItem = {
@@ -302,21 +305,13 @@ export class SearchbarComponent implements OnInit {
       this.historyService.addToHistory(
         historyItem.id,
         searchTerm  // Use the search term directly
-      ).subscribe({
-        next: (response) => {
-          console.log(`✅ Terme "${searchTerm}" ajouté à l'historique:`, response);
-        },
-        error: (err) => {
-          console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
-        }
-      });
+      ).subscribe();
 
       return;
     }
 
     // Default behavior for product selections
     if (!product || !product.id) {
-      console.warn('⚠️ Produit invalide pour l\'historique:', product);
       return;
     }
 
@@ -326,22 +321,10 @@ export class SearchbarComponent implements OnInit {
     // const sourceInfo = product.source ? ` (${product.source})` : '';
     const fullProductName = productName; // Just the product name
 
-    console.log('🔍 Envoi à l\'historique:', {
-      id: product.id,
-      name: fullProductName
-    });
-
     this.historyService.addToHistory(
       product.id,
       fullProductName
-    ).subscribe({
-      next: (response) => {
-        console.log(`✅ Produit "${fullProductName}" ajouté à l'historique:`, response);
-      },
-      error: (err) => {
-        console.error('❌ Erreur lors de l\'ajout à l\'historique:', err);
-      }
-    });
+    ).subscribe();
   }
 
   /**
@@ -367,15 +350,11 @@ export class SearchbarComponent implements OnInit {
       this.historyService.addToHistory(
         filterId,
         filterDescription
-      ).subscribe({
-        next: (response) => console.log('✅ Recherche par filtres ajoutée à l\'historique:', response),
-        error: (err) => console.error('❌ Erreur lors de l\'ajout à l\'historique:', err)
-      });
+      ).subscribe();
     }
 
     // Warn if no filters or selected product is present
     if (!includeSelectedProduct && !Object.keys(this.appliedFilters).length) {
-      console.warn('⚠️ No filters applied.');
       return;
     }
     const filtersToSend = {
@@ -386,11 +365,17 @@ export class SearchbarComponent implements OnInit {
     };
 
     this.isLoading = true;
+    this.noResultsMessage = ''; // Réinitialiser le message d'erreur
 
     // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
         this.isLoading = false;
+
+        if (!response || response.length === 0) {
+          this.noResultsMessage = 'Aucun produit trouvé avec ces critères';
+          return;
+        }
 
         // History saving is already done in onEnter
 
@@ -404,7 +389,10 @@ export class SearchbarComponent implements OnInit {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
         });
       },
-      error: (error) => console.error('❌ Search error:', error),
+      error: (error) => {
+        this.isLoading = false;
+        this.noResultsMessage = 'Erreur lors de la recherche. Veuillez réessayer.';
+      },
     });
   }
 
@@ -501,5 +489,21 @@ export class SearchbarComponent implements OnInit {
    */
   toggleFilterDropdown() {
     this.filterDropdownOpen = !this.filterDropdownOpen;
+  }
+
+  /**
+   * @function addNewProduct
+   * @description Redirects to the product addition page with the current search query
+   * as a suggested product name when no results are found.
+   */
+  addNewProduct() {
+    if (this.searchQuery.trim() !== '') {
+      this.router.navigate(['/add-product'], {
+        state: {
+          suggestedName: this.searchQuery.trim(),
+          source: 'search_not_found'
+        }
+      });
+    }
   }
 } 

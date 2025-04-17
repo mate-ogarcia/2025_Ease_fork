@@ -21,11 +21,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 // API Service
 import { AdminService } from '../../../../services/admin/admin.service';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-product-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './product-requests.component.html',
   styleUrls: ['./product-requests.component.css']
 })
@@ -235,7 +236,6 @@ export class ProductRequestsComponent implements OnInit {
         { status }
       );
 
-      console.log(`Status successfully updated:`, response);
     } catch (error) {
       console.error("❌ Error updating status:", error);
     }

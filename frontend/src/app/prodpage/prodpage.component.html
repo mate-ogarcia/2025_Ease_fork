@@ -1,101 +1,93 @@
 <div class="container">
-    <app-navbar class="app-navbar"></app-navbar>
+  <app-navbar class="app-navbar"></app-navbar>
 
-    <div class="prod-container" *ngIf="product">
-      <div class="product-details">
-        <!-- Left Section: Image -->
-        <div class="image-gallery">
+  <div class="prod-container" *ngIf="product">
+    <div class="product-details">
+      <!-- Left Section: Image -->
+      <div class="image-gallery">
         <div class="main-image-container">
-          <img
-            class="product-image"
-            [src]="product.image || 'assets/placeholder.jpg'"
-                       
-            alt="{{ product.name }}"
-          />
+          <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}" />
         </div>
+      </div>
+
+      <!-- Right Section: Product Info -->
+      <div class="product-info">
+        <span class="category">{{ product.category }}</span>
+        <h2 class="product-name">{{ product.name }}</h2>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <!-- Bouton favori/like -->
+          <div class="favorite-button" *ngIf="isAuthenticated">
+            <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
+          </div>
         </div>
 
-        <!-- Right Section: Product Info -->
-        <div class="product-info">
-          <span class="category">{{ product.category }}</span>
-          <h2 class="product-name">{{ product.name }}</h2>
-
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <!-- Bouton favori/like -->
-                    <div class="favorite-button" *ngIf="isAuthenticated">
-                        <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
-                    </div>
-                </div>
-
-          <!-- Rating + Reviews -->
-          <div class="rating">
-            <div class="stars-container">
+        <!-- Rating + Reviews -->
+        <div class="rating">
+          <div class="stars-container">
             <div class="stars-background">★★★★★</div>
-              <div class="stars-filled" [style.width.%]="(avgRate/5)*100">★★★★★</div>
+            <div class="stars-filled" [style.width.%]="(avgRate/5)*100">★★★★★</div>
           </div>
           <span class="review-count">{{ avgRate }} ({{ commentCount }} Commentaires)</span>
-          </div>
+        </div>
 
-          <!-- Description -->
-          <p class="product-description">
-            {{ product.description }}
-          </p>
+        <!-- Description -->
+        <p class="product-description">
+          {{ product.description }}
+        </p>
 
-          <!-- ID & Tags -->
-          <div class="extra-info">
-            <span class="id">ID du produit: {{ productId }}</span>
-          </div>
+        <!-- ID & Tags -->
+        <div class="extra-info">
+          <span class="id">ID du produit: {{ productId }}</span>
         </div>
       </div>
-
-    <!-- Navigation Tabs (PLACED BELOW PRODUCT SECTION) -->
-    <div class="tabs-container">
-      <div class="tabs">
-        <button
-          class="tab-btn"
-          [class.active]="selectedTab === 'description'"
-          (click)="selectTab('description')"
-        >
-          Description
-        </button>
-        <button
-          class="tab-btn"
-          [class.active]="selectedTab === 'info'"
-          (click)="selectTab('info')"
-        >
-          Informations supplémentaires
-        </button>
-        <button
-          class="tab-btn"
-          [class.active]="selectedTab === 'review'"
-          (click)="selectTab('review')"
-        >
-          Avis
-        </button>
+    </div>
+    <!-- id & Tags -->
+    <div class="extra-info">
+      <span class="id">ID product: {{productId}}</span>
+    </div>
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <!-- Bouton favori/like -->
+      <div class="favorite-button" *ngIf="isAuthenticated">
+        <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
       </div>
+    </div>
+  </div>
+</div>
 
-      <!-- Dynamic content based on selected tab -->
-      <div class="tab-content">
-        <div *ngIf="selectedTab === 'description'">
-          <p>
-            {{ product.description }}
-          </p>
-        </div>
-        <div *ngIf="selectedTab === 'info'">
-          <p>
-            Origine : <b>{{ product.origin || "Inconnue" }}</b>
-          </p>
-          <span class="tags">Tags: {{ product.tags }}</span>
-        </div>
-        <!-- Comments section -->
-        <div *ngIf="selectedTab === 'review'">
-          <app-comments-section
-            [productId]="productId"
-            [productSource]="productSource">
-          </app-comments-section>
-        </div>        
-      </div>
+<!-- Navigation Tabs (PLACED BELOW PRODUCT SECTION) -->
+<div class="tabs-container">
+  <div class="tabs">
+    <button class="tab-btn" [class.active]="selectedTab === 'description'" (click)="selectTab('description')">
+      Description
+    </button>
+    <button class="tab-btn" [class.active]="selectedTab === 'info'" (click)="selectTab('info')">
+      Informations supplémentaires
+    </button>
+    <button class="tab-btn" [class.active]="selectedTab === 'review'" (click)="selectTab('review')">
+      Avis
+    </button>
+  </div>
+
+  <!-- Dynamic content based on selected tab -->
+  <div class="tab-content">
+    <div *ngIf="selectedTab === 'description'">
+      <p>
+        {{ product.description }}
+      </p>
+    </div>
+    <div *ngIf="selectedTab === 'info'">
+      <p>
+        Origine : <b>{{ product.origin || "Inconnue" }}</b>
+      </p>
+      <span class="tags">Tags: {{ product.tags }}</span>
+    </div>
+    <!-- Comments section -->
+    <div *ngIf="selectedTab === 'review'">
+      <app-comments-section [productId]="productId" [productSource]="productSource">
+      </app-comments-section>
     </div>
   </div>
 </div>
