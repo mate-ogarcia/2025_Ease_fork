@@ -2,19 +2,23 @@
     <app-navbar class="app-navbar"></app-navbar>
 
     <div class="prod-container" *ngIf="product">
-        <div class="product-details">
-            <!-- Section Gauche : Image -->
-            <div class="image-gallery">
-                <div class="main-image-container">
-                    <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'"
-                        alt="{{ product.name }}">
-                </div>
-            </div>
+      <div class="product-details">
+        <!-- Left Section: Image -->
+        <div class="image-gallery">
+        <div class="main-image-container">
+          <img
+            class="product-image"
+            [src]="product.image || 'assets/placeholder.jpg'"
+                       
+            alt="{{ product.name }}"
+          />
+        </div>
+        </div>
 
-            <!-- Section Droite : Infos Produit -->
-            <div class="product-info">
-                <span class="category">{{product.category}}</span>
-                <h2 class="product-name">{{ product.name }}</h2>
+        <!-- Right Section: Product Info -->
+        <div class="product-info">
+          <span class="category">{{ product.category }}</span>
+          <h2 class="product-name">{{ product.name }}</h2>
 
                 <!-- Action Buttons -->
                 <div class="action-buttons">
@@ -24,59 +28,74 @@
                     </div>
                 </div>
 
-                <!-- Note + Avis -->
-                <div class="rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="review-count">5.0 (245 Reviews)</span>
-                </div>
+          <!-- Rating + Reviews -->
+          <div class="rating">
+            <div class="stars-container">
+            <div class="stars-background">★★★★★</div>
+              <div class="stars-filled" [style.width.%]="(avgRate/5)*100">★★★★★</div>
+          </div>
+          <span class="review-count">{{ avgRate }} ({{ commentCount }} Commentaires)</span>
+          </div>
 
-                <!-- Description -->
-                <p class="product-description">
-                    {{ product.description }}
-                </p>
+          <!-- Description -->
+          <p class="product-description">
+            {{ product.description }}
+          </p>
 
-                <!-- id & Tags -->
-                <div class="extra-info">
-                    <span class="id">ID product: {{productId}}</span>
-                </div>
-            </div>
+          <!-- ID & Tags -->
+          <div class="extra-info">
+            <span class="id">ID du produit: {{ productId }}</span>
+          </div>
         </div>
+      </div>
 
-        <!--  Onglets de navigation (PLACÉS SOUS LA SECTION PRODUIT) -->
-        <div class="tabs-container">
-            <div class="tabs">
-                <button class="tab-btn" [class.active]="selectedTab === 'description'"
-                    (click)="selectTab('description')">
-                    Description
-                </button>
-                <button class="tab-btn" [class.active]="selectedTab === 'info'" (click)="selectTab('info')">
-                    Additional Information
-                </button>
-                <button class="tab-btn" [class.active]="selectedTab === 'review'" (click)="selectTab('review')">
-                    Review
-                </button>
-            </div>
+    <!-- Navigation Tabs (PLACED BELOW PRODUCT SECTION) -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'description'"
+          (click)="selectTab('description')"
+        >
+          Description
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'info'"
+          (click)="selectTab('info')"
+        >
+          Informations supplémentaires
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="selectedTab === 'review'"
+          (click)="selectTab('review')"
+        >
+          Avis
+        </button>
+      </div>
 
-            <!--  Contenu dynamique selon l'onglet -->
-            <div class="tab-content">
-                <div *ngIf="selectedTab === 'description'">
-                    <p>
-                        {{ product.description }}
-                    </p>
-                </div>
-                <div *ngIf="selectedTab === 'info'">
-                    <p>
-                        Origin : <b>{{ product.origin || "Inconnue" }}</b>
-                    </p>
-                    <span class="tags">Tags: {{product.tags}}</span>
-
-                </div>
-
-                <div *ngIf="selectedTab === 'review'">
-                    <p>⭐⭐⭐⭐⭐ "Amazing quality and taste!"</p>
-                    <p>⭐⭐⭐⭐ "Good but delivery was slow."</p>
-                </div>
-            </div>
+      <!-- Dynamic content based on selected tab -->
+      <div class="tab-content">
+        <div *ngIf="selectedTab === 'description'">
+          <p>
+            {{ product.description }}
+          </p>
         </div>
+        <div *ngIf="selectedTab === 'info'">
+          <p>
+            Origine : <b>{{ product.origin || "Inconnue" }}</b>
+          </p>
+          <span class="tags">Tags: {{ product.tags }}</span>
+        </div>
+        <!-- Comments section -->
+        <div *ngIf="selectedTab === 'review'">
+          <app-comments-section
+            [productId]="productId"
+            [productSource]="productSource">
+          </app-comments-section>
+        </div>        
+      </div>
     </div>
+  </div>
 </div>

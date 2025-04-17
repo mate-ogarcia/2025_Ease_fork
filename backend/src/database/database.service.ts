@@ -35,9 +35,11 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { v4 as uuidv4 } from "uuid";  // Generate unique ID
 import { AddressDto } from "src/auth/dto/auth.dto"; // Check of the address
+import { CommentDto } from "src/comments/dto/comments.dto";
+
 // Definition of expected keys for Buckets and Collections
-type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "historyBucket" | "favoritesBucket";
-type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "historyCollection" | "favoritesCollection";
+type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "historyBucket" | "favoritesBucket" | "commentsBucket";
+type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "historyCollection" | "favoritesCollection" | "commentsCollection";
 
 /**
  * @brief Service responsible for database operations.
@@ -54,13 +56,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private brandBucket: Bucket;
   private historyBucket: Bucket;
   private favoritesBucket: Bucket;
+  private commentsBucket: Bucket;
   // Collections
   private productsCollection: Collection;
   private usersCollection: Collection;
   private categCollection: Collection;
   private brandCollection: Collection;
   private historyCollection: Collection;
-  private favoritesCollection: Collection;
+  private favoritesCollection: Collection;  
+  private commentsCollection: Collection;
+
   /**
    * @brief Constructor for DatabaseService.
    * @param {HttpService} httpService - Service for making HTTP requests.
@@ -131,6 +136,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
         this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
         this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection"),
+        this.connectToBucket("COMMENTS_BUCKET_NAME", "commentsBucket", "commentsCollection"),
         this.connectToBucket("SEARCH_HISTORY_BUCKET_NAME", "historyBucket", "historyCollection"),
         this.connectToBucket("FAVORITES_BUCKET_NAME", "favoritesBucket", "favoritesCollection")
       ]);
@@ -1328,6 +1334,158 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     `;
 
     return this.executeQuery(query);
+  }
+
+  // ========================================================================
+  // ======================== COMMENTS FUNCTIONS
+  // ========================================================================
+  /**
+   * Adds a new comment to the database.
+   *
+   * @param {CommentDto} comment - The comment data to be added.
+   * @returns {Promise<any>} - A promise resolving with a success message and the created comment.
+   * @throws {BadRequestException} - If any required field is missing.
+   * @throws {InternalServerErrorException} - If there is an error accessing the database or inserting the comment.
+   */
+  async addComment(comment: CommentDto): Promise<any> {
+    // Check that all required fields are provided
+    if (!comment.contentCom || !comment.dateCom || !comment.userRatingCom ||
+      !comment.userId || !comment.productId || !comment.source) {
+      throw new BadRequestException("❌ All comment fields must be filled.");
+    }
+
+    // Retrieve the comments bucket from the Couchbase cluster
+    const commentsBucket = this.cluster.bucket(process.env.COMMENTS_BUCKET_NAME);
+    if (!commentsBucket) {
+      throw new InternalServerErrorException("❌ COMMENTS_BUCKET_NAME is not defined in environment variables.");
+    }
+
+    // Get the default collection from the bucket
+    const collection = commentsBucket.defaultCollection();
+
+    // Create a new comment object with a unique ID
+    const newComment = {
+      id: uuidv4(), // Generate a unique ID
+      dateCom: comment.dateCom,
+      contentCom: comment.contentCom,
+      userRatingCom: comment.userRatingCom,
+      userId: comment.userId,
+      productId: comment.productId,
+      source: comment.source,
+    };
+
+    try {
+      // Insert the new comment into the database
+      await collection.insert(newComment.id, newComment);
+      return { message: "Comment successfully added", comment: newComment };
+    } catch (error) {
+      console.error("❌ Error while adding the comment:", error);
+      throw new InternalServerErrorException("Error while adding the comment.");
+    }
+  }
+
+  /**
+   * @brief Retrieves all comments for a specific product from the database.
+   * 
+   * This method interacts with the database to fetch all comments for a given product,
+   * ordered by the comment date in descending order. It does not apply pagination.
+   * If there is an error during the database query, an exception is thrown.
+   * 
+   * @param {string} productId - The ID of the product for which comments are retrieved.
+   * @returns {Promise<any[]>} A promise containing an array of comments for the specified product.
+   * @throws {Error} If an error occurs while querying the database for the comments.
+   */
+  async getProductComments(productId: string): Promise<any[]> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+    }
+
+    // Query to get all comments for this product (no pagination)
+    const query = `
+    SELECT * 
+    FROM \`${commentsBucketName}\` 
+    WHERE productId = $productId 
+    ORDER BY dateCom DESC
+  `;
+
+    try {
+      // Execute the query to fetch all comments for the product
+      const comments = await this.executeQuery(query, { productId });
+
+      return comments;
+    } catch (error) {
+      console.error(`❌ Error retrieving comments for product ${productId}:`, error);
+      throw new Error(`Error retrieving comments for product ${productId}`);
+    }
+  }
+
+  /**
+   * @brief Retrieves the total count of comments for a specific product from the comments bucket.
+   * 
+   * @param {string} productId - The ID of the product for which the comment count is retrieved.
+   * @returns {Promise<number>} A promise that resolves to the total comment count for the specified product.
+   * @throws {Error} If the comments bucket name is not defined in the environment variables or if an error occurs while executing the query.
+   */
+  async getCommentsCount(productId: string): Promise<number> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+    }
+
+    // Query to count the total number of comments for the product
+    const countQuery = `
+    SELECT COUNT(*) AS total 
+    FROM \`${commentsBucketName}\` 
+    WHERE productId = "${productId}"
+  `;
+
+    try {
+      // Execute the query to count the comments
+      const result = await this.executeQuery(countQuery);
+
+      // Extract the total count from the result
+      const totalCount = result[0]?.total || 0;
+
+      return totalCount;
+    } catch (error) {
+      console.error(`❌ Error retrieving comments count for product ${productId}:`, error);
+      throw new Error(`Error retrieving comments count for product ${productId}`);
+    }
+  }
+
+  /**
+   * @brief Retrieves the average rating for a specific product from the Couchbase database.
+   *
+   * @param productId - The ID of the product whose average rating should be calculated.
+   * @returns A promise resolving to the average rating rounded to two decimal places.
+   *          Returns 0 if no comments are found.
+   * @throws Error if an issue occurs during query execution or if the bucket name is missing.
+   */
+  async getAverageRating(productId: string): Promise<number> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error("❌ COMMENTS_BUCKET_NAME not defined in environment variables");
+    }
+
+    // Query to calculate the average score
+    const avgQuery = `
+    SELECT AVG(TO_NUMBER(userRatingCom)) AS averageRating
+    FROM \`${commentsBucketName}\`
+    WHERE productId = "${productId}"
+  `;
+
+    try {
+      const result = await this.executeQuery(avgQuery);
+
+      // Extract average (may be null if no comments)
+      const average = result[0]?.averageRating ?? 0;
+
+      return Number(average.toFixed(2)); // Rounded to 2 decimal places
+    } catch (error) {
+      console.error(`❌ Error retrieving average rating for product ${productId}:`, error);
+      throw new Error(`Error retrieving average rating for product ${productId}`);
+    }
   }
 
   // ========================================================================

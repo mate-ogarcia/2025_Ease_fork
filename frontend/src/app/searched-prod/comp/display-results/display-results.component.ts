@@ -1,12 +1,12 @@
 /**
  * @file display-results.component.ts
  * @brief Component for displaying product search results with optional images and view modes.
- * 
+ *
  * This component displays a list or grid of products with support for:
  * - Loading product images from the Unsplash API if not already provided.
  * - Switching between list and grid views.
  * - Navigating to the product details page.
- * 
+ *
  */
 
 import { Component, OnInit } from '@angular/core';
@@ -20,10 +20,12 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../../services/auth/auth.service';
 import { NotificationService } from '../../../../services/notification/notification.service';
 
+import { InfoBtnComponent } from '../info-btn/info-btn.component';
+
 /**
  * @class DisplayResultsComponent
  * @brief Handles displaying search results with dynamic images and view mode toggling.
- * 
+ *
  * This component:
  * - Loads product search results from the navigation state.
  * - Fetches images from Unsplash for products lacking images.
@@ -32,7 +34,7 @@ import { NotificationService } from '../../../../services/notification/notificat
 @Component({
   selector: 'app-display-results',
   standalone: true,
-  imports: [CommonModule, LikeBtnComponent],
+  imports: [CommonModule, LikeBtnComponent, InfoBtnComponent],
   templateUrl: './display-results.component.html',
   styleUrls: ['./display-results.component.css'],
 })
@@ -55,22 +57,22 @@ export class DisplayResultsComponent implements OnInit {
     private favoritesService: FavoritesService,
     private authService: AuthService,
     private notificationService: NotificationService
-  ) { }
+  ) {}
 
   /**
    * @brief Initializes the component and loads product results.
-   * 
+   *
    * - Retrieves the product array from the navigation state.
    * - Fetches images from Unsplash for products without an existing image.
    * - Vérifie si les produits sont dans les favoris de l'utilisateur
-   * 
+   *
    * @returns {void}
    */
   ngOnInit(): void {
     this.resultsArray = history.state.resultsArray || [];
 
     // Vérifier l'état d'authentification
-    this.authService.isAuthenticated().subscribe(isAuth => {
+    this.authService.isAuthenticated().subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
 
       // Si l'utilisateur est authentifié, charger les états de favoris
@@ -87,7 +89,7 @@ export class DisplayResultsComponent implements OnInit {
    * @brief Charge les images pour chaque produit qui n'en a pas
    */
   private loadProductImages(): void {
-    this.resultsArray.forEach(product => {
+    this.resultsArray.forEach((product) => {
       if (!product?.image && product?.name) {
         this.APIUnsplash.searchPhotos(product.name).subscribe({
           next: (response) => {
@@ -100,10 +102,13 @@ export class DisplayResultsComponent implements OnInit {
             }
           },
           error: (err) => {
-            console.error(`❌ Erreur de récupération d'image pour ${product.name}:`, err);
+            console.error(
+              `❌ Erreur de récupération d'image pour ${product.name}:`,
+              err
+            );
             // Ne pas définir d'image par défaut qui n'existe pas
             product.image = null;
-          }
+          },
         });
       }
     });
@@ -117,7 +122,7 @@ export class DisplayResultsComponent implements OnInit {
 
     // Désactiver temporairement le chargement automatique des favoris pour éviter l'erreur 500
     // Nous simulerons comme si aucun favori n'était présent initialement
-    this.resultsArray.forEach(product => {
+    this.resultsArray.forEach((product) => {
       // Par défaut, aucun produit n'est favori
       product.liked = false;
     });
@@ -125,12 +130,14 @@ export class DisplayResultsComponent implements OnInit {
     console.log('ℹ️ État initial des favoris défini par défaut comme non aimé');
 
     // Cette partie restera active pour mettre à jour l'UI quand les favoris changent
-    this.favoritesService.favoriteProducts$.subscribe(favoriteIds => {
+    this.favoritesService.favoriteProducts$.subscribe((favoriteIds) => {
       console.log('📋 Liste des IDs favoris mise à jour:', favoriteIds);
-      this.resultsArray.forEach(product => {
+      this.resultsArray.forEach((product) => {
         const isLiked = favoriteIds.includes(product.id);
         if (product.liked !== isLiked) {
-          console.log(`🔄 Mise à jour de l'état du produit ${product.id}: ${product.liked} -> ${isLiked}`);
+          console.log(
+            `🔄 Mise à jour de l'état du produit ${product.id}: ${product.liked} -> ${isLiked}`
+          );
           product.liked = isLiked;
         }
       });
@@ -142,7 +149,7 @@ export class DisplayResultsComponent implements OnInit {
 
   /**
    * @brief Sets the display mode for the results view.
-   * 
+   *
    * @param mode The desired view mode: 'list' or 'grid'.
    */
   setViewMode(mode: 'list' | 'grid'): void {
@@ -151,17 +158,38 @@ export class DisplayResultsComponent implements OnInit {
 
   /**
    * @brief Navigates to the product detail page.
-   * 
+   *
    * @param product The product object containing the product ID.
    * @throws {Error} Logs a warning if the product ID is missing.
    */
   goToProduct(product: any): void {
     if (product?.id) {
-      this.router.navigate([`/products-alternative/${product.id}/${product.source}`])
-        .then(() => console.log(`Navigated to /products-alternative/${product.id}/${product.source}`))
-        .catch(error => console.error("❌ Navigation error:", error));
+      this.router
+        .navigate([`/products-alternative/${product.id}/${product.source}`])
+        .then(() =>
+          console.log(
+            `Navigated to /products-alternative/${product.id}/${product.source}`
+          )
+        )
+        .catch((error) => console.error('❌ Navigation error:', error));
     } else {
-      console.warn("⚠️ Invalid product or missing ID");
+      console.warn('⚠️ Invalid product or missing ID');
+    }
+  }
+
+  /**
+   * @brief Navigates to the selected product's page.
+   * @param product The selected product object.
+   */
+  goToInfoProduct(product: any) {
+    if (product?.id) {
+      this.router
+        .navigate([`/product-page/${product.id}/${product.source}`])
+        .catch((error) => {
+          console.error('❌ Navigation error:', error);
+        });
+    } else {
+      console.warn('⚠️ Invalid product or missing ID');
     }
   }
 
@@ -173,13 +201,17 @@ export class DisplayResultsComponent implements OnInit {
     console.log('❤️ Bouton "J\'aime" cliqué pour:', {
       productId: product.id,
       productName: product.name,
-      newState: product.liked ? 'aimé' : 'non aimé'
+      newState: product.liked ? 'aimé' : 'non aimé',
     });
 
     // Vérifier si l'utilisateur est connecté en utilisant la valeur actuelle
     if (!this.isAuthenticated) {
-      console.warn('⚠️ Utilisateur non connecté - Redirection vers la page de connexion');
-      this.notificationService.showWarning('Veuillez vous connecter pour ajouter des favoris');
+      console.warn(
+        '⚠️ Utilisateur non connecté - Redirection vers la page de connexion'
+      );
+      this.notificationService.showWarning(
+        'Veuillez vous connecter pour ajouter des favoris'
+      );
       product.liked = false; // Reset le statut visuel
       this.router.navigate(['/login']);
       return;
@@ -189,13 +221,20 @@ export class DisplayResultsComponent implements OnInit {
     if (product.liked === undefined) {
       console.log('🔍 État du favori non défini, vérification...');
       this.favoritesService.isProductInFavorites(product.id).subscribe(
-        isLiked => {
+        (isLiked) => {
           product.liked = isLiked;
-          console.log(`📊 Produit ${product.id} - État favori initial: ${isLiked ? 'aimé' : 'non aimé'}`);
+          console.log(
+            `📊 Produit ${product.id} - État favori initial: ${
+              isLiked ? 'aimé' : 'non aimé'
+            }`
+          );
           this.toggleFavoriteState(product);
         },
-        error => {
-          console.error('❌ Erreur lors de la vérification du statut favori:', error);
+        (error) => {
+          console.error(
+            '❌ Erreur lors de la vérification du statut favori:',
+            error
+          );
           product.liked = false; // Par défaut, considérer comme non aimé en cas d'erreur
         }
       );
@@ -206,17 +245,26 @@ export class DisplayResultsComponent implements OnInit {
 
   private toggleFavoriteState(product: any): void {
     if (product.liked) {
-      console.log(`❌ Suppression du produit ${product.id} (${product.name}) des favoris`);
+      console.log(
+        `❌ Suppression du produit ${product.id} (${product.name}) des favoris`
+      );
       this.favoritesService.removeFromFavorites(product.id).subscribe(
         () => {
-          console.log(`✅ Produit ${product.id} supprimé des favoris avec succès`);
+          console.log(
+            `✅ Produit ${product.id} supprimé des favoris avec succès`
+          );
           product.liked = false;
         },
-        error => {
-          console.error(`❌ Erreur lors de la suppression du produit ${product.id} des favoris:`, error);
+        (error) => {
+          console.error(
+            `❌ Erreur lors de la suppression du produit ${product.id} des favoris:`,
+            error
+          );
           if (error.status === 401) {
             console.warn('⚠️ Session expirée ou token invalide');
-            this.notificationService.showWarning('Votre session a expiré, veuillez vous reconnecter');
+            this.notificationService.showWarning(
+              'Votre session a expiré, veuillez vous reconnecter'
+            );
             this.router.navigate(['/login']);
           }
           // Restaurer l'état visuel en cas d'erreur
@@ -224,18 +272,28 @@ export class DisplayResultsComponent implements OnInit {
         }
       );
     } else {
-      console.log(`✅ Ajout du produit ${product.id} (${product.name}) aux favoris`);
+      console.log(
+        `✅ Ajout du produit ${product.id} (${product.name}) aux favoris`
+      );
       // Les détails du produit sont automatiquement sauvegardés par le backend
       this.favoritesService.addToFavorites(product.id).subscribe(
-        response => {
-          console.log(`✅ Produit ${product.id} ajouté aux favoris avec succès`, response);
+        (response) => {
+          console.log(
+            `✅ Produit ${product.id} ajouté aux favoris avec succès`,
+            response
+          );
           product.liked = true;
         },
-        error => {
-          console.error(`❌ Erreur lors de l'ajout du produit ${product.id} aux favoris:`, error);
+        (error) => {
+          console.error(
+            `❌ Erreur lors de l'ajout du produit ${product.id} aux favoris:`,
+            error
+          );
           if (error.status === 401) {
             console.warn('⚠️ Session expirée ou token invalide');
-            this.notificationService.showWarning('Votre session a expiré, veuillez vous reconnecter');
+            this.notificationService.showWarning(
+              'Votre session a expiré, veuillez vous reconnecter'
+            );
             this.router.navigate(['/login']);
           }
           // Restaurer l'état visuel en cas d'erreur
@@ -276,6 +334,6 @@ export class DisplayResultsComponent implements OnInit {
       parentDiv.appendChild(placeholder);
     }
 
-    console.log('❌ Erreur de chargement d\'image:', img.src);
+    console.log("❌ Erreur de chargement d'image:", img.src);
   }
 }
