@@ -34,11 +34,7 @@ import { InfoBtnComponent } from '../info-btn/info-btn.component';
 @Component({
   selector: 'app-display-results',
   standalone: true,
-  imports: [
-    CommonModule, 
-    LikeBtnComponent, 
-    InfoBtnComponent
-  ],
+  imports: [CommonModule, LikeBtnComponent, InfoBtnComponent],
   templateUrl: './display-results.component.html',
   styleUrls: ['./display-results.component.css'],
 })
@@ -176,6 +172,22 @@ export class DisplayResultsComponent implements OnInit {
           )
         )
         .catch((error) => console.error('❌ Navigation error:', error));
+    } else {
+      console.warn('⚠️ Invalid product or missing ID');
+    }
+  }
+
+  /**
+   * @brief Navigates to the selected product's page.
+   * @param product The selected product object.
+   */
+  goToInfoProduct(product: any) {
+    if (product?.id) {
+      this.router
+        .navigate([`/product-page/${product.id}/${product.source}`])
+        .catch((error) => {
+          console.error('❌ Navigation error:', error);
+        });
     } else {
       console.warn('⚠️ Invalid product or missing ID');
     }
