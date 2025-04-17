@@ -39,63 +39,22 @@ import { NotificationService } from '../../services/notification/notification.se
   styleUrls: ['./comments-section.component.css'],
 })
 export class CommentsSectionComponent implements OnInit, OnChanges {
-  /**
-   * @brief The product ID received from the parent component.
-   *
-   * @details Used to fetch and associate comments with a specific product.
-   */
-  @Input() productId!: string;
-
-  /**
-   * @brief The product source (e.g., a specific platform or API) from the parent.
-   *
-   * @details Used to distinguish products that may come from different sources.
-   */
-  @Input() productSource!: string;
-
-  /**
-   * @brief Array of comments for the current product.
-   */
-  comments: Comment[] = [];
-
-  /**
-   * @brief Object containing pagination-related data and state.
-   *
-   * @details
-   *   - currentPage: The current page index.
-   *   - totalPages: The total number of pages.
-   *   - totalCount: The total number of comments.
-   *   - pageSize: The number of comments per page.
-   *   - hasNextPage: Whether there is another page of comments to load.
-   */
+  @Input() productId!: string; // Product ID from parent component
+  @Input() productSource!: string; // Product source from parent component
+  comments: Comment[] = []; // Array of comments for current product
+  loading = false; // Whether component is fetching data
+  showCommentForm = false; // Whether to show rating and buttons
+  canAddComment = false; // Whether user can add comments
+  // Get current user's email for sorting
+  currentUserEmail: string = '';
+  // Object containing pagination-related data and state.
   pagination = {
-    currentPage: 1,
-    totalPages: 0,
-    totalCount: 0,
-    pageSize: 10,
-    hasNextPage: false,
+    currentPage: 1, // Current page index
+    totalPages: 0, // Total number of pages
+    totalCount: 0, // Total number of comments
+    pageSize: 10, // Comments per page
+    hasNextPage: false, // Whether another page exists
   };
-
-  /**
-   * @brief Indicates if the component is currently fetching data.
-   */
-  loading = false;
-
-  /**
-   * @brief Controls whether the rating and the Submit/Cancel buttons are shown.
-   * @details The single <input> for the comment is always visible;
-   *          when the user clicks it, we set this to true to reveal rating + buttons.
-   */
-  showCommentForm = false;
-
-  /**
-   * @brief Flag indicating whether the user can add comments.
-   *
-   * @details Determined by checking the user's role via the authentication service.
-   *          If `false`, the input is disabled and the user must log in.
-   */
-  canAddComment = false;
-
   /**
    * @brief Model object for a new comment, bound to the form via [(ngModel)].
    *
@@ -152,9 +111,11 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
         this.canAddComment = ['user', 'admin', 'superadmin'].includes(
           role.toLowerCase()
         );
-        // In a real-world scenario, you'd set userId to the authenticated user's ID.
-        if (this.canAddComment) {
-          this.comment.userId = 1;
+        // Get user info from auth service
+        const userInfo = this.authService.getUserInfo();
+        if (userInfo && this.canAddComment) {
+          this.comment.userId = userInfo.email; // Use email as userId
+          this.currentUserEmail = userInfo.email;
         }
       } else {
         this.canAddComment = false;
@@ -201,7 +162,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
       contentCom: newComment.contentCom,
       userRatingCom: newComment.userRatingCom,
       source: newComment.source,
-      userId: newComment.userId.toString(),
+      userId: newComment.userId, // This is already the email
       productId: this.productId,
     };
 
@@ -240,12 +201,26 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
     }
 
     this.loading = true;
+
     this.commentService.getCommentsByProduct(this.productId).subscribe({
       next: (data: Comment[]) => {
-        const allComments = data.map((c: Comment) => ({
-          ...c,
-          userRatingCom: Number(c.userRatingCom),
-        }));
+        // Sort comments: user's comments first, then by date (newest first)
+        const allComments = data
+          .map((c: Comment) => ({
+            ...c,
+            userRatingCom: Number(c.userRatingCom),
+          }))
+          .sort((a, b) => {
+            // First sort by whether it's the user's comment
+            if (a.userId === this.currentUserEmail && b.userId !== this.currentUserEmail)
+              return -1;
+            if (a.userId !== this.currentUserEmail && b.userId === this.currentUserEmail)
+              return 1;
+            // Then sort by date (newest first)
+            return (
+              new Date(b.dateCom).getTime() - new Date(a.dateCom).getTime()
+            );
+          });
 
         // Manual pagination
         const start =
