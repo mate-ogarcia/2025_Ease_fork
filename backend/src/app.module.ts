@@ -15,6 +15,7 @@ import { DatabaseModule } from "./database/database.module";
 import { DataModule } from "./data/data.module";
 import { AuthModule } from "./auth/auth.module";
 import { ProductsModule } from "./products/products.module";
+import { CommentsModule } from "./comments/comments.module";
 import { OpenFoodFactsModule } from "./apiServices/openFoodFacts/openFoodFacts.module";
 import { CountriesModule } from "./apiServices/countries/countries.module";
 import { UnsplashModule } from "./apiServices/unsplash/unsplash.module";
@@ -29,6 +30,9 @@ import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
 import { AdminModule } from "./admin/admin.module";
 import { HistoryModule } from './history/history.module';
+// .env
+import * as dotenv from "dotenv";
+dotenv.config();
 
 /**
  * @class AppModule
@@ -47,6 +51,7 @@ import { HistoryModule } from './history/history.module';
     UnsplashModule,
     HistoryModule,
     FavoritesModule,
+    CommentsModule,
     /**
      * @brief Loads environment variables and validates them with Joi.
      *

@@ -33,11 +33,27 @@ import { UserRole } from "src/auth/enums/roles.enum";
 // .env
 import * as dotenv from "dotenv";
 dotenv.config();
-import { v4 as uuidv4 } from "uuid";  // Generate unique ID
+import { v4 as uuidv4 } from "uuid"; // Generate unique ID
 import { AddressDto } from "src/auth/dto/auth.dto"; // Check of the address
+import { CommentDto } from "src/comments/dto/comments.dto";
+
 // Definition of expected keys for Buckets and Collections
-type BucketKeys = "productsBucket" | "usersBucket" | "categBucket" | "brandBucket" | "historyBucket" | "favoritesBucket";
-type CollectionKeys = "productsCollection" | "usersCollection" | "categCollection" | "brandCollection" | "historyCollection" | "favoritesCollection";
+type BucketKeys =
+  | "productsBucket"
+  | "usersBucket"
+  | "categBucket"
+  | "brandBucket"
+  | "historyBucket"
+  | "favoritesBucket"
+  | "commentsBucket";
+type CollectionKeys =
+  | "productsCollection"
+  | "usersCollection"
+  | "categCollection"
+  | "brandCollection"
+  | "historyCollection"
+  | "favoritesCollection"
+  | "commentsCollection";
 
 /**
  * @brief Service responsible for database operations.
@@ -54,6 +70,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private brandBucket: Bucket;
   private historyBucket: Bucket;
   private favoritesBucket: Bucket;
+  private commentsBucket: Bucket;
   // Collections
   private productsCollection: Collection;
   private usersCollection: Collection;
@@ -61,6 +78,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private brandCollection: Collection;
   private historyCollection: Collection;
   private favoritesCollection: Collection;
+  private commentsCollection: Collection;
+
   /**
    * @brief Constructor for DatabaseService.
    * @param {HttpService} httpService - Service for making HTTP requests.
@@ -94,10 +113,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     collectionVar: CollectionKeys
   ): Promise<void> {
     const bucketName = process.env[bucketNameEnv];
-    if (!bucketName) throw new Error(`❌ ${bucketNameEnv} is not defined in environment variables.`);
+    if (!bucketName)
+      throw new Error(
+        `❌ ${bucketNameEnv} is not defined in environment variables.`
+      );
 
     const bucket = this.cluster.bucket(bucketName); // Couchbase bucket
-    this[bucketVar] = bucket as any;                // Force TypeScript to accept it
+    this[bucketVar] = bucket as any; // Force TypeScript to accept it
     this[collectionVar] = bucket.defaultCollection() as any; // Force TypeScript to accept it
   }
 
@@ -122,20 +144,49 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           username: process.env.DB_USER || "Administrator",
           password: process.env.DB_PASSWORD || "password",
           configProfile: "wanDevelopment",
-        },
+        }
       );
 
       // Connection to all buckets and collections
       await Promise.all([
-        this.connectToBucket("BUCKET_NAME", "productsBucket", "productsCollection"),
-        this.connectToBucket("USER_BUCKET_NAME", "usersBucket", "usersCollection"),
-        this.connectToBucket("CATEGORY_BUCKET_NAME", "categBucket", "categCollection"),
-        this.connectToBucket("BRAND_BUCKET_NAME", "brandBucket", "brandCollection"),
-        this.connectToBucket("SEARCH_HISTORY_BUCKET_NAME", "historyBucket", "historyCollection"),
-        this.connectToBucket("FAVORITES_BUCKET_NAME", "favoritesBucket", "favoritesCollection")
+        this.connectToBucket(
+          "BUCKET_NAME",
+          "productsBucket",
+          "productsCollection"
+        ),
+        this.connectToBucket(
+          "USER_BUCKET_NAME",
+          "usersBucket",
+          "usersCollection"
+        ),
+        this.connectToBucket(
+          "CATEGORY_BUCKET_NAME",
+          "categBucket",
+          "categCollection"
+        ),
+        this.connectToBucket(
+          "BRAND_BUCKET_NAME",
+          "brandBucket",
+          "brandCollection"
+        ),
+        this.connectToBucket(
+          "COMMENTS_BUCKET_NAME",
+          "commentsBucket",
+          "commentsCollection"
+        ),
+        this.connectToBucket(
+          "SEARCH_HISTORY_BUCKET_NAME",
+          "historyBucket",
+          "historyCollection"
+        ),
+        this.connectToBucket(
+          "FAVORITES_BUCKET_NAME",
+          "favoritesBucket",
+          "favoritesCollection"
+        ),
       ]);
 
-      console.log("Connection to Couchbase successful!");
+      console.log("Connexion à Couchbase réussie !");
     } catch (error) {
       console.error("❌ Connection error to Couchbase:", error);
       setTimeout(() => this.initializeConnections(), 5000); // Retry after 5s
@@ -156,10 +207,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // ======================== GENERIC METHODS
   /**
    * @brief Validates and returns the specified Couchbase bucket.
-   * 
-   * @details This method ensures that the provided Couchbase bucket is initialized. 
+   *
+   * @details This method ensures that the provided Couchbase bucket is initialized.
    * If the bucket is undefined or uninitialized, an error is thrown.
-   * 
+   *
    * @param {Bucket | undefined} bucket - The Couchbase bucket instance to validate.
    * @param {string} name - The name of the bucket (for error messages).
    */
@@ -172,19 +223,32 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Validates and returns the specified Couchbase collection.
-   * 
-   * @details This method ensures that the provided Couchbase collection is initialized. 
+   *
+   * @details This method ensures that the provided Couchbase collection is initialized.
    * If the collection is undefined or uninitialized, an error is thrown.
-   * 
+   *
    * @param {Collection | undefined} collection - The Couchbase collection instance to validate.
    * @param {string} name - The name of the collection (for error messages).
    */
-  private getCollection(collection: Collection | undefined, name: string): Collection {
+  private getCollection(
+    collection: Collection | undefined,
+    name: string
+  ): Collection {
     if (!collection) {
-      throw new Error(`❌ Couchbase collection '${name}' is not initialized yet.`);
+      throw new Error(
+        `❌ Couchbase collection '${name}' is not initialized yet.`
+      );
     }
     return collection;
   }
+
+  /**
+   * @brief Retrieves the favorites collection.
+   */
+  getFavoritesCollection(): Collection {
+    return this.getCollection(this.favoritesCollection, "favorites");
+  }
+
   // ======================== BUCKET METHODS
   /**
    * @brief Retrieves the Couchbase bucket instance for products.
@@ -219,6 +283,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   getHistoryBucket(): Bucket {
     return this.getBucket(this.historyBucket, "history");
+  }
+
+  /**
+   * @brief Retrieves the Couchbase bucket instance for favorites.
+   */
+  getFavoritesBucket(): Bucket {
+    return this.getBucket(this.favoritesBucket, "favorites");
   }
 
   // ======================== COLLECTION METHODS
@@ -262,15 +333,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // ========================================================================
   /**
    * @brief Executes a Couchbase N1QL query with provided parameters (public method).
-   * 
+   *
    * @details This public method exposes query execution for other services.
    * It calls the private executeQuery method to run a given N1QL query against the Couchbase cluster.
-   * 
+   *
    * @param {string} query - The N1QL query string to be executed.
    * @param {any} [params={}] - An optional object containing query parameters.
-   * 
+   *
    * @returns {Promise<any[]>} - A promise resolving to the query result rows.
-   * 
+   *
    * @throws {InternalServerErrorException} If the query execution fails.
    */
   async executeN1qlQuery(query: string, params: any = {}): Promise<any[]> {
@@ -279,21 +350,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Executes a Couchbase N1QL query with provided parameters.
-   * 
-   * @details This method runs a given N1QL query against the Couchbase cluster, 
-   * handling errors and timeouts appropriately. It logs the execution process 
+   *
+   * @details This method runs a given N1QL query against the Couchbase cluster,
+   * handling errors and timeouts appropriately. It logs the execution process
    * for debugging purposes and ensures queries do not block indefinitely.
-   * 
+   *
    * @param {string} query - The N1QL query string to be executed.
    * @param {any} [params={}] - An optional object containing query parameters.
-   * 
+   *
    * @returns {Promise<any[]>} - A promise resolving to the query result rows.
-   * 
+   *
    * @throws {InternalServerErrorException} If the query execution fails due to syntax errors, timeouts, or other issues.
    */
   private async executeQuery(query: string, params: any = {}): Promise<any[]> {
     try {
-      console.log(`Executing query:\n${query}\nParameters:`, params);
+      console.log(`Exécution de la requête:\n${query}\nParamètres:`, params);
 
       // Execute the Couchbase query with parameters and a timeout
       const result = await this.cluster.query(query, {
@@ -301,7 +372,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         timeout: 10000, // Timeout to prevent long-running queries
       });
 
-      console.log(`Query executed successfully. ${result.rows.length} rows returned.`);
+      console.log(
+        `Requête exécutée avec succès. ${result.rows.length} lignes retournées.`
+      );
       return result.rows || [];
     } catch (error) {
       console.error("❌ Couchbase Query Error:", error.message || error);
@@ -317,7 +390,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         console.error("⚠️ Couchbase query timed out.");
       }
 
-      throw new InternalServerErrorException("Database query execution failed.");
+      throw new InternalServerErrorException(
+        "Database query execution failed."
+      );
     }
   }
 
@@ -333,7 +408,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async searchQuery(searchQuery: string): Promise<any[]> {
     const _indexName = process.env.INDEX_NAME;
     if (!_indexName) {
-      throw new InternalServerErrorException("❌ Full-Text Search index name is not defined in environment variables.");
+      throw new InternalServerErrorException(
+        "❌ Full-Text Search index name is not defined in environment variables."
+      );
     }
 
     try {
@@ -343,23 +420,35 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         SearchQuery.match(queryLower)
       );
 
-      const searchRes = await this.cluster.searchQuery(_indexName, combinedQuery, {
-        fields: ["name", "description", "category", "tags", "status"],
-        highlight: {
-          style: HighlightStyle.HTML,
+      const searchRes = await this.cluster.searchQuery(
+        _indexName,
+        combinedQuery,
+        {
           fields: ["name", "description", "category", "tags", "status"],
-        },
-      });
+          highlight: {
+            style: HighlightStyle.HTML,
+            fields: ["name", "description", "category", "tags", "status"],
+          },
+        }
+      );
 
       // Exclude unwanted statuses
-      const filteredResults = searchRes.rows.filter(row =>
-        !["add-product", "edit-product", "delete-product", "Rejected"].includes(row.fields?.status)
+      const filteredResults = searchRes.rows.filter(
+        (row) =>
+          ![
+            "add-product",
+            "edit-product",
+            "delete-product",
+            "Rejected",
+          ].includes(row.fields?.status)
       );
 
       return filteredResults;
     } catch (error) {
       console.error("❌ Error during FTS query:", error);
-      throw new InternalServerErrorException("Full-Text Search query execution failed.");
+      throw new InternalServerErrorException(
+        "Full-Text Search query execution failed."
+      );
     }
   }
 
@@ -370,7 +459,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // =========== UTILITY FUNCTIONS
   /**
    * @brief Builds a SQL WHERE clause from an array of conditions with a dynamic operator.
-   * 
+   *
    * @param conditions An array of condition strings.
    * @param operator The SQL operator to use ("OR" or "AND"). Default is "OR".
    * @returns {string} A formatted SQL condition string or an empty string.
@@ -383,27 +472,33 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @brief Builds similarity-based conditions using attributes of a selected product.
    *
    * @details
-   * Fetches a product by its ID and constructs conditions to find similar products.  
+   * Fetches a product by its ID and constructs conditions to find similar products.
    * Similarity criteria include:
-   * - Category match  
-   * - Shared tags  
-   * - Price within ±20% of the selected product's price  
+   * - Category match
+   * - Shared tags
+   * - Price within ±20% of the selected product's price
    * - Same brand (FK_Brands)
    *
    * @param productId The ID of the selected product for similarity comparison.
    * @returns {Promise<string>} A string containing similarity conditions or an empty string if no product is found.
    * @throws {Error} If the product is not found or the query fails.
    */
-  async buildSimilarityConditions(this: any, productId: string): Promise<string> {
+  async buildSimilarityConditions(
+    this: any,
+    productId: string
+  ): Promise<string> {
     if (!productId) return "";
 
     const selectedProduct = await this.getProductById(productId);
-    if (!selectedProduct) throw new Error(`❌ Product with ID ${productId} not found.`);
+    if (!selectedProduct)
+      throw new Error(`❌ Product with ID ${productId} not found.`);
 
     const conditions: string[] = [];
     if (selectedProduct.category) conditions.push(`category = $category`);
-    if (selectedProduct.tags?.length) conditions.push(`ANY tag IN tags SATISFIES tag IN $tags END`);
-    if (selectedProduct.price) conditions.push(`price BETWEEN $minPrice AND $maxPrice`);
+    if (selectedProduct.tags?.length)
+      conditions.push(`ANY tag IN tags SATISFIES tag IN $tags END`);
+    if (selectedProduct.price)
+      conditions.push(`price BETWEEN $minPrice AND $maxPrice`);
     if (selectedProduct.FK_Brands) conditions.push(`FK_Brands = $brandFK`);
 
     return this.buildConditions(conditions, "AND");
@@ -411,20 +506,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Builds similarity conditions for an external product search.
-   * 
-   * Constructs a SQL-like condition string for filtering products based on 
-   * attributes such as name, brand, category, and tags. This method is used 
+   *
+   * Constructs a SQL-like condition string for filtering products based on
+   * attributes such as name, brand, category, and tags. This method is used
    * when searching for similar products to an external product (e.g., from an API).
-   * 
+   *
    * @param filters An object containing the filtering criteria:
    *   - `name` (string, optional): Product name.
    *   - `brand` (string, optional): Product brand.
    *   - `category` (string, optional): Product category.
    *   - `tags` (array, optional): List of tags associated with the product.
-   * 
+   *
    * @returns {string} A dynamically constructed SQL-like condition string.
-   * 
-   * @note Uses parameterized placeholders (e.g., `$filterName`, `$filterBrand`) 
+   *
+   * @note Uses parameterized placeholders (e.g., `$filterName`, `$filterBrand`)
    * to prevent SQL injection when used in queries.
    */
   buildSimilarityConditionsFromExternalProduct(filters: any): string {
@@ -433,7 +528,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     if (filters.name) conditions.push(`name = $filterName`);
     if (filters.brand) conditions.push(`FK_Brands = $brandFK`);
     if (filters.category) conditions.push(`category = $filterCategory`);
-    if (filters.tags?.length) conditions.push(`ANY tag IN tags SATISFIES tag IN $filterTags END`);
+    if (filters.tags?.length)
+      conditions.push(`ANY tag IN tags SATISFIES tag IN $filterTags END`);
 
     return this.buildConditions(conditions);
   }
@@ -447,7 +543,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * - Country of origin
    * - Price range
    * - Brand (via subquery to resolve foreign key reference)
-   * 
+   *
    * If a brand is provided without a product ID, it performs a subquery to find the corresponding `FK_Brands`.
    *
    * @param filters The filters object containing user-provided criteria.
@@ -477,7 +573,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // Exclude unwanted statuses only for internal products
     if (filters.productSource === "Internal") {
-      conditions.push("status NOT IN ['add-product', 'edit-product', 'delete-product']");
+      conditions.push(
+        "status NOT IN ['add-product', 'edit-product', 'delete-product']"
+      );
     }
 
     return this.buildConditions(conditions, "AND");
@@ -487,10 +585,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @brief Builds the final SQL query based on similarity and filter conditions.
    *
    * @details
-   * Combines similarity and filter conditions into a single WHERE clause.  
-   * - `/searched-prod`: Combines conditions with `AND` for stricter matching.  
-   * - `/home`: Combines conditions with `OR` for broader matching.  
-   * 
+   * Combines similarity and filter conditions into a single WHERE clause.
+   * - `/searched-prod`: Combines conditions with `AND` for stricter matching.
+   * - `/home`: Combines conditions with `OR` for broader matching.
+   *
    * @param similarityClause The similarity conditions string.
    * @param filtersClause The filter conditions string.
    * @param currentRoute The current route determining the logical operator to use.
@@ -498,18 +596,27 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @returns {string} A full N1QL query string.
    * @throws {Error} If the route is unrecognized.
    */
-  buildQuery(similarityClause: string, filtersClause: string, currentRoute: string, bucketName: string): string {
+  buildQuery(
+    similarityClause: string,
+    filtersClause: string,
+    currentRoute: string,
+    bucketName: string
+  ): string {
     if (!similarityClause && !filtersClause) return "";
 
     let whereClause = "";
     // If the route il /searched-prod then prioritize filters
     switch (currentRoute) {
-      case '/searched-prod':
-        whereClause = [similarityClause, filtersClause].filter(Boolean).join(" AND ");
+      case "/searched-prod":
+        whereClause = [similarityClause, filtersClause]
+          .filter(Boolean)
+          .join(" AND ");
         break;
       default:
-        whereClause = [similarityClause, filtersClause].filter(Boolean).join(" OR ");
-        break
+        whereClause = [similarityClause, filtersClause]
+          .filter(Boolean)
+          .join(" OR ");
+        break;
     }
     return `SELECT * FROM \`${bucketName}\` WHERE ${whereClause}`;
   }
@@ -533,14 +640,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         throw new Error("❌ searchCriteria is empty");
       }
 
-      console.log(`🔹 Recherche d'alternatives avec les critères:`, searchCriteria);
+      console.log(
+        `🔹 Recherche d'alternatives avec les critères:`,
+        searchCriteria
+      );
 
       // API call to fetch the list of European countries
       const response = await this.httpService.axiosRef.get(
-        "https://restcountries.com/v3.1/region/europe",
+        "https://restcountries.com/v3.1/region/europe"
       );
       const europeanCountries = response.data.map(
-        (country) => country.name.common,
+        (country) => country.name.common
       );
 
       // Dynamically construct the N1QL query
@@ -576,7 +686,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       console.log(
         `🔹 Executing N1QL query: ${query} with params:`,
-        queryParams,
+        queryParams
       );
 
       // Execute the query in Couchbase
@@ -587,10 +697,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error(
         "❌ Error retrieving alternative products (database.service):",
-        error,
+        error
       );
       throw new InternalServerErrorException(
-        "Error retrieving alternative products (database.service)",
+        "Error retrieving alternative products (database.service)"
       );
     }
   }
@@ -657,21 +767,34 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     if (similarityClause === filtersClause) {
       console.warn("⚠️ Duplicate conditions detected. Using only one set.");
     }
-    const queryWithJoin = this.buildQuery(similarityClause, filtersClause, currentRoute, bucketName);
+    const queryWithJoin = this.buildQuery(
+      similarityClause,
+      filtersClause,
+      currentRoute,
+      bucketName
+    );
     if (!queryWithJoin) return [];
 
     // Retrieve FK_Brand before building parameters
     let brandFK: string;
     if (filters.brand) {
-      brandFK = selectedProduct?.FK_Brands ?? await this.checkBrand(filters.brand);
+      brandFK =
+        selectedProduct?.FK_Brands ?? (await this.checkBrand(filters.brand));
     }
 
     // Step 5: Prepare parameters for query execution
     const parameters = {
       category: selectedProduct?.category ?? filters.category,
-      tags: selectedProduct?.tags?.map(tag => tag.toLowerCase()) ?? filters.tags ?? [],
-      minPrice: selectedProduct?.price ? selectedProduct.price * 0.8 : filters.minPrice,
-      maxPrice: selectedProduct?.price ? selectedProduct.price * 1.2 : filters.maxPrice,
+      tags:
+        selectedProduct?.tags?.map((tag) => tag.toLowerCase()) ??
+        filters.tags ??
+        [],
+      minPrice: selectedProduct?.price
+        ? selectedProduct.price * 0.8
+        : filters.minPrice,
+      maxPrice: selectedProduct?.price
+        ? selectedProduct.price * 1.2
+        : filters.maxPrice,
       brandFK,
       filterCategory: filters.category,
       filterCountry: filters.country,
@@ -685,10 +808,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     // Step 6: Execute query and return results
     try {
       const result = await this.cluster.query(queryWithJoin, { parameters });
-      return result.rows.map(row => row[bucketName]);
+      return result.rows.map((row) => row[bucketName]);
     } catch (error) {
       console.error("❌ Error executing query:", error);
-      throw new Error("An error occurred while retrieving the filtered products.");
+      throw new Error(
+        "An error occurred while retrieving the filtered products."
+      );
     }
   }
 
@@ -703,7 +828,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getAllUsers(): Promise<any[]> {
     const bucketName = this.usersBucket.name;
     if (!bucketName) {
-      throw new Error("❌ USER_BUCKET_NAME is not defined in environment variables.");
+      throw new Error(
+        "❌ USER_BUCKET_NAME is not defined in environment variables."
+      );
     }
 
     const query = `
@@ -782,8 +909,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Adds a new user to the Couchbase database.
-   * 
-   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the user was created 
+   *
+   * It also adds timestamps for `createdAt` and `updatedAt` fields to track when the user was created
    * and last updated.
    *
    * @param username The username of the new user.
@@ -796,7 +923,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    *
    * @throws InternalServerErrorException If there is an error during the insertion process.
    */
-  async addUser(username: string, email: string, password: string, address: AddressDto, role?: UserRole): Promise<any> {
+  async addUser(
+    username: string,
+    email: string,
+    password: string,
+    address: AddressDto,
+    role?: UserRole
+  ): Promise<any> {
     const bucketName = this.usersBucket.name;
     const userId = uuidv4();
 
@@ -826,7 +959,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       role: role || UserRole.USER,
       postCode: address.postCode,
       city: address.city,
-      country: address.country
+      country: address.country,
     });
 
     return result.length ? result[0] : null; // Returns `null` if already existing
@@ -852,7 +985,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Retrieves all users from the database, excluding SuperAdmins and optionally the current user.
-   * 
+   *
    * @param[in] currentUserEmail (Optional) Email of the currently connected user to exclude.
    * @return Filtered array of users.
    * @throws Error if the retrieval process fails.
@@ -863,9 +996,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const allUsers = await this.getAllUsers();
 
       // Filter superadmin and current users
-      return allUsers.filter(user => {
+      return allUsers.filter((user) => {
         // Exculude superadmin
-        if (user.role === 'SuperAdmin') {
+        if (user.role === "SuperAdmin") {
           return false;
         }
 
@@ -890,24 +1023,40 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const { product, newBrand } = payload;
 
     // Required field validation
-    const requiredFields = ["name", "description", "category", "tags", "ecoscore", "origin", "source", "status"];
-    const missingFields = requiredFields.filter(field => !product[field]);
+    const requiredFields = [
+      "name",
+      "description",
+      "category",
+      "tags",
+      "ecoscore",
+      "origin",
+      "source",
+      "status",
+    ];
+    const missingFields = requiredFields.filter((field) => !product[field]);
     if (missingFields.length > 0) {
-      throw new BadRequestException(`Missing required fields: ${missingFields.join(", ")}`);
+      throw new BadRequestException(
+        `Missing required fields: ${missingFields.join(", ")}`
+      );
     }
 
     // Type validation
     if (!Array.isArray(product.tags)) {
       throw new BadRequestException("❌ 'tags' must be an array of strings.");
     }
-    if (product.source !== 'Internal') {
+    if (product.source !== "Internal") {
       throw new BadRequestException("❌ Cannot add an external product");
     }
 
     // Check if a similar product exists
-    const existingSimilarProduct = await this.findProductByNameAndCateg(product.name, product.category);
+    const existingSimilarProduct = await this.findProductByNameAndCateg(
+      product.name,
+      product.category
+    );
     if (existingSimilarProduct) {
-      console.warn(`⚠ Product similar to '${product.name}' already exists with ID: ${existingSimilarProduct.id}`);
+      console.warn(
+        `⚠ Product similar to '${product.name}' already exists with ID: ${existingSimilarProduct.id}`
+      );
       throw new BadRequestException({
         error: `A similar product ('${existingSimilarProduct.name}') already exists with ID: ${existingSimilarProduct.id}`,
         statusCode: 400,
@@ -930,7 +1079,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     let brandId = product.brand ? await this.checkBrand(product.brand) : null;
     if (!brandId && newBrand) {
       try {
-        brandId = await this.addBrand(newBrand.name, newBrand.description, newBrand.status);
+        brandId = await this.addBrand(
+          newBrand.name,
+          newBrand.description,
+          newBrand.status
+        );
       } catch (error) {
         if (error instanceof BadRequestException) {
           throw new BadRequestException({
@@ -948,7 +1101,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const newProduct = {
       ...product,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     const query = `
@@ -957,7 +1110,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       RETURNING *;
   `;
 
-    const result = await this.executeQuery(query, { productId: product.id, newProduct });
+    const result = await this.executeQuery(query, {
+      productId: product.id,
+      newProduct,
+    });
     return result.length ? result[0] : { error: "Failed to insert product." };
   }
 
@@ -968,7 +1124,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * @param {string} category - The product category.
    * @returns {Promise<any | null>} - The product data if found, otherwise null.
    */
-  async findProductByNameAndCateg(name: string, category: string): Promise<any | null> {
+  async findProductByNameAndCateg(
+    name: string,
+    category: string
+  ): Promise<any | null> {
     if (!name.trim() || !category.trim()) return null;
 
     const query = `
@@ -979,7 +1138,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       LIMIT 1;
   `;
 
-    const result = await this.executeQuery(query, { name: name.trim(), category: category.trim() });
+    const result = await this.executeQuery(query, {
+      name: name.trim(),
+      category: category.trim(),
+    });
     return result?.[0] || null;
   }
 
@@ -996,7 +1158,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     // Check if the product exists
     const existingProduct = await this.getProductById(productId);
     if (!existingProduct) {
-      throw new NotFoundException(`Product with ID ${productId} not found`);
+      throw new NotFoundException(
+        `❌ Product with ID '${productId}' not found.`
+      );
     }
 
     // Delete the product
@@ -1043,7 +1207,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Retrieves products associated with a specific brand.
-   * 
+   *
    * @param {string} brandName - The name of the brand.
    * @returns {Promise<any[]>} - List of products associated with the brand.
    */
@@ -1060,25 +1224,36 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Updates a product in the database.
-   * 
-   * @details This function updates an existing product's fields dynamically based on 
-   * the provided `valueToUpdate` object. It ensures that the bucket exists, required 
-   * parameters are provided, and the database connection is established before executing 
+   *
+   * @details This function updates an existing product's fields dynamically based on
+   * the provided `valueToUpdate` object. It ensures that the bucket exists, required
+   * parameters are provided, and the database connection is established before executing
    * the update query.
-   * 
+   *
    * @param {string} productId - The unique ID of the product to update.
    * @param {Record<string, any>} valueToUpdate - An object containing the fields to update.
-   * 
+   *
    * @returns {Promise<any>} - A promise resolving to the updated product data.
-   * 
+   *
    * @throws {Error} If the bucket is not available, required parameters are missing, or an error occurs during execution.
    */
-  async updateProduct(productId: string, valueToUpdate: Record<string, any>): Promise<any> {
-    if (!productId || !valueToUpdate || Object.keys(valueToUpdate).length === 0) {
-      throw new BadRequestException("Invalid parameters: productId and fields to update are required.");
+  async updateProduct(
+    productId: string,
+    valueToUpdate: Record<string, any>
+  ): Promise<any> {
+    if (
+      !productId ||
+      !valueToUpdate ||
+      Object.keys(valueToUpdate).length === 0
+    ) {
+      throw new BadRequestException(
+        "Invalid parameters: productId and fields to update are required."
+      );
     }
 
-    const setClauses = Object.keys(valueToUpdate).map(key => `${key} = $${key}`).join(", ");
+    const setClauses = Object.keys(valueToUpdate)
+      .map((key) => `${key} = $${key}`)
+      .join(", ");
 
     const query = `
       UPDATE \`${this.productsBucket.name}\`._default._default
@@ -1087,18 +1262,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       RETURNING *;
     `;
 
-    const result = await this.executeQuery(query, { productId, ...valueToUpdate });
-    if (!result.length) throw new Error("No product was updated. Check the product ID.");
+    const result = await this.executeQuery(query, {
+      productId,
+      ...valueToUpdate,
+    });
+    if (!result.length)
+      throw new Error("No product was updated. Check the product ID.");
 
     return result[0];
   }
 
   /**
    * @brief Retrieves products based on a specified location.
-   * 
+   *
    * @param location The location to search for products (e.g., city or region).
    * @return A promise resolving to an array of products matching the location.
-   * 
+   *
    * @note If no products are found for the given location, an empty array is returned.
    * @warning Ensure the `origin` field exists in the database schema.
    */
@@ -1111,15 +1290,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       WHERE LOWER(p.origin) = $location;
     `;
 
-    const result = await this.executeQuery(query, { location: lowercaseLocation });
+    const result = await this.executeQuery(query, {
+      location: lowercaseLocation,
+    });
 
     if (result.length === 0) {
-      console.log(`No products found for location: ${location}`);
+      console.log(`Aucun produit trouvé pour l'emplacement: ${location}`);
       return [];
     }
 
     // Add default "source" field for products without one
-    return result.map(product => {
+    return result.map((product) => {
       if (!product.source) {
         return { ...product, source: "Internal" };
       }
@@ -1145,7 +1326,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       LIMIT 1;
   `;
 
-    const result = await this.executeQuery(query, { brandName: brandName.trim() });
+    const result = await this.executeQuery(query, {
+      brandName: brandName.trim(),
+    });
     return result?.[0]?.id || null;
   }
 
@@ -1160,14 +1343,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    *
    * @throws {BadRequestException} - If the brand already exists.
    */
-  async addBrand(brandName: string, brandDescription: string, status: string = ""): Promise<string> {
+  async addBrand(
+    brandName: string,
+    brandDescription: string,
+    status: string = ""
+  ): Promise<string> {
     if (!brandName.trim()) {
       throw new BadRequestException("❌ Brand name is required.");
     }
 
     const existingBrandId = await this.checkBrand(brandName);
     if (existingBrandId) {
-      console.warn(`⚠ Brand '${brandName}' already exists with ID: ${existingBrandId}`);
+      console.warn(
+        `⚠ Brand '${brandName}' already exists with ID: ${existingBrandId}`
+      );
       throw new BadRequestException(`Brand '${brandName}' already exists.`);
     }
 
@@ -1206,9 +1395,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Retrieves a brand by its ID.
-   * 
+   *
    * @details Queries the database to fetch a brand based on its unique identifier.
-   * 
+   *
    * @param {string} brandId - The unique ID of the brand.
    * @returns {Promise<any>} - The brand data if found, otherwise `null`.
    */
@@ -1224,16 +1413,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-  * @brief Deletes a brand from the database.
-  * 
-  * @details Ensures the brand exists before deletion. If not found, it throws an error.
-  * 
-  * @param {string} brandId - The unique ID of the brand to delete.
-  * @returns {Promise<any>} - The deleted brand data if successful.
-  * 
-  * @throws {BadRequestException} If `brandId` is empty.
-  * @throws {NotFoundException} If the brand does not exist.
-  */
+   * @brief Deletes a brand from the database.
+   *
+   * @details Ensures the brand exists before deletion. If not found, it throws an error.
+   *
+   * @param {string} brandId - The unique ID of the brand to delete.
+   * @returns {Promise<any>} - The deleted brand data if successful.
+   *
+   * @throws {BadRequestException} If `brandId` is empty.
+   * @throws {NotFoundException} If the brand does not exist.
+   */
   async deleteBrand(brandId: string): Promise<any> {
     if (!brandId) {
       throw new BadRequestException("❌ 'brandId' is required.");
@@ -1261,21 +1450,26 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-  * @brief Updates a brand in the database.
-  * 
-  * @details Checks if the brand exists before applying updates. The update 
-  * dynamically modifies only the provided fields while maintaining other data.
-  * 
-  * @param {string} brandId - The unique ID of the brand to update.
-  * @param {Record<string, any>} valueToUpdate - The fields to update.
-  * @returns {Promise<any>} - The updated brand data.
-  * 
-  * @throws {BadRequestException} If `brandId` or `valueToUpdate` is empty.
-  * @throws {NotFoundException} If the brand does not exist.
-  */
-  async updateBrand(brandId: string, valueToUpdate: Record<string, any>): Promise<any> {
+   * @brief Updates a brand in the database.
+   *
+   * @details Checks if the brand exists before applying updates. The update
+   * dynamically modifies only the provided fields while maintaining other data.
+   *
+   * @param {string} brandId - The unique ID of the brand to update.
+   * @param {Record<string, any>} valueToUpdate - The fields to update.
+   * @returns {Promise<any>} - The updated brand data.
+   *
+   * @throws {BadRequestException} If `brandId` or `valueToUpdate` is empty.
+   * @throws {NotFoundException} If the brand does not exist.
+   */
+  async updateBrand(
+    brandId: string,
+    valueToUpdate: Record<string, any>
+  ): Promise<any> {
     if (!brandId || !valueToUpdate || Object.keys(valueToUpdate).length === 0) {
-      throw new BadRequestException("Invalid parameters: brandId and fields to update are required.");
+      throw new BadRequestException(
+        "Invalid parameters: brandId and fields to update are required."
+      );
     }
 
     // Check if the brand exists before updating
@@ -1286,7 +1480,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // Construct the dynamic update query
     const setClauses = Object.keys(valueToUpdate)
-      .map(key => `${key} = $${key}`)
+      .map((key) => `${key} = $${key}`)
       .join(", ");
 
     const query = `
@@ -1296,7 +1490,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     RETURNING *;
   `;
 
-    const result = await this.executeQuery(query, { brandId, ...valueToUpdate });
+    const result = await this.executeQuery(query, {
+      brandId,
+      ...valueToUpdate,
+    });
     if (!result.length) {
       throw new Error(`❌ No brand was updated. Check the brand ID.`);
     }
@@ -1318,7 +1515,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getAllCategoryName(): Promise<any[]> {
     const categBucketName = this.categBucket.name;
     if (!categBucketName) {
-      throw new Error("❌ CATEGORY_BUCKET_NAME not defined in environment variables");
+      throw new Error(
+        "❌ CATEGORY_BUCKET_NAME not defined in environment variables"
+      );
     }
 
     const query = `
@@ -1331,16 +1530,247 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ========================================================================
+  // ======================== COMMENTS FUNCTIONS
+  // ========================================================================
+  /**
+   * Adds a new comment to the database.
+   *
+   * @param {CommentDto} comment - The comment data to be added.
+   * @returns {Promise<any>} - A promise resolving with a success message and the created comment.
+   * @throws {BadRequestException} - If any required field is missing.
+   * @throws {InternalServerErrorException} - If there is an error accessing the database or inserting the comment.
+   */
+  async addComment(comment: CommentDto): Promise<any> {
+    // Check that all required fields are provided
+    if (
+      !comment.contentCom ||
+      !comment.dateCom ||
+      !comment.userRatingCom ||
+      !comment.userId ||
+      !comment.productId ||
+      !comment.source
+    ) {
+      throw new BadRequestException("❌ All comment fields must be filled.");
+    }
+
+    // Retrieve the comments bucket from the Couchbase cluster
+    const commentsBucket = this.cluster.bucket(
+      process.env.COMMENTS_BUCKET_NAME
+    );
+    if (!commentsBucket) {
+      throw new InternalServerErrorException(
+        "❌ COMMENTS_BUCKET_NAME is not defined in environment variables."
+      );
+    }
+
+    // Get the default collection from the bucket
+    const collection = commentsBucket.defaultCollection();
+
+    // Create a new comment object with a unique ID
+    const newComment = {
+      id: uuidv4(), // Generate a unique ID
+      dateCom: comment.dateCom,
+      contentCom: comment.contentCom,
+      userRatingCom: comment.userRatingCom,
+      userId: comment.userId,
+      productId: comment.productId,
+      source: comment.source,
+    };
+
+    try {
+      // Insert the new comment into the database
+      await collection.insert(newComment.id, newComment);
+      return { message: "Comment successfully added", comment: newComment };
+    } catch (error) {
+      console.error("❌ Error while adding the comment:", error);
+      throw new InternalServerErrorException("Error while adding the comment.");
+    }
+  }
+
+  /**
+   * @brief Updates an existing comment in the Couchbase database.
+   *
+   * @param id The ID of the comment to update.
+   * @param comment The updated CommentDto object to store.
+   * @returns A success message and the updated comment object.
+   * @throws InternalServerErrorException if the update fails.
+   */
+  async updateComment(id: string, comment: CommentDto): Promise<any> {
+    const commentsBucket = this.cluster.bucket(
+      process.env.COMMENTS_BUCKET_NAME
+    );
+    const collection = commentsBucket.defaultCollection();
+
+    try {
+      // Update the comment in the database
+      await collection.replace(id, comment);
+      return { message: "Comment successfully updated", comment };
+    } catch (error) {
+      console.error("❌ Error while updating the comment:", error);
+      throw new InternalServerErrorException(
+        "Error while updating the comment."
+      );
+    }
+  }
+
+  /**
+   * @brief Deletes an existing comment from the Couchbase database.
+   *
+   * @param id The ID of the comment to delete.
+   * @returns A success message indicating the comment was deleted.
+   * @throws InternalServerErrorException if the deletion fails.
+   */
+  async deleteComment(id: string): Promise<any> {
+    const commentsBucket = this.cluster.bucket(
+      process.env.COMMENTS_BUCKET_NAME
+    );
+    const collection = commentsBucket.defaultCollection();
+
+    try {
+      // Delete the comment from the database
+      await collection.remove(id);
+      return { message: "Comment successfully deleted" };
+    } catch (error) {
+      console.error("❌ Error while deleting the comment:", error);
+      throw new InternalServerErrorException(
+        "Error while deleting the comment."
+      );
+    }
+  }
+
+  /**
+   * @brief Retrieves all comments for a specific product from the database.
+   *
+   * This method interacts with the database to fetch all comments for a given product,
+   * ordered by the comment date in descending order. It does not apply pagination.
+   * If there is an error during the database query, an exception is thrown.
+   *
+   * @param {string} productId - The ID of the product for which comments are retrieved.
+   * @returns {Promise<any[]>} A promise containing an array of comments for the specified product.
+   * @throws {Error} If an error occurs while querying the database for the comments.
+   */
+  async getProductComments(productId: string): Promise<any[]> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error(
+        "❌ COMMENTS_BUCKET_NAME not defined in environment variables"
+      );
+    }
+
+    // Query to get all comments for this product (no pagination)
+    const query = `
+    SELECT META().id as id, c.* 
+    FROM \`${commentsBucketName}\` c
+    WHERE c.productId = $productId 
+    ORDER BY c.dateCom DESC
+  `;
+
+    try {
+      // Execute the query to fetch all comments for the product
+      const comments = await this.executeQuery(query, { productId });
+      return comments;
+    } catch (error) {
+      console.error(
+        `❌ Error retrieving comments for product ${productId}:`,
+        error
+      );
+      throw new Error(`Error retrieving comments for product ${productId}`);
+    }
+  }
+
+  /**
+   * @brief Retrieves the total count of comments for a specific product from the comments bucket.
+   *
+   * @param {string} productId - The ID of the product for which the comment count is retrieved.
+   * @returns {Promise<number>} A promise that resolves to the total comment count for the specified product.
+   * @throws {Error} If the comments bucket name is not defined in the environment variables or if an error occurs while executing the query.
+   */
+  async getCommentsCount(productId: string): Promise<number> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error(
+        "❌ COMMENTS_BUCKET_NAME not defined in environment variables"
+      );
+    }
+
+    // Query to count the total number of comments for the product
+    const countQuery = `
+    SELECT COUNT(*) AS total 
+    FROM \`${commentsBucketName}\` 
+    WHERE productId = "${productId}"
+  `;
+
+    try {
+      // Execute the query to count the comments
+      const result = await this.executeQuery(countQuery);
+
+      // Extract the total count from the result
+      const totalCount = result[0]?.total || 0;
+
+      return totalCount;
+    } catch (error) {
+      console.error(
+        `❌ Error retrieving comments count for product ${productId}:`,
+        error
+      );
+      throw new Error(
+        `Error retrieving comments count for product ${productId}`
+      );
+    }
+  }
+
+  /**
+   * @brief Retrieves the average rating for a specific product from the Couchbase database.
+   *
+   * @param productId - The ID of the product whose average rating should be calculated.
+   * @returns A promise resolving to the average rating rounded to two decimal places.
+   *          Returns 0 if no comments are found.
+   * @throws Error if an issue occurs during query execution or if the bucket name is missing.
+   */
+  async getAverageRating(productId: string): Promise<number> {
+    const commentsBucketName = this.commentsBucket.name;
+    if (!commentsBucketName) {
+      throw new Error(
+        "❌ COMMENTS_BUCKET_NAME not defined in environment variables"
+      );
+    }
+
+    // Query to calculate the average score
+    const avgQuery = `
+    SELECT AVG(TO_NUMBER(userRatingCom)) AS averageRating
+    FROM \`${commentsBucketName}\`
+    WHERE productId = "${productId}"
+  `;
+
+    try {
+      const result = await this.executeQuery(avgQuery);
+
+      // Extract average (may be null if no comments)
+      const average = result[0]?.averageRating ?? 0;
+
+      return Number(average.toFixed(2)); // Rounded to 2 decimal places
+    } catch (error) {
+      console.error(
+        `❌ Error retrieving average rating for product ${productId}:`,
+        error
+      );
+      throw new Error(
+        `Error retrieving average rating for product ${productId}`
+      );
+    }
+  }
+
+  // ========================================================================
   // ======================== REQUESTS FUNCTIONS (FOR ADMIN MANAGEMENT)
   // ========================================================================
   /**
    * @brief Retrieves product requests with associated brand names.
-   * 
-   * This function fetches product data from the products bucket and associates 
+   *
+   * This function fetches product data from the products bucket and associates
    * them with their respective brands from the brands bucket using a LEFT JOIN.
-   * Only products with specific statuses ("add-product", "edit-product", "delete-product") 
+   * Only products with specific statuses ("add-product", "edit-product", "delete-product")
    * are retrieved.
-   * 
+   *
    * @return {Promise<any[]>} - A promise that resolves to an array of product requests.
    * @throws {InternalServerErrorException} - If an error occurs during retrieval.
    */
@@ -1376,28 +1806,38 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * @brief Updates an entity (product or brand) using existing update functions.
-   * 
-   * @details This method determines whether the entity is a product or brand 
+   *
+   * @details This method determines whether the entity is a product or brand
    * and calls the corresponding update function.
-   * 
+   *
    * @param {string} type - The type of entity to update ("product" or "brand").
    * @param {string} entityId - The unique identifier of the entity.
    * @param {Record<string, any>} valueToUpdate - The fields to update.
-   * 
+   *
    * @returns {Promise<any>} - The updated entity.
-   * 
+   *
    * @throws {BadRequestException} If the entity type is invalid or parameters are missing.
    */
-  async updateEntity(type: string, entityId: string, valueToUpdate: Record<string, any>): Promise<any> {
-    if (!entityId || !valueToUpdate || Object.keys(valueToUpdate).length === 0) {
-      throw new BadRequestException(`❌ Invalid parameters: ${type} ID and fields to update are required.`);
+  async updateEntity(
+    type: string,
+    entityId: string,
+    valueToUpdate: Record<string, any>
+  ): Promise<any> {
+    if (
+      !entityId ||
+      !valueToUpdate ||
+      Object.keys(valueToUpdate).length === 0
+    ) {
+      throw new BadRequestException(
+        `❌ Invalid parameters: ${type} ID and fields to update are required.`
+      );
     }
 
     // Determine which entity type to update
     switch (type) {
-      case 'product':
+      case "product":
         return this.updateProduct(entityId, valueToUpdate);
-      case 'brand':
+      case "brand":
         return this.updateBrand(entityId, valueToUpdate);
       default:
         throw new BadRequestException(`❌ Invalid entity type: ${type}`);
@@ -1405,33 +1845,39 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-  * @brief Deletes an entity (product or brand) using existing delete functions.
-  * 
-  * @details This method determines whether the entity is a product or brand 
-  * and calls the corresponding delete function.
-  * 
-  * @param {string} type - The type of entity to delete ("product" or "brand").
-  * @param {string} entityId - The unique identifier of the entity.
-  * 
-  * @returns {Promise<any>} - The deleted entity.
-  * 
-  * @throws {BadRequestException} If the entity type is invalid or the ID is missing.
-  */
+   * @brief Deletes an entity (product or brand) using existing delete functions.
+   *
+   * @details This method determines whether the entity is a product or brand
+   * and calls the corresponding delete function.
+   *
+   * @param {string} type - The type of entity to delete ("product" or "brand").
+   * @param {string} entityId - The unique identifier of the entity.
+   *
+   * @returns {Promise<any>} - The deleted entity.
+   *
+   * @throws {BadRequestException} If the entity type is invalid or the ID is missing.
+   */
   async deleteEntity(type: string, entityId: string): Promise<any> {
     if (!entityId) {
-      throw new BadRequestException(`❌ Invalid parameters: ${type} ID is required.`);
+      throw new BadRequestException(
+        `❌ Invalid parameters: ${type} ID is required.`
+      );
     }
     // Determine which entity type to delete
     switch (type) {
-      case 'product':
+      case "product":
         return this.deleteProduct(entityId);
-      case 'brand':
+      case "brand":
         try {
           // First get the brand to access its name
           const brand = await this.getBrandById(entityId);
           if (!brand) {
-            console.warn(`⚠️ Brand with ID '${entityId}' not found. Nothing to delete.`);
-            return { message: `Brand with ID '${entityId}' does not exist or was already deleted.` };
+            console.warn(
+              `⚠️ Brand with ID '${entityId}' not found. Nothing to delete.`
+            );
+            return {
+              message: `Brand with ID '${entityId}' does not exist or was already deleted.`,
+            };
           }
 
           const brandName = brand.name;
@@ -1449,14 +1895,18 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
                 continue;
               }
               try {
-                await this.updateProduct(productId, { status: 'edit-product' });
+                await this.updateProduct(productId, { status: "edit-product" });
                 updatedCount++;
               } catch (error) {
-                console.error(`❌ Failed to update product ${productId}: ${error.message}`);
+                console.error(
+                  `❌ Failed to update product ${productId}: ${error.message}`
+                );
               }
             }
           } else {
-            console.warn(`ℹNo products found associated with brand "${brandName}"`);
+            console.warn(
+              `ℹNo products found associated with brand "${brandName}"`
+            );
           }
 
           // Now delete the brand
@@ -1470,23 +1920,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /**
- * @brief Retrieves the Couchbase bucket instance for favorites.
- */
-  getFavoritesBucket(): Bucket {
-    return this.getBucket(this.favoritesBucket, "favorites");
-  }
-
-  /**
- * @brief Retrieves the favorites collection.
- */
-  getFavoritesCollection(): Collection {
-    return this.getCollection(this.favoritesCollection, "favorites");
-  }
+  // ========================================================================
+  // ======================== FAVORITES FUNCTIONS
+  // ========================================================================
 
   /**
    * @brief Adds a product to a user's favorites.
-   * 
+   *
    * @param userId The ID of the user.
    * @param productId The ID of the product to add to favorites.
    * @returns {Promise<any>} A promise resolving to the created favorite entry.
@@ -1509,34 +1949,41 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Check if the product already exists
       const productExists = await this.getProductById(productId);
       if (!productExists) {
-        throw new NotFoundException(`Product with ID ${productId} not found`);
+        throw new NotFoundException(`Produit avec ID ${productId} non trouvé`);
       }
 
       // Create a simple favorite document without including all product details
       const favorite = {
-        type: 'favorite',
+        type: "favorite",
         userId,
         productId,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       await favoritesCollection.insert(favoriteId, favorite);
-      console.log(`💾 Adding to favorites - userId: ${userId}, productId: ${productId}, favoriteId: ${favoriteId}`);
+      console.log(
+        `💾 Ajout aux favoris - userId: ${userId}, productId: ${productId}, favoriteId: ${favoriteId}`
+      );
       return { id: favoriteId, ...favorite, exists: false };
     } catch (error) {
-      console.error('❌ Error adding to favorites:', error);
-      throw new InternalServerErrorException('Error adding product to favorites');
+      console.error("❌ Error adding to favorites:", error);
+      throw new InternalServerErrorException(
+        "Error adding product to favorites"
+      );
     }
   }
 
   /**
    * @brief Removes a product from a user's favorites.
-   * 
+   *
    * @param userId The ID of the user.
    * @param productId The ID of the product to remove from favorites.
    * @returns {Promise<boolean>} A promise resolving to true if the favorite was removed.
    */
-  async removeFromFavorites(userId: string, productId: string): Promise<boolean> {
+  async removeFromFavorites(
+    userId: string,
+    productId: string
+  ): Promise<boolean> {
     try {
       const favoriteId = `favorite::${userId}::${productId}`;
       const favoritesCollection = this.getFavoritesCollection();
@@ -1547,28 +1994,32 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       if (error instanceof DocumentNotFoundError) {
         return false;
       }
-      console.error('❌ Error removing from favorites:', error);
-      throw new InternalServerErrorException('Error removing product from favorites');
+      console.error("❌ Error removing from favorites:", error);
+      throw new InternalServerErrorException(
+        "Error removing product from favorites"
+      );
     }
   }
 
   /**
    * @brief Gets all favorites for a user.
-   * 
+   *
    * @param userId The ID of the user.
    * @returns {Promise<any[]>} A promise resolving to an array of favorite products.
    */
   async getUserFavorites(userId: string): Promise<any[]> {
     try {
-      // Check that the user ID is defined
+      // Vérifier que l'ID utilisateur est défini
       if (!userId) {
-        console.error('❌ getUserFavorites called with undefined user ID');
-        return []; // Return an empty array instead of throwing an error
+        console.error(
+          "❌ getUserFavorites appelé avec un ID utilisateur undefined"
+        );
+        return []; // Retourner un tableau vide plutôt que de lancer une erreur
       }
 
-      console.log(`🔍 Retrieving favorites for user: ${userId}`);
+      console.log(`🔍 Récupération des favoris pour l'utilisateur: ${userId}`);
 
-      // Optimized query with USE KEYS for performance
+      // Requête optimisée avec USE KEYS pour la performance
       const query = `
         SELECT 
           f.userId, 
@@ -1581,29 +2032,37 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         ORDER BY f.createdAt DESC
       `;
 
-      // Display parameters for debugging
-      console.log(`📝 Query parameters:`, { userId });
-      console.log(`🔍 Buckets used: FAVORITES=${process.env.FAVORITES_BUCKET_NAME}, PRODUCTS=${process.env.BUCKET_NAME}`);
+      // Afficher les paramètres pour déboguer
+      console.log(`📝 Paramètres de la requête:`, { userId });
+      console.log(
+        `🔍 Buckets utilisés: FAVORITES=${process.env.FAVORITES_BUCKET_NAME}, PRODUCTS=${process.env.BUCKET_NAME}`
+      );
 
       const result = await this.executeQuery(query, { userId });
       return result;
     } catch (error) {
-      console.error('❌ Error getting user favorites:', error);
-      throw new InternalServerErrorException('Error retrieving user favorites');
+      console.error("❌ Error getting user favorites:", error);
+      throw new InternalServerErrorException("Error retrieving user favorites");
     }
   }
 
   /**
    * @brief Checks if a product is in a user's favorites.
-   * 
+   *
    * @param userId The ID of the user.
    * @param productId The ID of the product to check.
    * @returns {Promise<boolean>} A promise resolving to true if the product is in favorites.
    */
-  async isProductInFavorites(userId: string, productId: string): Promise<boolean> {
+  async isProductInFavorites(
+    userId: string,
+    productId: string
+  ): Promise<boolean> {
     try {
       if (!userId || !productId) {
-        console.error('❌ isProductInFavorites called with invalid parameters:', { userId, productId });
+        console.error(
+          "❌ isProductInFavorites appelé avec des paramètres invalides:",
+          { userId, productId }
+        );
         return false;
       }
 
@@ -1621,8 +2080,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const result = await this.executeQuery(query, { favoriteId });
       return result[0]?.exists ? true : false;
     } catch (error) {
-      console.error('❌ Error checking favorites status:', error);
-      throw new InternalServerErrorException('Error checking if product is in favorites');
+      console.error("❌ Error checking favorites status:", error);
+      throw new InternalServerErrorException(
+        "Error checking if product is in favorites"
+      );
     }
   }
 }

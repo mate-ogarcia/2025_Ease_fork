@@ -5,7 +5,7 @@
   box-sizing: border-box;
 }
 
-body {
+.container {
   font-family: "Poppins", sans-serif;
   overflow: hidden;
   background-color: #d5f5ea;
@@ -19,6 +19,7 @@ body {
     opacity: 0;
     transform: translateY(15px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -112,7 +113,7 @@ form {
   transition: 0.3s;
 }
 
-.input-container > div {
+.input-container>div {
   position: relative;
   height: 45px;
 }
@@ -130,8 +131,8 @@ h5 {
 
 /* Effets dynamiques des inputs */
 .input-container.focus h5,
-.input-log:focus + h5,
-.input-log:not(:placeholder-shown) + h5 {
+.input-log:focus+h5,
+.input-log:not(:placeholder-shown)+h5 {
   top: -10px;
   font-size: 15px;
   color: #38d39f;
@@ -181,12 +182,12 @@ h5 {
 }
 
 /* Couleur de l'icône en focus */
-.input-container.focus > .icon-log i {
+.input-container.focus>.icon-log i {
   color: #38d39f;
 }
 
 /* Couleur de l'icône en focus et en erreur */
-.input-container.error-input.focus > .icon-log i {
+.input-container.error-input.focus>.icon-log i {
   color: #38d39f;
 }
 
@@ -354,15 +355,19 @@ a:hover {
   .container {
     grid-template-columns: 1fr;
   }
+
   form {
     width: 290px;
   }
+
   .image {
     display: none;
   }
+
   .wave {
     height: 40%;
   }
+
   .wavetop {
     height: 60%;
   }
@@ -484,6 +489,7 @@ a:hover {
     opacity: 0;
     transform: translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -553,7 +559,8 @@ a:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
   z-index: 1000;
-  background-color: transparent !important;  /* Fond transparent en mode light */
+  background-color: transparent !important;
+  /* Fond transparent en mode light */
   border: 1px solid #e0e0e0;
   padding: 5px 0;
   top: 100%;
@@ -603,7 +610,7 @@ a:hover {
     top: 100%;
     width: 100%;
   }
-  
+
   .autocomplete-item {
     padding: 10px 12px;
   }

@@ -16,6 +16,7 @@
 /.history
 /bucketsJSON/exportedBucketsData/*
 !/bucketsJSON/exportedBucketsData/bucket.sample.json
+**/prettierignore
 #node_modules
 node_modules
 

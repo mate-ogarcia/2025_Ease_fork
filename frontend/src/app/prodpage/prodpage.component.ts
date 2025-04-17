@@ -10,14 +10,26 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+// Components
 import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
+import { CommentsSectionComponent } from '../comments-section/comments-section.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
 import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.service';
 import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
+import { CommentsService } from '../../services/comments/comments.service';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
+import { catchError, from } from 'rxjs';
+
+interface Product {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  image?: string;
+  [key: string]: any;
+}
 
 /**
  * @class ProdpageComponent
@@ -26,19 +38,29 @@ import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 @Component({
   selector: 'app-prodpage',
   standalone: true,
-  imports: [NavbarComponent, CommonModule, LikeBtnComponent],
+  imports: [
+    NavbarComponent,
+    CommonModule,
+    LikeBtnComponent,
+    CommentsSectionComponent,
+  ],
   templateUrl: './prodpage.component.html',
-  styleUrls: ['./prodpage.component.css']
+  styleUrls: ['./prodpage.component.css'],
 })
 export class ProdpageComponent implements OnInit {
-  productId: string = '';           // The ID of the selected product.
-  productSource: string = '';       // The source of the product (Internal or OpenFoodFacts).
-  product: any = null;              // The product details.
-  isLoading: boolean = false;       // Loading state flag.
-  errorMessage: string = '';        // Error message in case of failure.
+  productId: string = ''; // The ID of the selected product.
+  productSource: string = ''; // The source of the product (Internal or OpenFoodFacts).
+  product: Product | null = null; // The product details.
+  isLoading: boolean = false; // Loading state flag.
+  errorMessage: string = ''; // Error message in case of failure.
   selectedTab: string = 'description'; // Selected tab for displaying product information.
-  isAuthenticated: boolean = false; // L'utilisateur est-il authentifié
-  isFavorite: boolean = false;      // Le produit est-il dans les favoris
+  isAuthenticated: boolean = false; // Is the user authenticated
+  isFavorite: boolean = false; // Is the product in favorites
+  showCommentForm = false;
+  canAddComment: boolean = false; // Determines if the user can add a comment.
+  userRole: string | null = null; // Stores the user role.
+  commentCount: number = 0; // Number of comments for a product
+  avgRate: number = 0; // Average rate for a product
 
   /**
    * @brief Constructor initializes dependencies.
@@ -57,16 +79,17 @@ export class ProdpageComponent implements OnInit {
     private openFoodFactsService: ApiOpenFoodFacts,
     private favoritesService: FavoritesService,
     private authService: AuthService,
-    private router: Router
-  ) { }
+    private router: Router,
+    private commentsService: CommentsService
+  ) {}
 
   /**
    * @brief Lifecycle hook executed when the component is initialized.
    * It retrieves the product ID and source from the route parameters.
    */
-  ngOnInit() {
-    // Vérifier si l'utilisateur est connecté
-    this.authService.isAuthenticated().subscribe(isAuth => {
+  ngOnInit(): void {
+    // Check if the user is logged in
+    this.authService.isAuthenticated().subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
     });
 
@@ -77,23 +100,47 @@ export class ProdpageComponent implements OnInit {
       if (this.productId) {
         this.loadProduct(this.productId, this.productSource);
 
-        // Si l'utilisateur est authentifié, vérifier si le produit est dans les favoris
+        // If the user is authenticated, check if the product is in favorites
         if (this.isAuthenticated) {
           this.checkFavoriteStatus();
         }
       }
     });
 
-    // S'abonner aux changements d'état d'authentification
-    this.authService.isAuthenticated().subscribe(isAuth => {
+    // Subscribe to authentication state changes
+    this.authService.isAuthenticated().subscribe((isAuth) => {
       if (isAuth && this.productId) {
         this.checkFavoriteStatus();
       }
     });
+
+    // Get the number of comments
+    from(this.commentsService.getCommentCountForProduct(this.productId))
+      .pipe(
+        catchError((error) => {
+          console.error('❌ Error fetching comment count', error);
+          return []; // Returns an empty array or another default value in case of error
+        })
+      )
+      .subscribe((count) => {
+        this.commentCount = count; // Stores the number of comments
+      });
+
+    // Get the average rating for the product
+    from(this.commentsService.getAverageRateForProduct(this.productId))
+      .pipe(
+        catchError((error) => {
+          console.error('❌ Error fetching comment avg rate', error);
+          return []; // Returns an empty array or another default value in case of error
+        })
+      )
+      .subscribe((count) => {
+        this.avgRate = count;
+      });
   }
 
   /**
-   * @brief Vérifie si le produit actuel est dans les favoris de l'utilisateur
+   * @brief Checks if the current product is in the user's favorites
    */
   private checkFavoriteStatus(): void {
     if (!this.productId) return;
@@ -103,32 +150,32 @@ export class ProdpageComponent implements OnInit {
         this.isFavorite = isFavorite;
       },
       error: (error) => {
-        console.error('Erreur lors de la vérification des favoris:', error);
-      }
+        console.error('Error checking favorites:', error);
+      },
     });
   }
 
   /**
-   * @brief Gère le changement d'état du bouton like
-   * @param liked Nouvel état du bouton (true = aimé, false = non aimé)
+   * @brief Handles the like button state change
+   * @param liked New button state (true = liked, false = not liked)
    */
   onLikeToggled(liked: boolean): void {
     if (!this.isAuthenticated) {
-      // Si l'utilisateur n'est pas authentifié, rediriger vers la page de connexion
+      // If the user is not authenticated, redirect to the login page
       this.router.navigate(['/auth']);
       return;
     }
 
     if (liked) {
-      // Sauvegarde des détails du produit automatiquement gérée par le backend
+      // Product details saving is automatically handled by the backend
       this.favoritesService.addToFavorites(this.productId).subscribe({
         next: () => {
           this.isFavorite = true;
         },
         error: (err) => {
-          this.isFavorite = false; // Réinitialiser l'état visuel en cas d'erreur
-          console.error('Erreur lors de l\'ajout aux favoris:', err);
-        }
+          this.isFavorite = false; // Reset visual state in case of error
+          console.error('Error adding to favorites:', err);
+        },
       });
     } else {
       this.favoritesService.removeFromFavorites(this.productId).subscribe({
@@ -136,9 +183,9 @@ export class ProdpageComponent implements OnInit {
           this.isFavorite = false;
         },
         error: (err) => {
-          this.isFavorite = true; // Réinitialiser l'état visuel en cas d'erreur
-          console.error('Erreur lors de la suppression des favoris:', err);
-        }
+          this.isFavorite = true; // Reset visual state in case of error
+          console.error('Error removing from favorites:', err);
+        },
       });
     }
   }
@@ -148,18 +195,18 @@ export class ProdpageComponent implements OnInit {
    * @param productId The unique identifier of the product.
    * @param productSource The source of the product (Internal or OpenFoodFacts).
    */
-  loadProduct(productId: string, productSource: string) {
+  loadProduct(productId: string, productSource: string): void {
     this.isLoading = true;
     this.errorMessage = '';
     this.product = null;
 
-    if (productSource === "Internal") {
+    if (productSource === 'Internal') {
       this.fetchInternalProduct(productId);
-    } else if (productSource === "OpenFoodFacts") {
+    } else if (productSource === 'OpenFoodFacts') {
       this.fetchExternalProduct(productId);
     } else {
       console.warn(`⚠️ Unknown product source: ${productSource}`);
-      this.errorMessage = "Unknown product source.";
+      this.errorMessage = 'Unknown product source.';
       this.isLoading = false;
     }
   }
@@ -168,12 +215,14 @@ export class ProdpageComponent implements OnInit {
    * @brief Fetches an internal product.
    * @param productId The ID of the product.
    */
-  fetchInternalProduct(productId: string) {
+  fetchInternalProduct(productId: string): void {
     this.apiService.getProductById(productId).subscribe({
       next: (data) => {
         if (data) {
           this.product = data;
-          this.loadProductImage(this.product);
+          if (this.product) {
+            this.loadProductImage(this.product);
+          }
         } else {
           this.errorMessage = 'Product not found.';
         }
@@ -191,23 +240,26 @@ export class ProdpageComponent implements OnInit {
    * @brief Fetches a product from OpenFoodFacts.
    * @param productId The ID of the product.
    */
-  fetchExternalProduct(productId: string) {
+  fetchExternalProduct(productId: string): void {
     this.openFoodFactsService.getOpenFoodFactsProductById(productId).subscribe({
       next: (data) => {
         if (data) {
-          this.product = this.openFoodFactsService.formatOpenFoodFactsProduct(data);
-          this.loadProductImage(this.product);
+          this.product =
+            this.openFoodFactsService.formatOpenFoodFactsProduct(data);
+          if (this.product) {
+            this.loadProductImage(this.product);
+          }
         } else {
-          this.errorMessage = "Product not found on OpenFoodFacts.";
+          this.errorMessage = 'Product not found on OpenFoodFacts.';
         }
       },
       error: (error) => {
-        console.error("❌ Error retrieving product from OpenFoodFacts:", error);
-        this.errorMessage = "Unable to fetch product from OpenFoodFacts.";
+        console.error('❌ Error retrieving product from OpenFoodFacts:', error);
+        this.errorMessage = 'Unable to fetch product from OpenFoodFacts.';
       },
       complete: () => {
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -215,7 +267,7 @@ export class ProdpageComponent implements OnInit {
    * @brief Fetches an image from Unsplash if the product has no image.
    * @param product The product object.
    */
-  private loadProductImage(product: any) {
+  private loadProductImage(product: Product): void {
     if (product.imageUrl) {
       return;
     }
@@ -231,7 +283,7 @@ export class ProdpageComponent implements OnInit {
         },
         error: (err) => {
           console.error(`❌ Error retrieving image for ${product.name}:`, err);
-        }
+        },
       });
     }
   }
@@ -240,7 +292,7 @@ export class ProdpageComponent implements OnInit {
    * @brief Updates the selected tab.
    * @param tab The tab to display.
    */
-  selectTab(tab: string) {
+  selectTab(tab: string): void {
     this.selectedTab = tab;
   }
 
@@ -250,7 +302,7 @@ export class ProdpageComponent implements OnInit {
    * @param product The product object.
    * @return The unique product ID.
    */
-  trackByProduct(index: number, product: any): any {
+  trackByProduct(index: number, product: Product): string {
     return product.id;
   }
 }
