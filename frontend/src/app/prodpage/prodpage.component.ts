@@ -10,9 +10,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { catchError, from } from 'rxjs';
 // Components
 import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
 import { CommentsSectionComponent } from '../comments-section/comments-section.component';
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
@@ -20,8 +22,7 @@ import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.ser
 import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { CommentsService } from '../../services/comments/comments.service';
-import { NavbarComponent } from '../shared/components/navbar/navbar.component';
-import { catchError, from } from 'rxjs';
+import { Co2CalculatorService } from '../../services/co2Calculator/co2Calculator.service';
 
 interface Product {
   id: string;
@@ -80,7 +81,8 @@ export class ProdpageComponent implements OnInit {
     private favoritesService: FavoritesService,
     private authService: AuthService,
     private router: Router,
-    private commentsService: CommentsService
+    private commentsService: CommentsService,
+    private co2Service: Co2CalculatorService,
   ) {}
 
   /**
@@ -137,6 +139,9 @@ export class ProdpageComponent implements OnInit {
       .subscribe((count) => {
         this.avgRate = count;
       });
+
+      // Test CO2
+      this.calculateCo2Impact();
   }
 
   /**
@@ -286,6 +291,16 @@ export class ProdpageComponent implements OnInit {
         },
       });
     }
+  }
+
+  /**
+   * @brief Calculates the CO2 impact for the product
+   */
+  // TODO case if produt is external
+  calculateCo2Impact(): void {
+    this.co2Service.getCo2ImpactForProduct(this.productId).subscribe((data) => {
+      console.log(data);
+    });
   }
 
   /**
