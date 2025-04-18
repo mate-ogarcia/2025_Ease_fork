@@ -136,7 +136,14 @@ export class UsersService {
    */
   async delete(email: string): Promise<void> {
     try {
-      const result = await this.databaseService.deleteUser(email);
+      // D'abord, rechercher l'utilisateur par email pour obtenir son ID
+      const user = await this.databaseService.getUserByEmail(email);
+      if (!user) {
+        throw new NotFoundException(`User with email ${email} not found`);
+      }
+
+      // Utiliser l'ID du document pour supprimer l'utilisateur
+      const result = await this.databaseService.deleteUser(user.id);
       if (!result) {
         throw new NotFoundException(`User with email ${email} not found`);
       }

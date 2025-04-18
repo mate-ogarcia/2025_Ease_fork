@@ -161,9 +161,11 @@ export class UsersComponent implements OnInit {
         next: () => {
           this.users = this.users.filter(u => u.email !== user.email);
           console.log('✅ Utilisateur supprimé avec succès');
+          this.notificationService.showSuccess(`L'utilisateur ${user.username} a été supprimé avec succès`);
         },
         error: (error) => {
           console.error('❌ Erreur lors de la suppression:', error);
+          this.notificationService.showError(`Erreur lors de la suppression de l'utilisateur ${user.username}`);
           // Recharger les utilisateurs en cas d'erreur
           this.loadUsers();
         }

@@ -141,7 +141,10 @@ export class AdminController {
   @Delete("users/:email")
   async deleteUser(@Param("email") email: string) {
     try {
-      return await this.usersService.delete(email);
+      // Decode the email (convert %40 to @ and other encoded characters)
+      const decodedEmail = decodeURIComponent(email);
+
+      return await this.usersService.delete(decodedEmail);
     } catch (error) {
       console.error("❌ Error deleting user:", error);
       throw new HttpException(
