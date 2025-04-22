@@ -1,8 +1,17 @@
+/**
+ * @file contact.component.ts
+ * @brief Component for the contact page, handling form submission and displaying team/FAQ info.
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 
+/**
+ * @interface ContactForm
+ * @brief Interface representing the contact form model.
+ */
 interface ContactForm {
   name: string;
   email: string;
@@ -10,6 +19,10 @@ interface ContactForm {
   message: string;
 }
 
+/**
+ * @class ContactComponent
+ * @brief Component for managing contact form, team members, and FAQs.
+ */
 @Component({
   selector: 'app-contact',
   standalone: true,
@@ -18,6 +31,7 @@ interface ContactForm {
   styleUrl: './contact.component.css'
 })
 export class ContactComponent implements OnInit {
+  /** @brief Model for form inputs. */
   contactForm: ContactForm = {
     name: '',
     email: '',
@@ -25,51 +39,53 @@ export class ContactComponent implements OnInit {
     message: ''
   };
 
+  /** @brief Form submission state flags. */
   formSubmitted = false;
   formSuccess = false;
   formError = false;
   errorMessage = '';
   loading = false;
 
-  // Informations de contact de l'entreprise
+  /** @brief Contact information of the company. */
   companyInfo = {
     name: 'Ease-2025',
     address: 'Pau, France',
     email: 'easeprojectcap@gmail.com',
   };
 
-  // Équipe de contact
+  /** @brief Team member list. */
   teamMembers = [
-    { name: 'Matéo GARCIA', role: 'Développeur Full-Stack' },
-    { name: 'Tommy CHOUANGMALA', role: 'Développeur Full-Stack' },
-    { name: 'Baptiste MINET', role: 'Développeur Full-Stack' }
+    { name: 'Matéo GARCIA', role: 'Full-Stack Developer' },
+    { name: 'Tommy CHOUANGMALA', role: 'Full-Stack Developer' },
+    { name: 'Baptiste MINET', role: 'Full-Stack Developer' }
   ];
 
-  // Questions fréquentes
+  /** @brief Frequently asked questions data. */
   faqs = [
     {
-      question: 'Comment puis-je proposer un nouveau produit ?',
-      answer: 'Vous pouvez ajouter un nouveau produit en vous connectant à votre compte et en cliquant sur "Add Product" dans le menu principal.'
+      question: 'How can I suggest a new product?',
+      answer: 'You can add a new product by logging into your account and clicking on "Add Product" in the main menu.'
     },
     {
-      question: 'Comment fonctionne la recherche d\'alternatives ?',
-      answer: 'Notre algorithme analyse les caractéristiques des produits importés et propose des alternatives européennes similaires en termes de qualité et de fonctionnalités.'
+      question: 'How does the alternative search work?',
+      answer: 'Our algorithm analyzes the characteristics of imported products and offers similar European alternatives in terms of quality and functionality.'
     },
     {
-      question: 'Puis-je contribuer au projet ?',
-      answer: 'Absolument ! Nous accueillons les contributions de la communauté. Contactez-nous via ce formulaire pour en savoir plus sur les possibilités de collaboration.'
+      question: 'Can I contribute to the project?',
+      answer: 'Absolutely! We welcome community contributions. Contact us through this form to learn more about collaboration opportunities.'
     }
   ];
 
   constructor() { }
 
-  ngOnInit(): void {
-    // Initialisation du composant
-  }
+  /**
+   * @brief Lifecycle hook that runs after component initialization.
+   */
+  ngOnInit(): void {}
 
   /**
-   * Gère la soumission du formulaire de contact
-   * @param form Le formulaire soumis
+   * @brief Handles contact form submission.
+   * @param form The submitted form reference.
    */
   onSubmit(form: NgForm): void {
     if (form.invalid) {
@@ -79,13 +95,11 @@ export class ContactComponent implements OnInit {
     this.loading = true;
     this.formSubmitted = true;
 
-    // Simulation d'un appel API (à remplacer par un vrai appel API)
+    // Simulate API call (replace with real API logic)
     setTimeout(() => {
-      // Simulation de succès (à remplacer par la logique réelle)
       if (this.contactForm.email.includes('@')) {
         this.formSuccess = true;
         this.formError = false;
-        // Réinitialiser le formulaire après succès
         this.contactForm = {
           name: '',
           email: '',
@@ -94,17 +108,16 @@ export class ContactComponent implements OnInit {
         };
         form.resetForm();
       } else {
-        // Simulation d'erreur
         this.formSuccess = false;
         this.formError = true;
-        this.errorMessage = 'Une erreur est survenue lors de l\'envoi du message. Veuillez réessayer.';
+        this.errorMessage = 'An error occurred while sending your message. Please try again.';
       }
       this.loading = false;
     }, 1500);
   }
 
   /**
-   * Réinitialise l'état du formulaire
+   * @brief Resets form feedback state.
    */
   resetFormState(): void {
     this.formSubmitted = false;

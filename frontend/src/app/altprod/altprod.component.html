@@ -1,23 +1,18 @@
-<!--
-    @file altprod.component.html
-    @brief HTML structure for the AltProd component.
--->
-
 <div class="container">   
     <!-- Navigation bar component -->
     <app-navbar class="app-navbar"></app-navbar>
-    
-    <!-- Container for search and alternative product display -->
+
+    <!-- Wrapper containing the product search and alternatives display -->
     <div class="results-container">
-        <!-- Search component -->
+        <!-- Product search component -->
         <app-prodsearch class="app-prodsearch"></app-prodsearch>
 
-        <!-- Arrow icon for visual separation -->
+        <!-- Icon separator between components -->
         <div class="arrow">
             <i class="fa-solid fa-arrow-right"></i>
         </div>
 
-        <!-- Alternative product component -->
-        <app-prodalternative class="app-prodalternative" ></app-prodalternative>
+        <!-- Component showing similar/alternative products -->
+        <app-prodalternative class="app-prodalternative"></app-prodalternative>
     </div>
-</div>  
+</div>

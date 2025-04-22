@@ -1,4 +1,3 @@
-/* Conteneur global */
 .add-product-container {
   width: 100%;
   margin: 0 auto;
@@ -8,7 +7,6 @@
   color: #333;
 }
 
-/* En-tête (titre + boutons) */
 .header {
   display: flex;
   justify-content: center;
@@ -37,7 +35,6 @@
   margin-top: 10px;
 }
 
-/* Boutons génériques */
 .btn,
 .refresh-btn {
   padding: 10px 20px;
@@ -52,7 +49,6 @@
 
 .btn-save {
   background-color: #0f5e08;
-
   color: #c7c6c6;
 }
 
@@ -75,7 +71,6 @@
   padding: 15px;
 }
 
-/* Layout principal : deux colonnes */
 .content {
   display: flex;
   gap: 16px;
@@ -94,7 +89,6 @@
   flex-direction: column;
 }
 
-/* Cartes de contenu */
 .card {
   background-color: #fff;
   border: 1px solid #ddd;
@@ -108,7 +102,6 @@
   margin-top: 0;
 }
 
-/* Labels et champs de formulaire */
 label {
   display: block;
   margin: 8px 0 4px;
@@ -127,21 +120,18 @@ select {
   border: 1px solid #ccc;
 }
 
-/* Note / petit texte */
 .note {
   font-size: 0.9rem;
   color: #666;
   margin-top: 8px;
 }
 
-/* Onglets */
 .tabs {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-/* Contenu des onglets */
 .tab-content {
   margin-bottom: 16px;
   gap: 15px;
@@ -149,11 +139,9 @@ select {
   flex-direction: column;
 }
 
-/* Styles pour l'input de tags sous forme d'étiquettes */
 .tags-input-container {
   display: flex;
   flex-wrap: wrap;
-  /* Permet aux tags de se répartir sur plusieurs lignes */
   align-items: center;
   border: 1px solid #ccc;
   border-radius: 25px;
@@ -194,7 +182,6 @@ select {
   }
 }
 
-/* Style pour le spinner dans le bouton */
 .button-spinner {
   display: inline-block;
   width: 16px;

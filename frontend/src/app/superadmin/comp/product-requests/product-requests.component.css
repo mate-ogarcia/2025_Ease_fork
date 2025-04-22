@@ -1,4 +1,4 @@
-/* 🌟 Global : Lisibilité et transitions */
+/*  Global: Readability and transitions */
 body {
   font-family: 'Arial', sans-serif;
   background: #f4f4f4;
@@ -12,7 +12,7 @@ body {
   gap: 15px;
 }
 
-/* Conteneur principal */
+/* Main container */
 .product-requests-container {
   display: flex;
   gap: 20px;
@@ -21,7 +21,7 @@ body {
   padding: 20px;
 }
 
-/* Liste des produits et des marques */
+/* Products and brands list */
 .requests-column {
   display: flex;
   flex-direction: column;
@@ -29,7 +29,7 @@ body {
   width: 320px;
 }
 
-/* Conteneur des produits et marques */
+/* Products and brands box */
 .requests-list {
   background: #fff;
   padding: 15px;
@@ -43,7 +43,7 @@ body {
   font-size: 1.2rem;
 }
 
-/* Cartes des demandes */
+/* Request cards */
 .request-card {
   background: #fff;
   border-radius: 10px;
@@ -61,7 +61,7 @@ body {
   transform: scale(1.03);
 }
 
-/* 📝 Zone d'édition */
+/*  Editing area */
 .request-details {
   flex: 1;
   background: #fff;
@@ -72,7 +72,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 
-/* 📌 Header */
+/*  Header */
 .details-header {
   display: flex;
   justify-content: space-between;
@@ -85,7 +85,7 @@ body {
   margin: 0;
 }
 
-/* ✏️ Bouton d'édition */
+/*  Edit button */
 .edit-btn {
   background: none;
   border: none;
@@ -99,7 +99,7 @@ body {
   opacity: 0.8;
 }
 
-/* 🌟 Mode Édition : Amélioration des inputs */
+/*  Editing mode: input improvements */
 .detail-item {
   margin-bottom: 15px;
   transition: all 0.3s;
@@ -112,7 +112,7 @@ body {
   color: #333;
 }
 
-/* 🌟 Input & Select stylisés */
+/*  Styled input & select */
 .detail-item input,
 .detail-item select,
 .detail-item textarea {
@@ -134,7 +134,7 @@ body {
   background: #fff;
 }
 
-/* 📌 Boutons d'actions */
+/*Action buttons */
 .details-actions {
   margin-top: 20px;
   text-align: right;
@@ -151,7 +151,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 
-/* 🎨 Bouton SAVE */
+/* SAVE button */
 .details-actions .save-btn {
   background: linear-gradient(135deg, #28a745, #218838);
   color: #fff;
@@ -164,7 +164,7 @@ body {
   box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
 }
 
-/* Bouton CANCEL */
+/* CANCEL button */
 .details-actions .cancel-btn {
   background: linear-gradient(135deg, #dc3545, #c82333);
   color: #fff;
@@ -177,7 +177,7 @@ body {
   box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
 }
 
-/* Amélioration des tags */
+/* Tag input enhancement */
 .tags-input-container {
   display: flex;
   flex-wrap: wrap;
@@ -195,7 +195,7 @@ body {
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
 }
 
-/* Style des tags */
+/* Tag styling */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -207,7 +207,7 @@ body {
   transition: background 0.3s ease-in-out;
 }
 
-/* Bouton de suppression des tags */
+/* Tag delete button */
 .tag button {
   background: none;
   border: none;
@@ -222,7 +222,7 @@ body {
   color: #ffdddd;
 }
 
-/* Input des tags */
+/* Tag input field */
 .tags-input-container input {
   flex: 1;
   min-width: 120px;
@@ -237,12 +237,12 @@ body {
   color: #333;
 }
 
-/* Effet sur l'ensemble */
+/* Overall focus effect */
 .request-details:focus-within {
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
 }
 
-/* Alignement des boutons Validate & Refuse */
+/* Centering Validate & Refuse buttons */
 .validate-actions {
   display: flex;
   justify-content: center;
@@ -250,7 +250,7 @@ body {
   margin-top: 25px;
 }
 
-/* Bouton VALIDATE */
+/* VALIDATE button */
 .accept-btn {
   background: linear-gradient(135deg, #28a745, #218838);
   color: white;
@@ -271,7 +271,7 @@ body {
   box-shadow: 0 5px 10px rgba(40, 167, 69, 0.4);
 }
 
-/* Bouton REFUSE */
+/* REFUSE button */
 .reject-btn {
   background: linear-gradient(135deg, #dc3545, #c82333);
   color: white;
@@ -292,7 +292,7 @@ body {
   box-shadow: 0 5px 10px rgba(220, 53, 69, 0.4);
 }
 
-/* Animation pour le spinner de chargement - version améliorée */
+/* Animation for loading spinner - enhanced version */
 @keyframes rotate {
   0% {
     transform: rotate(0deg);
@@ -306,17 +306,15 @@ body {
 .spinner-rotate {
   animation: rotate 1s linear infinite;
   display: inline-block;
-  /* Forcer le rendu hardware pour améliorer les performances */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   will-change: transform;
-  /* Assurer que l'animation est toujours visible */
   backface-visibility: hidden;
   perspective: 1000px;
 }
 
-/* Styles pour le conteneur de chargement */
+/* Styles for loading container */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -343,7 +341,7 @@ body {
   margin: 0;
 }
 
-/* Style pour le message "aucune demande" */
+/* Style for "no requests" message */
 .no-requests {
   text-align: center;
   padding: 1.5rem;
@@ -354,7 +352,7 @@ body {
 }
 
 /** Filters */
-/* Styles pour les contrôles de filtrage */
+/* Styles for filter controls */
 .filter-controls {
   margin-bottom: 20px;
   padding: 15px;
@@ -396,7 +394,7 @@ body {
   color: white;
 }
 
-/* Styles pour les indicateurs de statut sur les cartes */
+/* Styles for status indicators on cards */
 .request-card {
   position: relative;
   padding-left: 15px;
@@ -415,7 +413,7 @@ body {
   border-left-color: #dc3545;
 }
 
-/* Styles pour les badges de type de demande */
+/* Styles for request type badges */
 .request-type-badge {
   display: inline-block;
   padding: 4px 8px;
@@ -472,7 +470,7 @@ body {
   }
 }
 
-/* Style pour le spinner dans le bouton */
+/* Spinner style inside buttons */
 .button-spinner {
   display: inline-block;
   width: 16px;

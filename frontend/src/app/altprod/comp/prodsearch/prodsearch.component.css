@@ -1,6 +1,5 @@
-/* === Main Container === */
 .container {
-  
+  /* === Main Container === */
   width: 100%;
   height: fit-content;
   display: flex;
@@ -13,29 +12,34 @@
   box-sizing: border-box;
   overflow-y: auto;
 }
+
 .sticky-container {
+  /* === Sticky Header Container === */
   position: sticky;
   top: 0;
-  z-index: 1000; /* Permet à l'élément de rester visible par-dessus d'autres contenus */
+  z-index: 1000; 
 }
 
-/* === Style appliqué si le produit n'est pas européen === */
-.container.container.non-european .item{
+.container.container.non-european .item {
+  /* === Style applied if product is not European === */
   border: 3px solid red;
 }
-.container.non-european .product-details .origin b{
+
+.container.non-european .product-details .origin b {
+  /* === Color styling for non-European origin === */
   color: red;
 }
-/* === Result Container === */
+
 .result-container {
+  /* === Result Container === */
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
 }
 
-/* === Item Container === */
 .item-container {
+  /* === Item Container === */
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -44,8 +48,8 @@
   box-sizing: border-box;
 }
 
-/* === Items List === */
 .items-list {
+  /* === Items List === */
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -55,8 +59,8 @@
   box-sizing: border-box;
 }
 
-/* === Individual Item === */
 .item {
+  /* === Individual Item === */
   display: flex;
   flex-direction: row;
   background-color: #f9ebde;
@@ -72,11 +76,12 @@
 }
 
 .item:hover {
+  /* === Hover effect === */
   transform: scale(1.01);
 }
 
-/* === Image Container (Fixed Size) === */
 .img-container {
+  /* === Image Container (Fixed Size) === */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -86,57 +91,59 @@
   flex-shrink: 0;
 }
 
-/* === Product Image === */
 .product-image {
+  /* === Product Image === */
   width: 100%;
   height: 100%;
   border-radius: 10px;
   object-fit: cover;
 }
 
-/* === Product Details === */
 .product-details {
+  /* === Product Details === */
   display: flex;
   flex-direction: column;
   width: 100%;
   justify-content: space-between;
 }
 
-/* === Title Info === */
 .title-info {
+  /* === Title Info === */
   margin-bottom: 10px;
 }
 
-/* === Product Name === */
 .product-name {
+  /* === Product Name === */
   font-weight: 900;
   font-size: clamp(1rem, 2vw, 1.5rem);
   margin: 0;
 }
 
-/* === Other Info Section === */
 .other-info {
+  /* === Other Info Section === */
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
 
-/* === Origin Styling === */
 .origin {
+  /* === Origin Styling === */
   font-size: 0.9rem;
-
 }
-.origin b{
+
+.origin b {
+  /* === Origin Label Color === */
   color: #11ca14;
 }
-/* === Rating Styling === */
+
 .rating {
+  /* === Rating Styling === */
   font-size: 0.9rem;
 }
 
-/* === Responsive Design === */
 @media screen and (max-width: 768px) {
+  /* === Responsive Design === */
   .item {
     flex-direction: column;
     max-height: none;

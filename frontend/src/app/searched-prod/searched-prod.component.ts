@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-// Component
 import { DisplayResultsComponent } from './comp/display-results/display-results.component';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 @Component({
