@@ -20,6 +20,7 @@ import { OpenFoodFactsModule } from "./apiServices/openFoodFacts/openFoodFacts.m
 import { CountriesModule } from "./apiServices/countries/countries.module";
 import { UnsplashModule } from "./apiServices/unsplash/unsplash.module";
 import { FavoritesModule } from "./favorites/favorites.module";
+import { Co2CalculatorModule } from "./apiServices/co2Calculator/co2Calculator.module";
 // Environment variables configuration
 import { ConfigModule } from "@nestjs/config";
 import * as Joi from "joi";
@@ -52,6 +53,7 @@ dotenv.config();
     HistoryModule,
     FavoritesModule,
     CommentsModule,
+    Co2CalculatorModule,
     /**
      * @brief Loads environment variables and validates them with Joi.
      *

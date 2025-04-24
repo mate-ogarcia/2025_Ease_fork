@@ -7,7 +7,6 @@ import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { SearchbarComponent } from '../shared/components/searchbar/searchbar.component';
 import { CommonModule } from '@angular/common';
 import { InfoComponent } from "./info/info.component";
-import { SettingsButtonComponent } from '../shared/components/settings-button/settings-button.component';
 
 /**
  * @class HomepageComponent
@@ -24,7 +23,7 @@ import { SettingsButtonComponent } from '../shared/components/settings-button/se
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [NavbarComponent, SearchbarComponent, SettingsButtonComponent, CommonModule, InfoComponent],
+  imports: [NavbarComponent, SearchbarComponent, CommonModule, InfoComponent],
   templateUrl: './homepage.component.html',
   styleUrl: './homepage.component.css'
 })

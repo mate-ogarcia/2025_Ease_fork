@@ -112,7 +112,6 @@ export class ApiService {
    * Get thje product around a location
    * @param location 
    */
-  // TODO
   getProductsAround(location: string): Observable<any> {
     return this.http.get<any[]>(`${this._productsUrl}/location/${location}`);
   }
