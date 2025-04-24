@@ -3,6 +3,7 @@ import { NgFor, NgClass, NgStyle, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataCacheService } from '../../../../services/cache/data-cache.service';
 import { ApiService } from '../../../../services/api.service';
+import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 import { first } from 'rxjs/operators';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { Product } from '../../../models/product.model';
@@ -37,13 +38,13 @@ export class ChoiceComponent implements OnInit {
    * Constructor for the ChoiceComponent.
    * @param {DataCacheService} dataCacheService - The service to fetch categories and subcategories.
    * @param {ApiService} apiService - The service to fetch products by category.
+   * @param {APIUnsplash} apiUnsplash - The service to fetch product images from Unsplash.
    */
   constructor(
     private dataCacheService: DataCacheService,
-    private apiService: ApiService
-  ) {
-    this.rayonsData = this.initializeRayonsData();
-  }
+    private apiService: ApiService,
+    private apiUnsplash: APIUnsplash
+  ) {}
 
   /**
    * Lifecycle hook that is called when the component is initialized.
@@ -171,52 +172,6 @@ export class ChoiceComponent implements OnInit {
   }
 
   /**
-   * Initializes the rayons data.
-   * @returns {Object} An object containing products for each rayon.
-   */
-  private initializeRayonsData(): { [key: string]: Product[] } {
-    this.isLoading = true;
-    const products: { [key: string]: Product[] } = {
-      Fruits: [
-        {
-          id: '1',
-          name: 'Pomme',
-          brand: 'Local',
-          description: 'Pommes fraîches de Normandie',
-          category: 'Fruits',
-          tags: ['bio', 'local'],
-          ecoscore: 'A',
-          origin: 'Normandie',
-          manufacturing_places: 'Normandie',
-          image: 'https://via.placeholder.com/200x200?text=Pomme',
-          source: 'Internal',
-          status: 'available'
-        }
-      ],
-      Légumes: [
-        {
-          id: '2',
-          name: 'Carotte',
-          brand: 'Local',
-          description: 'Carottes bio de Bretagne',
-          category: 'Légumes',
-          tags: ['bio', 'local'],
-          ecoscore: 'A',
-          origin: 'Bretagne',
-          manufacturing_places: 'Bretagne',
-          image: 'https://via.placeholder.com/200x200?text=Carotte',
-          source: 'Internal',
-          status: 'available'
-        }
-      ]
-    };
-    this.rayonsData = products;
-    this.filteredProducts = products['Fruits'];
-    this.isLoading = false;
-    return products;
-  }
-
-  /**
    * Gets the original category name from the translated name.
    * @param {string} translatedName - The translated name of the category.
    * @returns {string} The original category name.
@@ -235,6 +190,29 @@ export class ChoiceComponent implements OnInit {
   }
 
   /**
+   * Loads product images from Unsplash if the product has no image.
+   * @param products The array of products to load images for.
+   */
+  private loadProductImages(products: Product[]): void {
+    products.forEach(product => {
+      if (!product.image) {
+        this.apiUnsplash.searchPhotos(product.name).subscribe({
+          next: (response) => {
+            if (response.imageUrl) {
+              product.image = response.imageUrl;
+            } else {
+              console.warn(`🚫 No image found for ${product.name}`);
+            }
+          },
+          error: (err) => {
+            console.error(`❌ Error retrieving image for ${product.name}:`, err);
+          },
+        });
+      }
+    });
+  }
+
+  /**
    * Selects a rayon and updates the current rayon and subcategories.
    * @param {string} rayonName - The name of the rayon to select.
    */
@@ -244,20 +222,20 @@ export class ChoiceComponent implements OnInit {
     this.currentSubCategory = '';
     this.searchQuery = '';
     this.filteredProducts = [];
-    this.isLoading = true; // Set loading to true before fetching
+    this.isLoading = true;
     
-    console.log("RayonName", rayonName);
     const originalCategoryName = this.getOriginalCategoryName(rayonName);
-    console.log("Original Category Name", originalCategoryName);
     
     this.apiService.getProductByCateg(originalCategoryName).subscribe({
       next: (products: Product[]) => {
-        this.filteredProducts = products;
-        this.isLoading = false; // Set loading to false after products are loaded
+        this.filteredProducts = products.filter(product => product.status !== 'add-product');
+        // Load images for filtered products
+        this.loadProductImages(this.filteredProducts);
+        this.isLoading = false;
       },
       error: (error: Error) => {
         console.error('Error loading products:', error);
-        this.isLoading = false; // Set loading to false on error
+        this.isLoading = false;
       }
     });
   }
@@ -285,6 +263,8 @@ export class ChoiceComponent implements OnInit {
     // Get products for the current subcategory and filter out 'add-product' status
     const products = this.rayonsData[this.currentSubCategory] || [];
     this.filteredProducts = products.filter(product => product.status !== 'add-product');
+    // Load images for filtered products
+    this.loadProductImages(this.filteredProducts);
     this.isLoading = false;
   }
 

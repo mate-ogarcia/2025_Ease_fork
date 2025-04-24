@@ -1539,6 +1539,26 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.executeQuery(query);
   }
 
+  /**
+   * @brief Retrieves products by category.
+   * @param category The category name to fetch products for.
+   * @returns {Promise<any[]>} A promise resolving to an array of products.
+   */
+  getProductByCategory(category: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        META(p).id AS id,
+        p.*,
+        COALESCE(b.name, "Marque inconnue") AS brand
+      FROM \`${this.productsBucket.name}\`._default._default p
+      LEFT JOIN \`${this.brandBucket.name}\`._default._default b
+      ON p.FK_Brands = META(b).id
+      WHERE p.category = $category
+    `;
+
+    return this.executeQuery(query, { category });
+  }
+
   // ========================================================================
   // ======================== COMMENTS FUNCTIONS
   // ========================================================================
@@ -2035,8 +2055,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         return []; // Retourner un tableau vide plutôt que de lancer une erreur
       }
 
-      console.log(`🔍 Récupération des favoris pour l'utilisateur: ${userId}`);
-
       // Requête optimisée avec USE KEYS pour la performance
       const query = `
         SELECT 
@@ -2049,12 +2067,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         WHERE f.type = 'favorite' AND f.userId = $userId
         ORDER BY f.createdAt DESC
       `;
-
-      // Afficher les paramètres pour déboguer
-      console.log(`📝 Paramètres de la requête:`, { userId });
-      console.log(
-        `🔍 Buckets utilisés: FAVORITES=${process.env.FAVORITES_BUCKET_NAME}, PRODUCTS=${process.env.BUCKET_NAME}`
-      );
 
       const result = await this.executeQuery(query, { userId });
       return result;
