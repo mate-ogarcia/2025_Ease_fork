@@ -29,7 +29,7 @@
           </div>
           <div class="text">
             <h3>8,549k</h3>
-            <p>User</p>
+            <p>Utilisateurs</p>
           </div>
         </div>
         <div class="arrow-icon" (click)="toggleCustomer($event)">
@@ -50,7 +50,7 @@
           </div>
           <div class="text">
             <h3>1,423k</h3>
-            <p>Product</p>
+            <p>Produits</p>
           </div>
         </div>
         <div class="arrow-icon" (click)="toggleProduct($event)">
@@ -83,67 +83,8 @@
       </div>
     </div>
   
-    <!-- Carte 5 : Orders -->
-    <div class="stat-card">
-      <div class="card-header">
-        <div class="left-part">
-          <div class="icon-box">
-            <i class="fas fa-shopping-cart"></i>
-          </div>
-          <div class="text">
-            <h3>2,76k</h3>
-            <p>Orders</p>
-          </div>
-        </div>
-        <div class="arrow-icon" (click)="toggleOrders($event)">
-          <i class="fas fa-chevron-right" [class.rotated]="ordersOpen"></i>
-        </div>
-      </div>
-      <div class="details-box" *ngIf="ordersOpen">
-        <p>Détails sur les commandes…</p>
-      </div>
-    </div>
+    
   
-    <!-- Carte 6 : Profit -->
-    <div class="stat-card">
-      <div class="card-header">
-        <div class="left-part">
-          <div class="icon-box">
-            <i class="fas fa-chart-pie"></i>
-          </div>
-          <div class="text">
-            <h3>6,24k</h3>
-            <p>Profit</p>
-          </div>
-        </div>
-        <div class="arrow-icon" (click)="toggleProfit($event)">
-          <i class="fas fa-chevron-right" [class.rotated]="profitOpen"></i>
-        </div>
-      </div>
-      <div class="details-box" *ngIf="profitOpen">
-        <p>Détails sur les profits…</p>
-      </div>
-    </div>
-  
-    <!-- Carte 7 : Earnings this month -->
-    <div class="stat-card">
-      <div class="card-header">
-        <div class="left-part">
-          <div class="icon-box">
-            <i class="fas fa-coins"></i>
-          </div>
-          <div class="text">
-            <h3>$29,214.00</h3>
-            <p>Earnings this month</p>
-          </div>
-        </div>
-        <div class="arrow-icon" (click)="toggleEarnings($event)">
-          <i class="fas fa-chevron-right" [class.rotated]="earningsOpen"></i>
-        </div>
-      </div>
-      <div class="details-box" *ngIf="earningsOpen">
-        <p>63% more earnings than last month…</p>
-      </div>
-    </div>
+    
   </div>
   

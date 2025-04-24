@@ -1,5 +1,5 @@
 <div class="container">
-  <!-- Bouton pour changer de mode -->
+  <!-- Button to switch view mode -->
   <div class="grid-btn">
     <button
       [ngClass]="{ active: viewMode === 'list' }"
@@ -17,14 +17,14 @@
 
   <div class="result-container" *ngIf="resultsArray.length > 0; else noResults">
     <div class="item-container">
-      <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
+      <!-- Conditional class based on view mode -->
       <ul class="items-list" [ngClass]="viewMode">
         <li
           class="item"
           *ngFor="let product of resultsArray; trackBy: trackByProduct"
           (click)="goToProduct(product)"
           tabindex="0"
-          [attr.aria-label]="'Voir le produit ' + product.name"
+          [attr.aria-label]="'View product ' + product.name"
         >
           <div class="img-container">
             <ng-container *ngIf="product.image; else noImage">
@@ -42,7 +42,7 @@
             </ng-template>
           </div>
 
-          <!-- Information button (rediract to the prodpage) -->
+          <!-- Information button (redirect to product page) -->
           <div class="info-btn">
             <app-info-btn
               class="app-info-btn"
@@ -57,12 +57,10 @@
             <p class="categ">{{ product.category }}</p>
             <h3 class="product-name">{{ product.name }}</h3>
             <p class="product-description">
-              <strong>Description :</strong> {{ product.description }}
+              <strong>Description:</strong> {{ product.description }}
             </p>
           </div>
-
-          <!-- Le bouton "like" -->
-          <!-- On arrête la propagation pour éviter d'appeler goToProduct -->
+          <!-- Stop propagation to avoid triggering goToProduct -->
           <div class="like-btn" (click)="$event.stopPropagation()">
             <app-like-btn
               class="app-like-btn"
@@ -77,6 +75,6 @@
   </div>
 
   <ng-template #noResults>
-    <p>Aucun produit trouvé avec ces critères.</p>
+    <p>No products found with these criteria.</p>
   </ng-template>
 </div>

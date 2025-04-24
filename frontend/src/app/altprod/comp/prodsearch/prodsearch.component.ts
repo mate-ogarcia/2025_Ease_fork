@@ -10,12 +10,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-// API services
 import { ApiService } from '../../../../services/api.service';
 import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 import { DataCacheService } from '../../../../services/cache/data-cache.service';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
-// Model
 import { Product } from '../../../models/product.model';
 
 /**
@@ -29,10 +27,10 @@ import { Product } from '../../../models/product.model';
   styleUrls: ['./prodsearch.component.css'],
 })
 export class ProdsearchComponent implements OnInit {
-  productId: string = '';                 // Product ID retrieved from the route parameters.
-  productDetails: Product | null = null;  // Stores the product details fetched from the API.
-  isEuropean: boolean = false;            // Indicates whether the product originates from a European country.
-  countries: string[] = [];               // List of European countries fetched from the backend.
+  productId: string = '';
+  productDetails: Product | null = null;
+  isEuropean: boolean = false;
+  countries: string[] = [];
 
   /**
    * @brief Constructor to initialize services and route parameters.
@@ -123,7 +121,6 @@ export class ProdsearchComponent implements OnInit {
   loadProductImage(product: Product) {
     if (!product || !product.name) return;
 
-    // Check if the product already has an image
     if (product.image) {
       return;
     }

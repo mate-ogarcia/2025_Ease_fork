@@ -6,9 +6,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./like-btn.component.css']
 })
 export class LikeBtnComponent {
-  /** État du "like" (vrai ou faux) */
   @Input() liked = false;
-  /** Événement émis à chaque fois que l'état "liked" change */
   @Output() likeToggled = new EventEmitter<boolean>();
 
   /**

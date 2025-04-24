@@ -1,4 +1,4 @@
-/* Container principal : sidebar + contenu */
+/* Main container: sidebar + content */
 .dashboard-container {
   display: flex;
   height: 100vh;
@@ -7,31 +7,31 @@
   padding: 0;
   font-family: 'Geologica', sans-serif;
   background: #f8f9fd;
-  /* Fond général clair (optionnel) */
+  /* Light background (optional) */
   position: relative;
 }
 
-/* Barre latérale */
+/* Sidebar */
 .tab-bar {
   width: 300px;
   background: #ffffff;
-  /* Fond blanc */
+  /* White background */
   padding: 20px;
   border-right: 1px solid #eee;
-  /* Séparation légère */
+  /* Light separation */
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease;
 }
 
-/* Boutons (onglets) de la barre latérale */
+/* Sidebar buttons (tabs) */
 .tab-bar a {
   display: flex;
-  /* Pour centrer icône+texte */
+  /* Center icon + text */
   align-items: center;
-  /* Alignement vertical */
+  /* Vertical alignment */
   gap: 10px;
-  /* Espace entre icône et texte */
+  /* Space between icon and text */
   margin-bottom: 10px;
   padding: 15px 20px;
   border: none;
@@ -44,21 +44,21 @@
   transition: all 0.3s ease-in-out;
 }
 
-/* Au survol */
+/* On hover */
 .tab-bar a:hover {
   color: #1cac53;
   transform: scale(1.05);
-  /* Zoom au survol */
+  /* Zoom on hover */
   background-color: #eee;
 }
 
-/* Bouton actif (onglet sélectionné) */
+/* Active button (selected tab) */
 .tab-bar a.active {
   color: #0a7c22;
   transform: scale(1.03);
 }
 
-/* Contenu à droite */
+/* Content area on the right */
 .tab-content {
   flex: 1;
   padding: 20px;
@@ -66,15 +66,15 @@
   background: #f8f9fd;
 }
 
-/* Bouton burger (invisible en desktop) */
+/* Burger button (hidden on desktop) */
 .burger-btn {
   display: none;
 }
 
-/* === Responsive : mode burger pour la barre latérale === */
+/* === Responsive: burger mode for the sidebar === */
 @media screen and (max-width: 768px) {
 
-  /* Masquer la barre latérale en la déplaçant hors écran */
+  /* Hide sidebar by shifting it off-screen */
   .tab-bar {
     position: absolute;
     top: 0;
@@ -84,12 +84,12 @@
     transform: translateX(-100%);
   }
 
-  /* Lorsque le menu est ouvert, on retire la translation */
+  /* When menu is open, remove the transform */
   .tab-bar.open {
     transform: translateX(0);
   }
 
-  /* Afficher le bouton burger */
+  /* Show the burger button */
   .burger-btn {
     display: block;
     position: absolute;
@@ -103,7 +103,6 @@
     cursor: pointer;
     border-radius: 0px 15px 15px 0px;
     transition: transform 0.3s ease;
-
   }
 
   .burger-btn.open {
@@ -119,7 +118,7 @@
     transform: rotate(180deg);
   }
 
-  /* Pour le contenu, ajouter un padding afin d'éviter qu'il soit caché derrière le bouton */
+  /* Add top padding to avoid content being hidden under the burger */
   .tab-content {
     padding-top: 60px;
   }

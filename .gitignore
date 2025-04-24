@@ -14,6 +14,7 @@
 /noteRU.txt
 /.vscode
 /.history
+/.venv
 /bucketsJSON/exportedBucketsData/*
 !/bucketsJSON/exportedBucketsData/bucket.sample.json
 **/prettierignore

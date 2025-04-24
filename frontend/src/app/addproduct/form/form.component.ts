@@ -1,10 +1,9 @@
 /**
  * @file form.component.ts
  * @brief Form component for product data input.
- * 
- * This component handles product creation, tag management, brand selection, and data validation.
+ *
+ * Handles product creation, tag management, brand selection, and data validation.
  */
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +13,10 @@ import { Product } from '../../models/product.model';
 import { first, forkJoin } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
+/**
+ * @class FormComponent
+ * @brief Component for managing the product form.
+ */
 @Component({
   selector: 'app-form',
   standalone: true,
@@ -22,16 +25,36 @@ import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner
   styleUrls: ['./form.component.css']
 })
 export class FormComponent implements OnInit {
-  countries: string[] = [];                   // List of all available countries.
-  categories: string[] = [];                  // List of all available product categories.
-  brands: { id: string; name: string }[] = [];// List of all available brands (ID and name).
-  newBrandDescription: string = '';           // Description of a new brand if added.
-  tagInput: string = '';                      // Input field for a new tag.
-  selectedBrand: string = '';     // Stores selected brand.
-  isOtherBrand: boolean = false;  // Flag to check if a new brand is being added.
-  newBrand: string = '';          // Stores the new brand name entered by the user.
-  isSubmitting: boolean = false;  // Flag to track form submission state
-  // Product object model.
+  /** @brief List of all available countries. */
+  countries: string[] = [];
+
+  /** @brief List of all available product categories. */
+  categories: string[] = [];
+
+  /** @brief List of all available brands (ID and name). */
+  brands: { id: string; name: string }[] = [];
+
+  /** @brief Description of a new brand if added. */
+  newBrandDescription: string = '';
+
+  /** @brief Input field value for a new tag. */
+  tagInput: string = '';
+
+  /** @brief Currently selected brand identifier. */
+  selectedBrand: string = '';
+
+  /** @brief Flag indicating if 'Other' brand option is selected. */
+  isOtherBrand: boolean = false;
+
+  /** @brief Name of the new brand entered by the user. */
+  newBrand: string = '';
+
+  /** @brief Flag indicating if form is in submitting state. */
+  isSubmitting: boolean = false;
+
+  /**
+   * @brief Product object model bound to the form.
+   */
   product: Product = {
     id: '',
     name: '',
@@ -47,6 +70,11 @@ export class FormComponent implements OnInit {
     status: '',
   };
 
+  /**
+   * @brief Constructor with injected services.
+   * @param dataCacheService Service for caching and retrieving data.
+   * @param apiService Service for API calls.
+   */
   constructor(
     private dataCacheService: DataCacheService,
     private apiService: ApiService,
@@ -54,6 +82,7 @@ export class FormComponent implements OnInit {
 
   /**
    * @brief Initializes component and loads cached data.
+   * Also sets up polling to refresh brands every 5 minutes.
    */
   ngOnInit(): void {
     this.dataCacheService.loadData();
@@ -68,14 +97,13 @@ export class FormComponent implements OnInit {
       this.brands = brands;
     });
 
-    // Refresh brands every 5 minutes
     setInterval(() => {
       this.dataCacheService.refreshBrands();
     }, 5 * 60 * 1000);
   }
 
   /**
-   * @brief Adds a tag when Enter is pressed.
+   * @brief Adds a tag when Enter key is pressed.
    * @param event KeyboardEvent triggered by keypress.
    */
   addTag(event: KeyboardEvent): void {
@@ -92,24 +120,25 @@ export class FormComponent implements OnInit {
   }
 
   /**
-   * @brief Removes a tag from the list.
-   * @param tag Tag to be removed.
+   * @brief Removes a tag from the product's tag list.
+   * @param tag Tag string to be removed.
    */
   removeTag(tag: string): void {
     this.product.tags = this.product.tags.filter(t => t !== tag);
   }
 
   /**
-   * @brief Refreshes the list of brands.
+   * @brief Manually triggers a refresh of the brand list.
    */
   refreshBrands(): void {
     this.dataCacheService.refreshBrands();
   }
 
   /**
-   * @brief Saves the product data and submits it to the backend.
+   * @brief Validates and submits the product data to the backend.
+   * @return Promise resolved after submission attempt.
    */
-  async onSave() {
+  async onSave(): Promise<void> {
     if (!this.checkProductField(this.product)) {
       return;
     }
@@ -125,78 +154,66 @@ export class FormComponent implements OnInit {
       };
     }
 
-    const payload = {
-      product: this.product,
-      newBrand: newBrandInfo
-    };
+    const payload = { product: this.product, newBrand: newBrandInfo };
 
     this.apiService.postAddProduct(payload).subscribe({
       next: () => {
         this.isSubmitting = false;
-        alert("Product submitted for admin review!");
+        alert('Product submitted for admin review!');
         this.dataCacheService.refreshBrands();
         this.onCancel();
       },
       error: (err) => {
         this.isSubmitting = false;
-        console.error("❌ API Error:", err);
-
+        console.error('❌ API Error:', err);
         if (err.status === 400) {
           alert(err.error.error);
         } else if (err.status === 0) {
-          alert("Unable to connect to server. Check your backend.");
+          alert('Unable to connect to server. Check your backend.');
         } else {
-          alert("An unknown error has occurred.");
+          alert('An unknown error has occurred.');
         }
       }
     });
   }
 
   /**
-   * @brief Validates product fields before submission.
-   * @param product The product object to be validated.
-   * @return True if all required fields are valid, false otherwise.
+   * @brief Validates required fields of the product before submission.
+   * @param product The product object to validate.
+   * @return True if validation passes; False otherwise.
    */
   checkProductField(product: Product): boolean {
     let errors: string[] = [];
-
     const requiredFields: (keyof Product)[] = [
-      "name", "description", "category", "tags",
-      "ecoscore", "origin", "source", "status"
+      'name', 'description', 'category', 'tags',
+      'ecoscore', 'origin', 'source', 'status'
     ];
-
     const missingFields = requiredFields.filter(field => !product[field]);
     if (missingFields.length > 0) {
-      errors.push(`Missing required fields: ${missingFields.join(", ")}`);
+      errors.push(`Missing required fields: ${missingFields.join(', ')}`);
     }
-
     if (!this.isOtherBrand && !product.brand) {
-      errors.push("Brand is required.");
+      errors.push('Brand is required.');
     }
-
     if (this.isOtherBrand && !this.newBrand.trim()) {
-      errors.push("New brand name is required.");
+      errors.push('New brand name is required.');
     }
-
     if (!Array.isArray(product.tags)) {
-      errors.push("Tags must be an array.");
+      errors.push('Tags must be an array.');
     }
-
-    if (!["Internal", "OpenFoodFacts"].includes(product.source)) {
+    if (!['Internal', 'OpenFoodFacts'].includes(product.source)) {
       errors.push("Source must be 'Internal' or 'OpenFoodFacts'.");
     }
-
     if (errors.length > 0) {
-      alert(errors.join("\n"));
-      console.error("Product validation errors:", errors);
+      alert(errors.join('\n'));
+      console.error('Product validation errors:', errors);
       return false;
     }
-
     return true;
   }
 
   /**
-   * @brief Resets all form fields.
+   * @brief Resets all form fields to their default values.
    */
   onCancel(): void {
     this.product = {
@@ -208,21 +225,18 @@ export class FormComponent implements OnInit {
 
   /**
    * @brief Handles the change event when a brand is selected.
-   * @param event The change event object.
+   * @param event Event object from the select element.
    */
   onBrandChange(event: Event): void {
     const selectElement = event.target as HTMLSelectElement;
     this.selectedBrand = selectElement.value;
-
-    // Check if the user selected "Other" to add a new brand
     this.isOtherBrand = this.selectedBrand === 'other';
-
     if (!this.isOtherBrand) {
-      this.product.brand = this.selectedBrand; // Assign the selected brand to the product
-      this.newBrand = '';             // Reset new brand input
-      this.newBrandDescription = ''; // Reset brand description input
+      this.product.brand = this.selectedBrand;
+      this.newBrand = '';
+      this.newBrandDescription = '';
     } else {
-      this.product.brand = ''; // Clear brand field for a new entry
+      this.product.brand = '';
     }
   }
 }

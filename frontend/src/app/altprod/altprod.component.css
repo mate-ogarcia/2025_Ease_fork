@@ -31,6 +31,8 @@
  */
 .app-navbar {
     width: 100%;
+    z-index: 1000;
+    border-bottom: 1px solid #ccc;
 
 }
 
@@ -48,6 +50,8 @@
     height: 100%;
     gap: 20px;
     padding: 25px;
+    z-index: 80;
+
 }
 
 /**

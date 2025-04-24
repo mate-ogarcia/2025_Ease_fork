@@ -1,3 +1,8 @@
+/**
+ * @file users.component.ts
+ * @description Component for managing user accounts, including search, role updates, banning, and deleting users.
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -5,6 +10,10 @@ import { AdminService, User } from '../../../../services/admin/admin.service';
 import { NotificationService } from '../../../../services/notification/notification.service';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
+/**
+ * @component UsersComponent
+ * @description Displays a list of users with functionalities to filter, edit roles, delete or ban users.
+ */
 @Component({
   selector: 'app-users',
   standalone: true,
@@ -13,185 +22,209 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
   styleUrl: './users.component.css'
 })
 export class UsersComponent implements OnInit {
-  // Terme de recherche
+  /** @property {string} searchTerm - Current user search input */
   searchTerm: string = '';
 
-  // Liste des utilisateurs
+  /** @property {Array} users - List of users including edit state */
   users: (User & { isEditing: boolean })[] = [];
 
-  // Liste des rôles disponibles
+  /** @property {string[]} availableRoles - List of available roles excluding 'Banned' */
   availableRoles: string[] = [];
 
-  // Indique si l'utilisateur actuel est SuperAdmin
+  /** @property {boolean} isSuperAdmin - True if the current user is a SuperAdmin */
   isSuperAdmin: boolean = false;
 
-  // Indicateurs de chargement
+  /** @property {boolean} isLoadingUsers - Indicates if user data is currently being loaded */
   isLoadingUsers: boolean = false;
+
+  /** @property {boolean} isLoadingRoles - Indicates if role list is currently being loaded */
   isLoadingRoles: boolean = false;
 
+  /**
+   * @constructor
+   * @param {AdminService} adminService - Service for admin operations
+   * @param {NotificationService} notificationService - Service to display notifications
+   */
   constructor(
     private adminService: AdminService,
     private notificationService: NotificationService
-  ) { }
+  ) {}
 
-  ngOnInit() {
+  /**
+   * @lifecycle ngOnInit
+   * @description Initializes component by checking user role and loading users and roles
+   */
+  ngOnInit(): void {
     this.checkUserRole();
     this.loadUsers();
     this.loadRoles();
   }
 
-  // Vérifie si l'utilisateur est SuperAdmin
-  private checkUserRole() {
+  /**
+   * @method checkUserRole
+   * @description Verifies if the current user is a SuperAdmin
+   * @private
+   */
+  private checkUserRole(): void {
     this.adminService.getCurrentUserRole().subscribe({
       next: (role) => {
-        console.log('🔍 Rôle reçu du serveur:', role);
-        // Vérification stricte du rôle SuperAdmin
+        console.log('🔍 Role received from server:', role);
         this.isSuperAdmin = role === 'SuperAdmin';
-        console.log('✅ Est SuperAdmin ?', this.isSuperAdmin);
+        console.log('✅ Is SuperAdmin?', this.isSuperAdmin);
       },
       error: (error) => {
-        console.error('❌ Erreur lors de la vérification du rôle:', error);
+        console.error('❌ Error checking user role:', error);
         this.isSuperAdmin = false;
       }
     });
   }
 
-  // Charge la liste des utilisateurs
-  loadUsers() {
+  /**
+   * @method loadUsers
+   * @description Loads the list of all users from the server
+   */
+  loadUsers(): void {
     this.isLoadingUsers = true;
     this.adminService.getAllUsers().subscribe({
       next: (users) => {
-        this.users = users.map(user => ({
-          ...user,
-          isEditing: false
-        }));
-        console.log('✅ Utilisateurs chargés:', this.users);
+        this.users = users.map(user => ({ ...user, isEditing: false }));
+        console.log('✅ Users loaded:', this.users);
         this.isLoadingUsers = false;
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des utilisateurs:', error);
+        console.error('❌ Error loading users:', error);
         this.isLoadingUsers = false;
-        this.notificationService.showError('Erreur lors du chargement des utilisateurs');
+        this.notificationService.showError('Failed to load users');
       }
     });
   }
 
-  // Charge la liste des rôles disponibles
-  loadRoles() {
+  /**
+   * @method loadRoles
+   * @description Loads the list of available roles excluding 'Banned'
+   */
+  loadRoles(): void {
     this.isLoadingRoles = true;
     this.adminService.getAllRoles().subscribe({
       next: (roles) => {
-        // Filtrer le rôle 'Banned' du menu déroulant
         this.availableRoles = roles.filter(role => role !== 'Banned');
-        console.log('✅ Rôles chargés:', this.availableRoles);
+        console.log('✅ Roles loaded:', this.availableRoles);
         this.isLoadingRoles = false;
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des rôles:', error);
-        // Fallback sur des rôles par défaut en cas d'erreur
-        this.availableRoles = ['SuperAdmin', 'Admin', 'User'];
+        console.error('❌ Error loading roles:', error);
+        this.availableRoles = ['SuperAdmin', 'Admin', 'Utilisateur'];
         this.isLoadingRoles = false;
-        this.notificationService.showError('Erreur lors du chargement des rôles');
+        this.notificationService.showError('Erreur de chargement des utilisateurs');
       }
     });
   }
 
-  // Liste filtrée en fonction du terme de recherche
-  get filteredUsers() {
-    if (!this.searchTerm.trim()) {
-      return this.users;
-    }
+  /**
+   * @method filteredUsers
+   * @description Returns the list of users filtered by search term
+   * @returns {Array<User>} Filtered user list
+   */
+  get filteredUsers(): (User & { isEditing: boolean })[] {
+    if (!this.searchTerm.trim()) return this.users;
+
     const term = this.searchTerm.toLowerCase();
-    return this.users.filter(
-      user =>
-        user.username.toLowerCase().includes(term) ||
-        user.email.toLowerCase().includes(term)
+    return this.users.filter(user =>
+      user.username.toLowerCase().includes(term) ||
+      user.email.toLowerCase().includes(term)
     );
   }
 
-  // Active le mode édition pour le rôle d'un utilisateur
+  /**
+   * @method editRole
+   * @description Enables role edit mode for a user
+   * @param {User & { isEditing: boolean }} user - The user to edit
+   */
   editRole(user: User & { isEditing: boolean }): void {
     user.isEditing = true;
   }
 
-  // Sauvegarde le nouveau rôle et désactive le mode édition
+  /**
+   * @method saveRole
+   * @description Saves the updated role for a user
+   * @param {User & { isEditing: boolean }} user - The user being updated
+   * @param {string} newRole - The new role to assign
+   */
   saveRole(user: User & { isEditing: boolean }, newRole: string): void {
-    console.log(`🔄 Tentative de mise à jour du rôle pour ${user.email} de ${user.role} à ${newRole}`);
+    console.log(`🔄 Attempting role update for ${user.email} from ${user.role} to ${newRole}`);
 
-    // Vérifier si le rôle a changé
     if (user.role === newRole) {
-      console.log('ℹ️ Aucun changement de rôle détecté, annulation de l\'édition');
+      console.log('ℹ️ No role change detected, canceling edit');
       user.isEditing = false;
       return;
     }
 
     this.adminService.updateUserRole(user.email, newRole).subscribe({
-      next: (response) => {
-        console.log('✅ Réponse du serveur:', response);
+      next: () => {
         user.role = newRole;
         user.isEditing = false;
-        console.log(`✅ Rôle mis à jour avec succès pour ${user.email}: ${newRole}`);
+        console.log(`✅ Role successfully updated for ${user.email}: ${newRole}`);
       },
       error: (error) => {
-        console.error('❌ Erreur lors de la mise à jour du rôle:', error);
-        console.error('❌ Détails de l\'erreur:', {
-          status: error.status,
-          message: error.message,
-          error: error.error
-        });
-
-        // Afficher un message d'erreur à l'utilisateur
-        alert(`Erreur lors de la mise à jour du rôle: ${error.message}`);
-
-        // Recharger les utilisateurs en cas d'erreur pour avoir l'état à jour
-        this.loadUsers();
+        console.error('❌ Error updating role:', error);
+        alert(`Error updating role: ${error.message}`);
+        this.loadUsers(); // Refresh data on failure
       }
     });
   }
 
-  // Annule l'édition du rôle
+  /**
+   * @method cancelEdit
+   * @description Cancels role editing for a user
+   * @param {User & { isEditing: boolean }} user - The user to cancel edit for
+   */
   cancelEdit(user: User & { isEditing: boolean }): void {
     user.isEditing = false;
   }
 
-  // Supprime l'utilisateur après confirmation
+  /**
+   * @method deleteUser
+   * @description Deletes a user after confirmation
+   * @param {User & { isEditing: boolean }} user - The user to delete
+   */
   deleteUser(user: User & { isEditing: boolean }): void {
-    if (confirm(`Voulez-vous vraiment supprimer ${user.username} ?`)) {
+    if (confirm(`Are you sure you want to delete ${user.username}?`)) {
       this.adminService.deleteUser(user.email).subscribe({
         next: () => {
           this.users = this.users.filter(u => u.email !== user.email);
-          console.log('✅ Utilisateur supprimé avec succès');
+          console.log('✅ User successfully deleted');
         },
         error: (error) => {
-          console.error('❌ Erreur lors de la suppression:', error);
-          // Recharger les utilisateurs en cas d'erreur
-          this.loadUsers();
+          console.error('❌ Error deleting user:', error);
+          this.loadUsers(); // Refresh list on error
         }
       });
     }
   }
 
-  // Bascule entre bannir et débannir l'utilisateur avec validation
+  /**
+   * @method banUser
+   * @description Toggles ban/unban for a user
+   * @param {User & { isEditing: boolean }} user - The user to ban or unban
+   */
   banUser(user: User & { isEditing: boolean }): void {
     const newRole = user.role === 'Banned' ? 'User' : 'Banned';
-    const action = user.role === 'Banned' ? 'débanni' : 'banni';
+    const action = user.role === 'Banned' ? 'unbanned' : 'banned';
 
-    if (confirm(`Voulez-vous vraiment ${action} ${user.username} ?`)) {
+    if (confirm(`Are you sure you want to ${action} ${user.username}?`)) {
       this.adminService.updateUserRole(user.email, newRole).subscribe({
         next: () => {
           user.role = newRole;
           user.isEditing = false;
-          console.log(`✅ Utilisateur ${action} avec succès`);
-          this.notificationService.showSuccess(`L'utilisateur ${user.username} a été ${action} avec succès`);
+          console.log(`✅ Utilisateurs a bien été ${action}`);
+          this.notificationService.showSuccess(`User ${user.username} was successfully ${action}`);
         },
         error: (error) => {
-          console.error(`❌ Erreur lors du ${action}:`, error);
-          this.notificationService.showError(`Erreur lors du ${action} de l'utilisateur ${user.username}`);
-          // Recharger les utilisateurs en cas d'erreur
-          this.loadUsers();
+          console.error(`❌ Error during ${action}:`, error);
+          this.notificationService.showError(`Error ${action} user ${user.username}`);
+          this.loadUsers(); // Refresh on failure
         }
       });
     }
   }
 }
-
