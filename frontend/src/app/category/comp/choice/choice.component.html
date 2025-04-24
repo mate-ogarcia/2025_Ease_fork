@@ -58,7 +58,7 @@
         <!-- Products grid -->
         <div id="rayon-products" class="product-grid">
           <app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
-          <div *ngIf="!isLoading">
+          <div *ngIf="!isLoading" class="product-grid-wrapper">
             <div *ngFor="let product of filteredProducts" class="product-card">
               <div class="product-image">
                 <img [src]="product.image" [alt]="product.name" />
