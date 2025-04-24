@@ -66,28 +66,6 @@
     {{ errorMessage }}
   </div>
 
-  <div *ngIf="co2Impact && !isLoading" class="co2-impact-section">
-    <h3>Impact sur l'environnement</h3>
-    <div class="co2-info">
-      <div class="co2-metric">
-        <span class="label">Distance :</span>
-        <span class="value">{{ co2Impact.co2.distance | number:'1.0-0' }} km</span>
-      </div>
-      <div class="co2-metric">
-        <span class="label">Moyen de transport :</span>
-        <span class="value">{{ co2Impact.co2.transportType === 'plane' ? 'Avion' : 
-          co2Impact.co2.transportType === 'truck' ? 'Camion' : 
-          co2Impact.co2.transportType === 'ship' ? 'Bateau' : 
-          co2Impact.co2.transportType }}</span>
-      </div>
-      <div class="co2-metric">
-        <span class="label">Impact en CO2 :</span>
-        <span class="value">{{ co2Impact.co2.co2Impact | number:'1.0-0' }} kg CO2</span>
-      </div>
-    </div>
-    <p class="co2-warning">* Ces informations sont des estimations basées sur la distance et le mode de transport le plus probable.</p>
-  </div>
-
   <!-- Navigation Tabs -->
   <div *ngIf="product && !isLoading" class="tabs-container">
     <div class="tabs">
@@ -110,6 +88,36 @@
       <div *ngIf="selectedTab === 'info'">
         <p>Origine : <b>{{ product.origin || "Inconnue" }}</b></p>
         <span class="tags">Tags: {{ product.tags || 'Aucun tag' }}</span>
+
+        <!-- CO2 Impact Section -->
+        <div class="co2-impact-section">
+          <h3>Impact sur l'environnement</h3>
+          
+          <ng-container *ngIf="isCO2Loading; else co2Data">
+            <app-loading-spinner></app-loading-spinner>
+          </ng-container>
+
+          <ng-template #co2Data>
+            <div *ngIf="co2Impact" class="co2-info">
+              <div class="co2-metric">
+                <span class="label">Distance :</span>
+                <span class="value">{{ co2Impact.co2.distance | number:'1.0-0' }} km</span>
+              </div>
+              <div class="co2-metric">
+                <span class="label">Moyen de transport :</span>
+                <span class="value">{{ co2Impact.co2.transportType === 'plane' ? 'Avion' : 
+                  co2Impact.co2.transportType === 'truck' ? 'Camion' : 
+                  co2Impact.co2.transportType === 'ship' ? 'Bateau' : 
+                  co2Impact.co2.transportType }}</span>
+              </div>
+              <div class="co2-metric">
+                <span class="label">Impact en CO2 :</span>
+                <span class="value">{{ co2Impact.co2.co2Impact | number:'1.0-0' }} kg CO2</span>
+              </div>
+              <p class="co2-warning">* Ces informations sont des estimations basées sur la distance et le mode de transport le plus probable.</p>
+            </div>
+          </ng-template>
+        </div>
       </div>
       <div *ngIf="selectedTab === 'review'">
         <app-comments-section [productId]="productId" [productSource]="productSource">

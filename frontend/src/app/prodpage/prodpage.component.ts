@@ -15,6 +15,7 @@ import { catchError, from } from 'rxjs';
 import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
 import { CommentsSectionComponent } from '../comments-section/comments-section.component';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
+import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
@@ -45,6 +46,7 @@ interface Product {
     CommonModule,
     LikeBtnComponent,
     CommentsSectionComponent,
+    LoadingSpinnerComponent,
   ],
   templateUrl: './prodpage.component.html',
   styleUrls: ['./prodpage.component.css'],
@@ -54,6 +56,7 @@ export class ProdpageComponent implements OnInit {
   productSource: string = ''; // The source of the product (Internal or OpenFoodFacts).
   product: Product | null = null; // The product details.
   isLoading: boolean = false; // Loading state flag.
+  isCO2Loading: boolean = false; // Loading state for CO2 calculation
   errorMessage: string = ''; // Error message in case of failure.
   selectedTab: string = 'description'; // Selected tab for displaying product information.
   isAuthenticated: boolean = false; // Is the user authenticated
@@ -95,6 +98,7 @@ export class ProdpageComponent implements OnInit {
    * It retrieves the product ID and source from the route parameters.
    */
   ngOnInit(): void {
+    this.isCO2Loading = true; // Loading state for CO2 calculation
     // Check if the user is logged in
     this.authService.isAuthenticated().subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
@@ -322,6 +326,8 @@ export class ProdpageComponent implements OnInit {
    */
   calculateCo2Impact(): void {
     if (!this.productId) return;
+    
+    this.isCO2Loading = true;
 
     if (this.productSource !== 'Internal' && this.product) {
       // For external products, send all product details
@@ -334,10 +340,12 @@ export class ProdpageComponent implements OnInit {
         next: (data) => {
           console.log('CO2 Impact data:', data);
           this.co2Impact = data;
+          this.isCO2Loading = false;
         },
         error: (error) => {
           console.error('Error calculating CO2 impact:', error);
           this.co2Impact = null;
+          this.isCO2Loading = false;
         }
       });
     } else {
@@ -346,10 +354,12 @@ export class ProdpageComponent implements OnInit {
         next: (data) => {
           console.log('CO2 Impact data:', data);
           this.co2Impact = data;
+          this.isCO2Loading = false;
         },
         error: (error) => {
           console.error('Error calculating CO2 impact:', error);
           this.co2Impact = null;
+          this.isCO2Loading = false;
         }
       });
     }
