@@ -34,5 +34,8 @@
 .app-navbar, .app-form{
     width: 100%;
 }
-
+.app-navbar{
+    z-index: 1000;
+    border-bottom: 1px solid #ccc;
+}
 

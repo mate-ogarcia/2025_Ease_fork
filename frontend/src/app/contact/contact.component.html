@@ -2,18 +2,18 @@
   <app-navbar class="app-navbar"></app-navbar>
 
   <div class="contact-content">
-    <!-- En-tête de la page -->
+    <!-- Page header -->
     <header class="contact-header">
       <div class="header-content">
         <h1>Contactez-nous</h1>
-        <p>Nous sommes à votre écoute pour toute question ou suggestion concernant Ease.</p>
+        <p>Nous sommes là pour répondre à toutes vos questions ou suggestions concernant Ease.</p>
       </div>
     </header>
 
     <div class="contact-container">
-      <!-- Section principale -->
+      <!-- Main section -->
       <main class="contact-main">
-        <!-- Informations de contact -->
+        <!-- Contact information -->
         <section class="contact-info">
           <h2>Nos coordonnées</h2>
 
@@ -36,29 +36,27 @@
               <p><a href="mailto:{{ companyInfo.email }}">{{ companyInfo.email }}</a></p>
             </div>
           </div>
-
-
         </section>
 
-        <!-- Formulaire de contact -->
+        <!-- Contact form -->
         <section class="contact-form-section">
           <h2>Envoyez-nous un message</h2>
 
-          <!-- Message de succès -->
+          <!-- Success message -->
           <div class="form-message success" *ngIf="formSubmitted && formSuccess">
             <i class="fas fa-check-circle"></i>
             <p>Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.</p>
             <button (click)="resetFormState()" class="btn-close">Fermer</button>
           </div>
 
-          <!-- Message d'erreur -->
+          <!-- Error message -->
           <div class="form-message error" *ngIf="formSubmitted && formError">
             <i class="fas fa-exclamation-circle"></i>
             <p>{{ errorMessage }}</p>
             <button (click)="resetFormState()" class="btn-close">Fermer</button>
           </div>
 
-          <!-- Formulaire -->
+          <!-- Contact form -->
           <form #contactFormElement="ngForm" (ngSubmit)="onSubmit(contactFormElement)"
             *ngIf="!(formSubmitted && formSuccess)">
             <div class="form-group">
@@ -81,11 +79,11 @@
             </div>
 
             <div class="form-group">
-              <label for="subject">Sujet <span class="required">*</span></label>
+              <label for="subject">Objet <span class="required">*</span></label>
               <input type="text" id="subject" name="subject" [(ngModel)]="contactForm.subject" required
                 #subjectInput="ngModel" [class.invalid]="subjectInput.invalid && subjectInput.touched">
               <div class="error-message" *ngIf="subjectInput.invalid && subjectInput.touched">
-                Veuillez entrer un sujet
+                Veuillez entrer un objet
               </div>
             </div>
 
@@ -106,9 +104,9 @@
         </section>
       </main>
 
-      <!-- Section FAQ -->
+      <!-- FAQ section -->
       <section class="faq-section">
-        <h2>Questions fréquentes</h2>
+        <h2>Foire Aux Questions</h2>
 
         <div class="faq-container">
           <div class="faq-item" *ngFor="let faq of faqs">
@@ -118,9 +116,9 @@
         </div>
       </section>
 
-      <!-- Section Équipe -->
+      <!-- Team section -->
       <section class="team-section">
-        <h2>Notre équipe</h2>
+        <h2>Notre Équipe</h2>
 
         <div class="team-container">
           <div class="team-member" *ngFor="let member of teamMembers">

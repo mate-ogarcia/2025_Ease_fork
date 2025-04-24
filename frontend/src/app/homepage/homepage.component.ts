@@ -5,6 +5,7 @@ import * as THREE from 'three';
 // Component
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { SearchbarComponent } from '../shared/components/searchbar/searchbar.component';
+import { SettingsButtonComponent } from '../shared/components/settings-button/settings-button.component';
 import { CommonModule } from '@angular/common';
 import { InfoComponent } from "./info/info.component";
 
@@ -23,7 +24,7 @@ import { InfoComponent } from "./info/info.component";
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [NavbarComponent, SearchbarComponent, CommonModule, InfoComponent],
+  imports: [NavbarComponent, SearchbarComponent, CommonModule, InfoComponent,SettingsButtonComponent],
   templateUrl: './homepage.component.html',
   styleUrl: './homepage.component.css'
 })

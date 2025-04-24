@@ -15,19 +15,6 @@
 
   <app-searchbar class="app-searchbar"></app-searchbar>
 
-  <!-- Bouton engrenage -->
-  <div class="settings-icon" [class.open]="isSettingsOpen" (click)="toggleSettingsPanel()">
-    ⚙
-  </div>
-
-  <!-- Menu des paramètres -->
-  <div class="settings-menu" [class.open]="isSettingsOpen">
-    <button class="settings-btn" (click)="toggleDarkMode()" title="Mode Sombre">
-      {{ isDarkMode ? '☀' : '🌙' }}
-    </button>
-    <button class="settings-btn" (click)="toggleVantaEffect()" title="Animation">
-      {{ isVantaActive ? '💨' : '🎨' }}
-    </button>
-  </div>
+  <app-settings-button class="app-settings-button"></app-settings-button>
 </div>
 <app-info class="app-info"></app-info>

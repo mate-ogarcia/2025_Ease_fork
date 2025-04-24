@@ -13,3 +13,7 @@
 .app-choice {
   width: 100%;
 }
+.app-navbar{
+  border-bottom: 1px solid #ccc;
+  z-index: 1000000;
+}

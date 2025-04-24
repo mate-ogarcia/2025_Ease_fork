@@ -85,7 +85,6 @@ export class AuthComponent implements AfterViewInit, OnInit, OnDestroy {
       }
     });
     this.getUserLocation();
-    // Précharger les images
     this.preloadImages();
   }
 
@@ -95,12 +94,10 @@ export class AuthComponent implements AfterViewInit, OnInit, OnDestroy {
   ngAfterViewInit() {
     this.setupFocusBlurListeners();
     this.setupValidationListeners();
-    // Ajouter les classes d'animation une fois que les images sont chargées
     this.checkImagesLoaded();
   }
 
   ngOnDestroy() {
-    // Nettoyer les animations et les images
     if (this.waveImage?.nativeElement) {
       this.waveImage.nativeElement.classList.remove('fade-in');
     }
@@ -137,7 +134,6 @@ export class AuthComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private checkImagesLoaded() {
     if (this.imagesLoaded && this.waveImage && this.waveTopImage && this.bearImage) {
-      // Ajouter les classes d'animation avec un léger délai
       setTimeout(() => {
         if (this.waveImage?.nativeElement) {
           this.waveImage.nativeElement.classList.add('fade-in');

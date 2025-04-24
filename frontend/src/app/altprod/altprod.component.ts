@@ -13,10 +13,10 @@ import { ProdsearchComponent } from './comp/prodsearch/prodsearch.component';
  * @brief Represents the AltProd component responsible for product search and alternative suggestions.
  */
 @Component({
-  selector: 'app-altprod', ///< The HTML tag used to include this component.
-  imports: [NavbarComponent, ProdalternativeComponent, ProdsearchComponent], ///< Imported components used within AltProd.
-  templateUrl: './altprod.component.html', ///< Template file defining the component's structure.
-  styleUrl: './altprod.component.css' ///< Stylesheet applied to this component.
+  selector: 'app-altprod', 
+  imports: [NavbarComponent, ProdalternativeComponent, ProdsearchComponent],
+  templateUrl: './altprod.component.html', 
+  styleUrl: './altprod.component.css' ,
 })
 export class AltprodComponent {
   /**

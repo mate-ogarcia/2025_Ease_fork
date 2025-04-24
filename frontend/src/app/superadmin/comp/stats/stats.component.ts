@@ -9,7 +9,6 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./stats.component.css']
 })
 export class StatsComponent {
-  // Variables booléennes pour chaque box
   salesOpen = false;
   customerOpen = false;
   productOpen = false;
