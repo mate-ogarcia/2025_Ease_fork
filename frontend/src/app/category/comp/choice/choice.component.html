@@ -40,25 +40,32 @@
 
                 <!-- Produits affichés -->
                 <div id="rayon-products" class="product-grid">
-                    <div *ngFor="let product of filteredProducts" class="product-card">
-                        <div class="product-image">
-                            <img [src]="'https://via.placeholder.com/200x200?text=' + product.name" [alt]="product.name">
-                        </div>
-                        <div class="product-info">
-                            <h3>{{ product.name }}</h3>
-                            <p class="region">Région: {{ product.region }}</p>
-                            <p class="description">{{ product.description }}</p>
-                            <div class="product-impact">
-                                Impact écologique: 
-                                <span [ngClass]="{'impact-good': product.ecologicalImpact === 'good', 
-                                                 'impact-neutral': product.ecologicalImpact === 'neutral',
-                                                 'impact-bad': product.ecologicalImpact === 'bad'}">
-                                    {{ product.ecologicalImpact }}
-                                </span>
+                    <app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
+                    <div *ngIf="!isLoading">
+                        <div *ngFor="let product of filteredProducts" class="product-card">
+                            <div class="product-image">
+                                <img [src]="product.image" [alt]="product.name">
+                            </div>
+                            <div class="product-info">
+                                <h3>{{ product.name }}</h3>
+                                <p class="brand">Marque: {{ product.brand }}</p>
+                                <p class="origin">Origine: {{ product.origin }}</p>
+                                <p class="description">{{ product.description }}</p>
+                                <div class="product-impact">
+                                    Impact écologique: 
+                                    <span [ngClass]="{'impact-good': product.ecoscore === 'A' || product.ecoscore === 'B', 
+                                                     'impact-neutral': product.ecoscore === 'C',
+                                                     'impact-bad': product.ecoscore === 'D' || product.ecoscore === 'E'}">
+                                        {{ product.ecoscore }}
+                                    </span>
+                                </div>
+                                <div class="tags">
+                                    <span *ngFor="let tag of product.tags" class="tag">{{ tag }}</span>
+                                </div>
                             </div>
                         </div>
+                        <p *ngIf="filteredProducts.length === 0" class="no-results">Aucun produit trouvé.</p>
                     </div>
-                    <p *ngIf="filteredProducts.length === 0" class="no-results">Aucun produit trouvé.</p>
                 </div>
             </div>
         </div>
