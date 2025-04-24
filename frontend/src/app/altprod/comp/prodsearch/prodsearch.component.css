@@ -11,6 +11,7 @@
   scroll-behavior: smooth;
   box-sizing: border-box;
   overflow-y: auto;
+  z-index: 80;
 }
 
 .sticky-container {

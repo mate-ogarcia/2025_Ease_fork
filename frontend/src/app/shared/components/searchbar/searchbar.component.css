@@ -25,6 +25,7 @@
   transition: all 0.3s ease;
   z-index: 11;
   overflow: visible;
+  
   /* Permet à la loading bar de déborder */
 }
 
@@ -36,12 +37,12 @@
 .search-container input {
   border: none;
   outline: none;
-  /* Conserver le focus natif */
   width: 100%;
   font-size: 16px;
   padding: 15px;
   border-radius: 25px;
   background-color: transparent;
+  z-index: 1000;
 }
 
 /* Conteneur pour les boutons d'action */
@@ -173,6 +174,7 @@
 .has-suggestions input {
   border-radius: 25px 25px 0 0;
   border: none;
+  z-index: 1000;
 }
 
 .suggestions ul li {
@@ -415,8 +417,12 @@
     right: 120px;
     max-width: 45%;
     font-size: 12px;
+    z-index: 100;
   }
-
+  .search-container input[type="text"] {
+    padding-right: 120px;
+    z-index: 1000;
+  }
   .add-product-hint {
     font-size: 10px;
   }
@@ -512,6 +518,7 @@ app-loading-spinner.search-message {
   padding: 0 10px;
   display: flex;
   align-items: center;
+  z-index: 100;
 }
 
 /* Positionnement spécial pour l'indicateur dans le conteneur de bouton */
@@ -544,6 +551,7 @@ app-loading-spinner.search-message {
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
+  z-index: 100; 
 }
 
 .no-results-indicator span:first-child {
@@ -575,6 +583,7 @@ app-loading-spinner.search-message {
 /* Ajustement pour le champ de recherche */
 .search-container input[type="text"] {
   padding-right: 150px;
+  z-index: 1000;
   /* Augmenté pour laisser plus d'espace pour les indicateurs et boutons */
 }
 

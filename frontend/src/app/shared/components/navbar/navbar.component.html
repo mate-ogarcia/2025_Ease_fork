@@ -38,7 +38,7 @@
           <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
             <span routerLink="/user-profile" class="user-btn profile-btn"><i class="fa-solid fa-user"></i>Profile</span>
             <span *ngIf="userRole === 'Admin' || userRole === 'SuperAdmin'" routerLink="/admin"
-              class="user-btn admin-btn"><i class="fas fa-user-shield"></i>Dashboard Admin</span>
+              class="user-btn admin-btn"><i class="fas fa-user-shield"></i>Admin</span>
             <div class="logout-container">
               <span (click)="logout()" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Log out</span>
             </div>

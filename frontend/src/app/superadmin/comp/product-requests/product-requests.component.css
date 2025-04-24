@@ -1,13 +1,9 @@
-/*  Global: Readability and transitions */
-body {
-  font-family: 'Arial', sans-serif;
-  background: #f4f4f4;
-  margin: 0;
-  padding: 0;
-}
+
 
 .requests-content {
   display: flex;
+  width: 100%;
+  align-items: flex-start;
   flex-direction: row;
   gap: 15px;
 }
@@ -16,7 +12,8 @@ body {
 .product-requests-container {
   display: flex;
   gap: 20px;
-  align-items: flex-start;
+  align-items: center;
+  
   flex-direction: column;
   padding: 20px;
 }
@@ -354,6 +351,7 @@ body {
 /** Filters */
 /* Styles for filter controls */
 .filter-controls {
+  width: 100%;
   margin-bottom: 20px;
   padding: 15px;
   background-color: #f8f9fa;

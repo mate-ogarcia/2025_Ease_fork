@@ -1,10 +1,10 @@
 <!-- Search bar -->
 <div class="search-container">
-  <input class="search-bar" type="text" placeholder="Search for users..." [(ngModel)]="searchTerm" />
+  <input class="search-bar" type="text" placeholder="Recherche des utilisateurs..." [(ngModel)]="searchTerm" />
 </div>
 
 <!-- User loading indicator -->
-<app-loading-spinner *ngIf="isLoadingUsers" message="Loading users..." size="medium">
+<app-loading-spinner *ngIf="isLoadingUsers" message="Chargements des utilisateurs..." size="medium">
 </app-loading-spinner>
 
 <!-- List of user cards (filtered) -->
@@ -18,7 +18,7 @@
         <div class="text">
           <h3>{{ user.username }}</h3>
           <p>{{ user.email }}</p>
-          <p class="created-at">Created on: {{ user.createdAt | date:'dd/MM/yyyy' }}</p>
+          <p class="created-at">Crée le : {{ user.createdAt | date:'dd/MM/yyyy' }}</p>
           <div class="edit-container">
             <ng-container *ngIf="isSuperAdmin">
               <ng-container *ngIf="user.isEditing; else viewRole">
@@ -51,10 +51,10 @@
     </div>
     <div class="card-actions" *ngIf="isSuperAdmin">
       <button (click)="deleteUser(user)" title="Delete user">
-        <i class="fas fa-trash"></i> Delete
+        <i class="fas fa-trash"></i> Supprimer
       </button>
       <button (click)="banUser(user)" title="Ban/Unban user">
-        <i class="fas fa-ban"></i> {{ user.role === 'Banned' ? 'Unban' : 'Ban' }}
+        <i class="fas fa-ban"></i> {{ user.role === 'Banned' ? 'Débannir' : 'Bannir' }}
       </button>
     </div>
   </div>
@@ -62,5 +62,5 @@
 
 <!-- Message when no users are found -->
 <div class="no-results" *ngIf="!isLoadingUsers && filteredUsers.length === 0">
-  <p>No users found for "{{ searchTerm }}"</p>
+  <p>Aucun Utilisateurs trouvés "{{ searchTerm }}"</p>
 </div>

@@ -113,9 +113,9 @@ export class UsersComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ Error loading roles:', error);
-        this.availableRoles = ['SuperAdmin', 'Admin', 'User'];
+        this.availableRoles = ['SuperAdmin', 'Admin', 'Utilisateur'];
         this.isLoadingRoles = false;
-        this.notificationService.showError('Failed to load roles');
+        this.notificationService.showError('Erreur de chargement des utilisateurs');
       }
     });
   }
@@ -216,7 +216,7 @@ export class UsersComponent implements OnInit {
         next: () => {
           user.role = newRole;
           user.isEditing = false;
-          console.log(`✅ User successfully ${action}`);
+          console.log(`✅ Utilisateurs a bien été ${action}`);
           this.notificationService.showSuccess(`User ${user.username} was successfully ${action}`);
         },
         error: (error) => {

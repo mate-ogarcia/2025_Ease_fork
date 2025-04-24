@@ -55,24 +55,24 @@ export class ContactComponent implements OnInit {
 
   /** @brief Team member list. */
   teamMembers = [
-    { name: 'Matéo GARCIA', role: 'Full-Stack Developer' },
-    { name: 'Tommy CHOUANGMALA', role: 'Full-Stack Developer' },
-    { name: 'Baptiste MINET', role: 'Full-Stack Developer' }
+    { name: 'Matéo GARCIA', role: 'Développeur Full-Stack' },
+    { name: 'Tommy CHOUANGMALA', role: 'Développeur Full-Stack' },
+    { name: 'Baptiste MINET', role: 'Développeur Full-Stack' }
   ];
 
   /** @brief Frequently asked questions data. */
   faqs = [
     {
-      question: 'How can I suggest a new product?',
-      answer: 'You can add a new product by logging into your account and clicking on "Add Product" in the main menu.'
+      question: 'Comment puis-je suggérer un nouveau produit ?',
+      answer: 'Vous pouvez ajouter un nouveau produit en vous connectant à votre compte et en cliquant sur " + produit" dans le menu principal.'
     },
     {
-      question: 'How does the alternative search work?',
-      answer: 'Our algorithm analyzes the characteristics of imported products and offers similar European alternatives in terms of quality and functionality.'
+      question: 'Comment fonctionne la recherche d’alternatives ?',
+      answer: 'Notre algorithme analyse les caractéristiques des produits importés et propose des alternatives européennes similaires en termes de qualité et de fonctionnalité.'
     },
     {
-      question: 'Can I contribute to the project?',
-      answer: 'Absolutely! We welcome community contributions. Contact us through this form to learn more about collaboration opportunities.'
+      question: 'Puis-je contribuer au projet ?',
+      answer: 'Absolument ! Nous accueillons les contributions de la communauté. Contactez-nous via ce formulaire pour en savoir plus sur les opportunités de collaboration.'
     }
   ];
 
@@ -110,7 +110,7 @@ export class ContactComponent implements OnInit {
       } else {
         this.formSuccess = false;
         this.formError = true;
-        this.errorMessage = 'An error occurred while sending your message. Please try again.';
+        this.errorMessage = 'Une erreur est survenue lors de l\'envoi de votre message. Veuillez réessayer.';
       }
       this.loading = false;
     }, 1500);
