@@ -10,9 +10,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { catchError, from } from 'rxjs';
 // Components
 import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
 import { CommentsSectionComponent } from '../comments-section/comments-section.component';
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
+import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
@@ -20,8 +23,8 @@ import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.ser
 import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { CommentsService } from '../../services/comments/comments.service';
-import { NavbarComponent } from '../shared/components/navbar/navbar.component';
-import { catchError, from } from 'rxjs';
+import { Co2CalculatorService } from '../../services/co2Calculator/co2Calculator.service';
+import { ApiAddress } from '../../services/address/address.service';
 
 interface Product {
   id: string;
@@ -43,6 +46,7 @@ interface Product {
     CommonModule,
     LikeBtnComponent,
     CommentsSectionComponent,
+    LoadingSpinnerComponent,
   ],
   templateUrl: './prodpage.component.html',
   styleUrls: ['./prodpage.component.css'],
@@ -52,6 +56,7 @@ export class ProdpageComponent implements OnInit {
   productSource: string = ''; // The source of the product (Internal or OpenFoodFacts).
   product: Product | null = null; // The product details.
   isLoading: boolean = false; // Loading state flag.
+  isCO2Loading: boolean = false; // Loading state for CO2 calculation
   errorMessage: string = ''; // Error message in case of failure.
   selectedTab: string = 'description'; // Selected tab for displaying product information.
   isAuthenticated: boolean = false; // Is the user authenticated
@@ -61,6 +66,9 @@ export class ProdpageComponent implements OnInit {
   userRole: string | null = null; // Stores the user role.
   commentCount: number = 0; // Number of comments for a product
   avgRate: number = 0; // Average rate for a product
+  userLocation: string = '';
+  co2Impact: number | null = null;
+  locationError: string = '';
 
   /**
    * @brief Constructor initializes dependencies.
@@ -80,7 +88,9 @@ export class ProdpageComponent implements OnInit {
     private favoritesService: FavoritesService,
     private authService: AuthService,
     private router: Router,
-    private commentsService: CommentsService
+    private commentsService: CommentsService,
+    private co2Service: Co2CalculatorService,
+    private addressService: ApiAddress
   ) {}
 
   /**
@@ -88,6 +98,7 @@ export class ProdpageComponent implements OnInit {
    * It retrieves the product ID and source from the route parameters.
    */
   ngOnInit(): void {
+    this.isCO2Loading = true; // Loading state for CO2 calculation
     // Check if the user is logged in
     this.authService.isAuthenticated().subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
@@ -137,6 +148,9 @@ export class ProdpageComponent implements OnInit {
       .subscribe((count) => {
         this.avgRate = count;
       });
+
+    // Get user location and calculate CO2 impact
+    this.getUserLocationAndCalculateCO2();
   }
 
   /**
@@ -284,6 +298,69 @@ export class ProdpageComponent implements OnInit {
         error: (err) => {
           console.error(`❌ Error retrieving image for ${product.name}:`, err);
         },
+      });
+    }
+  }
+
+  /**
+   * Gets the user's location and calculates the CO2 impact
+   */
+  private getUserLocationAndCalculateCO2(): void {
+    this.addressService.getCurrentLocation().subscribe({
+      next: (location) => {
+        this.userLocation = location;
+        this.calculateCo2Impact();
+      },
+      error: (error) => {
+        console.error('Error getting location:', error);
+        this.locationError = 'Unable to get your location. CO2 impact calculation may be inaccurate.';
+        // Use a default location (e.g., Paris) if location access is denied
+        this.userLocation = 'Paris';
+        this.calculateCo2Impact();
+      }
+    });
+  }
+
+  /**
+   * Calculates the CO2 impact for the product
+   */
+  calculateCo2Impact(): void {
+    if (!this.productId) return;
+    
+    this.isCO2Loading = true;
+
+    if (this.productSource !== 'Internal' && this.product) {
+      // For external products, send all product details
+      this.co2Service.getCo2ImpactForProduct(
+        this.userLocation,
+        this.productId,
+        this.product['category'],
+        this.product['origin']
+      ).subscribe({
+        next: (data) => {
+          console.log('CO2 Impact data:', data);
+          this.co2Impact = data;
+          this.isCO2Loading = false;
+        },
+        error: (error) => {
+          console.error('Error calculating CO2 impact:', error);
+          this.co2Impact = null;
+          this.isCO2Loading = false;
+        }
+      });
+    } else {
+      // For internal products, only send productId and location
+      this.co2Service.getCo2ImpactForProduct(this.userLocation, this.productId).subscribe({
+        next: (data) => {
+          console.log('CO2 Impact data:', data);
+          this.co2Impact = data;
+          this.isCO2Loading = false;
+        },
+        error: (error) => {
+          console.error('Error calculating CO2 impact:', error);
+          this.co2Impact = null;
+          this.isCO2Loading = false;
+        }
       });
     }
   }
