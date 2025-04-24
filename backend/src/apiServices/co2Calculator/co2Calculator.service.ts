@@ -7,62 +7,92 @@
  */
 import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "src/database/database.service";
+import { GeocodingService } from "./geocoding.service";
 
+/**
+ * @brief Interface for the CO2 impact result.
+ * @param distance The distance in kilometers.
+ * @param co2Impact The CO2 impact in kilograms.
+ * @param transportType The transport type.
+ */
+export interface CO2Result {
+  distance: number;
+  co2Impact: number;
+  transportType: string;
+}
 @Injectable()
 export class Co2CalculatorService {
-    constructor(
-        private databaseService: DatabaseService
-    ) {}
+  constructor(
+    private databaseService: DatabaseService,
+    private geocodingService: GeocodingService
+  ) {}
 
-    async calculateCO2(
-        productId: string,
-        userLocation: string,
-        category?: string,
-        origin?: string
-    ): Promise<number> {
-        console.log('param:', productId, userLocation, category, origin);
+  /**
+   * Calculates the CO2 impact for a product based on its origin, destination, and category.
+   * @param productId The ID of the product.
+   * @param userLocation The user's location.
+   * @param category The category of the product.
+   * @param origin The origin of the product.
+   * @returns A promise that resolves to the CO2 impact result.
+   */
+  async calculateCO2(
+    productId: string,
+    userLocation: string,
+    category?: string,
+    origin?: string
+  ): Promise<CO2Result> {
+    // Input validation
+    if (!productId || typeof productId !== 'string' || productId.trim() === '') {
+      throw new Error('Invalid productId: must be a non-empty string');
+    }
+    if (!userLocation || typeof userLocation !== 'string' || userLocation.trim() === '') {
+      throw new Error('Invalid userLocation: must be a non-empty string');
+    }
 
-        // If origin and category are provided, it's an external product
-        // Otherwise, fetch the product data from database using productId
-        let productOrigin = origin;
-        let productCategory = category;
+    // If category and origin are provided, it's an external product
+    // Otherwise, fetch the product data from database using productId
+    let productOrigin = origin;
+    let productCategory = category;
 
-        if (!origin || !category) {
-            const product = await this.databaseService.getProductById(productId);
-            if (!product) {
-                throw new Error(`Product with ID ${productId} not found`);
-            }
-            productOrigin = productOrigin || product.origin;
-            productCategory = productCategory || product.category;
+    // Check if origin or category are actually undefined or empty strings
+    if (origin === 'undefined' || !origin || category === 'undefined' || !category) {
+      try {
+        const product = await this.databaseService.getProductById(productId);
+        if (!product) {
+          throw new Error(`Product with ID ${productId} not found`);
         }
-
-        const distance = await this.getDistanceInKm(productOrigin, userLocation);
-        const transport = this.estimateTransportType(productOrigin, productCategory);
-        const coefficient = this.getCO2Coefficient(transport);
-        return distance * coefficient;
+        productOrigin = product.origin;
+        productCategory = product.category;
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+        throw new Error(`Failed to fetch product details for CO2 calculation: ${error.message}`);
+      }
     }
 
-    private async getDistanceInKm(
-        origin: string,
-        destination: string
-    ): Promise<number> {
-        // TODO: Implement actual distance calculation
-        return 1000; // Placeholder value
+    // Validate product origin and category
+    if (!productOrigin || typeof productOrigin !== 'string' || productOrigin.trim() === '') {
+      throw new Error('Invalid product origin: must be a non-empty string');
+    }
+    if (!productCategory || typeof productCategory !== 'string' || productCategory.trim() === '') {
+      throw new Error('Invalid product category: must be a non-empty string');
     }
 
-    private estimateTransportType(origin: string, category: string): string {
-        // Implement logic based on your criteria
-        if (origin.includes("China") && category === "High-tech") return "plane";
-        // ... other rules
-        return "ship"; // fallback
-    }
+    try {
+      // Get coordinates for both locations
+      const originCoords = await this.geocodingService.getCoordinates(productOrigin);
+      const destCoords = await this.geocodingService.getCoordinates(userLocation);
 
-    private getCO2Coefficient(transport: string): number {
-        const coeffs = {
-            plane: 0.55,
-            truck: 0.12,
-            ship: 0.017,
-        };
-        return coeffs[transport] || 0.1;
+      // Calculate distance and get CO2 impact
+      const result = this.geocodingService.calculateDistance(
+        originCoords,
+        destCoords,
+        productOrigin
+      );
+
+      return result;
+    } catch (error) {
+      console.error("Error in CO2 calculation:", error);
+      throw new Error(`Failed to calculate CO2 impact: ${error.message}`);
     }
+  }
 }

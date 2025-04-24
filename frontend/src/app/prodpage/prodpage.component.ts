@@ -23,6 +23,7 @@ import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { CommentsService } from '../../services/comments/comments.service';
 import { Co2CalculatorService } from '../../services/co2Calculator/co2Calculator.service';
+import { ApiAddress } from '../../services/address/address.service';
 
 interface Product {
   id: string;
@@ -62,6 +63,9 @@ export class ProdpageComponent implements OnInit {
   userRole: string | null = null; // Stores the user role.
   commentCount: number = 0; // Number of comments for a product
   avgRate: number = 0; // Average rate for a product
+  userLocation: string = '';
+  co2Impact: number | null = null;
+  locationError: string = '';
 
   /**
    * @brief Constructor initializes dependencies.
@@ -83,6 +87,7 @@ export class ProdpageComponent implements OnInit {
     private router: Router,
     private commentsService: CommentsService,
     private co2Service: Co2CalculatorService,
+    private addressService: ApiAddress
   ) {}
 
   /**
@@ -140,8 +145,8 @@ export class ProdpageComponent implements OnInit {
         this.avgRate = count;
       });
 
-      // Test CO2
-      this.calculateCo2Impact();
+    // Get user location and calculate CO2 impact
+    this.getUserLocationAndCalculateCO2();
   }
 
   /**
@@ -294,13 +299,60 @@ export class ProdpageComponent implements OnInit {
   }
 
   /**
-   * @brief Calculates the CO2 impact for the product
+   * Gets the user's location and calculates the CO2 impact
    */
-  // TODO case if produt is external
-  calculateCo2Impact(): void {
-    this.co2Service.getCo2ImpactForProduct(this.productId).subscribe((data) => {
-      console.log(data);
+  private getUserLocationAndCalculateCO2(): void {
+    this.addressService.getCurrentLocation().subscribe({
+      next: (location) => {
+        this.userLocation = location;
+        this.calculateCo2Impact();
+      },
+      error: (error) => {
+        console.error('Error getting location:', error);
+        this.locationError = 'Unable to get your location. CO2 impact calculation may be inaccurate.';
+        // Use a default location (e.g., Paris) if location access is denied
+        this.userLocation = 'Paris';
+        this.calculateCo2Impact();
+      }
     });
+  }
+
+  /**
+   * Calculates the CO2 impact for the product
+   */
+  calculateCo2Impact(): void {
+    if (!this.productId) return;
+
+    if (this.productSource !== 'Internal' && this.product) {
+      // For external products, send all product details
+      this.co2Service.getCo2ImpactForProduct(
+        this.userLocation,
+        this.productId,
+        this.product['category'],
+        this.product['origin']
+      ).subscribe({
+        next: (data) => {
+          console.log('CO2 Impact data:', data);
+          this.co2Impact = data;
+        },
+        error: (error) => {
+          console.error('Error calculating CO2 impact:', error);
+          this.co2Impact = null;
+        }
+      });
+    } else {
+      // For internal products, only send productId and location
+      this.co2Service.getCo2ImpactForProduct(this.userLocation, this.productId).subscribe({
+        next: (data) => {
+          console.log('CO2 Impact data:', data);
+          this.co2Impact = data;
+        },
+        error: (error) => {
+          console.error('Error calculating CO2 impact:', error);
+          this.co2Impact = null;
+        }
+      });
+    }
   }
 
   /**

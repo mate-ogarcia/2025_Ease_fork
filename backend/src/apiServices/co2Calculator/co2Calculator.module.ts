@@ -10,12 +10,13 @@
 import { Module } from '@nestjs/common';
 import { Co2CalculatorController } from './co2Calculator.controller';
 import { Co2CalculatorService } from './co2Calculator.service';
+import { GeocodingService } from './geocoding.service';
 import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [Co2CalculatorController],
-  providers: [Co2CalculatorService],
+  providers: [Co2CalculatorService, GeocodingService],
   exports: [Co2CalculatorService]
 })
 export class Co2CalculatorModule {}
