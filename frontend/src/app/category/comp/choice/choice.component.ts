@@ -257,9 +257,10 @@ export class ChoiceComponent implements OnInit {
   }
 
   /**
-   * Filters the products based on the current subcategory.
+   * Filters the products based on the current subcategory and search query.
    */
   filterProducts(): void {
+    console.log('RayonsData:', this.rayonsData);  
     if (!this.currentSubCategory) {
       this.filteredProducts = [];
       return;
@@ -270,9 +271,34 @@ export class ChoiceComponent implements OnInit {
     this.filteredProducts = products.filter(product => product.status !== 'add-product');
     // Load images for filtered products
     this.loadProductImages(this.filteredProducts);
+    // Apply search filter if there's a search query
+    if (this.searchQuery) {
+      this.searchProducts();
+    }
     this.isLoading = false;
   }
 
+  /**
+   * Filters the products based on the search query.
+   * This function filters the already loaded products without making new API calls.
+   */
+  searchProducts(): void {
+    if (!this.searchQuery.trim()) {
+      // If search query is empty, show all products
+      return;
+    }
+
+    const searchTerm = this.searchQuery.toLowerCase().trim();
+    this.filteredProducts = this.filteredProducts.filter(product => 
+      product.name.toLowerCase().includes(searchTerm) ||
+      (product.description && product.description.toLowerCase().includes(searchTerm))
+    );
+  }
+
+  /**
+   * Handles the subcategory selection event
+   * @param subCategory The selected subcategory
+   */
   onSubCategorySelect(subCategory: string) {
     this.isLoading = true;
     this.currentSubCategory = subCategory;
