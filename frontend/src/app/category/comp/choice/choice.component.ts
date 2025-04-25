@@ -307,24 +307,6 @@ export class ChoiceComponent implements OnInit {
   }
 
   /**
-   * Handles the info button click event
-   */
-  onInfoClick(): void {
-    // Add your info button click logic here
-    console.log('Info button clicked');
-  }
-
-  /**
-   * Handles the info button toggle event
-   * @param active The new active state of the info button
-   */
-  onInfoToggled(active: boolean): void {
-    this.infoActive = active;
-    // Add your info button toggle logic here
-    console.log('Info button toggled:', active);
-  }
-
-  /**
    * @brief Navigates to the selected product's page.
    * @param product The selected product object.
    */
