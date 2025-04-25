@@ -64,7 +64,15 @@
                 <img [src]="product.image" [alt]="product.name" />
               </div>
               <div class="product-info">
-                <h3>{{ product.name }}</h3>
+                <div class="product-header">
+                  <h3>{{ product.name }}</h3>
+                  <app-info-btn
+                    class="app-info-btn"
+                    [infoActive]="product.infoActive"
+                    (infoToggled)="product.infoActive = $event"
+                    (infoClicked)="goToInfoProduct(product)"
+                  ></app-info-btn>
+                </div>
                 <p class="brand"> <b>Marque:</b> {{ product.brand }}</p>
                 <p class="origin"> <b>Origine:</b> {{ product.origin }}</p>
                 <p class="description"> <b>Description:</b> {{ product.description }}</p>

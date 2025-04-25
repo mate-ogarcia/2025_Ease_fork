@@ -340,3 +340,29 @@
         width: 100%;
     }
 }
+
+.title-categ {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-categ h2 {
+  margin: 0;
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.product-header h3 {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.app-info-btn {
+  margin-left: 10px;
+}

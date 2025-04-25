@@ -7,6 +7,8 @@ import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 import { first } from 'rxjs/operators';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { Product } from '../../../models/product.model';
+import { InfoBtnComponent } from '../../../searched-prod/comp/info-btn/info-btn.component';
+import { Router } from '@angular/router';
 
 interface Rayon {
   name: string;
@@ -21,7 +23,7 @@ interface Rayon {
   standalone: true,
   templateUrl: './choice.component.html',
   styleUrl: './choice.component.css',
-  imports: [NgFor, NgClass, NgStyle, FormsModule, NgIf, LoadingSpinnerComponent],
+  imports: [NgFor, NgClass, NgStyle, FormsModule, NgIf, LoadingSpinnerComponent, InfoBtnComponent],
 })
 export class ChoiceComponent implements OnInit {
   isLoading: boolean = false;
@@ -33,17 +35,20 @@ export class ChoiceComponent implements OnInit {
   currentSubCategory: string = '';
   searchQuery: string = ''; // The search query entered by the user
   filteredProducts: Product[] = []; // Array of filtered products based on the current subcategory
+  infoActive: boolean = false;
 
   /**
    * Constructor for the ChoiceComponent.
    * @param {DataCacheService} dataCacheService - The service to fetch categories and subcategories.
    * @param {ApiService} apiService - The service to fetch products by category.
    * @param {APIUnsplash} apiUnsplash - The service to fetch product images from Unsplash.
+   * @param {Router} router - The router service for navigation.
    */
   constructor(
     private dataCacheService: DataCacheService,
     private apiService: ApiService,
-    private apiUnsplash: APIUnsplash
+    private apiUnsplash: APIUnsplash,
+    private router: Router
   ) {}
 
   /**
@@ -273,5 +278,40 @@ export class ChoiceComponent implements OnInit {
     this.currentSubCategory = subCategory;
     this.filterProducts();
     this.isLoading = false;
+  }
+
+  /**
+   * Handles the info button click event
+   */
+  onInfoClick(): void {
+    // Add your info button click logic here
+    console.log('Info button clicked');
+  }
+
+  /**
+   * Handles the info button toggle event
+   * @param active The new active state of the info button
+   */
+  onInfoToggled(active: boolean): void {
+    this.infoActive = active;
+    // Add your info button toggle logic here
+    console.log('Info button toggled:', active);
+  }
+
+  /**
+   * @brief Navigates to the selected product's page.
+   * @param product The selected product object.
+   */
+  goToInfoProduct(product: any) {
+    if (product?.id) {
+      const source = product.source || 'Internal';
+      this.router
+        .navigate([`/product-page/${product.id}/${source}`])
+        .catch((error) => {
+          console.error('❌ Navigation error:', error);
+        });
+    } else {
+      console.warn('⚠️ Invalid product or missing ID');
+    }
   }
 }
