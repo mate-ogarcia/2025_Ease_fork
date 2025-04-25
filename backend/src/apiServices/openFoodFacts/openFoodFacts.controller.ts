@@ -96,5 +96,27 @@ export class OpenFoodFactsController {
     return await this.openFoodFactsService.searchSimilarProducts(product, pageNumber);
   }
 
+  /**
+   * @brief Gets food products from OpenFoodFacts.
+   * 
+   * @details
+   * This endpoint retrieves food products from OpenFoodFacts.
+   * - Pagination is supported through the `page` and `pageSize` query parameters.
+   * - Defaults to page 1 and pageSize 20 if parameters are not provided.
+   * 
+   * @param page The page number for paginated results.
+   * @param pageSize The number of results per page.
+   * @returns Promise with the list of food products.
+   */
+  @Get('searchFoodProducts')
+  async searchFoodProducts(
+    @Query('page') page: string = '1',
+    @Query('pageSize') pageSize: string = '20'
+  ) {
+    return this.openFoodFactsService.searchFoodProducts(
+      parseInt(page),
+      parseInt(pageSize)
+    );
+  }
 
 }

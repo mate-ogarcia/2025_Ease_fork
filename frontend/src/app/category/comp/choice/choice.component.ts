@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DataCacheService } from '../../../../services/cache/data-cache.service';
 import { ApiService } from '../../../../services/api.service';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
+import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
 import { first } from 'rxjs/operators';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { Product } from '../../../models/product.model';
@@ -27,6 +28,7 @@ interface Rayon {
 })
 export class ChoiceComponent implements OnInit {
   isLoading: boolean = false;
+  isLoadingOffProducts: boolean = false; // New loading state for OFF products
   rayons: Rayon[] = []; // Array of rayons
   subCategoriesData: { [key: string]: string[] } = {}; // Object to store subcategories for each category
   rayonsData: { [key: string]: Product[] } = {}; // Object to store products for each rayon
@@ -42,12 +44,14 @@ export class ChoiceComponent implements OnInit {
    * @param {DataCacheService} dataCacheService - The service to fetch categories and subcategories.
    * @param {ApiService} apiService - The service to fetch products by category.
    * @param {APIUnsplash} apiUnsplash - The service to fetch product images from Unsplash.
+   * @param {ApiOpenFoodFacts} apiOpenFoodFacts - The service to fetch product information from Open Food Facts.
    * @param {Router} router - The router service for navigation.
    */
   constructor(
     private dataCacheService: DataCacheService,
     private apiService: ApiService,
     private apiUnsplash: APIUnsplash,
+    private apiOpenFoodFacts: ApiOpenFoodFacts,
     private router: Router
   ) {}
 
@@ -218,6 +222,39 @@ export class ChoiceComponent implements OnInit {
   }
 
   /**
+   * Checks if a category is food-related
+   * @param categoryName The name of the category to check
+   * @returns boolean indicating if the category is food-related
+   */
+  private isFoodRelatedCategory(categoryName: string): boolean {
+    const foodCategories = ['Food', 'Beverages'];
+    return foodCategories.includes(categoryName);
+  }
+
+  /**
+   * @brief Helper method to handle Open Food Facts products response
+   * @param products The products to process
+   * @param shouldFilterBeverages Whether to filter out beverages
+   */
+  private handleOpenFoodFactsResponse(products: any[], shouldFilterBeverages: boolean = false): void {
+    let offProducts = products.map(product => this.apiOpenFoodFacts.formatOpenFoodFactsProduct(product));
+    
+    if (shouldFilterBeverages) {
+      offProducts = offProducts.filter(product => {
+        const categories = (product?.category || '').toLowerCase();
+        const excludedTerms = ['beverage', 'drink', 'water', 'juice', 'soda', 'boisson', 'eau', 'jus'];
+        return !excludedTerms.some(term => categories.includes(term));
+      });
+    }
+
+    // Add OFF products to the existing filtered products
+    this.filteredProducts = [...this.filteredProducts, ...offProducts];
+    // Load images for the new OFF products
+    this.loadProductImages(offProducts);
+    this.isLoadingOffProducts = false;
+  }
+
+  /**
    * Selects a rayon and updates the current rayon and subcategories.
    * @param {string} rayonName - The name of the rayon to select.
    */
@@ -228,21 +265,64 @@ export class ChoiceComponent implements OnInit {
     this.searchQuery = '';
     this.filteredProducts = [];
     this.isLoading = true;
+    this.isLoadingOffProducts = false;
     
     const originalCategoryName = this.getOriginalCategoryName(rayonName);
     
+    // First, load products from our database
     this.apiService.getProductByCateg(originalCategoryName).subscribe({
       next: (products: Product[]) => {
         this.filteredProducts = products.filter(product => product.status !== 'add-product');
         // Load images for filtered products
         this.loadProductImages(this.filteredProducts);
         this.isLoading = false;
+
+        // If it's a food-related category, load OFF products in the background
+        if (this.isFoodRelatedCategory(originalCategoryName)) {
+          this.loadOpenFoodFactsProducts(originalCategoryName);
+        }
       },
       error: (error: Error) => {
         console.error('Error loading products:', error);
         this.isLoading = false;
       }
     });
+  }
+
+  /**
+   * Loads products from Open Food Facts in the background
+   * @param categoryName The category name to search for
+   */
+  private loadOpenFoodFactsProducts(categoryName: string): void {
+    this.isLoadingOffProducts = true;
+    
+    if (categoryName === 'Food') {
+      // Use the dedicated food products search
+      this.apiOpenFoodFacts.searchFoodProducts().subscribe({
+        next: (response: any[]) => this.handleOpenFoodFactsResponse(response, true),
+        error: (error: Error) => {
+          console.error('Error loading food products from Open Food Facts:', error);
+          this.isLoadingOffProducts = false;
+        }
+      });
+    } else {
+      // For Beverages, use the alternative products endpoint
+      const formattedProduct = {
+        name: '',
+        brand: '',
+        category: categoryName,
+        tags: [],
+        description: ''
+      };
+
+      this.apiOpenFoodFacts.postOpenFoodFactsAlternativeProducts(formattedProduct).subscribe({
+        next: (response: any[]) => this.handleOpenFoodFactsResponse(response),
+        error: (error: Error) => {
+          console.error('Error loading products from Open Food Facts:', error);
+          this.isLoadingOffProducts = false;
+        }
+      });
+    }
   }
 
   /**

@@ -102,6 +102,11 @@
               Aucun produit trouvé.
             </p>
           </div>
+          <!-- OFF Products Loading Indicator -->
+          <div *ngIf="isLoadingOffProducts" class="off-loading-container">
+            <app-loading-spinner></app-loading-spinner>
+            <p class="off-loading-text">Chargement des produits Open Food Facts...</p>
+          </div>
         </div>
       </div>
     </div>
