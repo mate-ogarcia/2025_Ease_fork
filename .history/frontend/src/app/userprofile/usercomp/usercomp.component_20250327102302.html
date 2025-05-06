@@ -4,11 +4,10 @@
     <img class="profile-image" src="rhinoceros.png" alt="Profile Picture" />
     <div class="profile-info">
       <h2 class="username">{{ userInfo?.username }}</h2>
-      <h4 class="email">{{ userInfo?.email }}</h4>
-      <h4 class="locaton">{{ userInfo?.address?.postCode }} {{ userInfo?.address?.city }}, {{ userInfo?.address?.country
-        }}</h4> <!-- <p class="location">{{ location }}</p> -->
+      <h5 class="email">{{ userInfo?.email }}</h5>
+      <p class="location">{{ location }}</p>
       <div class="profile-actions">
-        <button class="edit-profile-btn">Modifier le Profile</button>
+        <button class="edit-profile-btn">Edit Profile</button>
       </div>
     </div>
   </div>
@@ -16,14 +15,9 @@
   <!-- Navigation des onglets -->
   <nav class="profile-nav">
     <ul>
-
+      <li [class.active]="activeTab === 'Historique'" (click)="changeTab('Historique')">Historique</li>
+      <li [class.active]="activeTab === 'Favoris'" (click)="changeTab('Favoris')">Favoris</li>
       <li [class.active]="activeTab === 'Badges'" (click)="changeTab('Badges')">Badges</li>
-      <li [class.active]="activeTab === 'Historique'" (click)="changeTab('Historique')">
-        Historique
-      </li>
-      <li [class.active]="activeTab === 'Favoris'" (click)="changeTab('Favoris')">
-        Favoris
-      </li>
     </ul>
   </nav>
 
@@ -31,19 +25,21 @@
   <div class="content-section">
     <!-- Onglet Historique -->
     <div class="history" *ngIf="activeTab === 'Historique'">
+      <h3>Historique</h3>
+      <p>Voici votre historique d'activités.</p>
       <app-history class="app-history"></app-history>
     </div>
 
     <!-- Onglet Favoris -->
     <div *ngIf="activeTab === 'Favoris'">
-      <h3>Mes produits favoris</h3>
-      <app-favorites class="app-favorites"></app-favorites>
+      <h3>Favoris</h3>
+      <p>Voici vos éléments favoris.</p>
     </div>
 
     <!-- Onglet Badges -->
     <div *ngIf="activeTab === 'Badges'">
-      <app-badges class="app-badge"></app-badges>
-      <app-achivement class="app-achivement"></app-achivement>
+      <h3>Badges</h3>
+      <app-badges class="app-"></app-badges>
     </div>
   </div>
 </div>

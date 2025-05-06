@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HistoryComponent } from './history/history.component';
 import { FavoritesComponent } from './favorites/favorites.component';
+import { BadgesComponent }  from './badges/badges.component';
+import { AchivementComponent } from './achivement/achivement.component';
 // Services
 import { AuthService } from '../../../services/auth/auth.service';
 
@@ -11,7 +13,7 @@ import { AuthService } from '../../../services/auth/auth.service';
  */
 @Component({
   selector: 'app-usercomp',
-  imports: [CommonModule, HistoryComponent, FavoritesComponent],
+  imports: [CommonModule, HistoryComponent, FavoritesComponent, BadgesComponent,AchivementComponent],
   templateUrl: './usercomp.component.html',
   styleUrl: './usercomp.component.css'
 })
@@ -27,6 +29,7 @@ export class UsercompComponent implements OnInit {
 
   /** @property {any} userInfo - Information about the current user */
   userInfo: any;
+  location: string = 'Chargement...';
 
   /**
    * @constructor

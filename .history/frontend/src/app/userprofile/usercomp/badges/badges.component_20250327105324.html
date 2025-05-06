@@ -1,0 +1,12 @@
+<div class="badges-grid">
+  <div class="badge-card" *ngFor="let badge of badges">
+    <div class="badge-icon-container"
+         [style.background]="createGradient(badge.bgColor)"
+         [style.border]="'8px solid ' + darkenColor(badge.bgColor, 40)">
+      <span class="badge-emoji">{{ badge.emoji }}</span>
+      <h3 class="badge-title">{{ badge.title }}</h3>
+
+    </div>
+    <p class="badge-description">{{ badge.description }}</p>
+  </div>
+</div>

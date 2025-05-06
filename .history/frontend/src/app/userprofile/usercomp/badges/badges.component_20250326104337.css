@@ -1,0 +1,91 @@
+/* Main grid to display all badges */
+.badges-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Individual badge card */
+.badge-card {
+  position: relative;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  /* Initial fixed height; will expand on hover */
+  height: 220px;
+  /* Flex layout to center content vertically/horizontally */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Smooth transition for height and slight "lift" effect */
+  transition: height 0.3s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+
+/* Expand the card on hover to create space for text */
+.badge-card:hover {
+  height: 320px; /* Increase as needed for more room */
+  transform: translateY(-2px);
+}
+
+/* Round container for the emoji */
+.badge-icon-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Transition to move it upward on hover */
+  transition: transform 0.3s ease, margin-bottom 0.3s ease;
+}
+
+/* Move the emoji upward on hover */
+.badge-card:hover .badge-icon-container {
+  transform: translateY(-20px);
+  margin-bottom: 1rem; /* Space between emoji and text */
+}
+
+/* Centered and enlarged emoji */
+.badge-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Hide the text initially (opacity=0), and shift it down slightly */
+.badge-title,
+.badge-description {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  margin: 0;
+  pointer-events: none; /* Optional, prevents interactions while hidden */
+}
+
+/* Spacing for the title/description */
+.badge-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.badge-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0;
+}
+
+/* Reveal text on hover, move it up into view */
+.badge-card:hover .badge-title,
+.badge-card:hover .badge-description {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
