@@ -1,66 +1,118 @@
+<!-- Main container -->
 <div class="container">
-    <div class="categ-container">
-        <div class="rayons-container">
-            <div class="rayons-wrapper">
-                <div class="rayon" *ngFor="let rayon of rayons" 
-                     (click)="selectRayon(rayon.name)"
-                     [ngStyle]="{'background-color': rayon.backgroundColor, 'color': rayon.textColor}">
-                    <div class="rayon-icon">{{ rayon.icon }}</div>
-                    <div class="rayon-title">{{ rayon.name }}</div>
-                </div>
-            </div>
+  <div class="categ-container">
+    <!-- Categories section -->
+    <div class="rayons-container">
+      <div class="rayons-wrapper">
+        <div
+          class="rayon"
+          *ngFor="let rayon of rayons"
+          (click)="selectRayon(rayon.name)"
+          [ngStyle]="{
+            'background-color': rayon.backgroundColor,
+            color: rayon.textColor
+          }"
+        >
+          <div class="rayon-icon">{{ rayon.icon }}</div>
+          <div class="rayon-title">{{ rayon.name }}</div>
         </div>
-
-        <div class="details-container">
-            <div class="details-content">
-                <div class="rayon-header">
-                    <div class="title-categ">
-                        <h2>{{ currentRayon || 'Sélectionnez une catégorie' }}</h2>
-                    </div>
-                
-                
-                    <!-- Barre de recherche -->
-                <div class="search-container">
-                    <input type="text" class="searchbar-prod" [(ngModel)]="searchQuery" (input)="filterProducts()" placeholder="Rechercher un produit...">
-                </div>
-            </div>
-                <!-- Barre de sous-catégories -->
-                <div class="sub-categories-container" *ngIf="currentSubCategories.length > 0">
-                    <div class="sub-categories-wrapper">
-                        <div *ngFor="let subCategory of currentSubCategories" 
-                             (click)="selectSubCategory(subCategory)"
-                             [ngClass]="{'selected': currentSubCategory === subCategory}"
-                             class="sub-category">
-                            {{ subCategory }}
-                        </div>
-                    </div>
-                </div>
-
-                
-
-                <!-- Produits affichés -->
-                <div id="rayon-products" class="product-grid">
-                    <div *ngFor="let product of filteredProducts" class="product-card">
-                        <div class="product-image">
-                            <img [src]="'https://via.placeholder.com/200x200?text=' + product.name" [alt]="product.name">
-                        </div>
-                        <div class="product-info">
-                            <h3>{{ product.name }}</h3>
-                            <p class="region">Région: {{ product.region }}</p>
-                            <p class="description">{{ product.description }}</p>
-                            <div class="product-impact">
-                                Impact écologique: 
-                                <span [ngClass]="{'impact-good': product.ecologicalImpact === 'good', 
-                                                 'impact-neutral': product.ecologicalImpact === 'neutral',
-                                                 'impact-bad': product.ecologicalImpact === 'bad'}">
-                                    {{ product.ecologicalImpact }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <p *ngIf="filteredProducts.length === 0" class="no-results">Aucun produit trouvé.</p>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- Product details section -->
+    <div class="details-container">
+      <div class="details-content">
+        <div class="rayon-header">
+          <div class="title-categ">
+            <h2>{{ currentRayon || "Sélectionnez une catégorie" }}</h2>
+          </div>
+
+          <!-- Search bar -->
+          <div class="search-container">
+            <input
+              type="text"
+              class="searchbar-prod"
+              [(ngModel)]="searchQuery"
+              (input)="searchProducts()"
+              placeholder="Rechercher un produit..."
+            />
+          </div>
+        </div>
+        <!-- Subcategories bar -->
+        <div
+          class="sub-categories-container"
+          *ngIf="currentSubCategories.length > 0"
+        >
+          <div class="sub-categories-wrapper">
+            <div
+              *ngFor="let subCategory of currentSubCategories"
+              (click)="selectSubCategory(subCategory)"
+              [ngClass]="{ selected: currentSubCategory === subCategory }"
+              class="sub-category"
+            >
+              {{ subCategory }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Products grid -->
+        <div id="rayon-products" class="product-grid">
+          <app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
+          <div *ngIf="!isLoading" class="product-grid-wrapper">
+            <div *ngFor="let product of filteredProducts" class="product-card">
+              <div class="product-image">
+                <img [src]="product.image" [alt]="product.name" />
+              </div>
+              <div class="product-info">
+                <div class="product-header">
+                  <h3>{{ product.name }}</h3>
+                  <app-info-btn
+                    class="app-info-btn"
+                    [infoActive]="product.infoActive"
+                    (infoToggled)="product.infoActive = $event"
+                    (infoClicked)="goToInfoProduct(product)"
+                  ></app-info-btn>
+                </div>
+                <p class="brand"> <b>Marque:</b> {{ product.brand }}</p>
+                <p class="origin"> <b>Origine:</b> {{ product.origin }}</p>
+                <p class="description"> <b>Description:</b> {{ product.description }}</p>
+                <div class="product-impact">
+                  <b>Impact écologique:</b>
+                  <span
+                    *ngIf="product.ecoscore"
+                    [ngClass]="{
+                      'impact-good':
+                        product.ecoscore === 'A' || product.ecoscore === 'B',
+                      'impact-neutral': product.ecoscore === 'C',
+                      'impact-bad':
+                        product.ecoscore === 'D' || product.ecoscore === 'E'
+                    }"
+                  >
+                    {{ product.ecoscore }}
+                  </span>
+                  <span *ngIf="!product.ecoscore" class="no-impact">
+                    <i> allez voir sur la page produit (bouton info en haut à droite)</i>
+                  </span>
+                </div>
+                <div class="tags">
+                  <b>Tags: </b>
+                  <span *ngFor="let tag of product.tags; let last = last" class="tag">
+                    {{ tag }}{{ !last ? ', ' : '' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p *ngIf="filteredProducts.length === 0" class="no-results">
+              Aucun produit trouvé.
+            </p>
+          </div>
+          <!-- OFF Products Loading Indicator -->
+          <div *ngIf="isLoadingOffProducts" class="off-loading-container">
+            <app-loading-spinner></app-loading-spinner>
+            <p class="off-loading-text">Chargement des produits Open Food Facts...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

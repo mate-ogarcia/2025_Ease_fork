@@ -412,4 +412,18 @@ export class ProductsService {
       throw new InternalServerErrorException("Error inserting product.");
     }
   }
+
+  /**
+   * @brief Retrieves products by category.
+   * @param category The category name to fetch products for.
+   * @returns {Promise<any[]>} A promise resolving to an array of products.
+   */
+  async getProductsByCategory(category: string): Promise<any[]> {
+    try {
+      return await this.databaseService.getProductByCategory(category);
+    } catch (error) {
+      console.error("❌ Error retrieving products by category:", error);
+      throw new InternalServerErrorException("Error retrieving products by category.");
+    }
+  }
 }

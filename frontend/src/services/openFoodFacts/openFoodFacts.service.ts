@@ -71,4 +71,14 @@ export class ApiOpenFoodFacts {
       source: 'OpenFoodFacts',
     };
   }
+
+  /**
+   * @brief Gets food products from Open Food Facts.
+   * @param page The page number for paginated results.
+   * @param pageSize The number of results per page.
+   * @returns Observable with the food products data.
+   */
+  searchFoodProducts(page: number = 1, pageSize: number = 20): Observable<any[]> {
+    return this.http.get<any[]>(`${this._offUrl}/searchFoodProducts?page=${page}&pageSize=${pageSize}`);
+  }
 }
