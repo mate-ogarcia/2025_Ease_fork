@@ -22,6 +22,8 @@ Before starting, ensure you have the following installed on your system:
 - **Angular CLI** (for the frontend)
 - **Git** (to clone the repository)
 - **CouchBase** (if you want to run the project in development mode)
+- **Python** (for running data import scripts)
+- **Docker** and **Docker Compose** (for containerized deployment)
 
 ### Installation Steps
 
@@ -40,9 +42,20 @@ Navigate to the root of your directory and install the required dependencies:
 npm run install:all
 ```
 
-#### Import the Environment File
+#### Environment Configuration
 
-Place the `.env.production` file at the project root (place your .env file where the `.env.sample` file is). If necessary, you may need to modify this part of the `\2025_Ease\backend\src\main.ts` file to adapt it to your .env file:
+1. Create the following environment files at the project root:
+   - `.env.development` for development mode
+   - `.env.production` for production mode
+   - `.env.docker` for Docker deployment
+
+2. Configure the environment variables in each file according to your setup. Required variables include:
+   - Database connection details
+   - API endpoints
+   - Authentication credentials
+   - Port configurations
+
+3. If necessary, modify the `\2025_Ease\backend\src\main.ts` file to adapt it to your .env file:
 
 ```sh
 // Load the right .env
@@ -372,3 +385,55 @@ You only need to reconfigure Couchbase in the following scenarios:
 4. If you're setting up the application on a new machine
 
 In all other cases, including regular application restarts with `.\start-docker.cmd`, your Couchbase configuration will remain intact.
+
+## Troubleshooting Guide
+
+### Common Issues and Solutions
+
+1. **Angular Cache Issues**
+   If you encounter the error:
+   ```
+   NOTE: Raw file sizes do not reflect development server per-request transformations.
+   An unhandled exception occurred: EBUSY: resource busy or locked, rmdir 'your_path\ProjetTutore_CapG\frontend\.angular\cache\19.1.5\frontend\vite\deps_ssr'
+   ```
+   Solution:
+   - Navigate to `your_path\ProjetTutore_CapG\frontend\.angular\cache\19.1.5\frontend\vite\`
+   - Delete the `deps_ssr` and `deps` files or the entire `vite` folder
+
+2. **Database Connection Issues**
+   - Check VPN settings (CouchBase prevents connections with VPN)
+   - Verify database credentials in environment files
+   - Ensure CouchBase service is running
+   - Check network connectivity
+
+3. **Port Conflicts**
+   - Frontend default port: 4200
+   - Backend default port: 3000
+   - Docker proxy port: 8081
+   - CouchBase admin port: 8091
+   If any port is in use, modify the configuration in the respective environment file
+
+### Performance Optimization
+
+1. **Frontend**
+   - Use lazy loading for modules
+   - Implement proper caching strategies
+   - Optimize images and assets
+
+2. **Backend**
+   - Implement proper database indexing
+   - Use caching where appropriate
+   - Optimize database queries
+
+3. **Docker**
+   - Use multi-stage builds
+   - Implement proper volume management
+   - Configure resource limits
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
