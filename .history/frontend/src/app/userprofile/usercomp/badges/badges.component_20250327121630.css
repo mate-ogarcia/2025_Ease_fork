@@ -1,0 +1,101 @@
+/* Grid to display badges */
+.badges-grid {
+  display: grid;
+  height: fit-content;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Card container with fixed dimensions */
+.badge-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between ;
+  width: 200px;
+  height: 220px;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: visible;
+  transition: transform 0.3s ease;
+}
+
+/* On hover, enlarge the card and bring it to the front */
+.badge-card:hover {
+  z-index: 9999;
+  transform: scale(1.1);
+}
+
+/* Top container: groups emoji and title, centered absolutely */
+.badge-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+/* On hover, move the top container further upward */
+.badge-card:hover .badge-top {
+  transform: translateY(-10%);
+}
+
+/* Emoji container (round) with centered content */
+.badge-icon-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Emoji styling */
+.badge-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Title styling: visible by default, centered below emoji */
+.badge-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Bottom container for the description */
+.badge-bottom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+/* Description styling: hidden initially */
+.badge-description {
+  display: none;
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.badge-description:hover{
+  display: ;
+}
+/* On hover, reveal the description */
+.badge-card:hover .badge-description {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
