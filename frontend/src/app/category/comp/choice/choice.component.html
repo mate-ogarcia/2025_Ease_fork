@@ -79,6 +79,7 @@
                 <div class="product-impact">
                   <b>Impact écologique:</b>
                   <span
+                    *ngIf="product.ecoscore"
                     [ngClass]="{
                       'impact-good':
                         product.ecoscore === 'A' || product.ecoscore === 'B',
@@ -89,12 +90,15 @@
                   >
                     {{ product.ecoscore }}
                   </span>
+                  <span *ngIf="!product.ecoscore" class="no-impact">
+                    <i> allez voir sur la page produit (bouton info en haut à droite)</i>
+                  </span>
                 </div>
                 <div class="tags">
-                  <b>Tags:</b>
-                  <span *ngFor="let tag of product.tags" class="tag">{{
-                    tag
-                  }}</span>
+                  <b>Tags: </b>
+                  <span *ngFor="let tag of product.tags; let last = last" class="tag">
+                    {{ tag }}{{ !last ? ', ' : '' }}
+                  </span>
                 </div>
               </div>
             </div>
