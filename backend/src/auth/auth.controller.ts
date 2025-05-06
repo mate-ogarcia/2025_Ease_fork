@@ -48,7 +48,7 @@ export class AuthController {
    */
   @Post("register")
   async register(@Body() body: RegisterDto): Promise<any> {
-    return this.authService.register(body.username, body.email, body.password);
+    return this.authService.register(body.username, body.email, body.password, body.address);
   }
 
   /**
@@ -67,22 +67,18 @@ export class AuthController {
     @Body() body: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<any> {
-    console.log("📝 Login attempt for:", body.email);
     const result = await this.authService.login(body);
-    console.log("✅ Login successful, setting cookie");
-
-    // Définir le cookie avec des options plus permissives pour le développement
+    // Set the cookie with more permissive options for development
     response.cookie("accessToken", result.access_token, {
-      httpOnly: false, // Temporairement false pour debug
-      secure: false, // Temporairement false pour le développement local
+      httpOnly: false, // Temporarily set to false for debugging
+      secure: false, // Temporarily set to false for local development
       sameSite: "lax",
       path: "/",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      domain: undefined, // Laisser le navigateur gérer le domaine
+      domain: undefined, // Let the browser handle the domain
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 
-    console.log("🍪 Cookie set with token:", result.access_token.substring(0, 15) + "...");
     return result;
   }
 
@@ -99,7 +95,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get("profile")
   async getProfile(@Req() req): Promise<any> {
-    return req.user;
+    // Get the full user
+    const fullUser = await this.authService.findUserByEmail(req.user.email);
+    return {
+      email: fullUser.email,
+      role: fullUser.role,
+      username: fullUser.username,
+      address: fullUser.address
+    };
   }
 
   /**

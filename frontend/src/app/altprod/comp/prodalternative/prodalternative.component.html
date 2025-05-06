@@ -1,27 +1,35 @@
+<!-- Main container for similar products -->
 <div class="container">
+  <!-- Show this block if there are results, otherwise display no-results template -->
   <div class="result-container" *ngIf="productDetails && productDetails.length > 0; else noResults">
     <h2>🔎 Produits similaires trouvés : 🔎</h2>
+    <!-- Wrapper around the list of items -->
     <div class="item-container">
       <ul class="items-list">
-        <li class="item"
-            *ngFor="let product of productDetails; trackBy: trackByProduct"
-            (click)="goToProduct(product)"
-            tabindex="0"
-            [attr.aria-label]="'Voir le produit ' + product.name">
+        <!-- Repeat for each product -->
+        <li
+          class="item"
+          *ngFor="let product of productDetails; trackBy: trackByProduct"
+          (click)="goToProduct(product)"
+          tabindex="0"
+          [attr.aria-label]="'Voir le produit ' + product.name"
+        >
+          <!-- Product image -->
           <div class="img-container">
-            <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
+            <img class="product-image" [src]="product.image" alt="{{ product.name }}">
           </div>
+          <!-- Details about the product -->
           <div class="product-details">
             <div class="title-info">
               <p class="categ">{{ product.category }}</p>
               <h3 class="product-name">{{ product.name }}</h3>
             </div>
             <div class="other-info">
-              <!-- Affichage de l'origine -->
+              <!-- Display product origin -->
               <div class="origin">
                 Origin: <b>{{ product.origin || 'Unknown' }}</b>
               </div>
-              <!-- Système de note -->
+              <!-- Rating system display -->
               <div class="rating">
                 <span class="stars">★★★★★</span>
                 <span class="review-count">5.0 (245 Reviews)</span>
@@ -33,6 +41,7 @@
     </div>
   </div>
 
+  <!-- Template shown when no results are found -->
   <ng-template #noResults>
     <p>Aucun produit trouvé avec ces critères.</p>
   </ng-template>

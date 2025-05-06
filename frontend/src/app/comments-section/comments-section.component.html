@@ -1,0 +1,106 @@
+<div class="comments-section">
+  <!-- Global form (for ngSubmit) -->
+  <!-- Pagination information -->
+  <div *ngIf="comments.length > 0" class="pagination-info">
+    <h2>{{ pagination.totalCount }} Commentaires</h2>
+  </div>
+
+  <form (ngSubmit)="onCommentSubmitted(comment)" #commentForm="ngForm">
+    <!-- The only text input for the comment, always visible -->
+    <div class="comment-input">
+      <div class="profile-container">
+        <img src="./rhinoceros.png" alt="Profile Picture" class="profile-picture" />
+      </div>
+      <div class="container-input">
+        <input
+          id="comment"
+          type="text"
+          placeholder="Ajouter un commentaire ..."
+          [(ngModel)]="comment.contentCom"
+          name="contentCom"
+          required
+          maxlength="500"
+          [disabled]="!canAddComment"
+          (click)="onAddCommentClick()"
+        />
+        <!-- Character counter just below the input -->
+        <div class="char-container" *ngIf="showCommentForm">
+          <div class="form-group">
+            <label for="rating">Notes</label>
+            <select
+              id="rating"
+              [(ngModel)]="comment.userRatingCom"
+              name="userRatingCom"
+              required
+            >
+              <option value="5">5 ⭐⭐⭐⭐⭐</option>
+              <option value="4">4 ⭐⭐⭐⭐</option>
+              <option value="3">3 ⭐⭐⭐</option>
+              <option value="2">2 ⭐⭐</option>
+              <option value="1">1 ⭐</option>
+            </select>
+          </div>
+          <p class="char-count">
+            {{ comment.contentCom?.length || 0 }}/500
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating + Submit/Cancel buttons: displayed only if showCommentForm = true -->
+    <div class="rating-and-buttons" *ngIf="showCommentForm">
+      <div class="form-actions">
+        <button type="submit">{{ editingCommentId ? 'Update' : 'Send' }}</button>
+        <button type="button" (click)="cancelForm()">Annuler</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- List of comments -->
+  <div class="comments-list">
+    <ng-container *ngIf="comments.length > 0; else noComments">
+      <div *ngFor="let item of comments" class="comment">
+        <div class="comment-header">
+          <div class="profile">
+            <img src="./rhinoceros.png" alt="" />
+          </div>
+          <div class="rating-stars">
+            <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+              <span [class.filled]="item.userRatingCom >= star"
+                ><i class="fa-solid fa-star"></i
+              ></span>
+            </ng-container>
+          </div>
+          <!-- Date in YYYY-MM-DD format -->
+          <span class="date">Publiée le {{ item.dateCom | date:'yyyy-MM-dd' }}</span>
+          <button *ngIf="item.userId === currentUserEmail" class="delete-button" (click)="deleteComment(item.id?.toString())">Supprimer</button>
+          <button *ngIf="item.userId === currentUserEmail" class="edit-button" (click)="editComment(item.id?.toString())">Modifier</button>
+        </div>
+        <div class="comment-content">
+          {{ item.contentCom }}
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Message if there are no comments -->
+    <ng-template #noComments>
+      <p class="no-comments">Pas de commentaire disponible pour ce produit.</p>
+    </ng-template>
+  </div>
+
+  <!-- Loading indicator -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <span>Chargement des commentaires...</span>
+  </div>
+
+  <!-- Button to load more comments -->
+  <button
+    *ngIf="pagination.hasNextPage"
+    (click)="handleLoadMore()"
+    [disabled]="loading"
+    class="load-more-btn"
+  >
+    Charger plus de commentaires
+  </button>
+</div>

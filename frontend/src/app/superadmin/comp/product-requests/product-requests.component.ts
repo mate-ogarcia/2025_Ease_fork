@@ -21,11 +21,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 // API Service
 import { AdminService } from '../../../../services/admin/admin.service';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-product-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './product-requests.component.html',
   styleUrls: ['./product-requests.component.css']
 })
@@ -41,7 +42,14 @@ export class ProductRequestsComponent implements OnInit {
   productRequests: any[] = [];  // List of product requests retrieved from the backend.
   brandRequests: any[] = [];    // List of brands requests retrieved from the backend.
   selectedRequest: any = null;  // The currently selected product request.
-  tagInput: string = '';        //Input field for adding a new tag to the selected request.
+  tagInput: string = '';        // Input field for adding a new tag to the selected request.
+  // Filters
+  currentFilter: 'all' | 'add' | 'edit' | 'delete' = 'all';
+  filteredProductRequests: any[] = [];
+
+  // Indicateurs de chargement
+  isLoadingRequests: boolean = false;
+  isSavingRequest: boolean = false;
 
   constructor(private adminService: AdminService) { }
 
@@ -64,25 +72,30 @@ export class ProductRequestsComponent implements OnInit {
    * @public
    */
   loadProductRequests(): void {
+    this.isLoadingRequests = true;
     this.adminService.getAllRequests().subscribe({
       next: (data) => {
         // Extract product requests
         this.productRequests = data
-          .filter(item => item.status === "add-product")  // Identifies products
+          .filter(item => ['add-product', 'edit-product', 'delete-product'].includes(item.status))
           .map(req => ({ ...req, type: 'product' }));     // Assigns the type
 
         // Extract brand requests
         this.brandRequests = data
           .filter(item => item.status === "add-brand")  // Identifies brands
           .map(req => ({ ...req, type: 'brand' }));     // Assigns the type
+
+        // Apply current filter to products
+        this.applyFilter();
+
+        this.isLoadingRequests = false;
       },
       error: (error) => {
         console.error('❌ Error while loading requests:', error);
+        this.isLoadingRequests = false;
       }
     });
   }
-
-
 
   /**
    * @brief Selects a product request and displays its details.
@@ -91,7 +104,11 @@ export class ProductRequestsComponent implements OnInit {
    * @public
    */
   selectRequest(request: any): void {
-    this.selectedRequest = request;
+    this.selectedRequest = { ...request, isEditing: false };
+    // Ensure tags is an array
+    if (!this.selectedRequest.tags) {
+      this.selectedRequest.tags = [];
+    }
   }
 
   /**
@@ -113,8 +130,14 @@ export class ProductRequestsComponent implements OnInit {
    * @public
    */
   saveRequest(): void {
-    if (this.selectedRequest) {
-      this.selectedRequest.isEditing = false;
+    if (this.selectedRequest && this.selectedRequest.isEditing) {
+      this.isSavingRequest = true;
+
+      // Simulate API call with setTimeout
+      setTimeout(() => {
+        this.selectedRequest.isEditing = false;
+        this.isSavingRequest = false;
+      }, 1000);
     }
   }
 
@@ -164,22 +187,22 @@ export class ProductRequestsComponent implements OnInit {
     }
   }
 
-/**
- * @brief Updates the status of a selected request (product or brand).
- * 
- * @details Calls `updateEntity` in `AdminService` to update the status of a selected 
- * request. The function ensures the request type and ID are available before proceeding. 
- * If needed, additional fields can be updated alongside the status.
- * 
- * @param {any} selectedRequest - The selected request object (product or brand).
- * @param {string} status - The new status to be assigned (e.g., "Validated", "Rejected").
- * 
- * @returns {Promise<void>} - Resolves when the update process is completed.
- * 
- * @throws {Error} If an error occurs during the status update process.
- */
-async validateRequest(selectedRequest: any, status: string): Promise<void> {
-  try {
+  /**
+   * @brief Updates the status of a selected request (product or brand).
+   * 
+   * @details Calls `updateEntity` in `AdminService` to update the status of a selected 
+   * request. The function ensures the request type and ID are available before proceeding. 
+   * If needed, additional fields can be updated alongside the status.
+   * 
+   * @param {any} selectedRequest - The selected request object (product or brand).
+   * @param {string} status - The new status to be assigned (e.g., "Validated", "Rejected").
+   * 
+   * @returns {Promise<void>} - Resolves when the update process is completed.
+   * 
+   * @throws {Error} If an error occurs during the status update process.
+   */
+  async validateRequest(selectedRequest: any, status: string): Promise<void> {
+    try {
       /**
        * Calling `updateEntity` with:
        * - `selectedRequest.id`: Extracts the unique entity ID.
@@ -208,15 +231,105 @@ async validateRequest(selectedRequest: any, status: string): Promise<void> {
        */
       // Update entity status in the database
       const response = await this.adminService.updateEntity(
-          selectedRequest.type, 
-          selectedRequest.id, 
-          { status }
+        selectedRequest.type,
+        selectedRequest.id,
+        { status }
       );
 
-      console.log(`Status successfully updated:`, response);
-  } catch (error) {
+    } catch (error) {
       console.error("❌ Error updating status:", error);
+    }
   }
-}
 
+  // ====================================================
+  // =================== FILTERS FUNCTIONS
+  // ====================================================
+  /**
+   * @brief Sets the current filter and applies it to product requests.
+   * @param filter The filter type: 'all', 'add', 'edit', or 'delete'.
+   */
+  setFilter(filter: 'all' | 'add' | 'edit' | 'delete'): void {
+    this.currentFilter = filter;
+    this.applyFilter();
+  }
+
+  /**
+  * @brief Filters product requests based on the current filter.
+  * 
+  * If the filter is 'all', all requests are displayed. Otherwise, the requests
+  * are filtered based on their status ('add-product', 'edit-product', 'delete-product').
+  */
+  applyFilter(): void {
+    if (this.currentFilter === 'all') {
+      this.filteredProductRequests = [...this.productRequests];
+      return;
+    }
+
+    // Mapping filter types to corresponding status values
+    const statusMap: Record<'add' | 'edit' | 'delete', string> = {
+      'add': 'add-product',
+      'edit': 'edit-product',
+      'delete': 'delete-product'
+    };
+
+    // Use type assertion since 'all' case is already handled
+    const filterKey = this.currentFilter as 'add' | 'edit' | 'delete';
+    this.filteredProductRequests = this.productRequests.filter(
+      request => request.status === statusMap[filterKey]
+    );
+  }
+
+  /**
+  * @brief Returns a CSS class based on the request status.
+  * @param status The status of the product request.
+  * @return The corresponding CSS class name.
+  */
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'add-product':
+        return 'status-add';
+      case 'edit-product':
+        return 'status-edit';
+      case 'delete-product':
+        return 'status-delete';
+      default:
+        return '';
+    }
+  }
+
+  /**
+  * @brief Returns a CSS class for the badge based on the request type.
+  * @param status The status of the product request.
+  * @return The corresponding badge CSS class.
+  */
+  getRequestTypeBadgeClass(status: string): string {
+    switch (status) {
+      case 'add-product':
+        return 'badge-add';
+      case 'edit-product':
+        return 'badge-edit';
+      case 'delete-product':
+        return 'badge-delete';
+      default:
+        return 'badge-default';
+    }
+  }
+
+  /**
+  * @brief Retrieves a user-friendly label for the request type.
+  * @param status The status of the product request.
+  * @return A label representing the request type.
+  */
+  getRequestTypeLabel(status: string): string {
+    switch (status) {
+      case 'add-product':
+        return 'Ajout';
+      case 'edit-product':
+        return 'Modification';
+      case 'delete-product':
+        return 'Suppression';
+      default:
+        return status;
+    }
+  }
 }

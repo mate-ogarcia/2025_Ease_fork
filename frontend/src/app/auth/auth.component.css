@@ -1,59 +1,80 @@
-/* Réinitialisation des styles de base */
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
 }
 
-body {
+.container {
   font-family: "Poppins", sans-serif;
   overflow: hidden;
   background-color: #d5f5ea;
-  transition: opacity 0.8s ease-in;
-  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+  min-height: 100vh;
+  position: relative;
 }
 
-/* Animation de fondu */
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(15px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.container,
 .wave,
 .wavetop,
-.login-content {
-  animation: fadeIn 1s ease-in-out;
+.header-form img {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
 }
 
-/* Positionnement des vagues */
+.wave.fade-in,
+.wavetop.fade-in,
+.header-form img.fade-in {
+  opacity: 1;
+}
+
 .wave,
 .wavetop {
-  height: auto;
   position: fixed;
   height: 100%;
   z-index: 0;
-  animation: fadeIn 1s ease-in-out;
+  pointer-events: none;
 }
 
 .wave {
   bottom: 0;
   left: 0;
+  transform: translateY(20px);
+}
+
+.wave.fade-in {
+  transform: translateY(0);
 }
 
 .wavetop {
   top: 0;
   right: 0;
+  transform: translateY(-20px);
 }
 
-/* Conteneur principal */
+.wavetop.fade-in {
+  transform: translateY(0);
+}
+
+.header-form img {
+  height: 100px;
+  transform: scale(0.95);
+  transition: transform 0.3s ease-in-out;
+}
+
+.header-form img.fade-in {
+  transform: scale(1);
+}
+
 .container {
   width: 100vw;
   height: 100vh;
@@ -64,7 +85,6 @@ body {
   transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
 }
 
-/* Contenu de connexion */
 .login-content {
   display: flex;
   flex-direction: column;
@@ -85,44 +105,10 @@ body {
   font-size: 2.9rem;
 }
 
-/* Formulaire */
 form {
   width: 360px;
 }
 
-/* Animation pour la barre d'erreur */
-@keyframes errorPulse {
-  0% {
-    transform: scaleX(1);
-    opacity: 0.8;
-  }
-
-  50% {
-    transform: scaleX(1.02);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scaleX(1);
-    opacity: 0.8;
-  }
-}
-
-@keyframes validGlow {
-  0% {
-    box-shadow: 0 0 0px rgba(56, 211, 159, 0);
-  }
-
-  50% {
-    box-shadow: 0 2px 4px rgba(56, 211, 159, 0.5);
-  }
-
-  100% {
-    box-shadow: 0 0 0px rgba(56, 211, 159, 0);
-  }
-}
-
-/* Conteneurs des champs */
 .input-container {
   position: relative;
   display: grid;
@@ -132,7 +118,6 @@ form {
   border-bottom: 2px solid #38d39f;
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
   margin-bottom: 35px;
-  animation: validGlow 3s infinite;
 }
 
 .icon-log {
@@ -146,12 +131,11 @@ form {
   transition: 0.3s;
 }
 
-.input-container>div {
+.input-container > div {
   position: relative;
   height: 45px;
 }
 
-/* Label flottant */
 h5 {
   position: absolute;
   left: 10px;
@@ -162,10 +146,9 @@ h5 {
   transition: 0.3s;
 }
 
-/* Effets dynamiques des inputs */
 .input-container.focus h5,
-.input-log:focus+h5,
-.input-log:not(:placeholder-shown)+h5 {
+.input-log:focus + h5,
+.input-log:not(:placeholder-shown) + h5 {
   top: -10px;
   font-size: 15px;
   color: #38d39f;
@@ -195,12 +178,10 @@ h5 {
   width: 50%;
 }
 
-/* Styles pour les champs en erreur avec animation améliorée */
 .input-container.error-input {
   border-bottom: 2px solid #ff4444;
   animation: errorPulse 2s infinite;
   transition: all 0.3s ease-in-out;
-  box-shadow: 0 2px 5px rgba(255, 68, 68, 0.3);
 }
 
 .input-container.error-input:before,
@@ -215,13 +196,11 @@ h5 {
   transition: all 0.5s ease-in-out;
 }
 
-/* Couleur de l'icône en focus */
-.input-container.focus>.icon-log i {
+.input-container.focus > .icon-log i {
   color: #38d39f;
 }
 
-/* Couleur de l'icône en focus et en erreur */
-.input-container.error-input.focus>.icon-log i {
+.input-container.error-input.focus > .icon-log i {
   color: #38d39f;
 }
 
@@ -240,7 +219,6 @@ h5 {
   font-family: "Poppins", sans-serif;
 }
 
-/* Icône d'œil */
 .eye-icon {
   position: absolute;
   right: 10px;
@@ -255,7 +233,6 @@ h5 {
   color: #38d39f;
 }
 
-/* Liens */
 a {
   display: block;
   text-align: right;
@@ -269,7 +246,6 @@ a:hover {
   color: #38d39f;
 }
 
-/* Bouton de connexion */
 .btn {
   display: block;
   width: 100%;
@@ -294,7 +270,6 @@ a:hover {
   background-position: right;
 }
 
-/* Mode Sombre */
 .dark-mode {
   background-color: #0e7500;
   color: #f1f1f1;
@@ -322,7 +297,6 @@ a:hover {
   color: #38d39f;
 }
 
-/* Bouton Mode Sombre */
 .dark-mode-btn {
   position: fixed;
   bottom: 20px;
@@ -343,7 +317,6 @@ a:hover {
   transform: scale(1.1);
 }
 
-/* Bouton switch Login/Register */
 .switch-container {
   display: flex;
   justify-content: center;
@@ -358,7 +331,6 @@ a:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Boutons du switch */
 .switch-button {
   flex: 1;
   height: 100%;
@@ -373,23 +345,17 @@ a:hover {
   transition: all 0.3s ease-in-out;
 }
 
-/* Bouton actif */
 .switch-button.active {
   background-color: #17b317;
-  /* Couleur bleue pour le bouton actif */
   color: #fff;
-  /* Couleur blanche pour le texte */
   font-weight: 700;
   border-radius: 20px;
 }
 
-/* Bouton non actif (hover) */
 .switch-button:not(.active):hover {
   background-color: rgba(184, 206, 184, 0.2);
   border-radius: 20px;
 }
-
-/* Responsive */
 
 @media screen and (max-width: 1230px) {
   .container {
@@ -413,7 +379,6 @@ a:hover {
   }
 }
 
-/* Bouton de retour */
 .back-btn {
   position: fixed;
   top: 20px;
@@ -452,7 +417,6 @@ a:hover {
   background-color: #38d39f;
 }
 
-/* Position du header-form */
 .header-form {
   position: relative;
   width: 100%;
@@ -467,7 +431,6 @@ a:hover {
   height: auto;
 }
 
-/* Suppression des styles qui colorent les icônes et le texte en rouge */
 .input-container.error-input .icon-log i {
   color: #d9d9d9;
 }
@@ -476,7 +439,6 @@ a:hover {
   color: #999;
 }
 
-/* Style pour les messages d'erreur simplifiés */
 .simple-error {
   display: flex;
   align-items: center;
@@ -497,7 +459,6 @@ a:hover {
   color: #ff6b6b;
 }
 
-/* Style pour le lien "Forgot Password" */
 .forgot-password {
   display: block;
   text-align: right;
@@ -513,7 +474,6 @@ a:hover {
   color: #38d39f;
 }
 
-/* Styles des messages d'erreur */
 .error-wrapper {
   position: absolute;
   bottom: -25px;
@@ -529,7 +489,6 @@ a:hover {
     opacity: 0;
     transform: translateY(-5px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -570,7 +529,6 @@ a:hover {
   font-weight: 500;
 }
 
-/* Mode sombre */
 .dark-mode .error-wrapper i,
 .dark-mode .error-message {
   color: #ff6b6b;
@@ -585,26 +543,62 @@ a:hover {
   color: #ff6b6b;
 }
 
-/* Ajustement des conteneurs pour les messages d'erreur */
-.input-container {
-  margin-bottom: 35px;
+.autocomplete-results {
+  position: absolute;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  z-index: 1000;
+  background-color: transparent !important;
+  border: 1px solid #e0e0e0;
+  padding: 5px 0;
+  top: 100%;
+  left: 0;
+  margin-top: 10px;
 }
 
-/* Style pour l'autocomplétion spécifique au composant d'authentification */
-.input-log:-webkit-autofill,
-.input-log:-webkit-autofill:hover,
-.input-log:-webkit-autofill:focus,
-.input-log:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #d5f5ea inset !important;
-  -webkit-text-fill-color: #333 !important;
-  transition: background-color 5000s ease-in-out 0s;
+.autocomplete-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  border-left: 3px solid transparent;
+  color: #333;
 }
 
-/* Pour le mode sombre */
-.dark-mode .input-log:-webkit-autofill,
-.dark-mode .input-log:-webkit-autofill:hover,
-.dark-mode .input-log:-webkit-autofill:focus,
-.dark-mode .input-log:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #2c3e50 inset !important;
-  -webkit-text-fill-color: #fff !important;
+.dark-mode .autocomplete-results {
+  background-color: transparent !important;
+}
+
+.autocomplete-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.autocomplete-results::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 0 8px 8px 0;
+}
+
+.autocomplete-results::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.autocomplete-results::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+@media (max-width: 768px) {
+  .autocomplete-results {
+    max-height: 180px;
+    left: 0;
+    top: 100%;
+    width: 100%;
+  }
+  .autocomplete-item {
+    padding: 10px 12px;
+  }
 }

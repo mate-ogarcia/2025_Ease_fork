@@ -21,8 +21,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { map, tap, catchError, finalize, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, BehaviorSubject, throwError, of, interval } from 'rxjs';
+import { map, tap, catchError, finalize, distinctUntilChanged, switchMap, takeWhile } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { JwtHelperService } from '@auth0/angular-jwt';
 // Cookies
@@ -56,28 +56,17 @@ interface AuthState {
   providedIn: 'root',
 })
 export class AuthService {
-  /**
-   * @property {string} _authBackendUrl - The base URL for authentication API endpoints
-   * @private
-   */
-  private _authBackendUrl = environment.authBackendUrl;
-
+  private _authBackendUrl = environment.authBackendUrl; // The base URL for authentication API endpoints
   /**
    * @property {BehaviorSubject<AuthState>} authState - Subject that broadcasts authentication state changes
-   * @private
    */
   private authState = new BehaviorSubject<AuthState>({
     isAuthenticated: false,
     role: null
   });
-
-  /**
-   * @property {JwtHelperService} jwtHelper - Service for JWT token operations
-   * @private
-   */
-  private jwtHelper = new JwtHelperService();
+  private jwtHelper = new JwtHelperService(); // Service for JWT token operations
   // store user info
-  private user: { email: string, role: string, username: string } | null = null;
+  private user: { email: string, role: string, username: string, address: any } | null = null;
 
   /**
    * @constructor
@@ -85,7 +74,7 @@ export class AuthService {
    * 
    * @param {HttpClient} http - The Angular HttpClient for making HTTP requests
    * @param {Router} router - The Angular Router for navigation
-   * @param {CookieService} cookieService - Service for managing browser cookies
+   * @param {²Service} cookieService - Service for managing browser cookies
    * @param {NotificationService} notificationService - Service for showing notifications
    */
   constructor(
@@ -96,6 +85,9 @@ export class AuthService {
   ) {
     // Check initial authentication state on service initialization
     this.checkAuthState();
+
+    // Configurer le rafraîchissement périodique de l'état d'authentification
+    this.setupPeriodicAuthRefresh();
   }
 
   /**
@@ -120,7 +112,8 @@ export class AuthService {
         this.user = {
           email: decodedToken.email,
           role: newRole,
-          username: decodedToken.username
+          username: decodedToken.username,
+          address: decodedToken.address
         };
 
         // Vérifier si l'utilisateur a été banni ou débanni
@@ -150,18 +143,44 @@ export class AuthService {
    * @public
    */
   public refreshAuthState(): Observable<any> {
+    // Vérifier si le cookie d'authentification existe avant de faire la requête
+    const accessToken = this.cookieService.get('accessToken');
+
+    if (!accessToken) {
+      // Si aucun token, mettre à jour l'état comme non authentifié sans faire de requête
+      this.updateAuthState(false, null);
+      this.user = null;
+      // Retourner un observable qui émet immédiatement pour respecter le contrat
+      return of({ authenticated: false });
+    }
+
+    // Si un token existe, faire la requête normalement
     return this.http.get<any>(`${this._authBackendUrl}/profile`, { withCredentials: true })
       .pipe(
         tap(response => {
-          console.log('Profile response:', response);
           if (response && response.role) {
             this.updateAuthState(true, response.role);
             this.user = response;
           }
         }),
         catchError(error => {
-          console.error('Error refreshing auth state:', error);
-          // Don't update state in case of error
+          // Si l'erreur est 401 (non autorisé), c'est probablement un token expiré - déconnecter l'utilisateur
+          if (error.status === 401) {
+            this.updateAuthState(false, null);
+            this.user = null;
+            // Ne pas rediriger vers login pour permettre une reconnexion silencieuse si c'est juste un problème temporaire
+          }
+          // Pour les erreurs de connexion (comme après un redémarrage du serveur), on ne fait rien immédiatement
+          else if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
+            console.warn('Le serveur backend est peut-être indisponible temporairement, essai de reconnexion en cours...');
+            // On garde l'état d'authentification précédent en attendant que le serveur revienne
+          } else {
+            // Pour les autres erreurs, consigner et mettre à jour l'état
+            console.error('Error refreshing auth state:', error);
+            this.updateAuthState(false, null);
+            this.user = null;
+          }
+
           return throwError(() => error);
         })
       );
@@ -179,7 +198,6 @@ export class AuthService {
    * @private
    */
   private updateAuthState(isAuthenticated: boolean, role: string | null): void {
-    console.log('Updating auth state:', { isAuthenticated, role });
     // Only update state if values actually change
     if (this.authState.value.isAuthenticated !== isAuthenticated ||
       this.authState.value.role !== role) {
@@ -200,14 +218,16 @@ export class AuthService {
    * @param {string} username - The username for the new account
    * @param {string} email - The email address for the new account
    * @param {string} password - The password for the new account
+   * @param {string} address - The address for the new account (only post code, city and country)
    * @returns {Observable<any>} An observable of the registration API response
    * @public
    */
-  register(username: string, email: string, password: string): Observable<any> {
+  register(username: string, email: string, password: string, address: any): Observable<any> {
     return this.http.post(`${this._authBackendUrl}/register`, {
       username,
       email,
       password,
+      address,
     });
   }
 
@@ -236,7 +256,7 @@ export class AuthService {
           this.updateAuthState(true, newRole);
           this.user = response.user;
 
-          // Vérifier si l'utilisateur a été banni ou débanni
+          // Check if the user has been banned or unbanned
           if (previousRole === 'Banned' && newRole !== 'Banned') {
             this.notificationService.showSuccess('Votre compte a été débanni. Vous avez maintenant accès à toutes les fonctionnalités.');
           } else if (previousRole !== 'Banned' && newRole === 'Banned') {
@@ -271,7 +291,7 @@ export class AuthService {
       .post(`${this._authBackendUrl}/logout`, {}, { withCredentials: true })
       .pipe(
         finalize(() => {
-          this.router.navigate(['/login']);
+          this.router.navigate(['/auth']);
         })
       );
   }
@@ -346,7 +366,48 @@ export class AuthService {
    * Retrieve user information
    * @returns User information
    */
-  getUserInfo(): { email: string, role: string, username: string } | null {
-    return this.user;
+  getUserInfo(): any | null {
+    return this.user ? {
+      email: this.user.email,
+      role: this.user.role,
+      username: this.user.username,
+      address: this.user.address
+    } : null;
   }
+
+  /**
+   * @method setupPeriodicAuthRefresh
+   * @description Configure un rafraîchissement périodique de l'état d'authentification
+   * 
+   * Cette méthode établit un intervalle pour rafraîchir périodiquement l'état d'authentification,
+   * ce qui est utile pour maintenir l'état synchronisé avec le backend, notamment après
+   * des redémarrages de serveur ou des déconnexions temporaires.
+   * 
+   * @private
+   */
+  private setupPeriodicAuthRefresh(): void {
+    // Rafraîchir toutes les 2 minutes, mais seulement si l'utilisateur est authentifié
+    interval(120000) // 2 minutes
+      .pipe(
+        // Ne continuer que si l'utilisateur est authentifié
+        switchMap(() => this.isAuthenticated()),
+        // Seulement si l'utilisateur est authentifié
+        takeWhile(isAuth => isAuth, true),
+        // Si authentifié, tenter de rafraîchir l'état
+        switchMap(isAuth => {
+          if (isAuth) {
+            // Essayer de rafraîchir silencieusement, sans afficher d'erreurs à l'utilisateur
+            return this.refreshAuthState().pipe(
+              catchError(err => {
+                // En cas d'erreur, consigner mais ne pas perturber l'expérience utilisateur
+                return of(null);
+              })
+            );
+          }
+          return of(null);
+        })
+      )
+      .subscribe();
+  }
+
 }

@@ -15,9 +15,6 @@ export class HttpRetryService {
       count: maxRetries,
       delay: (error, retryCount) => {
         const delay = Math.min(delayMs * Math.pow(2, retryCount - 1), 10000);
-        console.log(
-          `Tentative ${retryCount}/${maxRetries} - Délai: ${delay}ms`
-        );
         return timer(delay);
       },
     });

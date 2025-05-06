@@ -1,14 +1,12 @@
-/* Conteneur global */
 .add-product-container {
   width: 100%;
   margin: 0 auto;
+  margin-top: 10px;
   padding: 10px 30px;
   font-family: 'Geologica', sans-serif;
   color: #333;
-  border-top: 1px solid #f9f9f9;
 }
 
-/* En-tête (titre + boutons) */
 .header {
   display: flex;
   justify-content: center;
@@ -37,23 +35,20 @@
   margin-top: 10px;
 }
 
-/* Boutons génériques */
-.btn {
+.btn,
+.refresh-btn {
   padding: 10px 20px;
   border: none;
-  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
 }
 
 .btn-cancel {
   background-color: #ccc;
-  border-radius: 20px;
-  transition: all 0.3s ease-in-out;
 }
 
 .btn-save {
   background-color: #0f5e08;
-  border-radius: 20px;
-  transition: all 0.3s ease-in-out;
   color: #c7c6c6;
 }
 
@@ -76,7 +71,6 @@
   padding: 15px;
 }
 
-/* Layout principal : deux colonnes */
 .content {
   display: flex;
   gap: 16px;
@@ -95,7 +89,6 @@
   flex-direction: column;
 }
 
-/* Cartes de contenu */
 .card {
   background-color: #fff;
   border: 1px solid #ddd;
@@ -109,7 +102,6 @@
   margin-top: 0;
 }
 
-/* Labels et champs de formulaire */
 label {
   display: block;
   margin: 8px 0 4px;
@@ -128,21 +120,18 @@ select {
   border: 1px solid #ccc;
 }
 
-/* Note / petit texte */
 .note {
   font-size: 0.9rem;
   color: #666;
   margin-top: 8px;
 }
 
-/* Onglets */
 .tabs {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-/* Contenu des onglets */
 .tab-content {
   margin-bottom: 16px;
   gap: 15px;
@@ -150,10 +139,9 @@ select {
   flex-direction: column;
 }
 
-/* Styles pour l'input de tags sous forme d'étiquettes */
 .tags-input-container {
   display: flex;
-  flex-wrap: wrap; /* Permet aux tags de se répartir sur plusieurs lignes */
+  flex-wrap: wrap;
   align-items: center;
   border: 1px solid #ccc;
   border-radius: 25px;
@@ -183,11 +171,30 @@ select {
   margin-left: 4px;
   cursor: pointer;
 }
+
 @media screen and (max-width: 1200px) {
   .content {
     flex-direction: column;
   }
-  .left-column{
+
+  .left-column {
     width: 100%;
+  }
+}
+
+.button-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

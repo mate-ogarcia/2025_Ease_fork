@@ -1,14 +1,5 @@
-<!-- Écran de chargement qui s'affiche pendant l'initialisation de l'application -->
-<div *ngIf="!(isAppReady | async)" class="app-loading">
-  <div class="loading-container">
-    <div class="loading-spinner">
-      <span></span>
-    </div>
-    <p>Initialisation de l'application...</p>
-  </div>
-</div>
+<!-- Contenu de l'application -->
+<router-outlet></router-outlet>
 
-<!-- Contenu de l'application qui s'affiche une fois l'initialisation terminée -->
-<div *ngIf="isAppReady | async">
-  <router-outlet></router-outlet>
-</div>
+<!-- Bouton de paramètres global (sans contrôle des oiseaux) -->
+<app-settings-button *ngIf="!isHomePage"></app-settings-button>

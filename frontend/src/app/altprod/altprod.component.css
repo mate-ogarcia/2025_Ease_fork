@@ -4,7 +4,9 @@
  */
 
 /* Reset margins and paddings for all elements */
-*,::before,::after{
+*,
+::before,
+::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -15,20 +17,22 @@
  * @brief Main container of the component.
  * It arranges elements in a column and centers them.
  */
-.container{
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: fit-content; 
-    background-color: #023436;  
+    height: fit-content;
+    background-color: #023436;
 }
 
 /**
  * @brief Styles for the navigation bar inside the component.
  */
-.app-navbar{
+.app-navbar {
     width: 100%;
+    z-index: 1000;
+    border-bottom: 1px solid #ccc;
 
 }
 
@@ -37,7 +41,7 @@
  * @brief Container for displaying search results.
  * Aligns child elements in a row by default.
  */
-.results-container{
+.results-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -46,13 +50,15 @@
     height: 100%;
     gap: 20px;
     padding: 25px;
-    border-top: 1px solid #fafafa;
+    z-index: 80;
+
 }
 
 /**
  * @brief Defines styles for search and alternative product components.
  */
-.app-prodsearch, .app-prodalternative{
+.app-prodsearch,
+.app-prodalternative {
     height: 50%;
     width: 100%;
 }
@@ -60,11 +66,8 @@
 /**
  * @brief Styles for the arrow icon.
  */
-.fa-arrow-right{
+.fa-arrow-right {
     font-size: 60px;
     color: aliceblue;
     rotate: 90deg;
 }
-
-
-

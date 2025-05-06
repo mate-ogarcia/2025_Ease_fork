@@ -1,28 +1,37 @@
-/* Container principal : sidebar + contenu */
+/* Main container: sidebar + content */
 .dashboard-container {
   display: flex;
   height: 100vh;
   margin: 0;
+  margin-top: 20px;
   padding: 0;
   font-family: 'Geologica', sans-serif;
-  background: #f8f9fd; /* Fond général clair (optionnel) */
+  background: #f8f9fd;
+  /* Light background (optional) */
+  position: relative;
 }
 
-/* Barre latérale */
+/* Sidebar */
 .tab-bar {
-  width: 320px;
-  background: #ffffff; /* Fond blanc */
+  width: 300px;
+  background: #ffffff;
+  /* White background */
   padding: 20px;
-  border-right: 1px solid #eee; /* Séparation légère */
+  border-right: 1px solid #eee;
+  /* Light separation */
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s ease;
 }
 
-/* Boutons (onglets) de la barre latérale */
+/* Sidebar buttons (tabs) */
 .tab-bar a {
-  display: flex;             /* Pour pouvoir centrer icône+texte si tu veux */
-  align-items: center;       /* Aligner verticalement */
-  gap: 10px;                 /* Espace entre icône et texte */
+  display: flex;
+  /* Center icon + text */
+  align-items: center;
+  /* Vertical alignment */
+  gap: 10px;
+  /* Space between icon and text */
   margin-bottom: 10px;
   padding: 15px 20px;
   border: none;
@@ -32,28 +41,85 @@
   font-weight: 700;
   border-radius: 15px;
   cursor: pointer;
-  transition: all 0.3s  ease-in-out;
-
+  transition: all 0.3s ease-in-out;
 }
 
-/* Au survol, on change la couleur de fond/texte pour un effet hover */
+/* On hover */
 .tab-bar a:hover {
   color: #1cac53;
-  transform: scale(1.05); /* Zoom au survol */
-  transition: all 0.3s  ease-in-out;
+  transform: scale(1.05);
+  /* Zoom on hover */
   background-color: #eee;
 }
 
-/* Bouton actif (onglet sélectionné) */
+/* Active button (selected tab) */
 .tab-bar a.active {
   color: #0a7c22;
-  transform: scale(1.03); /* Zoom au survol */
+  transform: scale(1.03);
 }
 
-/* Contenu à droite */
+/* Content area on the right */
 .tab-content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background: #f8f9fd; /* Même fond clair que le container */
+  background: #f8f9fd;
+}
+
+/* Burger button (hidden on desktop) */
+.burger-btn {
+  display: none;
+}
+
+/* === Responsive: burger mode for the sidebar === */
+@media screen and (max-width: 768px) {
+
+  /* Hide sidebar by shifting it off-screen */
+  .tab-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+  }
+
+  /* When menu is open, remove the transform */
+  .tab-bar.open {
+    transform: translateX(0);
+  }
+
+  /* Show the burger button */
+  .burger-btn {
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 1100;
+    background: #fff;
+    border: none;
+    padding: 10px;
+    font-size: 1.5em;
+    cursor: pointer;
+    border-radius: 0px 15px 15px 0px;
+    transition: transform 0.3s ease;
+  }
+
+  .burger-btn.open {
+    transform: translateX(300px);
+  }
+
+  .fa-arrow-right {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .burger-btn.open .fa-arrow-right {
+    transition: all 0.3s ease-in-out;
+    transform: rotate(180deg);
+  }
+
+  /* Add top padding to avoid content being hidden under the burger */
+  .tab-content {
+    padding-top: 60px;
+  }
 }

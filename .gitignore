@@ -1,6 +1,8 @@
 # Environments files
 /.env.development
 /.env.production
+/.env.docker
+/.env.deploy
 /frontend/src/environments/*
 
 # Do not ignore example .env
@@ -11,6 +13,13 @@
 /delDeps.bat
 /noteRU.txt
 /.vscode
-
+/.history
+/.venv
+/bucketsJSON/exportedBucketsData/*
+!/bucketsJSON/exportedBucketsData/bucket.sample.json
+**/prettierignore
 #node_modules
 node_modules
+
+# Logs
+/logs

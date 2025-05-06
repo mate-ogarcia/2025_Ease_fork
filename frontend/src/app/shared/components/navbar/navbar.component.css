@@ -1,0 +1,292 @@
+/* Styles de base */
+
+.navbar {
+  font-family: "Montserrat", serif;
+  font-optical-sizing: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40px 20px;
+  background: transparent;
+  width: 100%;
+  height: 60px;
+  color: #f9f9f9;
+  z-index: 9999;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  font-size: 1.5em;
+  padding-right: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.easelogo {
+  height: 100%;
+  border-radius: 45px;
+}
+
+/* Style pour la barre de recherche dans la navbar */
+.navbar-searchbar {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 15px;
+  z-index: 999;
+}
+
+/* Menu */
+.navbar ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 15px;
+  padding-left: 20px;
+  margin: 0;
+  text-align: center;
+  color: #f9f9f9;
+}
+
+.navbar ul li {
+  display: inline-block;
+  height: fit-content;
+}
+
+/* Pour enlever l'espace quand un élément est masqué avec ngIf */
+.navbar ul li:empty {
+  display: none;
+}
+
+.nav-btn, .user-btn{
+  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  color: #f9f9f9;
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 10px 15px;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  width: 160px;
+}
+
+.nav-btn:hover, .user-btn:hover {
+  color: #2d2b27;
+  background-color: #f9f9f9;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease-in-out;
+}
+
+
+/* User Profile */
+.user {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  margin-left: auto;
+}
+
+.log-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.login-btn {
+  background-color: #011f20;
+  color: white;
+}
+
+.userprofile {
+  height: 100%;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* Menu burger pour mobiles */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+/* Position et style du menu déroulant */
+.dropdown-menu {
+  position: absolute;
+  right: 10px;
+  top: 70px;
+  gap: 10px;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.profile-btn {
+  padding: 10px 15px;
+  color: black;
+}
+
+/* Style du bouton logout dans le menu */
+.logout-container {
+  width: 100%;
+  display: flex;
+  padding-top: 10px;
+  border-top: 1px solid #778081;
+}
+
+/*.user-btn {
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}*/
+
+.admin-btn {
+  color: #011f20;
+}
+
+.logout-btn {
+  background-color: red;
+  color: white;
+  padding: 10px 0;
+  font-weight: 500;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 100%;
+  text-align: center;
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logout-btn:hover {
+  background-color: darkred;
+}
+
+
+
+.menu-toggle span {
+  width: 25px;
+  height: 3px;
+  background: #f9f9f9;
+  margin: 4px 0;
+  transition: 0.3s;
+}
+
+/* Responsive */
+@media (max-width: 1350px) {
+  .navbar {
+    flex-direction: row;
+  }
+
+  /* Ajuster la barre de recherche en mode responsive */
+  .navbar-searchbar {
+    max-width: none;
+    width: 100%;
+  }
+
+  .navbar ul {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 70px;
+    right: 5px;
+    background: white;
+    color: #2d2b27;
+    width: fit-content;
+    padding: 10px 20px;
+    gap: 5px;
+    border-radius: 15px;
+  }
+
+  .navbar ul.active {
+    display: flex;
+    z-index: 1000;
+  }
+
+  .nav-btn {
+    border-radius: 10px;
+    color: black;
+  }
+
+  .login-btn {
+    color: white;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .user {
+    margin-left: 0;
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logo {
+    border-right: none;
+  }
+
+  .log-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: fit-content;
+    gap: 10px;
+    margin-left: auto;
+    flex-direction: column;
+    z-index: 1000;
+
+  }
+
+  .userprofile {
+    display: none;
+  }
+
+  .profile-btn {
+    margin-top: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .dropdown-menu {
+    position: static;
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+    background: none;
+    padding: 0;
+    border-top: 1px solid #778081;
+  }
+}

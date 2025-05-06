@@ -63,7 +63,6 @@ export class ApiService {
       .get<any[]>(`${this._productsUrl}/alternativeProducts/${id}`)
       .pipe(
         catchError((error) => {
-          console.error('❌ API Error:', error);
           return throwError(
             () =>
               new Error(
@@ -101,14 +100,20 @@ export class ApiService {
    */
   searchProducts(query: string): Observable<any[]> {
     return this.http.get<any[]>(`${this._searchUrl}?q=${query}`).pipe(
-      tap((response) => console.log('🔹 API Response:', response)),
       catchError((error) => {
-        console.error('❌ Search API Error:', error);
         return throwError(
           () => new Error("Erreur API : Impossible d'effectuer la recherche.")
         );
       })
     );
+  }
+
+  /**
+   * Get thje product around a location
+   * @param location 
+   */
+  getProductsAround(location: string): Observable<any> {
+    return this.http.get<any[]>(`${this._productsUrl}/location/${location}`);
   }
   // ======================== SEND/POST
 
@@ -168,15 +173,32 @@ export class ApiService {
       .post<any[]>(`${this._productsUrl}/filteredProducts`, filters)
       .pipe(
         catchError((error) => {
-          console.error('❌ API Error:', error);
+          // Fallback pour développement - récupérer des produits génériques
+          if (error.status === 404) {
+            return this.getProductsWithFallback();
+          }
+
           return throwError(
             () =>
               new Error(
-                'API error: Unable to retrieve filtered products.'
+                `API error: Unable to retrieve filtered products. Status: ${error.status}`
               )
           );
         })
       );
+  }
+
+  /**
+   * @brief Fallback method to retrieve some products when the main endpoint fails
+   * @returns {Observable<any[]>} A limited set of products or empty array
+   */
+  private getProductsWithFallback(): Observable<any[]> {
+    // Tenter de récupérer des produits génériques
+    return this.http.get<any[]>(`${this._productsUrl}`).pipe(
+      catchError(error => {
+        return throwError(() => new Error('Unable to retrieve any products'));
+      })
+    );
   }
 
   /**
@@ -187,5 +209,4 @@ export class ApiService {
   postAddProduct(product: any): Observable<any> {
     return this.http.post(`${this._productsUrl}/add`, product);
   }
-
 }

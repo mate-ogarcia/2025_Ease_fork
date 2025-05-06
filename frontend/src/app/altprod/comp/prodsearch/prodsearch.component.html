@@ -1,10 +1,11 @@
-<div class="container sticky-container" [ngClass]="{'non-european': !isEuropean}" *ngIf="productDetails; else noResults">
+<div class="container sticky-container" [ngClass]="{'non-european': !isEuropean}"
+  *ngIf="productDetails; else noResults">
   <div class="result-container">
     <div class="item-container">
       <ul class="items-list">
         <li class="item" tabindex="0" [attr.aria-label]="'Voir le produit ' + productDetails.name">
           <div class="img-container">
-            <img class="product-image" [src]="productDetails.image || 'assets/placeholder.jpg'" alt="{{ productDetails.name }}">
+            <img class="product-image" [src]="productDetails.image" alt="{{ productDetails.name }}">
           </div>
           <div class="product-details">
             <div class="title-info">

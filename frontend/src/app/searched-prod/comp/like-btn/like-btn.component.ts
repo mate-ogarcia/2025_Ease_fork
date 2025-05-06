@@ -6,15 +6,14 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./like-btn.component.css']
 })
 export class LikeBtnComponent {
-  /** État du "like" (vrai ou faux) */
   @Input() liked = false;
-  /** Événement émis à chaque fois que l’état "liked" change */
   @Output() likeToggled = new EventEmitter<boolean>();
 
   /**
-   * @brief Inverse l’état du "like" et émet la nouvelle valeur
+   * @brief Inverse l'état du "like" et émet la nouvelle valeur
    */
   onCheckboxChange(): void {
+    const oldState = this.liked;
     this.liked = !this.liked;
     this.likeToggled.emit(this.liked);
   }

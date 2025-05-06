@@ -1,71 +1,88 @@
+/**
+ * @file auth.interceptor.ts
+ * @description
+ * This file contains an HTTP interceptor that is responsible for adding authentication credentials to outgoing HTTP requests.
+ * It checks whether the request is targeting internal API endpoints or external services (like OpenStreetMap).
+ * For internal API requests, it adds an authorization token (if available) either from cookies or localStorage.
+ * For OpenStreetMap requests, it avoids adding any authentication credentials.
+ * The interceptor ensures that cross-site credentials are included where necessary.
+ * 
+ * It also prevents sending credentials with OpenStreetMap requests and selectively applies the authentication token
+ * to API requests that require it.
+ */
+
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
+import { catchError, throwError } from 'rxjs';
 
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const cookieService = inject(CookieService);
 
-  // Log tous les cookies au début de chaque requête
-  console.log('🔍 Interceptor - Available cookies:', cookieService.getAll());
+  // Retrieve environment information
 
-  // Vérifier si la requête est vers l'API
-  const isApiRequest = req.url.includes('localhost:3000') || req.url.includes('api');
-  console.log(`📡 Request to: ${req.url} (isApiRequest: ${isApiRequest})`);
+  // Check if the request is for the internal API or OpenStreetMap
+  const isApiRequest = !req.url.includes('localhost:4200') &&
+    (req.url.includes('localhost:3000') ||
+      req.url.includes('api') ||
+      req.url.includes('render.com'));
 
-  // Clone la requête avec withCredentials pour tous les appels API
-  let newReq = req.clone({
-    withCredentials: true
-  });
+  const isOpenStreetMapRequest = req.url.includes('openstreetmap.org') ||
+    req.url.includes('nominatim') ||
+    req.url.includes('osm');
 
-  // Ajouter le token seulement pour les requêtes API
-  if (isApiRequest) {
-    const token = cookieService.get('accessToken');
-    if (token) {
-      console.log('🔑 Adding token to request headers');
-      newReq = newReq.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
+  // Do not add withCredentials for OpenStreetMap requests
+  let newReq;
+  if (isOpenStreetMapRequest) {
+    // For OpenStreetMap, do not add credentials
+    newReq = req.clone();
+  } else {
+    // For other requests, use withCredentials
+    newReq = req.clone({
+      withCredentials: true
+    });
+
+    // Add the token only for internal API requests
+    if (isApiRequest) {
+      // Vérifier d'abord les cookies
+      let token = cookieService.get('accessToken');
+      let tokenSource = 'cookie';
+
+      // Log des cookies disponibles
+      const allCookies = cookieService.getAll();
+
+      // Si le token n'est pas dans les cookies, vérifier le localStorage
+      if (!token) {
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+          token = storedToken;
+          tokenSource = 'localStorage';
         }
-      });
-      console.log('📤 Request headers set:', newReq.headers.get('Authorization')?.substring(0, 20) + '...');
-    } else {
-      console.log('⚠️ No token available for API request');
+      }
 
-      // Si c'est un rechargement de page et qu'on n'est pas déjà sur login
-      if (document.readyState === 'complete' && !window.location.pathname.includes('/login')) {
-        console.log('🔄 Page reload detected without token - staying on current page');
-        return next(newReq); // Continue sans redirection
+      if (token) {
+        newReq = newReq.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      } else {
+        console.error('❌ No token found in either cookies or localStorage');
       }
     }
   }
 
   return next(newReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      console.log('❌ Request error:', {
-        status: error.status,
-        url: error.url,
-        message: error.message
-      });
-
       if (error.status === 401) {
-        console.log('🔒 Authentication error detected');
-
-        // Ne pas rediriger si c'est un rechargement de page et qu'on n'est pas sur login
-        const isPageReload = document.readyState === 'complete';
-        const isLoginPage = window.location.pathname.includes('/login');
-
-        if (!isPageReload || isLoginPage) {
-          console.log('🚀 Redirecting to login page');
-          cookieService.delete('accessToken', '/');
-          router.navigate(['/login']);
-        } else {
-          console.log('🔄 Keeping user on current page despite 401');
-        }
+        // Clear both cookie and localStorage
+        cookieService.delete('accessToken', '/');
+        localStorage.removeItem('accessToken');
+        router.navigate(['/auth']);
       }
       return throwError(() => error);
     })
   );
-};  
+};

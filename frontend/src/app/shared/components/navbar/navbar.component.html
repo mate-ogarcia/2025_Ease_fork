@@ -1,0 +1,60 @@
+<nav class="navbar">
+  <div class="logo" routerLink="/home">
+    <img class="easelogo" src="vrailogo.png" alt="Logo">
+  </div>
+
+  <!-- Barre de recherche à intégrer uniquement si on n'est pas sur la page d'accueil -->
+  <div class="navbar-searchbar" *ngIf="!isHomePage">
+    <app-searchbar></app-searchbar>
+  </div>
+
+  <ul [class.active]="menuOpen">
+    <li>
+      <a class="nav-btn" routerLink="/home">
+        <i class="fa-solid fa-house"></i>Accueil
+      </a>
+    </li>
+    <li>
+      <a class="nav-btn" routerLink="/category">
+        <i class="fa-solid fa-tags"></i>Catégories
+      </a>
+    </li>
+    <li *ngIf="canAddProduct">
+      <a class="nav-btn" routerLink="/add-product">
+        <i class="fa-solid fa-plus"></i>Produit
+      </a>
+    </li>
+    <li>
+      <a class="nav-btn" routerLink="/contact">
+        <i class="fa-solid fa-phone"></i>Contact
+      </a>
+    </li>
+    <li class="user">
+      <div class="log-container">
+        <ng-container class="log-info" *ngIf="isAuthenticated; else loginTemplate">
+          <!--Image de profil qui ouvre le menu déroulant -->
+          <img class="userprofile" src="rhinoceros.png" alt="Profile" (click)="toggleDropdown()">
+          <!-- Menu déroulant -->
+          <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
+            <span routerLink="/user-profile" class="user-btn profile-btn"><i class="fa-solid fa-user"></i>Profile</span>
+            <span *ngIf="userRole === 'Admin' || userRole === 'SuperAdmin'" routerLink="/admin"
+              class="user-btn admin-btn"><i class="fas fa-user-shield"></i>Admin</span>
+            <div class="logout-container">
+              <span (click)="logout()" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Log out</span>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #loginTemplate>
+          <a class="nav-btn" routerLink="/auth" class="nav-btn login-btn">Login</a>
+        </ng-template>
+      </div>
+    </li>
+  </ul>
+
+  <div class="menu-toggle" (click)="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</nav>

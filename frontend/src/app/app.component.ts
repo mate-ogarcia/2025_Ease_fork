@@ -6,13 +6,20 @@
  * data is loaded at startup. It also sets up the router module for navigation.
  */
 
-import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, OnInit, Renderer2 } from '@angular/core';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataCacheService } from '../services/cache/data-cache.service';
 import { AuthService } from '../services/auth/auth.service';
-import { BehaviorSubject, timer } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { timer, of, from, throwError } from 'rxjs';
+import { retry, delay, catchError, mergeMap, filter } from 'rxjs/operators';
+import { SettingsButtonComponent } from './shared/components/settings-button/settings-button.component';
+
+declare global {
+  interface Window {
+    domLoaded: boolean;
+  }
+}
 
 @Component({
   selector: 'app-root',
@@ -20,14 +27,15 @@ import { switchMap, tap } from 'rxjs/operators';
   imports: [
     CommonModule,   // Provides Angular common directives.
     RouterModule,   // Enables navigation between application routes.
+    SettingsButtonComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
   title = 'Ease';
-  isAppReady = new BehaviorSubject<boolean>(false);
-  private readonly MIN_LOADING_TIME = 400; // Temps minimum d'affichage du chargement en ms
+  private readonly MIN_LOADING_TIME = 2000; // Temps minimum d'affichage du chargement en ms
+  isHomePage: boolean = false;
 
   /**
    * @brief Constructor for AppComponent.
@@ -35,10 +43,14 @@ export class AppComponent implements OnInit {
    * Initializes services required at the root level.
    * @param dataCacheService Service for preloading and caching data from the backend.
    * @param authService Service for managing authentication state.
+   * @param renderer Renderer2 pour manipuler le DOM de manière sécurisée.
+   * @param router Router for navigation and route management.
    */
   constructor(
     private dataCacheService: DataCacheService,
-    private authService: AuthService
+    private authService: AuthService,
+    private renderer: Renderer2,
+    private router: Router
   ) { }
 
   /**
@@ -54,16 +66,52 @@ export class AppComponent implements OnInit {
     // Créer un timer pour assurer un temps minimum d'affichage du chargement
     const startTime = Date.now();
 
-    // Initialiser l'état d'authentification
-    this.authService.refreshAuthState().subscribe({
-      next: () => {
-        console.log('✅ État d\'authentification initialisé');
-        this.completeInitialization(startTime);
-      },
-      error: () => {
-        console.log('❌ Erreur lors de l\'initialisation de l\'état d\'authentification');
-        this.completeInitialization(startTime);
-      }
+    // Initialiser l'état d'authentification avec un timeout pour éviter un blocage
+    const authTimeout = setTimeout(() => {
+      this.completeInitialization(startTime);
+    }, 5000); // Augmenter le timeout à 5 secondes pour laisser le temps aux tentatives
+
+    // Essayer de récupérer l'état d'authentification avec plusieurs tentatives en cas d'échec
+    this.authService.refreshAuthState()
+      .pipe(
+        // Réessayer jusqu'à 3 fois avec un délai exponentiel entre les tentatives
+        catchError(error => {
+          if (error.status === 0 || error.status === 502 || error.status === 503 || error.status === 504) {
+            // Le serveur est peut-être en train de redémarrer, essayer à nouveau
+            return throwError(() => error);
+          }
+          // Pour les autres erreurs (comme 401), ne pas réessayer
+          return throwError(() => error);
+        }),
+        retry({
+          count: 3,
+          delay: (error, retryCount) => {
+            // Délai exponentiel: 1s, 2s, 4s
+            const delayTime = Math.pow(2, retryCount - 1) * 1000;
+            return timer(delayTime);
+          }
+        })
+      )
+      .subscribe({
+        next: () => {
+          clearTimeout(authTimeout);
+          this.completeInitialization(startTime);
+        },
+        error: (err) => {
+          clearTimeout(authTimeout);
+          // Continuer sans redirection, juste terminer l'écran de chargement
+          this.completeInitialization(startTime);
+        }
+      });
+
+    // Vérification initiale si nous sommes sur la page d'accueil
+    this.checkIfHomePage();
+
+    // Surveille les changements de route
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.checkIfHomePage();
     });
   }
 
@@ -72,6 +120,7 @@ export class AppComponent implements OnInit {
    * 
    * Cette méthode calcule le temps écoulé depuis le début de l'initialisation
    * et attend le temps restant si nécessaire avant de marquer l'application comme prête.
+   * Elle gère également la transition entre l'écran de chargement et le contenu de l'application.
    * 
    * @param startTime Timestamp du début de l'initialisation
    */
@@ -81,7 +130,36 @@ export class AppComponent implements OnInit {
 
     // Attendre le temps restant si nécessaire
     setTimeout(() => {
-      this.isAppReady.next(true);
+      // Étape 1: Rendre le composant app-root visible mais garder l'écran de chargement
+      const appRoot = document.querySelector('app-root');
+      if (appRoot) {
+        this.renderer.addClass(appRoot, 'ready');
+      }
+
+      // Étape 2: Après un court délai, commencer à masquer l'écran de chargement
+      setTimeout(() => {
+        const initialLoading = document.getElementById('initial-loading');
+        if (initialLoading) {
+          this.renderer.setStyle(initialLoading, 'opacity', '0');
+
+          // Étape 3: Une fois l'animation de fondu terminée, masquer complètement l'écran de chargement
+          setTimeout(() => {
+            this.renderer.setStyle(initialLoading, 'display', 'none');
+
+            // Étape 4: Ajouter une classe 'loaded' au body pour les animations
+            this.renderer.addClass(document.body, 'loaded');
+          }, 800); // Durée de l'animation de fondu
+        }
+      }, 300); // Délai pour s'assurer que le contenu est prêt
     }, remainingTime);
   }
+
+  /**
+   * @brief Vérifie si la route actuelle est la page d'accueil
+   */
+  private checkIfHomePage(): void {
+    const currentUrl = this.router.url;
+    this.isHomePage = currentUrl === '/' || currentUrl === '/home';
+  }
 }
+

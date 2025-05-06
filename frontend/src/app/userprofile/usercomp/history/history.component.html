@@ -1,38 +1,66 @@
-<div class="container">
-    <!-- Bouton pour changer de mode -->
-    <div class="grid-btn">
-      <button [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')">
-        <i class="fa-solid fa-list"></i>
-      </button>
-      <button [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')">
-        <i class="fa-solid fa-grip"></i>
-      </button>
+<div class="history-container">
+  <div class="history-header">
+    <h2>Historique de recherche</h2>
+    <button class="btn-clear" (click)="clearHistory()" [disabled]="isLoading || totalItems === 0">
+      <i class="fas fa-trash-alt"></i> Effacer tout l'historique
+    </button>
+  </div>
+
+  <div class="history-content">
+    <!-- Utilisation du composant LoadingSpinner -->
+    <app-loading-spinner *ngIf="isLoading" message="Chargement de votre historique..."
+      size="medium"></app-loading-spinner>
+
+    <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+    <div *ngIf="!isLoading && (!resultsArray || resultsArray.length === 0)" class="no-history">
+      <p>Aucun historique de recherche disponible.</p>
     </div>
-      
-    
-    <div class="result-container" *ngIf="resultsArray.length > 0; else noResults">
-      <div class="item-container">
-        <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
-        <ul class="items-list" [ngClass]="viewMode">
-          <li class="item" 
-              *ngFor="let product of resultsArray; trackBy: trackByProduct" 
-              (click)="goToProduct(product)"
-              tabindex="0" 
-              [attr.aria-label]="'Voir le produit ' + product.name">
-            <div class="img-container">
-              <img class="product-image" [src]="product.image || 'assets/placeholder.jpg'" alt="{{ product.name }}">
-            </div> 
-            <div class="product-details">
-              <p class="categ">{{ product.category }}</p>
-              <h3 class="product-name">{{ product.name }}</h3>
-              <p class="product-description"><strong>Description :</strong> {{ product.description }}</p>
-            </div>
+
+    <ul *ngIf="!isLoading && resultsArray && resultsArray.length > 0" class="history-list">
+      <li class="history-item" *ngFor="let item of resultsArray; trackBy: trackByProduct" (click)="searchAgain(item)">
+        <div class="item-content">
+          <div class="item-details">
+            <h3 class="item-name">{{ getSearchTerm(item) }}</h3>
+            <p class="item-date">{{ item.searchDate | date:'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+          <button class="btn-delete" [disabled]="item.isDeleting" (click)="deleteHistoryItem(item, $event)">
+            <i *ngIf="!item.isDeleting" class="fas fa-times"></i>
+            <!-- On garde le mini-loader en CSS pour la cohérence visuelle -->
+            <div *ngIf="item.isDeleting" class="mini-loader"></div>
+          </button>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Pagination controls -->
+    <div class="pagination-controls" *ngIf="totalItems > 0">
+      <div class="page-size-selector">
+        <label for="pageSize">Éléments par page:</label>
+        <select id="pageSize" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+          <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
+        </select>
+      </div>
+
+      <nav aria-label="Pagination de l'historique" *ngIf="pages.length > 1">
+        <ul class="pagination">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1">
+              <span aria-hidden="true">&laquo;</span> Précédent
+            </button>
+          </li>
+
+          <li class="page-item" *ngFor="let page of pages" [class.active]="page === currentPage">
+            <button class="page-link" (click)="onPageChange(page)">{{ page }}</button>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage === pages.length">
+            <button class="page-link" (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === pages.length">
+              Suivant <span aria-hidden="true">&raquo;</span>
+            </button>
           </li>
         </ul>
-      </div>
+      </nav>
     </div>
-  
-    <ng-template #noResults>
-      <p>Aucun produit trouvé avec ces critères.</p>
-    </ng-template>
   </div>
+</div>

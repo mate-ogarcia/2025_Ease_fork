@@ -15,10 +15,12 @@ import { DatabaseModule } from "./database/database.module";
 import { DataModule } from "./data/data.module";
 import { AuthModule } from "./auth/auth.module";
 import { ProductsModule } from "./products/products.module";
+import { CommentsModule } from "./comments/comments.module";
 import { OpenFoodFactsModule } from "./apiServices/openFoodFacts/openFoodFacts.module";
 import { CountriesModule } from "./apiServices/countries/countries.module";
 import { UnsplashModule } from "./apiServices/unsplash/unsplash.module";
-import { LocationModule } from "./apiServices/LocationService/locationService.module";
+import { FavoritesModule } from "./favorites/favorites.module";
+import { Co2CalculatorModule } from "./apiServices/co2Calculator/co2Calculator.module";
 // Environment variables configuration
 import { ConfigModule } from "@nestjs/config";
 import * as Joi from "joi";
@@ -28,6 +30,10 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { LoggingMiddleware } from "./logging.middleware";
 import { RequestHandlerModule } from "./requestHandler/requestHandler.module";
 import { AdminModule } from "./admin/admin.module";
+import { HistoryModule } from './history/history.module';
+// .env
+import * as dotenv from "dotenv";
+dotenv.config();
 
 /**
  * @class AppModule
@@ -44,7 +50,10 @@ import { AdminModule } from "./admin/admin.module";
     OpenFoodFactsModule,
     CountriesModule,
     UnsplashModule,
-    LocationModule,
+    HistoryModule,
+    FavoritesModule,
+    CommentsModule,
+    Co2CalculatorModule,
     /**
      * @brief Loads environment variables and validates them with Joi.
      *
@@ -59,6 +68,7 @@ import { AdminModule } from "./admin/admin.module";
         BUCKET_NAME: Joi.string().required(),
         URL_FRONTEND: Joi.string().uri().required(),
         BACKEND_PORT: Joi.number().required().default(3000),
+        FAVORITES_BUCKET_NAME: Joi.string().required(),
       }),
     }),
     /**
