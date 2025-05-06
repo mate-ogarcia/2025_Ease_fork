@@ -1,8 +1,6 @@
 /* info-panel.component.css */
 .info-panel {
-  width: 100%;
-  max-width: 900px;
-  margin: 20px auto;
+  width: 90%;
   /* Centrage avec une marge verticale */
   background-color: #fff;
   border-radius: 20px;
@@ -14,6 +12,7 @@
 /* Info Header */
 .info-header {
   display: flex;
+  width: 100%;
   justify-content: space-between;
   align-items: center;
   padding: 25px 30px;
@@ -58,6 +57,7 @@
 /* Info Content */
 .info-content {
   padding: 30px;
+  width: 100%;
 }
 
 .info-intro {
@@ -75,7 +75,7 @@
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(35%, 1fr));
   gap: 25px;
 }
 
