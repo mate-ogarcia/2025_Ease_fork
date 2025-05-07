@@ -106,9 +106,8 @@ async function bootstrap() {
   /**
    * Configures CORS settings with credential support.
    */
-  // TODO configure the CORS: all requets are accepeted for now
   app.enableCors({
-    origin: ['http://localhost:8081', 'http://localhost:4201', 'http://frontend', 'http://localhost:4200', 'http://nginx-proxy'],
+    origin: ['http://localhost:8081', 'http://localhost:4201', 'http://frontend', 'http://localhost:4200', 'http://nginx-proxy', 'https://ease-bon.vercel.app', 'https://two025-ease-fork.onrender.com'],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
     allowedHeaders: "Content-Type, Accept, Authorization",
