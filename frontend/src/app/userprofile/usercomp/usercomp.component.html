@@ -8,7 +8,7 @@
       <h4 class="locaton">{{ userInfo?.address?.postCode }} {{ userInfo?.address?.city }}, {{ userInfo?.address?.country
         }}</h4> <!-- <p class="location">{{ location }}</p> -->
       <div class="profile-actions">
-        <button class="edit-profile-btn">Edit Profile</button>
+        <button class="edit-profile-btn">Modifier le Profile</button>
       </div>
     </div>
   </div>
@@ -16,6 +16,8 @@
   <!-- Navigation des onglets -->
   <nav class="profile-nav">
     <ul>
+
+      <li [class.active]="activeTab === 'Badges'" (click)="changeTab('Badges')">Badges</li>
       <li [class.active]="activeTab === 'Historique'" (click)="changeTab('Historique')">
         Historique
       </li>
@@ -36,6 +38,12 @@
     <div *ngIf="activeTab === 'Favoris'">
       <h3>Mes produits favoris</h3>
       <app-favorites class="app-favorites"></app-favorites>
+    </div>
+
+    <!-- Onglet Badges -->
+    <div *ngIf="activeTab === 'Badges'">
+      <app-badges class="app-badge"></app-badges>
+      <app-achivement class="app-achivement"></app-achivement>
     </div>
   </div>
 </div>

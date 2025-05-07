@@ -1,7 +1,7 @@
 <div class="container">
   <app-navbar class="app-navbar"></app-navbar>
 
-  <div class="prod-container" *ngIf="product">
+  <div *ngIf="product && !isLoading" class="prod-container">
     <div class="product-details">
       <!-- Left Section: Image -->
       <div class="image-gallery">
@@ -12,7 +12,7 @@
 
       <!-- Right Section: Product Info -->
       <div class="product-info">
-        <span class="category">{{ product.category }}</span>
+        <span class="category">{{ product.category || 'Non catégorisé' }}</span>
         <h2 class="product-name">{{ product.name }}</h2>
 
         <!-- Action Buttons -->
@@ -34,7 +34,7 @@
 
         <!-- Description -->
         <p class="product-description">
-          {{ product.description }}
+          {{ product.description || 'Aucune description disponible.' }}
         </p>
 
         <!-- ID & Tags -->
@@ -43,51 +43,75 @@
         </div>
       </div>
     </div>
-    <!-- id & Tags -->
-    <div class="extra-info">
-      <span class="id">ID product: {{productId}}</span>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading">
+    Chargement du produit...
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div *ngIf="product && !isLoading" class="tabs-container">
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="selectedTab === 'description'" (click)="selectTab('description')">
+        Description
+      </button>
+      <button class="tab-btn" [class.active]="selectedTab === 'info'" (click)="selectTab('info')">
+        Informations supplémentaires
+      </button>
+      <button class="tab-btn" [class.active]="selectedTab === 'review'" (click)="selectTab('review')">
+        Avis
+      </button>
     </div>
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-      <!-- Bouton favori/like -->
-      <div class="favorite-button" *ngIf="isAuthenticated">
-        <app-like-btn [liked]="isFavorite" (likeToggled)="onLikeToggled($event)"></app-like-btn>
+
+    <!-- Dynamic content based on selected tab -->
+    <div class="tab-content">
+      <div *ngIf="selectedTab === 'description'">
+        <p>{{ product.description || 'Aucune description disponible.' }}</p>
       </div>
-    </div>
-  </div>
-</div>
+      <div *ngIf="selectedTab === 'info'">
+        <p>Origine : <b>{{ product.origin || "Inconnue" }}</b></p>
+        <span class="tags">Tags: {{ product.tags || 'Aucun tag' }}</span>
 
-<!-- Navigation Tabs (PLACED BELOW PRODUCT SECTION) -->
-<div class="tabs-container">
-  <div class="tabs">
-    <button class="tab-btn" [class.active]="selectedTab === 'description'" (click)="selectTab('description')">
-      Description
-    </button>
-    <button class="tab-btn" [class.active]="selectedTab === 'info'" (click)="selectTab('info')">
-      Informations supplémentaires
-    </button>
-    <button class="tab-btn" [class.active]="selectedTab === 'review'" (click)="selectTab('review')">
-      Avis
-    </button>
-  </div>
+        <!-- CO2 Impact Section -->
+        <div class="co2-impact-section">
+          <h3>Impact sur l'environnement</h3>
+          
+          <ng-container *ngIf="isCO2Loading; else co2Data">
+            <app-loading-spinner></app-loading-spinner>
+          </ng-container>
 
-  <!-- Dynamic content based on selected tab -->
-  <div class="tab-content">
-    <div *ngIf="selectedTab === 'description'">
-      <p>
-        {{ product.description }}
-      </p>
-    </div>
-    <div *ngIf="selectedTab === 'info'">
-      <p>
-        Origine : <b>{{ product.origin || "Inconnue" }}</b>
-      </p>
-      <span class="tags">Tags: {{ product.tags }}</span>
-    </div>
-    <!-- Comments section -->
-    <div *ngIf="selectedTab === 'review'">
-      <app-comments-section [productId]="productId" [productSource]="productSource">
-      </app-comments-section>
+          <ng-template #co2Data>
+            <div *ngIf="co2Impact" class="co2-info">
+              <div class="co2-metric">
+                <span class="label">Distance :</span>
+                <span class="value">{{ co2Impact.co2.distance | number:'1.0-0' }} km</span>
+              </div>
+              <div class="co2-metric">
+                <span class="label">Moyen de transport :</span>
+                <span class="value">{{ co2Impact.co2.transportType === 'plane' ? 'Avion' : 
+                  co2Impact.co2.transportType === 'truck' ? 'Camion' : 
+                  co2Impact.co2.transportType === 'ship' ? 'Bateau' : 
+                  co2Impact.co2.transportType }}</span>
+              </div>
+              <div class="co2-metric">
+                <span class="label">Impact en CO2 :</span>
+                <span class="value">{{ co2Impact.co2.co2Impact | number:'1.0-0' }} kg CO2</span>
+              </div>
+              <p class="co2-warning">* Ces informations sont des estimations basées sur la distance et le mode de transport le plus probable.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+      <div *ngIf="selectedTab === 'review'">
+        <app-comments-section [productId]="productId" [productSource]="productSource">
+        </app-comments-section>
+      </div>
     </div>
   </div>
 </div>

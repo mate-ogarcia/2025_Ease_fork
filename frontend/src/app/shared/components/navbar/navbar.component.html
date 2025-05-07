@@ -21,7 +21,7 @@
     </li>
     <li *ngIf="canAddProduct">
       <a class="nav-btn" routerLink="/add-product">
-        <i class="fa-solid fa-plus"></i>Ajouter un produit
+        <i class="fa-solid fa-plus"></i>Produit
       </a>
     </li>
     <li>
@@ -36,17 +36,18 @@
           <img class="userprofile" src="rhinoceros.png" alt="Profile" (click)="toggleDropdown()">
           <!-- Menu déroulant -->
           <div *ngIf="showDropdown || isMobile" class="dropdown-menu">
-            <span routerLink="/user-profile" class="user-btn profile-btn"><i class="fa-solid fa-user"></i>Profile</span>
+            <span routerLink="/user-profile" class="user-btn profile-btn"><i class="fa-solid fa-user"></i>Profil</span>
             <span *ngIf="userRole === 'Admin' || userRole === 'SuperAdmin'" routerLink="/admin"
-              class="user-btn admin-btn"><i class="fas fa-user-shield"></i>Dashboard Admin</span>
+              class="user-btn admin-btn"><i class="fas fa-user-shield"></i>Admin</span>
             <div class="logout-container">
-              <span (click)="logout()" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Log out</span>
+              <span (click)="logout()" class="logout-btn"><i
+                  class="fa-solid fa-right-from-bracket"></i>Déconnexion</span>
             </div>
           </div>
         </ng-container>
 
         <ng-template #loginTemplate>
-          <a class="nav-btn" routerLink="/auth" class="nav-btn login-btn">Login</a>
+          <a class="nav-btn" routerLink="/auth" class="nav-btn login-btn">Connexion</a>
         </ng-template>
       </div>
     </li>

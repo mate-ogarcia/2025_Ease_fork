@@ -10,9 +10,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { catchError, from, of } from 'rxjs';
 // Components
 import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
 import { CommentsSectionComponent } from '../comments-section/comments-section.component';
+import { NavbarComponent } from '../shared/components/navbar/navbar.component';
+import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
 // API
 import { ApiService } from '../../services/api.service';
 import { APIUnsplash } from '../../services/unsplash/unsplash.service';
@@ -20,8 +23,8 @@ import { ApiOpenFoodFacts } from '../../services/openFoodFacts/openFoodFacts.ser
 import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { CommentsService } from '../../services/comments/comments.service';
-import { NavbarComponent } from '../shared/components/navbar/navbar.component';
-import { catchError, from, of } from 'rxjs';
+import { Co2CalculatorService } from '../../services/co2Calculator/co2Calculator.service';
+import { ApiAddress } from '../../services/address/address.service';
 
 interface Product {
   id: string;
@@ -43,6 +46,7 @@ interface Product {
     CommonModule,
     LikeBtnComponent,
     CommentsSectionComponent,
+    LoadingSpinnerComponent,
   ],
   templateUrl: './prodpage.component.html',
   styleUrls: ['./prodpage.component.css'],
@@ -52,6 +56,7 @@ export class ProdpageComponent implements OnInit {
   productSource: string = ''; // The source of the product (Internal or OpenFoodFacts).
   product: Product | null = null; // The product details.
   isLoading: boolean = false; // Loading state flag.
+  isCO2Loading: boolean = false; // Loading state for CO2 calculation
   errorMessage: string = ''; // Error message in case of failure.
   selectedTab: string = 'description'; // Selected tab for displaying product information.
   isAuthenticated: boolean = false; // Is the user authenticated
@@ -61,6 +66,9 @@ export class ProdpageComponent implements OnInit {
   userRole: string | null = null; // Stores the user role.
   commentCount: number = 0; // Number of comments for a product
   avgRate: number = 0; // Average rate for a product
+  userLocation: string = '';
+  co2Impact: number | null = null;
+  locationError: string = '';
 
   /**
    * @brief Constructor initializes dependencies.
@@ -80,7 +88,9 @@ export class ProdpageComponent implements OnInit {
     private favoritesService: FavoritesService,
     private authService: AuthService,
     private router: Router,
-    private commentsService: CommentsService
+    private commentsService: CommentsService,
+    private co2Service: Co2CalculatorService,
+    private addressService: ApiAddress
   ) { }
 
   /**
@@ -88,6 +98,7 @@ export class ProdpageComponent implements OnInit {
    * It retrieves the product ID and source from the route parameters.
    */
   ngOnInit(): void {
+    this.isCO2Loading = true; // Loading state for CO2 calculation
     // Check if the user is logged in
     this.authService.isAuthenticated().subscribe((isAuth) => {
       this.isAuthenticated = isAuth;
@@ -137,6 +148,9 @@ export class ProdpageComponent implements OnInit {
       .subscribe((count) => {
         this.avgRate = count;
       });
+
+    // Get user location and calculate CO2 impact
+    this.getUserLocationAndCalculateCO2();
   }
 
   /**
@@ -243,13 +257,13 @@ export class ProdpageComponent implements OnInit {
       },
       complete: () => {
         this.isLoading = false;
-      },
+      }
     });
   }
 
   /**
-   * @brief Fetches a product from OpenFoodFacts.
-   * @param productId The ID of the product.
+   * @brief Fetches an external product from OpenFoodFacts.
+   * @param productId The ID of the product in OpenFoodFacts.
    */
   fetchExternalProduct(productId: string): void {
     this.openFoodFactsService.getOpenFoodFactsProductById(productId).subscribe({
@@ -265,28 +279,30 @@ export class ProdpageComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('❌ Error retrieving product from OpenFoodFacts:', error);
+        console.error('❌ Error fetching product from OpenFoodFacts:', error);
         this.errorMessage = 'Unable to fetch product from OpenFoodFacts.';
       },
       complete: () => {
         this.isLoading = false;
-      },
+      }
     });
   }
 
   /**
-   * @brief Fetches an image from Unsplash if the product has no image.
-   * @param product The product object.
+   * @brief Loads an image for the product if one is not available.
+   * @param product The product for which to retrieve an image.
    */
   private loadProductImage(product: Product): void {
     if (product.imageUrl) {
       return;
     }
 
+    this.isCO2Loading = true; // Loading state for CO2 calculation
+
     if (product.name) {
       this.apiUnsplash.searchPhotos(product.name).subscribe({
         next: (response) => {
-          if (response.imageUrl) {
+          if (response && response.imageUrl) {
             product.image = response.imageUrl;
           } else {
             console.warn(`🚫 No image found for ${product.name}`);
@@ -294,24 +310,85 @@ export class ProdpageComponent implements OnInit {
         },
         error: (err) => {
           console.error(`❌ Error retrieving image for ${product.name}:`, err);
-        },
+        }
       });
     }
   }
 
   /**
-   * @brief Updates the selected tab.
-   * @param tab The tab to display.
+   * @brief Gets the user's location and calculates CO2 impact
+   */
+  private getUserLocationAndCalculateCO2(): void {
+    this.addressService.getCurrentLocation().subscribe({
+      next: (location) => {
+        this.userLocation = location;
+        this.calculateCo2Impact();
+      },
+      error: (error) => {
+        console.error('Error getting location:', error);
+        this.locationError = 'Unable to get your location. CO2 impact will use a default location.';
+        // Use a default location
+        this.userLocation = 'Paris';
+        this.calculateCo2Impact();
+      }
+    });
+  }
+
+  /**
+   * @brief Calculates CO2 impact based on product and user location
+   */
+  calculateCo2Impact(): void {
+    if (!this.productId) return;
+
+    this.isCO2Loading = true;
+
+    if (this.productSource !== 'Internal' && this.product) {
+      // For external products (OpenFoodFacts)
+      this.co2Service.getCo2ImpactForProduct(
+        this.userLocation,
+        this.productId,
+        this.product['category'],
+        this.product['origin']
+      ).subscribe({
+        next: (data) => {
+          console.log('🌿 CO2 calculation results:', data);
+          this.co2Impact = data;
+          this.isCO2Loading = false;
+        },
+        error: (error) => {
+          console.error('❌ Error calculating CO2 impact:', error);
+          this.co2Impact = null;
+          this.isCO2Loading = false;
+        }
+      });
+    } else {
+      // For internal products
+      this.co2Service.getCo2ImpactForProduct(this.userLocation, this.productId).subscribe({
+        next: (data) => {
+          console.log('🌿 CO2 calculation results:', data);
+          this.co2Impact = data;
+          this.isCO2Loading = false;
+        },
+        error: (error) => {
+          console.error('❌ Error calculating CO2 impact:', error);
+          this.co2Impact = null;
+          this.isCO2Loading = false;
+        }
+      });
+    }
+  }
+
+  /**
+   * @brief Selects a tab to display different product information.
+   * @param tab The tab to select.
    */
   selectTab(tab: string): void {
     this.selectedTab = tab;
   }
 
   /**
-   * @brief Tracks product items for *ngFor to optimize rendering.
-   * @param index The index of the product.
-   * @param product The product object.
-   * @return The unique product ID.
+   * Provides an identifier for the ngFor directive to track products.
+   * This helps Angular optimize DOM updates by reusing elements.
    */
   trackByProduct(index: number, product: Product): string {
     return product.id;

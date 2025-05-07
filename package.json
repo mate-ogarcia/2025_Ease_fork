@@ -15,7 +15,8 @@
     "lint": "npm run lint:front && npm run lint:back"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
   },
   "dependencies": {
     "@angular/animations": "^19.2.1",

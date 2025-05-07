@@ -10,7 +10,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, Observable, throwError } from 'rxjs';
 import { environment } from '../environments/environment';
-import { tap } from 'rxjs/operators';
 
 /**
  * @class ApiService
@@ -112,9 +111,23 @@ export class ApiService {
    * Get thje product around a location
    * @param location 
    */
-  // TODO
   getProductsAround(location: string): Observable<any> {
     return this.http.get<any[]>(`${this._productsUrl}/location/${location}`);
+  }
+
+  /**
+   * @brief Retrieves products by category from the backend.
+   * @param category The category name to fetch products for.
+   * @returns {Observable<any[]>} An Observable containing the products for the category.
+   */
+  getProductByCateg(category: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this._productsUrl}/category/${category}`).pipe(
+      catchError((error) => {
+        return throwError(
+          () => new Error("Error fetching products by category.")
+        );
+      })
+    );
   }
   // ======================== SEND/POST
 

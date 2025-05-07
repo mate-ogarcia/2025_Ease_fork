@@ -1,4 +1,4 @@
-/* Conteneur global pour les cartes d'utilisateurs */
+/* Global container for user cards */
 .user-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -6,7 +6,7 @@
   margin-bottom: 20px;
 }
 
-/* Chaque carte utilisateur */
+/* Each user card */
 .user-card {
   background: #fff;
   border-radius: 12px;
@@ -18,25 +18,24 @@
   justify-content: space-between;
 }
 
-/* Style pour les utilisateurs bannis */
+/* Styles for banned users */
 .user-card.banned {
-  /* Styles spécifiques pour les utilisateurs bannis */
   background-color: #ffeeee;
-  /* Exemple : fond légèrement rouge */
+  /* Light red background */
   border-color: #ff0000;
-  /* Exemple : bordure rouge */
+  /* Red border */
   opacity: 0.8;
-  /* Exemple : légèrement transparent */
+  /* Slightly transparent */
 }
 
-/* En-tête de la carte : informations utilisateur */
+/* Card header: user info */
 .card-header {
   padding: 16px;
   display: flex;
   align-items: center;
 }
 
-/* Section d'info utilisateur */
+/* User info section */
 .user-info {
   display: flex;
   align-items: center;
@@ -59,7 +58,7 @@
   font-size: 20px;
 }
 
-/* Texte d'information */
+/* Text info */
 .text h3 {
   margin: 0;
   font-size: 1.1rem;
@@ -72,7 +71,7 @@
   font-size: 0.9rem;
 }
 
-/* Bouton d'édition du rôle (icône crayon) */
+/* Role edit button (pencil icon) */
 .edit-btn {
   background: none;
   border: none;
@@ -82,7 +81,7 @@
   font-size: 0.9rem;
 }
 
-/* Styles pour le select en mode édition */
+/* Styles for select in edit mode */
 .role-select {
   padding: 4px 8px;
   font-size: 0.9rem;
@@ -97,7 +96,7 @@
   border-color: #007bff;
 }
 
-/* Styles communs pour les boutons d'icône */
+/* Common styles for icon buttons */
 .icon-btn {
   background: transparent;
   border: none;
@@ -137,11 +136,10 @@
   cursor: pointer;
 }
 
-/* Barre de recherche */
+/* Search bar */
 .search-container {
   display: flex;
   justify-content: flex-end;
-
   width: 100%;
   margin-bottom: 20px;
 }
@@ -155,20 +153,19 @@
   outline: none;
 }
 
-/* Bouton de sauvegarde */
+/* Save button */
 .icon-btn.save-btn {
   color: #28a745;
-  /* Vert */
+  /* Green */
 }
 
-/* Bouton d'annulation */
+/* Cancel button */
 .icon-btn.cancel-btn {
   color: #dc3545;
-  /* Rouge */
+  /* Red */
 }
 
-
-/* Zone des actions en bas de la carte */
+/* Action zone at the bottom of the card */
 .card-actions {
   padding: 16px;
   display: flex;
@@ -194,7 +191,7 @@
   opacity: 0.9;
 }
 
-/* Bouton pour supprimer (fond rouge) */
+/* Delete button (red background) */
 .card-actions button:nth-child(1) {
   background: #dc3545;
   color: #fff;
@@ -206,7 +203,7 @@
   transition: all 0.3s ease-in-out;
 }
 
-/* Bouton pour bannir/unbannir (fond jaune) */
+/* Ban/Unban button (yellow background) */
 .card-actions button:nth-child(2) {
   background: #ffc107;
   color: #fff;
@@ -218,13 +215,13 @@
   transition: all 0.3s ease-in-out;
 }
 
-/* Harmoniser la taille des icônes dans les boutons */
+/* Normalize icon sizes in buttons */
 button i,
 .icon-btn i {
   font-size: 0.9rem;
 }
 
-/* Animation pour le spinner de chargement - version améliorée */
+/* Enhanced loading spinner animation */
 @keyframes rotate {
   0% {
     transform: rotate(0deg);
@@ -238,17 +235,16 @@ button i,
 .spinner-rotate {
   animation: rotate 1s linear infinite;
   display: inline-block;
-  /* Forcer le rendu hardware pour améliorer les performances */
   transform: translateZ(0);
+  /* Hardware acceleration */
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   will-change: transform;
-  /* Assurer que l'animation est toujours visible */
   backface-visibility: hidden;
   perspective: 1000px;
 }
 
-/* Styles pour le conteneur de chargement */
+/* Styles for loading container */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -273,7 +269,7 @@ button i,
   margin: 0;
 }
 
-/* Style pour le spinner de chargement des rôles */
+/* Style for loading spinner inside role selector */
 .role-selector-container {
   position: relative;
   display: inline-block;
@@ -288,20 +284,12 @@ button i,
   color: #1976d2;
 }
 
-/* Message quand aucun résultat n'est trouvé */
+/* Style for "no results" message */
 .no-results {
   text-align: center;
-  padding: 30px;
+  padding: 2rem;
   background-color: #f8f9fa;
-  border-radius: 12px;
-  margin-top: 20px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.no-results p {
+  border-radius: 8px;
+  margin: 1rem 0;
   color: #6c757d;
-  font-size: 1.1rem;
-  margin: 0;
 }

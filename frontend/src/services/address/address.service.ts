@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 /**
  * @class ApiAddress
@@ -73,7 +73,6 @@ export class ApiAddress {
     );
   }
 
-  // TODO
   /**
    * @brief Performs reverse geocoding using OpenStreetMap's Nominatim API.
    * 
@@ -113,7 +112,39 @@ export class ApiAddress {
       postcode: response.address.postcode || '',
       city: response.address.city || response.address.town || response.address.village || '',
       country: response.address.country || ''
-      // Additional properties if needed
     };
+  }
+
+  /**
+   * Gets the user's current location using browser's geolocation API
+   * and then reverse geocodes it to get the city name using OpenStreetMap
+   * @returns Observable with the city name
+   */
+  getCurrentLocation(): Observable<string> {
+    return new Observable(observer => {
+      if (!navigator.geolocation) {
+        observer.error('Geolocation is not supported by your browser');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          this.reverseGeocode(latitude, longitude).subscribe({
+            next: (addresses) => {
+              if (addresses && addresses.length > 0) {
+                observer.next(addresses[0].city);
+              } else {
+                observer.error('No address found');
+              }
+            },
+            error: (err) => observer.error(err)
+          });
+        },
+        (error) => {
+          observer.error('Unable to retrieve your location');
+        }
+      );
+    });
   }
 }

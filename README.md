@@ -22,6 +22,8 @@ Before starting, ensure you have the following installed on your system:
 - **Angular CLI** (for the frontend)
 - **Git** (to clone the repository)
 - **CouchBase** (if you want to run the project in development mode)
+- **Python** (for running data import scripts)
+- **Docker** and **Docker Compose** (for containerized deployment)
 
 ### Installation Steps
 
@@ -40,9 +42,20 @@ Navigate to the root of your directory and install the required dependencies:
 npm run install:all
 ```
 
-#### Import the Environment File
+#### Environment Configuration
 
-Place the `.env.production` file at the project root (place your .env file where the `.env.sample` file is). If necessary, you may need to modify this part of the `\2025_Ease\backend\src\main.ts` file to adapt it to your .env file:
+1. Create the following environment files at the project root:
+   - `.env.development` for development mode
+   - `.env.production` for production mode
+   - `.env.docker` for Docker deployment
+
+2. Configure the environment variables in each file according to your setup. Required variables include:
+   - Database connection details
+   - API endpoints
+   - Authentication credentials
+   - Port configurations
+
+3. If necessary, modify the `\2025_Ease\backend\src\main.ts` file to adapt it to your .env file:
 
 ```sh
 // Load the right .env
@@ -286,12 +299,6 @@ docker-compose down -v
 If you encounter issues with Docker setup:
 
 1. **Check container logs**:
-   ```
-   docker logs projetcapg-backend-1
-   docker logs projetcapg-frontend-1
-   docker logs couchbase
-   docker logs projetcapg-nginx-proxy-1
-   ```
 
 2. **Verify Couchbase is properly configured**:
    - Make sure you've created the admin user with correct permissions
@@ -303,28 +310,8 @@ If you encounter issues with Docker setup:
    - This ensures all API calls use relative paths (`/api/...`) instead of absolute URLs
    - The Nginx proxy (nginx-proxy.conf) routes these requests to the backend
 
-4. **Rebuild specific services if code changes are not appearing**:
-   ```
-   # Rebuild and restart only the frontend
-   docker-compose down
-   docker-compose build frontend
-   docker-compose up -d
-   
-   # Rebuild and restart only the backend
-   docker-compose down
-   docker-compose build backend
-   docker-compose up -d
-   
-   # Rebuild and restart everything
-   docker-compose down
-   docker-compose build
-   docker-compose up -d
-   ```
+4. **Reset everything and start fresh**:
 
-5. **Reset everything and start fresh**:
-   ```
-   docker-compose down -v
-   ```
    Then follow steps 1 to 4 from the "Starting the Project with Docker" section again.
 
 ## Important Notes About Couchbase Configuration

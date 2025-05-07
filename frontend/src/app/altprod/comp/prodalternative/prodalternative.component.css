@@ -11,9 +11,10 @@
   scroll-behavior: smooth;
   box-sizing: border-box;
   overflow-y: auto;
+  z-index: 80;
+
 }
 
-/* === Style appliqué si le produit n'est pas européen === */
 
 
 /* === Result Container === */
@@ -22,6 +23,8 @@
   align-items: center;
   flex-direction: column;
   width: 100%;
+  z-index: 80;
+
 }
 
 /* === Items Container === */

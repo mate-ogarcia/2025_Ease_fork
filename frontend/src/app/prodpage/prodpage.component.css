@@ -5,7 +5,6 @@
   margin: 0;
 }
 
-/* Container principal du composant */
 .container {
   display: flex;
   flex-direction: column;
@@ -17,16 +16,13 @@
   overflow-x: hidden;
   overflow-y: auto;
   gap: 20px;
-
 }
 
-/* (Optionnel) Navbar si nécessaire */
 .app-navbar {
   width: 100%;
   border-bottom: 1px solid #ddd;
 }
 
-/* Conteneur produit */
 .prod-container {
   display: flex;
   flex-direction: column;
@@ -40,7 +36,6 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Section Produit - Image + Infos */
 .product-details {
   display: flex;
   flex-direction: row;
@@ -48,10 +43,8 @@
   padding: 20px;
   width: 100%;
   height: fit-content;
-
 }
 
-/* Galerie d'images */
 .image-gallery {
   display: flex;
   flex-direction: column;
@@ -60,16 +53,12 @@
   width: 40%;
 }
 
-
-
-/* Image plus grande par défaut */
 .product-image {
   width: 100%;
   height: auto;
   border-radius: 10px;
 }
 
-/* Infos produit */
 .product-info {
   width: 60%;
 }
@@ -90,7 +79,6 @@
   height: auto;
 }
 
-/* Note et avis */
 .rating {
   display: flex;
   align-items: center;
@@ -103,17 +91,14 @@
   color: #777;
 }
 
-/* Infos supplémentaires */
 .extra-info {
   display: flex;
   flex-direction: column;
   padding: 10px 0;
 }
 
-/* Onglets (Description, Info, Review) */
 .tabs-container {
   width: 100%;
-
   background: #ffffff;
   z-index: 10;
   padding: 10px 0;
@@ -151,7 +136,6 @@
   border-bottom: 3px solid #38D39F;
 }
 
-/* Contenu des onglets */
 .tab-content {
   width: 100%;
   height: 100%;
@@ -159,7 +143,6 @@
   padding: 10px;
 }
 
-/* Action Buttons */
 .action-buttons {
   display: flex;
   align-items: center;
@@ -173,7 +156,6 @@
   justify-content: center;
 }
 
-/* Responsive */
 @media (max-width: 800px) {
   .container {
     height: auto;
@@ -195,9 +177,7 @@
 
   .main-image-container img {
     width: 90%;
-    /* Largeur accrue pour mobile */
     max-height: 500px;
-    /* Évite que l'image ne devienne trop haute */
     object-fit: contain;
   }
 
@@ -211,18 +191,15 @@
   }
 }
 
-/* ========== Rating */
 .stars-container {
   position: relative;
   display: inline-block;
   font-size: 24px;
-  /* Ajuster selon vos besoins */
   line-height: 1;
 }
 
 .stars-background {
   color: #ddd;
-  /* Étoiles vides */
 }
 
 .stars-filled {
@@ -230,7 +207,6 @@
   top: 0;
   left: 0;
   color: gold;
-  /* Étoiles pleines */
   overflow: hidden;
   white-space: nowrap;
 }
@@ -246,4 +222,87 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+
+/* CO2 Impact */
+.co2-impact-section {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.co2-impact-section h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.co2-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.co2-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.co2-metric:last-child {
+  border-bottom: none;
+}
+
+.co2-metric .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.co2-metric .value {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.location-error {
+  color: #dc3545;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.co2-value {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #28a745;
+  margin-top: 10px;
+}
+
+.co2-warning {
+  font-size: 0.9em;
+  color: #666;
+  font-style: italic;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px dashed #ddd;
+}
+
+/* Loading + Error */
+.loading, .error {
+  text-align: center;
+  padding: 20px;
+  margin: 20px;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.loading {
+  color: #666;
+}
+
+.error {
+  color: #dc3545;
+  border: 1px solid #dc3545;
 }

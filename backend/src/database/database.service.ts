@@ -368,21 +368,31 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       const result = await this.cluster.query(query, {
         parameters: params,
         timeout: 10000, // Timeout to prevent long-running queries
+        scanConsistency: 'request_plus' as any // Ensure we get the latest data
       });
 
       return result.rows || [];
     } catch (error) {
       console.error("❌ Couchbase Query Error:", error.message || error);
+      console.error("❌ Query that failed:", query);
+      console.error("❌ Parameters used:", params);
 
       /**
        * Error Handling:
        * - `error.first_error_code === 5000` → Syntax error in the query.
        * - `error.cause?.code === 1080` → Query execution timed out.
+       * - `error.message?.includes('timeout')` → General timeout error.
        */
       if (error?.first_error_code === 5000) {
         console.error("⚠️ Couchbase syntax error. Check your query.");
-      } else if (error?.cause?.code === 1080) {
-        console.error("⚠️ Couchbase query timed out.");
+        throw new InternalServerErrorException(
+          "Database query syntax error. Please check the query."
+        );
+      } else if (error?.cause?.code === 1080 || error.message?.includes('timeout')) {
+        console.error("⚠️ Couchbase query timed out after 10 seconds.");
+        throw new InternalServerErrorException(
+          "Database query timed out. Please try again later."
+        );
       }
 
       throw new InternalServerErrorException(
@@ -1511,6 +1521,26 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.executeQuery(query);
   }
 
+  /**
+   * @brief Retrieves products by category.
+   * @param category The category name to fetch products for.
+   * @returns {Promise<any[]>} A promise resolving to an array of products.
+   */
+  getProductByCategory(category: string): Promise<any[]> {
+    const query = `
+      SELECT 
+        META(p).id AS id,
+        p.*,
+        COALESCE(b.name, "Marque inconnue") AS brand
+      FROM \`${this.productsBucket.name}\`._default._default p
+      LEFT JOIN \`${this.brandBucket.name}\`._default._default b
+      ON p.FK_Brands = META(b).id
+      WHERE p.category = $category
+    `;
+
+    return this.executeQuery(query, { category });
+  }
+
   // ========================================================================
   // ======================== COMMENTS FUNCTIONS
   // ========================================================================
@@ -1717,15 +1747,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       );
     }
 
-    // Query to calculate the average score
+    // Query to calculate the average score using parameterized query
     const avgQuery = `
     SELECT AVG(TO_NUMBER(userRatingCom)) AS averageRating
     FROM \`${commentsBucketName}\`
-    WHERE productId = "${productId}"
+    WHERE productId = $productId
   `;
 
     try {
-      const result = await this.executeQuery(avgQuery);
+      const result = await this.executeQuery(avgQuery, { productId });
 
       // Extract average (may be null if no comments)
       const average = result[0]?.averageRating ?? 0;
@@ -1736,6 +1766,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         `❌ Error retrieving average rating for product ${productId}:`,
         error
       );
+      
+      // Check if the error is a timeout
+      if (error.message?.includes('timeout')) {
+        throw new Error(
+          `Query timeout while retrieving average rating for product ${productId}. Please try again.`
+        );
+      }
+      
       throw new Error(
         `Error retrieving average rating for product ${productId}`
       );

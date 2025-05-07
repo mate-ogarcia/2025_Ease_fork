@@ -16,6 +16,8 @@ body {
 
 .app-navbar {
   width: 100%;
+  border-bottom: 1px solid #ccc;
+
   z-index: 10000;
 }
 

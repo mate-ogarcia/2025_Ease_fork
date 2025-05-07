@@ -150,4 +150,19 @@ export class ProductsController {
       throw new InternalServerErrorException("Error retrieving products by location.");
     }
   }
+
+  /**
+   * @brief Retrieves products by category.
+   * @param category The category name to fetch products for.
+   * @returns {Promise<any[]>} A promise resolving to an array of products.
+   */
+  @Get("category/:category")
+  async getProductsByCategory(@Param("category") category: string) {
+    try {
+      return await this.productsService.getProductsByCategory(category);
+    } catch (error) {
+      console.error("❌ Error retrieving products by category:", error);
+      throw new InternalServerErrorException("Error retrieving products by category.");
+    }
+  }
 }

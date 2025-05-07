@@ -1,13 +1,13 @@
-<!-- Barre de recherche -->
+<!-- Search bar -->
 <div class="search-container">
-  <input class="search-bar" type="text" placeholder="Rechercher des utilisateurs..." [(ngModel)]="searchTerm" />
+  <input class="search-bar" type="text" placeholder="Recherche des utilisateurs..." [(ngModel)]="searchTerm" />
 </div>
 
-<!-- Indicateur de chargement des utilisateurs -->
-<app-loading-spinner *ngIf="isLoadingUsers" message="Chargement des utilisateurs..." size="medium">
+<!-- User loading indicator -->
+<app-loading-spinner *ngIf="isLoadingUsers" message="Chargements des utilisateurs..." size="medium">
 </app-loading-spinner>
 
-<!-- Liste des cartes utilisateurs (filtrée) -->
+<!-- List of user cards (filtered) -->
 <div class="user-cards" *ngIf="!isLoadingUsers">
   <div class="user-card" *ngFor="let user of filteredUsers" [ngClass]="{'banned': user.role === 'Banned'}">
     <div class="card-header">
@@ -18,7 +18,7 @@
         <div class="text">
           <h3>{{ user.username }}</h3>
           <p>{{ user.email }}</p>
-          <p class="created-at">Créé le : {{ user.createdAt | date:'dd/MM/yyyy' }}</p>
+          <p class="created-at">Crée le : {{ user.createdAt | date:'dd/MM/yyyy' }}</p>
           <div class="edit-container">
             <ng-container *ngIf="isSuperAdmin">
               <ng-container *ngIf="user.isEditing; else viewRole">
@@ -39,31 +39,31 @@
                 </button>
               </ng-container>
               <ng-template #viewRole>
-                <span>Role : {{ user.role }}</span>
-                <button class="icon-btn edit-btn" (click)="editRole(user)" title="Modifier le rôle">
+                <span>Role: {{ user.role }}</span>
+                <button class="icon-btn edit-btn" (click)="editRole(user)" title="Edit role">
                   <i class="fas fa-pencil-alt"></i>
                 </button>
               </ng-template>
             </ng-container>
             <ng-container *ngIf="!isSuperAdmin">
-              <span>Role : {{ user.role }}</span>
+              <span>Role: {{ user.role }}</span>
             </ng-container>
           </div>
         </div>
       </div>
     </div>
     <div class="card-actions" *ngIf="isSuperAdmin">
-      <button (click)="deleteUser(user)" title="Supprimer l'utilisateur">
+      <button (click)="deleteUser(user)" title="Delete user">
         <i class="fas fa-trash"></i> Supprimer
       </button>
-      <button (click)="banUser(user)" title="Bannir/Débannir l'utilisateur">
+      <button (click)="banUser(user)" title="Ban/Unban user">
         <i class="fas fa-ban"></i> {{ user.role === 'Banned' ? 'Débannir' : 'Bannir' }}
       </button>
     </div>
   </div>
 </div>
 
-<!-- Message si aucun utilisateur trouvé -->
+<!-- Message when no users are found -->
 <div class="no-results" *ngIf="!isLoadingUsers && filteredUsers.length === 0">
   <p *ngIf="searchTerm.trim()">Aucun utilisateur trouvé pour "{{ searchTerm }}"</p>
   <p *ngIf="!searchTerm.trim()">Aucun utilisateur disponible dans le système</p>
