@@ -1,16 +1,10 @@
 <div class="container">
   <!-- Bouton pour changer de mode -->
   <div class="grid-btn">
-    <button
-      [ngClass]="{ active: viewMode === 'list' }"
-      (click)="setViewMode('list')"
-    >
+    <button [ngClass]="{ active: viewMode === 'list' }" (click)="setViewMode('list')">
       <i class="fa-solid fa-list"></i>
     </button>
-    <button
-      [ngClass]="{ active: viewMode === 'grid' }"
-      (click)="setViewMode('grid')"
-    >
+    <button [ngClass]="{ active: viewMode === 'grid' }" (click)="setViewMode('grid')">
       <i class="fa-solid fa-grip"></i>
     </button>
   </div>
@@ -19,21 +13,12 @@
     <div class="item-container">
       <!-- Ajout d'une classe conditionnelle selon le mode de vue -->
       <ul class="items-list" [ngClass]="viewMode">
-        <li
-          class="item"
-          *ngFor="let product of resultsArray; trackBy: trackByProduct"
-          (click)="goToProduct(product)"
-          tabindex="0"
-          [attr.aria-label]="'Voir le produit ' + product.name"
-        >
+        <li class="item" *ngFor="let product of resultsArray; trackBy: trackByProduct" (click)="goToProduct(product)"
+          tabindex="0" [attr.aria-label]="'Voir le produit ' + product.name">
           <div class="img-container">
             <ng-container *ngIf="product.image; else noImage">
-              <img
-                class="product-image"
-                [src]="product.image"
-                alt="{{ product.name }}"
-                (error)="handleImageError($event)"
-              />
+              <img class="product-image" [src]="product.image" alt="{{ product.name }}"
+                (error)="handleImageError($event)" />
             </ng-container>
             <ng-template #noImage>
               <div class="placeholder-image">
@@ -44,12 +29,8 @@
 
           <!-- Information button (rediract to the prodpage) -->
           <div class="info-btn">
-            <app-info-btn
-              class="app-info-btn"
-              [infoActive]="product.infoActive"
-              (infoToggled)="product.infoActive = $event"
-              (infoClicked)="goToInfoProduct(product)"
-            >
+            <app-info-btn class="app-info-btn" [infoActive]="product.infoActive"
+              (infoToggled)="product.infoActive = $event" (infoClicked)="goToInfoProduct(product)">
             </app-info-btn>
           </div>
 
@@ -64,11 +45,7 @@
           <!-- Le bouton "like" -->
           <!-- On arrête la propagation pour éviter d'appeler goToProduct -->
           <div class="like-btn" (click)="$event.stopPropagation()">
-            <app-like-btn
-              class="app-like-btn"
-              [liked]="product.liked"
-              (likeToggled)="onLikeToggled(product)"
-            >
+            <app-like-btn class="app-like-btn" [liked]="product.liked" (likeToggled)="onLikeToggled(product)">
             </app-like-btn>
           </div>
         </li>

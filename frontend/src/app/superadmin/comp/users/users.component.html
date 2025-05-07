@@ -65,5 +65,6 @@
 
 <!-- Message si aucun utilisateur trouvé -->
 <div class="no-results" *ngIf="!isLoadingUsers && filteredUsers.length === 0">
-  <p>Aucun utilisateur trouvé pour "{{ searchTerm }}"</p>
+  <p *ngIf="searchTerm.trim()">Aucun utilisateur trouvé pour "{{ searchTerm }}"</p>
+  <p *ngIf="!searchTerm.trim()">Aucun utilisateur disponible dans le système</p>
 </div>

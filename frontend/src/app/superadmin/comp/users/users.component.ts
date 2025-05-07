@@ -44,10 +44,8 @@ export class UsersComponent implements OnInit {
   private checkUserRole() {
     this.adminService.getCurrentUserRole().subscribe({
       next: (role) => {
-        console.log('🔍 Rôle reçu du serveur:', role);
         // Vérification stricte du rôle SuperAdmin
         this.isSuperAdmin = role === 'SuperAdmin';
-        console.log('✅ Est SuperAdmin ?', this.isSuperAdmin);
       },
       error: (error) => {
         console.error('❌ Erreur lors de la vérification du rôle:', error);
@@ -65,7 +63,6 @@ export class UsersComponent implements OnInit {
           ...user,
           isEditing: false
         }));
-        console.log('✅ Utilisateurs chargés:', this.users);
         this.isLoadingUsers = false;
       },
       error: (error) => {
@@ -83,7 +80,6 @@ export class UsersComponent implements OnInit {
       next: (roles) => {
         // Filtrer le rôle 'Banned' du menu déroulant
         this.availableRoles = roles.filter(role => role !== 'Banned');
-        console.log('✅ Rôles chargés:', this.availableRoles);
         this.isLoadingRoles = false;
       },
       error: (error) => {
@@ -116,21 +112,17 @@ export class UsersComponent implements OnInit {
 
   // Sauvegarde le nouveau rôle et désactive le mode édition
   saveRole(user: User & { isEditing: boolean }, newRole: string): void {
-    console.log(`🔄 Tentative de mise à jour du rôle pour ${user.email} de ${user.role} à ${newRole}`);
 
     // Vérifier si le rôle a changé
     if (user.role === newRole) {
-      console.log('ℹ️ Aucun changement de rôle détecté, annulation de l\'édition');
       user.isEditing = false;
       return;
     }
 
     this.adminService.updateUserRole(user.email, newRole).subscribe({
       next: (response) => {
-        console.log('✅ Réponse du serveur:', response);
         user.role = newRole;
         user.isEditing = false;
-        console.log(`✅ Rôle mis à jour avec succès pour ${user.email}: ${newRole}`);
       },
       error: (error) => {
         console.error('❌ Erreur lors de la mise à jour du rôle:', error);
@@ -160,7 +152,6 @@ export class UsersComponent implements OnInit {
       this.adminService.deleteUser(user.email).subscribe({
         next: () => {
           this.users = this.users.filter(u => u.email !== user.email);
-          console.log('✅ Utilisateur supprimé avec succès');
           this.notificationService.showSuccess(`L'utilisateur ${user.username} a été supprimé avec succès`);
         },
         error: (error) => {
@@ -183,7 +174,6 @@ export class UsersComponent implements OnInit {
         next: () => {
           user.role = newRole;
           user.isEditing = false;
-          console.log(`✅ Utilisateur ${action} avec succès`);
           this.notificationService.showSuccess(`L'utilisateur ${user.username} a été ${action} avec succès`);
         },
         error: (error) => {

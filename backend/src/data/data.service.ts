@@ -13,7 +13,7 @@ import * as path from "path";
 
 @Injectable()
 export class DataService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
 
   async onApplicationBootstrap() {
     await this.insertProductsToDatabase();
@@ -42,12 +42,10 @@ export class DataService {
             .get(product.id)
             .catch(() => null);
           if (existingProduct) {
-            // console.log(`Product already exists, skipping: ${product.id}`);
             continue;
           }
 
           await collection.upsert(product.id, product);
-          // console.log(`Product added or updated: ${product.id}`);
         } catch (error) {
           console.error(`Error inserting product ${product.id}:`, error);
         }

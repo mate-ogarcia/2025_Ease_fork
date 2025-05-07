@@ -3,7 +3,7 @@ import { DatabaseService } from "../database/database.service";
 
 @Injectable()
 export class RequestHandler {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
   /**
    * @brief Processes a search query
    *
@@ -15,7 +15,6 @@ export class RequestHandler {
   async processSearch(searchQuery: string) {
     if (!searchQuery.trim()) {
       // Check if the string is empty or just whitespace
-      console.log("Search query is empty.");
       return; // Early return if search query is empty
     }
 

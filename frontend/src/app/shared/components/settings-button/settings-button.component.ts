@@ -30,17 +30,17 @@ export class SettingsButtonComponent implements OnInit {
   constructor(private router: Router) { }
 
   ngOnInit(): void {
-    // Vérifier si on est sur la page d'accueil
+    // Check if we are on the home page
     this.isHomePage = this.router.url === '/' || this.router.url === '/home';
 
-    // Récupérer l'état du mode sombre
+    // Get dark mode state
     const savedDarkMode = localStorage.getItem('darkMode');
     if (savedDarkMode !== null) {
       this.isDarkMode = savedDarkMode === 'true';
       document.body.classList.toggle('dark-mode', this.isDarkMode);
     }
 
-    // Récupérer l'état de l'animation (uniquement pour la page d'accueil)
+    // Get animation state (only for home page)
     if (this.isHomePage || this.showBirdControl) {
       const savedVantaState = localStorage.getItem('vantaActive');
       if (savedVantaState !== null) {
@@ -48,7 +48,7 @@ export class SettingsButtonComponent implements OnInit {
       }
     }
 
-    // Charger FontAwesome si nécessaire
+    // Load FontAwesome if needed
     this.loadFontAwesome();
   }
 
@@ -76,7 +76,7 @@ export class SettingsButtonComponent implements OnInit {
     this.isVantaActive = !this.isVantaActive;
     localStorage.setItem('vantaActive', this.isVantaActive.toString());
 
-    // Émettre un événement personnalisé pour que la page d'accueil puisse réagir
+    // Emit a custom event for the homepage to react
     const event = new CustomEvent('vantaToggle', {
       detail: { isActive: this.isVantaActive },
       bubbles: true

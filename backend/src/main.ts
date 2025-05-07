@@ -65,6 +65,7 @@ async function bootstrap() {
   // Middleware to parse cookies
   app.use(cookieParser());
 
+
   /**
    * Middleware to extract the JWT token from cookies and add it
    * to the Authorization header if not already set.
@@ -106,12 +107,27 @@ async function bootstrap() {
   /**
    * Configures CORS settings with credential support.
    */
-  // TODO configure the CORS: all requets are accepeted for now
+  const allowedOrigins: string[] = [
+    'http://localhost:4200',
+    'http://localhost:8081',
+    'https://ease-bon.vercel.app',
+  ];
+
   app.enableCors({
-    origin: ['http://localhost:8081', 'http://localhost:4201', 'http://frontend', 'http://localhost:4200', 'http://nginx-proxy'],
+    origin: (origin: string | undefined, callback) => {
+      console.log(`🌐 CORS request from origin: ${origin || 'No origin'}`);
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        console.log(`✅ CORS allowed for: ${origin || 'No origin'}`);
+      } else {
+        console.warn(`⛔ Origin not allowed by CORS: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
-    allowedHeaders: "Content-Type, Accept, Authorization",
+    allowedHeaders: "X-Requested-With,Accept,Content-Type,Origin,Authorization",
+    exposedHeaders: ["set-cookie"],
   });
 
 
@@ -123,4 +139,4 @@ async function bootstrap() {
   logger.log("info", `🚀 Application started at http://localhost:${port}`);
 }
 
-bootstrap();
+bootstrap();    

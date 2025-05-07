@@ -21,7 +21,7 @@ import { FavoritesService } from '../../services/favorites/favorites.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { CommentsService } from '../../services/comments/comments.service';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
-import { catchError, from } from 'rxjs';
+import { catchError, from, of } from 'rxjs';
 
 interface Product {
   id: string;
@@ -81,7 +81,7 @@ export class ProdpageComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private commentsService: CommentsService
-  ) {}
+  ) { }
 
   /**
    * @brief Lifecycle hook executed when the component is initialized.
@@ -143,16 +143,27 @@ export class ProdpageComponent implements OnInit {
    * @brief Checks if the current product is in the user's favorites
    */
   private checkFavoriteStatus(): void {
-    if (!this.productId) return;
+    if (!this.productId || !this.isAuthenticated) {
+      this.isFavorite = false;
+      return;
+    }
 
-    this.favoritesService.isProductInFavorites(this.productId).subscribe({
-      next: (isFavorite) => {
-        this.isFavorite = isFavorite;
-      },
-      error: (error) => {
-        console.error('Error checking favorites:', error);
-      },
-    });
+    this.favoritesService.isProductInFavorites(this.productId)
+      .pipe(
+        catchError((error) => {
+          console.error('Error checking favorites status:', error);
+          return of(false);
+        })
+      )
+      .subscribe({
+        next: (isFavorite) => {
+          this.isFavorite = isFavorite;
+        },
+        error: (error) => {
+          console.error('Error in favorites subscription:', error);
+          this.isFavorite = false;
+        }
+      });
   }
 
   /**

@@ -1,4 +1,3 @@
-/* Réinitialisation des styles de base */
 * {
   padding: 0;
   margin: 0;
@@ -14,7 +13,6 @@
   position: relative;
 }
 
-/* Animations de base */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -27,7 +25,6 @@
   }
 }
 
-/* Animations spécifiques pour les images */
 .wave,
 .wavetop,
 .header-form img {
@@ -41,7 +38,6 @@
   opacity: 1;
 }
 
-/* Positionnement des vagues avec animations améliorées */
 .wave,
 .wavetop {
   position: fixed;
@@ -70,7 +66,6 @@
   transform: translateY(0);
 }
 
-/* Style du logo avec animation */
 .header-form img {
   height: 100px;
   transform: scale(0.95);
@@ -81,7 +76,6 @@
   transform: scale(1);
 }
 
-/* Conteneur principal */
 .container {
   width: 100vw;
   height: 100vh;
@@ -92,7 +86,6 @@
   transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
 }
 
-/* Contenu de connexion */
 .login-content {
   display: flex;
   flex-direction: column;
@@ -113,12 +106,10 @@
   font-size: 2.9rem;
 }
 
-/* Formulaire */
 form {
   width: 360px;
 }
 
-/* Conteneurs des champs */
 .input-container {
   position: relative;
   display: grid;
@@ -146,7 +137,6 @@ form {
   height: 45px;
 }
 
-/* Label flottant */
 h5 {
   position: absolute;
   left: 10px;
@@ -157,7 +147,6 @@ h5 {
   transition: 0.3s;
 }
 
-/* Effets dynamiques des inputs */
 .input-container.focus h5,
 .input-log:focus+h5,
 .input-log:not(:placeholder-shown)+h5 {
@@ -190,7 +179,6 @@ h5 {
   width: 50%;
 }
 
-/* Styles pour les champs en erreur */
 .input-container.error-input {
   border-bottom: 2px solid #ff4444;
   animation: errorPulse 2s infinite;
@@ -209,12 +197,10 @@ h5 {
   transition: all 0.5s ease-in-out;
 }
 
-/* Couleur de l'icône en focus */
 .input-container.focus>.icon-log i {
   color: #38d39f;
 }
 
-/* Couleur de l'icône en focus et en erreur */
 .input-container.error-input.focus>.icon-log i {
   color: #38d39f;
 }
@@ -234,7 +220,6 @@ h5 {
   font-family: "Poppins", sans-serif;
 }
 
-/* Icône d'œil */
 .eye-icon {
   position: absolute;
   right: 10px;
@@ -249,7 +234,6 @@ h5 {
   color: #38d39f;
 }
 
-/* Liens */
 a {
   display: block;
   text-align: right;
@@ -263,7 +247,6 @@ a:hover {
   color: #38d39f;
 }
 
-/* Bouton de connexion */
 .btn {
   display: block;
   width: 100%;
@@ -288,7 +271,6 @@ a:hover {
   background-position: right;
 }
 
-/* Mode Sombre */
 .dark-mode {
   background-color: #0e7500;
   color: #f1f1f1;
@@ -316,7 +298,6 @@ a:hover {
   color: #38d39f;
 }
 
-/* Bouton Mode Sombre */
 .dark-mode-btn {
   position: fixed;
   bottom: 20px;
@@ -337,7 +318,6 @@ a:hover {
   transform: scale(1.1);
 }
 
-/* Bouton switch Login/Register */
 .switch-container {
   display: flex;
   justify-content: center;
@@ -378,7 +358,6 @@ a:hover {
   border-radius: 20px;
 }
 
-/* Responsive : ajustements pour petits écrans */
 @media screen and (max-width: 1230px) {
   .container {
     grid-template-columns: 1fr;
@@ -401,7 +380,6 @@ a:hover {
   }
 }
 
-/* Bouton de retour */
 .back-btn {
   position: fixed;
   top: 20px;
@@ -440,7 +418,6 @@ a:hover {
   background-color: #38d39f;
 }
 
-/* Position du header-form */
 .header-form {
   position: relative;
   width: 100%;
@@ -455,7 +432,6 @@ a:hover {
   height: auto;
 }
 
-/* Suppression des styles qui colorent les icônes et le texte en rouge */
 .input-container.error-input .icon-log i {
   color: #d9d9d9;
 }
@@ -464,7 +440,6 @@ a:hover {
   color: #999;
 }
 
-/* Style pour les messages d'erreur simplifiés */
 .simple-error {
   display: flex;
   align-items: center;
@@ -485,7 +460,6 @@ a:hover {
   color: #ff6b6b;
 }
 
-/* Style pour le lien "Forgot Password" */
 .forgot-password {
   display: block;
   text-align: right;
@@ -501,7 +475,6 @@ a:hover {
   color: #38d39f;
 }
 
-/* Styles des messages d'erreur */
 .error-wrapper {
   position: absolute;
   bottom: -25px;
@@ -558,7 +531,6 @@ a:hover {
   font-weight: 500;
 }
 
-/* Mode sombre pour les erreurs */
 .dark-mode .error-wrapper i,
 .dark-mode .error-message {
   color: #ff6b6b;
@@ -573,12 +545,6 @@ a:hover {
   color: #ff6b6b;
 }
 
-/* Ajustement des conteneurs pour les messages d'erreur */
-.input-container {
-  margin-bottom: 35px;
-}
-
-/* Enhanced autocomplete styling with transparent background */
 .autocomplete-results {
   position: absolute;
   width: 100%;
@@ -588,7 +554,6 @@ a:hover {
   border-radius: 8px;
   z-index: 1000;
   background-color: transparent !important;
-  /* Fond transparent en mode light */
   border: 1px solid #e0e0e0;
   padding: 5px 0;
   top: 100%;
@@ -606,12 +571,10 @@ a:hover {
   color: #333;
 }
 
-/* Pour forcer le fond transparent en mode dark aussi */
 .dark-mode .autocomplete-results {
   background-color: transparent !important;
 }
 
-/* Scrollbar styling for suggestions list */
 .autocomplete-results::-webkit-scrollbar {
   width: 6px;
 }
@@ -630,7 +593,6 @@ a:hover {
   background: #aaa;
 }
 
-/* Media query for responsive adjustments for autocompletion */
 @media (max-width: 768px) {
   .autocomplete-results {
     max-height: 180px;

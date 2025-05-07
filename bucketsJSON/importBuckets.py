@@ -13,7 +13,7 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
 # Configuration Couchbase
-COUCHBASE_HOST = "couchbase://localhost"
+COUCHBASE_HOST = "couchbase://couchbase"
 COUCHBASE_USER = "user1"
 COUCHBASE_PASSWORD = "password"
 
@@ -22,6 +22,9 @@ EXPORT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exportedB
 
 # Connexion au cluster Couchbase
 cluster = Cluster(COUCHBASE_HOST, ClusterOptions(PasswordAuthenticator(COUCHBASE_USER, COUCHBASE_PASSWORD)))
+
+# Liste des buckets supplémentaires à créer s'ils n'existent pas
+ADDITIONAL_BUCKETS = ["FavoritesBDD", "SearchHistoryBDD", "CommentsBDD"]
 
 # Fonction pour lire les fichiers JSON et retourner les données
 def load_json_data():
@@ -91,5 +94,10 @@ buckets_data = load_json_data()
 for bucket_name, documents in buckets_data.items():
     create_bucket(cluster, bucket_name)  # Crée le bucket s'il n'existe pas
     insert_documents(cluster, bucket_name, documents)  # Insère les documents
+
+# Créer les buckets supplémentaires
+for bucket_name in ADDITIONAL_BUCKETS:
+    create_bucket(cluster, bucket_name)
+    print(f"[INFO] Bucket supplémentaire '{bucket_name}' créé ou vérifié.")
 
 print("[TERMINE] Importation terminée !")

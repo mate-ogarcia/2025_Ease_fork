@@ -260,7 +260,6 @@ export class ProductsService {
         currentRoute: criteria.currentRoute,
         productSource: criteria.productSource,
       };
-      console.log("🏠 Internal search with criteria:", filters);
       const results = await this.databaseService.getProductsWithFilters(filters);
       return results.map(product => ({ ...product, source: "Internal" }));
     } catch (error) {

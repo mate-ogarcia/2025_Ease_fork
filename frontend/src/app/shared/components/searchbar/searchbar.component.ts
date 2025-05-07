@@ -25,7 +25,7 @@ import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFac
 import { DataCacheService } from '../../../../services/cache/data-cache.service';
 // History service
 import { HistoryService } from '../../../../services/history/history.service';
-// Import du composant de localisation
+// Location component import
 import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
 
 @Component({
@@ -57,14 +57,9 @@ export class SearchbarComponent implements OnInit {
   categories: any[] = []; // List of categories for filtering.
   selectedBrand: string = ''; // Selected brand for filtering.
   brands: any[] = []; // List of brands for filtering.
-  // Price filter state variables
-  priceFilter: boolean = false; // Boolean indicating whether the price filter is applied.
-  minPrice: number = 0; // Minimum price for filtering.
-  maxPrice: number = 5000; // Maximum price for filtering.
+
   appliedFilters: any = {}; // Object holding the applied filters.
-  minPriceRange: number = 0; // Minimum range for price filter.
-  maxPriceRange: number = 5000; // Maximum range for price filter.
-  stepPrice: number = 10; // Step value for price range adjustments.
+
   // Search & cache variables
   private _searchSubject = new Subject<string>(); // RxJS subject for debouncing search queries.
   private _cache = new Map<string, { data: any[]; timestamp: number }>(); // Cache to store search results.
@@ -114,7 +109,8 @@ export class SearchbarComponent implements OnInit {
             }));
             this.fullSearchResults = fullResults;
             this.searchResults = fullResults.slice(0, 5); // Show top 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'Aucun produit trouvé';
+            this.noResultsMessage = this.searchResults.length ? '' : 'No products found';
+            this.canAddProduct = this.searchResults.length === 0 && this.searchQuery.trim() !== '';
             return of(null);
           }
           this.isLoading = true;  // Display a loading message
@@ -165,11 +161,15 @@ export class SearchbarComponent implements OnInit {
             ];
             this.fullSearchResults = combinedResults;
             this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'Aucun produit trouvé';
+            this.noResultsMessage = this.searchResults.length ? '' : 'No products found';
+            this.canAddProduct = this.searchResults.length === 0 && this.searchQuery.trim() !== '';
           }
         },
         error: (error) => {
           this.isLoading = false;
+          this.noResultsMessage = 'No products found';
+          this.canAddProduct = this.searchQuery.trim() !== '';
+          console.error('❌ Error during search:', error);
         },
       });
   }
@@ -222,7 +222,22 @@ export class SearchbarComponent implements OnInit {
       this.clearSearch();
       return;
     }
+
+    // Force canAddProduct to true when there's a search query
+    if (this.searchQuery.trim().length > 0) {
+      const userRole = this.usersService.getUserRole();
+      this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
+    }
+
+    // Trigger the search
     this._searchSubject.next(this.searchQuery);
+
+    // Set the no results message if there are no results after a delay
+    setTimeout(() => {
+      if (this.searchResults.length === 0 && this.searchQuery.trim() !== '' && !this.isLoading) {
+        this.noResultsMessage = 'No products found';
+      }
+    }, 500);
   }
 
   /**
@@ -234,7 +249,7 @@ export class SearchbarComponent implements OnInit {
   onEnter(event: any) {
     event as KeyboardEvent;
     if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
-      // Sauvegarder directement le terme de recherche dans l'historique
+      // Save search term directly to history
       this.addToHistory(null);
 
       if (this.selectedProduct) {
@@ -263,7 +278,7 @@ export class SearchbarComponent implements OnInit {
     this.wholeSelectedProduct = null;
     this.isLoading = false;
 
-    // Fermer le dropdown des filtres si ouvert
+    // Close the filter dropdown if open
     this.filterDropdownOpen = false;
   }
 
@@ -273,14 +288,14 @@ export class SearchbarComponent implements OnInit {
    * @param product The product selected from suggestions.
    */
   selectProduct(product: any) {
-    // Mettre à jour le champ de recherche avec le nom du produit
+    // Update search field with product name
     this.searchQuery = product.name;
     this.selectedProduct = product.id;
     this.wholeSelectedProduct = product;
     this.noResultsMessage = '';
     this.searchResults = []; // Hide suggestions after selection.
 
-    // Ajouter à l'historique le terme exact affiché dans la barre de recherche
+    // Add the exact term displayed in the search bar to history
     this.addToHistory(product);
 
     // Launch the research
@@ -365,7 +380,7 @@ export class SearchbarComponent implements OnInit {
     };
 
     this.isLoading = true;
-    this.noResultsMessage = ''; // Réinitialiser le message d'erreur
+    this.noResultsMessage = ''; // Reset error message
 
     // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
@@ -373,7 +388,7 @@ export class SearchbarComponent implements OnInit {
         this.isLoading = false;
 
         if (!response || response.length === 0) {
-          this.noResultsMessage = 'Aucun produit trouvé avec ces critères';
+          this.noResultsMessage = 'No products found with these criteria';
           return;
         }
 
@@ -391,7 +406,7 @@ export class SearchbarComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.noResultsMessage = 'Erreur lors de la recherche. Veuillez réessayer.';
+        this.noResultsMessage = 'Error during search. Please try again.';
       },
     });
   }
@@ -404,23 +419,18 @@ export class SearchbarComponent implements OnInit {
     const parts = [];
 
     if (this.appliedFilters.country)
-      parts.push(`Pays: ${this.appliedFilters.country}`);
+      parts.push(`Country: ${this.appliedFilters.country}`);
 
     if (this.appliedFilters.department)
-      parts.push(`Département: ${this.appliedFilters.department}`);
+      parts.push(`Department: ${this.appliedFilters.department}`);
 
     if (this.appliedFilters.category)
-      parts.push(`Catégorie: ${this.appliedFilters.category}`);
+      parts.push(`Category: ${this.appliedFilters.category}`);
 
     if (this.appliedFilters.brand)
-      parts.push(`Marque: ${this.appliedFilters.brand}`);
+      parts.push(`Brand: ${this.appliedFilters.brand}`);
 
-    if (this.appliedFilters.price) {
-      const { min, max } = this.appliedFilters.price;
-      parts.push(`Prix: ${min}€-${max}€`);
-    }
-
-    return parts.length ? parts.join(', ') : 'Recherche avec filtres';
+    return parts.length ? parts.join(', ') : 'Search with filters';
   }
 
   /**
@@ -450,22 +460,6 @@ export class SearchbarComponent implements OnInit {
   }
 
   /**
-   * @brief Updates minimum price based on slider or manual input.
-   */
-  updateMinPrice() {
-    if (this.minPrice < this.minPriceRange) this.minPrice = this.minPriceRange;
-    if (this.minPrice > this.maxPrice) this.maxPrice = this.minPrice;
-  }
-
-  /**
-   * @brief Updates maximum price based on slider or manual input.
-   */
-  updateMaxPrice() {
-    if (this.maxPrice > this.maxPriceRange) this.maxPrice = this.maxPriceRange;
-    if (this.maxPrice < this.minPrice) this.minPrice = this.maxPrice;
-  }
-
-  /**
    * @brief Applies selected filters without triggering a search.
    */
   applyFilters() {
@@ -474,7 +468,6 @@ export class SearchbarComponent implements OnInit {
       department: this.selectedDepartment || null,
       category: this.selectedCategory || null,
       brand: this.selectedBrand || null,
-      price: { min: this.minPrice, max: this.maxPrice },
     };
 
     this.appliedFilters = Object.fromEntries(
@@ -498,12 +491,17 @@ export class SearchbarComponent implements OnInit {
    */
   addNewProduct() {
     if (this.searchQuery.trim() !== '') {
-      this.router.navigate(['/add-product'], {
-        state: {
-          suggestedName: this.searchQuery.trim(),
-          source: 'search_not_found'
-        }
-      });
+      // Store the product name in the cache service
+      this.dataCacheService.setPendingProductName(this.searchQuery.trim());
+
+      // Check if we're already on the add product page
+      if (this.router.url.includes('/add-product')) {
+        // If we're already on the page, reload to refresh the form
+        window.location.reload();
+      } else {
+        // Otherwise, navigate to the add page
+        this.router.navigate(['/add-product']);
+      }
     }
   }
 } 

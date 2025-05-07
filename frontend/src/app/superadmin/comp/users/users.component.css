@@ -288,12 +288,20 @@ button i,
   color: #1976d2;
 }
 
-/* Style pour le message "aucun résultat" */
+/* Message quand aucun résultat n'est trouvé */
 .no-results {
   text-align: center;
-  padding: 2rem;
+  padding: 30px;
   background-color: #f8f9fa;
-  border-radius: 8px;
-  margin: 1rem 0;
+  border-radius: 12px;
+  margin-top: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.no-results p {
   color: #6c757d;
+  font-size: 1.1rem;
+  margin: 0;
 }

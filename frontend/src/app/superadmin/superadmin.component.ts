@@ -14,6 +14,5 @@ export class SuperadminComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    console.log('SuperadminComponent Initialized');
   }
 }

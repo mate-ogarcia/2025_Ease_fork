@@ -50,15 +50,10 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    console.log(`🔍 RolesGuard - Path: ${request.path}`);
-    console.log(`🔍 RolesGuard - Method: ${request.method}`);
 
     const user = request.user;
 
     if (!user) {
-      console.error(`❌ RolesGuard - No user found in request for path: ${request.path}`);
-      console.error("❌ RolesGuard - This may indicate that the JWT strategy did not attach the user to the request");
-      console.error("❌ RolesGuard - Make sure the JWT guard is applied before the roles guard");
 
       const hasAuthHeader = !!request.headers.authorization;
       const hasCookieToken = request.cookies && request.cookies.accessToken;
@@ -70,12 +65,6 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException("User not authenticated");
     }
 
-    console.log(`👤 RolesGuard - Request user:`, {
-      id: user.id,
-      email: user.email,
-      role: user.role
-    });
-
 
     const hasRequiredRole = requiredRoles.some((role) => user.role === role);
 
@@ -84,7 +73,6 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException("Insufficient permissions");
     }
 
-    console.log(`✅ RolesGuard - User ${user.email} has required role: ${user.role}`);
     return true;
   }
 }

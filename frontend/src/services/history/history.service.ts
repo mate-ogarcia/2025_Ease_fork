@@ -113,7 +113,7 @@ export class HistoryService {
       searchDate: new Date().toISOString()
     };
 
-    return this.http.post(`${this.apiUrl}/add`, historyItem).pipe(
+    return this.http.post(`${this.apiUrl}/add`, historyItem, { withCredentials: true }).pipe(
       tap(() => {
         // Refresh after adding
         this.loadUserHistory();
@@ -138,7 +138,7 @@ export class HistoryService {
       return of({ items: [], total: 0, page: 1, pageSize: 10 });
     }
 
-    return this.http.get<SearchHistoryItem[]>(`${this.apiUrl}/user/${userId}`).pipe(
+    return this.http.get<SearchHistoryItem[]>(`${this.apiUrl}/user/${userId}`, { withCredentials: true }).pipe(
       tap(results => {
         this.allHistoryItems = results || [];
         this.totalItemsSubject.next(this.allHistoryItems.length);
@@ -243,19 +243,19 @@ export class HistoryService {
    * @returns Observable of the server response
    */
   deleteHistoryItem(historyId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${historyId}`).pipe(
+    return this.http.delete(`${this.apiUrl}/${historyId}`, { withCredentials: true }).pipe(
       tap(() => {
         // Refresh data after deletion
         this.loadUserHistory().subscribe();
       }),
       catchError(() => {
-        return of(null);
+        return of({ success: false });
       })
     );
   }
 
   /**
-   * @brief Clears all history of the current user
+   * @brief Clears all history items for the current user
    * @returns Observable of the server response
    */
   clearUserHistory(): Observable<any> {
@@ -263,33 +263,28 @@ export class HistoryService {
     const userId = userInfo?.userId || userInfo?.id || userInfo?.email;
 
     if (!userId) {
-      return of(null);
+      this.clearLocalCache();
+      return of({ success: false, message: 'No user ID available' });
     }
 
-    return this.http.delete(`${this.apiUrl}/user/${userId}/clear`).pipe(
+    return this.http.delete(`${this.apiUrl}/user/${userId}/all`, { withCredentials: true }).pipe(
       tap(() => {
-        // Reset local data
-        this.allHistoryItems = [];
-        this.historyItemsSubject.next([]);
-        this.totalItemsSubject.next(0);
-        this.currentPageSubject.next(1);
+        this.clearLocalCache();
       }),
       catchError(() => {
-        return of(null);
+        return of({ success: false });
       })
     );
   }
 
   /**
-   * @brief Clears any locally cached history data
+   * @brief Clears the local history cache
    * @private
    */
   private clearLocalCache(): void {
-    try {
-      localStorage.removeItem('searchHistory');
-      sessionStorage.removeItem('searchHistory');
-    } catch (e) {
-      // Silently fail
-    }
+    this.allHistoryItems = [];
+    this.historyItemsSubject.next([]);
+    this.totalItemsSubject.next(0);
+    this.currentPageSubject.next(1);
   }
 }

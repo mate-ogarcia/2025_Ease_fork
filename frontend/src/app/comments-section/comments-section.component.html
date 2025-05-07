@@ -9,30 +9,16 @@
     <!-- The only text input for the comment, always visible -->
     <div class="comment-input">
       <div class="profile-container">
-        <img src="./rhinoceros.png" alt="Profile Picture" class="profile-picture" />
+        <img src="assets/rhinoceros.png" alt="Profile Picture" class="profile-picture" />
       </div>
       <div class="container-input">
-        <input
-          id="comment"
-          type="text"
-          placeholder="Ajouter un commentaire ..."
-          [(ngModel)]="comment.contentCom"
-          name="contentCom"
-          required
-          maxlength="500"
-          [disabled]="!canAddComment"
-          (click)="onAddCommentClick()"
-        />
+        <input id="comment" type="text" placeholder="Ajouter un commentaire ..." [(ngModel)]="comment.contentCom"
+          name="contentCom" required maxlength="500" [disabled]="!canAddComment" (click)="onAddCommentClick()" />
         <!-- Character counter just below the input -->
         <div class="char-container" *ngIf="showCommentForm">
           <div class="form-group">
             <label for="rating">Notes</label>
-            <select
-              id="rating"
-              [(ngModel)]="comment.userRatingCom"
-              name="userRatingCom"
-              required
-            >
+            <select id="rating" [(ngModel)]="comment.userRatingCom" name="userRatingCom" required>
               <option value="5">5 ⭐⭐⭐⭐⭐</option>
               <option value="4">4 ⭐⭐⭐⭐</option>
               <option value="3">3 ⭐⭐⭐</option>
@@ -62,19 +48,19 @@
       <div *ngFor="let item of comments" class="comment">
         <div class="comment-header">
           <div class="profile">
-            <img src="./rhinoceros.png" alt="" />
+            <img src="assets/rhinoceros.png" alt="" />
           </div>
           <div class="rating-stars">
             <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
-              <span [class.filled]="item.userRatingCom >= star"
-                ><i class="fa-solid fa-star"></i
-              ></span>
+              <span [class.filled]="item.userRatingCom >= star"><i class="fa-solid fa-star"></i></span>
             </ng-container>
           </div>
           <!-- Date in YYYY-MM-DD format -->
           <span class="date">Publiée le {{ item.dateCom | date:'yyyy-MM-dd' }}</span>
-          <button *ngIf="item.userId === currentUserEmail" class="delete-button" (click)="deleteComment(item.id?.toString())">Supprimer</button>
-          <button *ngIf="item.userId === currentUserEmail" class="edit-button" (click)="editComment(item.id?.toString())">Modifier</button>
+          <button *ngIf="item.userId === currentUserEmail" class="delete-button"
+            (click)="deleteComment(item.id?.toString())">Supprimer</button>
+          <button *ngIf="item.userId === currentUserEmail" class="edit-button"
+            (click)="editComment(item.id?.toString())">Modifier</button>
         </div>
         <div class="comment-content">
           {{ item.contentCom }}
@@ -95,12 +81,7 @@
   </div>
 
   <!-- Button to load more comments -->
-  <button
-    *ngIf="pagination.hasNextPage"
-    (click)="handleLoadMore()"
-    [disabled]="loading"
-    class="load-more-btn"
-  >
+  <button *ngIf="pagination.hasNextPage" (click)="handleLoadMore()" [disabled]="loading" class="load-more-btn">
     Charger plus de commentaires
   </button>
 </div>

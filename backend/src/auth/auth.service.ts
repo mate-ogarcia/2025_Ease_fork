@@ -49,13 +49,11 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      console.warn("⚠️ User not found");
       throw new UnauthorizedException("User not found");
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      console.warn("⚠️ Invalid password");
       throw new UnauthorizedException("Invalid password");
     }
 
@@ -94,7 +92,6 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error("❌ Error during login:", error.message);
       throw new UnauthorizedException(error.message);
     }
   }
@@ -139,7 +136,6 @@ export class AuthService {
         updatedAt: user.updatedAt,
       };
     } catch (error) {
-      console.error("❌ Error creating user:", error);
       throw new InternalServerErrorException(
         "Error creating user"
       );
@@ -157,7 +153,6 @@ export class AuthService {
     try {
       return await this.usersService.findAll();
     } catch (error) {
-      console.error("❌ Error retrieving users:", error);
       throw new InternalServerErrorException("Error retrieving users list.");
     }
   }
@@ -175,7 +170,6 @@ export class AuthService {
     try {
       return await this.usersService.findByEmail(email);
     } catch (error) {
-      console.error("❌ Error retrieving users:", error);
       throw new InternalServerErrorException("Error retrieving users list.");
     }
   }

@@ -82,7 +82,7 @@ export class AdminService {
    * @returns {Observable<User[]>} An observable of user array.
    */
   getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.adminURL}/users`);
+    return this.http.get<User[]>(`${this.adminURL}/users`, { withCredentials: true });
   }
 
   /**
@@ -92,7 +92,7 @@ export class AdminService {
    * @returns {Observable<RoleUpdateResponse>} An observable of the update result.
    */
   updateUserRole(userId: string, newRole: string): Observable<RoleUpdateResponse> {
-    return this.http.put<RoleUpdateResponse>(`${this.adminURL}/users/${userId}/role`, { role: newRole });
+    return this.http.put<RoleUpdateResponse>(`${this.adminURL}/users/${userId}/role`, { role: newRole }, { withCredentials: true });
   }
 
   /**
@@ -101,7 +101,7 @@ export class AdminService {
    * @returns {Observable<{success: boolean, message: string}>} An observable of the deletion result.
    */
   deleteUser(userId: string): Observable<{ success: boolean, message: string }> {
-    return this.http.delete<{ success: boolean, message: string }>(`${this.adminURL}/users/${userId}`);
+    return this.http.delete<{ success: boolean, message: string }>(`${this.adminURL}/users/${userId}`, { withCredentials: true });
   }
 
   /**
@@ -109,7 +109,7 @@ export class AdminService {
    * @returns {Observable<SystemStats>} An observable of system statistics.
    */
   getStatistics(): Observable<SystemStats> {
-    return this.http.get<SystemStats>(`${this.adminURL}/statistics`);
+    return this.http.get<SystemStats>(`${this.adminURL}/statistics`, { withCredentials: true });
   }
 
   /**
@@ -117,7 +117,7 @@ export class AdminService {
    * @returns {Observable<AdminRequest[]>} An observable of admin requests.
    */
   getAllRequests(): Observable<AdminRequest[]> {
-    return this.http.get<AdminRequest[]>(`${this.adminURL}/getRequests`);
+    return this.http.get<AdminRequest[]>(`${this.adminURL}/getRequests`, { withCredentials: true });
   }
 
   /**
@@ -128,7 +128,7 @@ export class AdminService {
    * @returns {Observable<EntityUpdateResponse>} An observable of the update result.
    */
   updateEntity(type: string, id: string, data: any): Observable<EntityUpdateResponse> {
-    return this.http.patch<EntityUpdateResponse>(`${this.adminURL}/updateEntity/${type}/${id}`, data);
+    return this.http.patch<EntityUpdateResponse>(`${this.adminURL}/updateEntity/${type}/${id}`, data, { withCredentials: true });
   }
 
   /**
@@ -136,7 +136,7 @@ export class AdminService {
    * @returns {Observable<string[]>} An observable of role names.
    */
   getAllRoles(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.adminURL}/roles`);
+    return this.http.get<string[]>(`${this.adminURL}/roles`, { withCredentials: true });
   }
 
   /**
@@ -144,7 +144,7 @@ export class AdminService {
    * @returns {Observable<string>} An observable of the current user's role.
    */
   getCurrentUserRole(): Observable<string> {
-    return this.http.get<{ role: string }>(`${this.adminURL}/currentUserRole`).pipe(
+    return this.http.get<{ role: string }>(`${this.adminURL}/currentUserRole`, { withCredentials: true }).pipe(
       map(response => response.role)
     );
   }
@@ -154,6 +154,6 @@ export class AdminService {
    * @returns Observable<AdminStats> - The detailed admin statistics
    */
   getAdminStats(): Observable<AdminStats> {
-    return this.http.get<AdminStats>(`${this.adminURL}/stats/detailed`);
+    return this.http.get<AdminStats>(`${this.adminURL}/stats/detailed`, { withCredentials: true });
   }
 }

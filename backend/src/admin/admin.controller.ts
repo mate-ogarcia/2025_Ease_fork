@@ -66,13 +66,11 @@ export class AdminController {
       const users = await this.usersService.findAll();
 
       if (!users || users.length === 0) {
-        console.warn("⚠️ No users found.");
         return [];
       }
 
       return users;
     } catch (error) {
-      console.error(`❌ Error in getAllUsers: ${error.message}`);
       throw new HttpException(
         `Failed to retrieve users: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -146,7 +144,6 @@ export class AdminController {
 
       return await this.usersService.delete(decodedEmail);
     } catch (error) {
-      console.error("❌ Error deleting user:", error);
       throw new HttpException(
         "Error deleting user",
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -168,13 +165,11 @@ export class AdminController {
       const requests = await this.adminService.getRequestsProduct();
 
       if (!requests || requests.length === 0) {
-        console.warn("⚠️ No product requests found.");
         return [];
       }
 
       return requests;
     } catch (error) {
-      console.error('❌ Error retrieving product requests:', error);
       throw new HttpException(
         'Internal server error',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -213,7 +208,6 @@ export class AdminController {
       const updatedEntity = await this.adminService.updateEntity(type, id, valueToUpdate);
       return updatedEntity;
     } catch (error) {
-      console.error(`❌ Error updating ${type}:`, error);
       throw new HttpException("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

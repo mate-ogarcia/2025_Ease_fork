@@ -6,12 +6,12 @@
 
     <!-- No results message inside search bar -->
     <div *ngIf="noResultsMessage && !isLoading" class="search-status-indicator no-results-indicator">
-      <span>{{ noResultsMessage }}</span>
-      <span *ngIf="canAddProduct" class="add-product-hint">Cliquez sur <i class="fa-solid fa-plus"></i> pour
-        l'ajouter</span>
-      <button *ngIf="canAddProduct" class="add-product-btn" (click)="addNewProduct()" title="Ajouter ce produit">
-        <i class="fa-solid fa-plus"></i>
-      </button>
+      <div class="no-product-message">
+        <span class="no-product-text">{{ noResultsMessage }}</span>
+        <button *ngIf="canAddProduct" class="add-product-button" (click)="addNewProduct()">
+          Cliquez pour l'ajouter
+        </button>
+      </div>
     </div>
 
     <!-- Buttons -->
@@ -80,37 +80,6 @@
               {{ brand }}
             </option>
           </select>
-        </div>
-
-        <!-- Price filter -->
-        <div class="filter-group">
-          <label>Prix</label>
-          <div class="price-filters">
-            <div class="price-filter">
-              <label for="min-price-range">Min</label>
-              <input id="min-price-range" type="range" [(ngModel)]="minPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" [step]="stepPrice" (input)="updateMinPrice()" />
-              <span>{{ minPrice }} €</span>
-            </div>
-            <div class="price-filter">
-              <label for="max-price-range">Max</label>
-              <input id="max-price-range" type="range" [(ngModel)]="maxPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" [step]="stepPrice" (input)="updateMaxPrice()" />
-              <span>{{ maxPrice }} €</span>
-            </div>
-          </div>
-          <div class="price-inputs">
-            <div class="price-input">
-              <label for="min-price-number">Prix min</label>
-              <input id="min-price-number" type="number" [(ngModel)]="minPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" (input)="updateMinPrice()" />
-            </div>
-            <div class="price-input">
-              <label for="max-price-number">Prix max</label>
-              <input id="max-price-number" type="number" [(ngModel)]="maxPrice" [min]="minPriceRange"
-                [max]="maxPriceRange" (input)="updateMaxPrice()" />
-            </div>
-          </div>
         </div>
 
         <!-- Filter action buttons -->

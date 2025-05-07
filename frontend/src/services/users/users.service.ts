@@ -62,7 +62,6 @@ export class UsersService {
     // Ne pas rediriger lors d'un rechargement si on a un token
     const isPageReload = document.readyState === 'complete';
     if (isPageReload && this.isAuthenticated()) {
-      console.log('🔄 Page reload with valid token - staying on current page');
       return false;
     }
 
