@@ -2,19 +2,19 @@ FROM python:3.9-alpine
 
 WORKDIR /app
 
-# Installer les dépendances nécessaires avec un environnement virtuel
+# Install necessary dependencies with a virtual environment
 RUN apk add --no-cache python3 py3-pip \
     && python3 -m venv /venv \
     && . /venv/bin/activate \
     && pip install couchbase requests
 
-# Copier les scripts d'importation
+# Copy import scripts
 COPY importBuckets.py /app/
 COPY exportBucket.py /app/
 COPY init_couchbase.py /app/
 
-# Copier le dossier des données exportées s'il existe
+# Copy the exported data folder if it exists
 COPY exportedBucketsData/ /app/exportedBucketsData/
 
-# Définir le point d'entrée avec activation de l'environnement virtuel
+# Define entry point with virtual environment activation
 ENTRYPOINT ["sh", "-c", ". /venv/bin/activate && python /app/init_couchbase.py"] 

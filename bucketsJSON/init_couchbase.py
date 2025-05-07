@@ -5,6 +5,7 @@ import time
 import os
 import json
 from requests.auth import HTTPBasicAuth
+import uuid
 
 def wait_for_couchbase():
     """Wait for Couchbase to be available"""
@@ -28,10 +29,10 @@ def main():
         print("Failed to connect to Couchbase")
         exit(1)
         
-    # Attendre que le cluster soit complètement initialisé
+    # Wait for the cluster to be fully initialized
     time.sleep(10)
         
-    # Lancer l'importation des buckets
+    # Start bucket import
     print("Starting bucket import...")
     os.system("python /app/importBuckets.py")
     
