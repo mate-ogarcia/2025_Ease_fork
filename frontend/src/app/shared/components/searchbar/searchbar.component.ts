@@ -27,6 +27,8 @@ import { DataCacheService } from '../../../../services/cache/data-cache.service'
 import { HistoryService } from '../../../../services/history/history.service';
 // Location component import
 import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
+// Notification service
+import { NotificationService } from '../../../../services/notification/notification.service';
 
 @Component({
   selector: 'app-searchbar',
@@ -69,6 +71,9 @@ export class SearchbarComponent implements OnInit {
 
   isLoading: boolean = false; // Boolean indicating whether the search results are being loaded.
 
+  // Timer for long search notification
+  private longSearchTimer: any = null;
+
   @Output() searchExecuted = new EventEmitter<void>(); // Event emitter for search execution.
 
   /**
@@ -83,6 +88,7 @@ export class SearchbarComponent implements OnInit {
    * @param apiOFF The service for interacting with OpenFoodFacts API.
    * @param dataCacheService The service for managing cached data.
    * @param historyService The service for managing search history.
+   * @param notificationService The service for displaying notifications to the user.
    */
   constructor(
     private apiService: ApiService,
@@ -90,7 +96,8 @@ export class SearchbarComponent implements OnInit {
     private usersService: UsersService,
     private apiOFF: ApiOpenFoodFacts,
     private dataCacheService: DataCacheService,
-    private historyService: HistoryService
+    private historyService: HistoryService,
+    private notificationService: NotificationService
   ) {
     this._searchSubject
       .pipe(
@@ -114,6 +121,10 @@ export class SearchbarComponent implements OnInit {
             return of(null);
           }
           this.isLoading = true;  // Display a loading message
+
+          // Start timer for long search notification
+          this.startLongSearchTimer();
+
           // Launch parallel requests: Internal API + Open Food Facts
           return forkJoin({
             internalResults: this.apiService.sendSearchData({ search: trimmedQuery }),
@@ -121,6 +132,10 @@ export class SearchbarComponent implements OnInit {
           }).pipe(
             tap(({ internalResults, offResults }) => {
               this.isLoading = false;
+
+              // Clear notification timer
+              this.clearLongSearchTimer();
+
               const combinedResults = [
                 ...(internalResults || []),
                 ...(offResults?.products || []),  // Include Open Food Facts products.
@@ -141,6 +156,10 @@ export class SearchbarComponent implements OnInit {
          */
         next: (response: any) => {
           this.isLoading = false;
+
+          // Clear notification timer
+          this.clearLongSearchTimer();
+
           if (response) {
             const internalResults = response.internalResults || [];
             const offResults = response.offResults?.products || [];
@@ -161,17 +180,48 @@ export class SearchbarComponent implements OnInit {
             ];
             this.fullSearchResults = combinedResults;
             this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'Pas de produit trouvé';
+            this.noResultsMessage = this.searchResults.length ? '' : 'No product found';
             this.canAddProduct = this.searchResults.length === 0 && this.searchQuery.trim() !== '';
           }
         },
         error: (error) => {
           this.isLoading = false;
-          this.noResultsMessage = 'Ce produit n\'existe pas ou n\'est pas disponible vous pouvez le rajouter';
+
+          // Clear notification timer
+          this.clearLongSearchTimer();
+
+          this.noResultsMessage = 'This product does not exist or is not available. You can add it.';
           this.canAddProduct = this.searchQuery.trim() !== '';
           console.error('❌ Error during search:', error);
         },
       });
+  }
+
+  /**
+   * @brief Starts a timer to notify the user if the search takes too long
+   */
+  private startLongSearchTimer(): void {
+    // Cancel any existing timer
+    this.clearLongSearchTimer();
+
+    // Start a new 10-second timer
+    this.longSearchTimer = setTimeout(() => {
+      if (this.isLoading) {
+        this.notificationService.showInfo(
+          'The search is taking some time. Our systems are querying external databases...'
+        );
+      }
+    }, 10000); // 10 seconds
+  }
+
+  /**
+   * @brief Clears the long search timer if it's active
+   */
+  private clearLongSearchTimer(): void {
+    if (this.longSearchTimer) {
+      clearTimeout(this.longSearchTimer);
+      this.longSearchTimer = null;
+    }
   }
 
   /**
@@ -196,13 +246,13 @@ export class SearchbarComponent implements OnInit {
       this.dataCacheService.refreshBrands();
     }, 10 * 60 * 1000);
 
-    console.log("Initialisation du composant SearchBar");
+    console.log("Initializing SearchBar component");
 
     // Force canAddProduct to true by default in this version
     this.canAddProduct = true;
 
-    // Log pour débogage
-    console.log("canAddProduct initialisé à:", this.canAddProduct);
+    // Debug log
+    console.log("canAddProduct initialized to:", this.canAddProduct);
   }
 
   // ======================== RESEARCH FUNCTIONS
@@ -238,7 +288,7 @@ export class SearchbarComponent implements OnInit {
     // Set the no results message if there are no results after a delay
     setTimeout(() => {
       if (this.searchResults.length === 0 && this.searchQuery.trim() !== '' && !this.isLoading) {
-        this.noResultsMessage = 'Aucun produit trouvé';
+        this.noResultsMessage = 'No product found';
         // Make sure canAddProduct is properly set if the user has the correct role
         const userRole = this.usersService.getUserRole();
         this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
@@ -248,65 +298,59 @@ export class SearchbarComponent implements OnInit {
 
   /**
    * @function onEnter
-   * @description Sends a search request when the Enter key is pressed.
-   * Saves the exact search term to history and then performs the search.
+   * @description Handles the enter key press in the search field.
    * @param event The keyboard event.
    */
   onEnter(event: any) {
-    event as KeyboardEvent;
-    if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
-      // Save search term directly to history
-      this.addToHistory(null);
+    event.preventDefault();
+    if (this.searchQuery.trim() === '') {
+      return;
+    }
 
-      if (this.selectedProduct) {
-        this.search(true);  // Search including the selected product
-      } else {
-        if (this.fullSearchResults.length > 0) {
-          this.router.navigate(['/searched-prod'], {
-            state: { resultsArray: this.fullSearchResults },
-          });
-        } else {
-          this.search(false); // Search without including the selected product
-        }
-      }
+    // If there are search results, select the first one
+    if (this.searchResults.length > 0) {
+      this.selectProduct(this.searchResults[0]);
+    } else {
+      // If there are no search results but a search query is entered, search
+      this.search();
     }
   }
 
   /**
-   * @brief Clears the search query and results.
+   * @function clearSearch
+   * @description Clears the search query and results.
    */
   clearSearch() {
     this.searchQuery = '';
     this.searchResults = [];
-    this.fullSearchResults = [];
     this.noResultsMessage = '';
-    this.selectedProduct = '';
-    this.wholeSelectedProduct = null;
-    this.isLoading = false;
-    this.canAddProduct = false; // Explicitly reset canAddProduct
+    this.canAddProduct = false;
 
-    // Close the filter dropdown if open
-    this.filterDropdownOpen = false;
+    // Clear notification timer if active
+    this.clearLongSearchTimer();
   }
 
   /**
-   * @brief Selects a product from the search suggestions.
-   * After selection, the suggestions are hidden.
-   * @param product The product selected from suggestions.
+   * @function selectProduct
+   * @description Handles the selection of a product from the search results.
+   * @param product The selected product.
    */
   selectProduct(product: any) {
-    // Update search field with product name
-    this.searchQuery = product.name;
+    if (!product || !product.id) {
+      console.error('❌ Invalid product selected:', product);
+      return;
+    }
+
+    // Store the selected product
     this.selectedProduct = product.id;
     this.wholeSelectedProduct = product;
-    this.noResultsMessage = '';
-    this.searchResults = []; // Hide suggestions after selection.
 
-    // Add the exact term displayed in the search bar to history
+    // Add to history
     this.addToHistory(product);
 
-    // Launch the research
-    this.search(true);
+    // Navigate to the product detail page
+    this.clearSearch();
+    this.router.navigate(['/product', product.id, product.source]);
   }
 
   /**
@@ -395,7 +439,7 @@ export class SearchbarComponent implements OnInit {
         this.isLoading = false;
 
         if (!response || response.length === 0) {
-          this.noResultsMessage = 'Aucun produit trouvé avec ces critères';
+          this.noResultsMessage = 'No products found with these criteria';
           // Make sure canAddProduct is properly set if no results are found
           const userRole = this.usersService.getUserRole();
           this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
@@ -518,7 +562,7 @@ export class SearchbarComponent implements OnInit {
           this.router.navigate(['/add-product']);
         }
       } catch (err) {
-        console.error('Erreur lors de la redirection vers la page d\'ajout de produit:', err);
+        console.error('Error while redirecting to the product add page:', err);
         // Fallback redirection in case of error
         window.location.href = '/add-product';
       }

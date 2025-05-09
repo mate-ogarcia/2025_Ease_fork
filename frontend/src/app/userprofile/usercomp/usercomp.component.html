@@ -1,22 +1,94 @@
 <div class="profile-container">
-  <!-- Section du profil -->
+  <!-- Profile section -->
   <div class="profile-header">
-    <img class="profile-image" src="assets/rhinoceros.png" alt="Profile Picture" />
+    <img class="profile-image" src="assets/rhinoceros.png" alt="Photo de profil" />
     <div class="profile-info">
       <h2 class="username">{{ userInfo?.username }}</h2>
-      <h4 class="email">{{ userInfo?.email }}</h4>
-      <h4 class="locaton">{{ userInfo?.address?.postCode }} {{ userInfo?.address?.city }}, {{ userInfo?.address?.country
-        }}</h4> <!-- <p class="location">{{ location }}</p> -->
+      <h4 class="email" *ngIf="userInfo?.email">{{ userInfo?.email }}</h4>
+      <h4 class="location" *ngIf="hasAddress()">
+        {{ userInfo?.address?.postCode }} {{ userInfo?.address?.city }}{{ userInfo?.address?.country ? ', ' +
+        userInfo?.address?.country : '' }}
+      </h4>
       <div class="profile-actions">
-        <button class="edit-profile-btn">Modifier le Profile</button>
+        <button class="edit-profile-btn" (click)="toggleEditMode()">{{ isEditing ? 'Annuler' : 'Modifier le Profil'
+          }}</button>
       </div>
     </div>
   </div>
 
-  <!-- Navigation des onglets -->
+  <!-- Simplified profile edit form -->
+  <div class="edit-form-container" *ngIf="isEditing">
+    <h3 class="form-title">Modifier mon profil</h3>
+
+    <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+      <!-- Username section -->
+      <div class="form-section">
+        <div class="form-group">
+          <label for="username">Pseudo</label>
+          <input type="text" id="username" formControlName="username" placeholder="Votre pseudo">
+          <div class="error-message"
+            *ngIf="profileForm.get('username')?.invalid && profileForm.get('username')?.touched">
+            Le pseudo est requis
+          </div>
+        </div>
+      </div>
+
+      <!-- Password section -->
+      <div class="form-section">
+        <h4 class="section-title">Changer de mot de passe</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Nouveau mot de passe</label>
+            <input type="password" id="password" formControlName="password" placeholder="Nouveau mot de passe">
+            <div class="error-message"
+              *ngIf="profileForm.get('password')?.invalid && profileForm.get('password')?.touched">
+              Le mot de passe doit contenir au moins 6 caractères
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Confirmer</label>
+            <input type="password" id="confirmPassword" formControlName="confirmPassword"
+              placeholder="Confirmer le mot de passe">
+            <div class="error-message"
+              *ngIf="profileForm.get('confirmPassword')?.invalid && profileForm.get('confirmPassword')?.touched">
+              Les mots de passe ne correspondent pas
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address section -->
+      <div class="form-section">
+        <h4 class="section-title">Adresse</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="postCode">Code postal</label>
+            <input type="text" id="postCode" formControlName="postCode" placeholder="Code postal">
+          </div>
+
+          <div class="form-group">
+            <label for="city">Ville</label>
+            <input type="text" id="city" formControlName="city" placeholder="Ville">
+          </div>
+
+          <div class="form-group">
+            <label for="country">Pays</label>
+            <input type="text" id="country" formControlName="country" placeholder="Pays">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="toggleEditMode()">Annuler</button>
+        <button type="submit" class="save-btn" [disabled]="profileForm.invalid">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tab navigation -->
   <nav class="profile-nav">
     <ul>
-
       <li [class.active]="activeTab === 'Badges'" (click)="changeTab('Badges')">Badges</li>
       <li [class.active]="activeTab === 'Historique'" (click)="changeTab('Historique')">
         Historique
@@ -27,20 +99,20 @@
     </ul>
   </nav>
 
-  <!-- Contenu des onglets -->
+  <!-- Tab content -->
   <div class="content-section">
-    <!-- Onglet Historique -->
+    <!-- History tab -->
     <div class="history" *ngIf="activeTab === 'Historique'">
       <app-history class="app-history"></app-history>
     </div>
 
-    <!-- Onglet Favoris -->
+    <!-- Favorites tab -->
     <div *ngIf="activeTab === 'Favoris'">
       <h3>Mes produits favoris</h3>
       <app-favorites class="app-favorites"></app-favorites>
     </div>
 
-    <!-- Onglet Badges -->
+    <!-- Badges tab -->
     <div *ngIf="activeTab === 'Badges'">
       <app-badges class="app-badge"></app-badges>
       <app-achivement class="app-achivement"></app-achivement>

@@ -126,6 +126,29 @@ export class UsersService {
   }
 
   /**
+   * @brief Updates a user's information.
+   * @details This method updates the profile information of a user with the specified email.
+   *
+   * @param {string} email - The email of the user to update.
+   * @param {any} userData - Object containing the fields to update (username, password, address).
+   * @returns {Promise<any>} The updated user object.
+   * @throws {NotFoundException} If the user with the specified email is not found.
+   * @throws {InternalServerErrorException} If an error occurs during the update.
+   */
+  async updateUser(email: string, userData: any): Promise<any> {
+    try {
+      const result = await this.databaseService.updateUser(email, userData);
+      if (!result) {
+        throw new NotFoundException(`User with email ${email} not found`);
+      }
+      return result;
+    } catch (error) {
+      console.error("❌ Error updating user:", error);
+      throw new InternalServerErrorException("Error updating user information.");
+    }
+  }
+
+  /**
    * @brief Deletes a user from the database.
    * @details This method removes a user with the specified email from the database.
    *

@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../../services/api.service';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
 import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFacts.service';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 /**
  * @class ProdalternativeComponent
@@ -18,7 +19,7 @@ import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFac
 @Component({
   selector: 'app-prodalternative',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingSpinnerComponent],
   templateUrl: './prodalternative.component.html',
   styleUrls: ['./prodalternative.component.css']
 })
@@ -26,7 +27,7 @@ export class ProdalternativeComponent implements OnInit {
   productId: string = '';           // The ID of the selected product.
   productSource: string = '';       // The source of the product (e.g., Internal, OpenFoodFacts).
   productDetails: any[] = [];       // List of alternative products.
-  isLoading: boolean = false;       // Loading state flag.
+  isLoading: boolean = true;        // Loading state flag, initially true to show the spinner.
   errorMessage: string = '';        // Error message in case of failure.
 
   /**
@@ -79,6 +80,7 @@ export class ProdalternativeComponent implements OnInit {
   fetchInternalProduct(productId: string) {
     this.isLoading = true;
     this.errorMessage = '';
+    this.productDetails = []; // Réinitialise les produits lors d'une nouvelle recherche
     this.apiService.getAlternativeProducts(productId).subscribe(this.createObserver());
   }
 
@@ -90,6 +92,7 @@ export class ProdalternativeComponent implements OnInit {
   fetchExternalProduct(productId: string, productSource: string) {
     this.isLoading = true;
     this.errorMessage = '';
+    this.productDetails = []; // Réinitialise les produits lors d'une nouvelle recherche
 
     switch (productSource) {
       case "OpenFoodFacts":
@@ -149,10 +152,12 @@ export class ProdalternativeComponent implements OnInit {
             });
           }
         });
+        this.isLoading = false;
       },
       error: (error: any) => {
         console.error("❌ Error retrieving alternative products:", error);
         this.errorMessage = "Unable to fetch alternative products.";
+        this.isLoading = false;
       },
       complete: () => this.isLoading = false
     };

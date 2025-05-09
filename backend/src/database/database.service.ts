@@ -882,6 +882,59 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * @brief Updates a user's information in the database.
+   * @param email User email.
+   * @param userData Object containing fields to update (username, password, address).
+   * @returns {Promise<any>} Updated user data.
+   */
+  async updateUser(email: string, userData: any): Promise<any> {
+    try {
+      // Check if the user exists before updating
+      const userExists = await this.getUserByEmail(email);
+      if (!userExists) {
+        console.warn(`⚠️ No user found with email: ${email}`);
+        return null;
+      }
+
+      // Use the Couchbase API directly to update the document
+      const collection = this.getUsersCollection();
+      const userId = userExists.id;
+
+      try {
+        // Retrieve current document
+        const getResult = await collection.get(userId);
+        const userDoc = getResult.content;
+
+        // Update fields if provided
+        if (userData.username) {
+          userDoc.username = userData.username;
+        }
+        if (userData.password) {
+          userDoc.password = userData.password;
+        }
+        if (userData.address) {
+          userDoc.address = userData.address;
+        }
+
+        // Always update the timestamp
+        userDoc.updatedAt = new Date().toISOString();
+
+        // Save updated document
+        await collection.replace(userId, userDoc);
+
+        // Retrieve updated user for confirmation
+        return await this.getUserByEmail(email);
+      } catch (err) {
+        console.error(`❌ Error during Couchbase operation: ${err.message}`);
+        throw new Error(`Failed to update user: ${err.message}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error updating user ${email}:`, error);
+      throw new Error(`Failed to update user: ${error.message}`);
+    }
+  }
+
+  /**
    * @brief Deletes a user from the database.
    * @param id User ID.
    * @returns {Promise<boolean>} True if deleted, false otherwise.
@@ -1766,14 +1819,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         `❌ Error retrieving average rating for product ${productId}:`,
         error
       );
-      
+
       // Check if the error is a timeout
       if (error.message?.includes('timeout')) {
         throw new Error(
           `Query timeout while retrieving average rating for product ${productId}. Please try again.`
         );
       }
-      
+
       throw new Error(
         `Error retrieving average rating for product ${productId}`
       );

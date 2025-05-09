@@ -15,11 +15,12 @@ import {
   Get,
   Req,
   Res,
+  Put,
 } from "@nestjs/common";
 import { Response } from "express";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { RegisterDto, LoginDto } from "./dto/auth.dto";
+import { RegisterDto, LoginDto, UpdateProfileDto } from "./dto/auth.dto";
 import { Roles } from "./decorators/roles.decorator";
 import { UserRole } from "./enums/roles.enum";
 import { RolesGuard } from "./guards/roles.guard";
@@ -123,6 +124,23 @@ export class AuthController {
       username: fullUser.username,
       address: fullUser.address
     };
+  }
+
+  /**
+   * @brief Updates the authenticated user's profile.
+   * 
+   * This endpoint is protected and requires a valid JWT token.
+   * It allows users to update their profile information.
+   * 
+   * @param {Request} req - The request object containing user details.
+   * @param {UpdateProfileDto} body - The request body containing updated profile information.
+   * @returns {Promise<any>} The updated user's profile information.
+   * @throws {UnauthorizedException} If the user is not authenticated.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Put("profile/update")
+  async updateProfile(@Req() req, @Body() body: UpdateProfileDto): Promise<any> {
+    return this.authService.updateProfile(req.user.email, body);
   }
 
   /**

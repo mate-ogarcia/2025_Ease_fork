@@ -6,7 +6,7 @@
  * including registration and login requests.
  */
 
-import { IsNotEmpty, MinLength, IsEmail, ValidateNested } from 'class-validator';
+import { IsNotEmpty, MinLength, IsEmail, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 /**
  * @class AddressDto
@@ -105,4 +105,40 @@ export class LoginDto {
    */
   @IsNotEmpty()
   password: string;
+}
+
+/**
+ * @class UpdateProfileDto
+ * @brief DTO for user profile update.
+ * 
+ * This class defines the structure and validation rules for user profile update requests.
+ */
+export class UpdateProfileDto {
+  /**
+   * @property username
+   * @brief The new username of the user.
+   * @details Optional, must have a minimum length of 1 character if provided.
+   */
+  @IsOptional()
+  @MinLength(1)
+  username?: string;
+
+  /**
+   * @property password
+   * @brief The new password of the user.
+   * @details Optional, must have a minimum length of 6 characters if provided.
+   */
+  @IsOptional()
+  @MinLength(6)
+  password?: string;
+
+  /**
+   * @property address
+   * @brief The new address of the user.
+   * @details Optional, must be a valid address object if provided.
+   */
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address?: AddressDto;
 }

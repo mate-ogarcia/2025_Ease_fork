@@ -5,6 +5,7 @@ import { UsercompComponent } from './usercomp/usercomp.component';
 
 @Component({
   selector: 'app-userprofile',
+  standalone: true,
   imports: [
     NavbarComponent,
     UsercompComponent,

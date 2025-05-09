@@ -128,3 +128,29 @@
     height: auto;
   }
 }
+
+/* Style pour le conteneur du spinner */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  width: 100%;
+  background-color: #e8f5e4;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+/* Style pour le conteneur sans résultats */
+.no-results {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  width: 100%;
+  background-color: #e8f5e4;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
