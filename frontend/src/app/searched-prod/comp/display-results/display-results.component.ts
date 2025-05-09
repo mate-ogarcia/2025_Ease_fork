@@ -9,7 +9,7 @@
  *
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { APIUnsplash } from '../../../../services/unsplash/unsplash.service';
@@ -38,10 +38,13 @@ import { InfoBtnComponent } from '../info-btn/info-btn.component';
   templateUrl: './display-results.component.html',
   styleUrls: ['./display-results.component.css'],
 })
-export class DisplayResultsComponent implements OnInit {
+export class DisplayResultsComponent implements OnInit, OnDestroy {
   resultsArray: any[] = []; // Array of product results to display.
   viewMode: 'list' | 'grid' = 'list'; // View mode state: 'list' (default) or 'grid'.
   isAuthenticated = false; // User authentication state
+
+  // Element to store the permanent notification
+  private permanentNotificationElement: HTMLDivElement | null = null;
 
   /**
    * @constructor
@@ -83,6 +86,9 @@ export class DisplayResultsComponent implements OnInit {
 
     // Load product images
     this.loadProductImages();
+
+    // Display a notification with search results
+    this.showSearchResultsNotification();
   }
 
   /**
@@ -321,5 +327,81 @@ export class DisplayResultsComponent implements OnInit {
     }
 
     console.log('Erreur de chargement d\'image:', img.src);
+  }
+
+  /**
+   * @brief Displays a permanent notification with search results
+   * Shows search query and number of results found
+   */
+  private showSearchResultsNotification(): void {
+    // Get the last search query from sessionStorage
+    const lastSearchQuery = sessionStorage.getItem('lastSearchQuery') || 'votre recherche';
+
+    // Create notification message (keep in French as it's user-facing)
+    const message = `Voici les résultats trouvés pour "${lastSearchQuery}" (${this.resultsArray.length} produit(s))`;
+
+    // Remove previous notification if it exists
+    if (this.permanentNotificationElement) {
+      document.body.removeChild(this.permanentNotificationElement);
+    }
+
+    // Create a permanent notification
+    this.permanentNotificationElement = document.createElement('div');
+    this.permanentNotificationElement.textContent = message;
+    this.permanentNotificationElement.className = 'permanent-notification';
+
+    // Add a close button
+    const closeButton = document.createElement('span');
+    closeButton.textContent = '×';
+    closeButton.className = 'close-notification';
+    closeButton.onclick = () => {
+      if (this.permanentNotificationElement && this.permanentNotificationElement.parentNode) {
+        document.body.removeChild(this.permanentNotificationElement);
+        this.permanentNotificationElement = null;
+      }
+    };
+
+    this.permanentNotificationElement.appendChild(closeButton);
+
+    // Styles for the permanent notification
+    const styles = `
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 36px 12px 24px;
+      border-radius: 4px;
+      background-color: #2196F3;
+      color: white;
+      font-size: 14px;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    `;
+
+    this.permanentNotificationElement.style.cssText = styles;
+
+    // Styles for the close button
+    closeButton.style.cssText = `
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 18px;
+      cursor: pointer;
+    `;
+
+    // Add the notification to the document
+    document.body.appendChild(this.permanentNotificationElement);
+  }
+
+  /**
+   * @brief Cleanup when the component is destroyed
+   * Removes the permanent notification if it exists
+   */
+  ngOnDestroy(): void {
+    // Remove the permanent notification if it exists
+    if (this.permanentNotificationElement && this.permanentNotificationElement.parentNode) {
+      document.body.removeChild(this.permanentNotificationElement);
+      this.permanentNotificationElement = null;
+    }
   }
 }

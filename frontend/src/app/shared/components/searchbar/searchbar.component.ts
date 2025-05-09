@@ -11,11 +11,11 @@
  * @modified 2023-XX-XX
  */
 
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, OnDestroy, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Subject, of, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first } from 'rxjs/operators';
+import { Subject, of, forkJoin, timer } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, tap, filter, first, takeUntil } from 'rxjs/operators';
 import { Router } from '@angular/router';
 // API
 import { ApiService } from '../../../../services/api.service';
@@ -25,10 +25,10 @@ import { ApiOpenFoodFacts } from '../../../../services/openFoodFacts/openFoodFac
 import { DataCacheService } from '../../../../services/cache/data-cache.service';
 // History service
 import { HistoryService } from '../../../../services/history/history.service';
-// Location component import
-import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
 // Notification service
 import { NotificationService } from '../../../../services/notification/notification.service';
+// Location component import
+import { LocationDropdownComponent } from '../location-dropdown/location-dropdown.component';
 
 @Component({
   selector: 'app-searchbar',
@@ -41,7 +41,7 @@ import { NotificationService } from '../../../../services/notification/notificat
   templateUrl: './searchbar.component.html',
   styleUrls: ['./searchbar.component.css'],
 })
-export class SearchbarComponent implements OnInit {
+export class SearchbarComponent implements OnInit, OnDestroy {
   // Search state variables
   searchQuery: string = '';     // The search query entered by the user.
   searchResults: any[] = [];    // Array of search results based on the current query.
@@ -71,10 +71,10 @@ export class SearchbarComponent implements OnInit {
 
   isLoading: boolean = false; // Boolean indicating whether the search results are being loaded.
 
-  // Timer for long search notification
-  private longSearchTimer: any = null;
-
   @Output() searchExecuted = new EventEmitter<void>(); // Event emitter for search execution.
+
+  // Subject to cancel the long search notification timer
+  private searchTimeoutSubscription = new Subject<void>();
 
   /**
    * @brief Constructs the SearchbarComponent and sets up search logic.
@@ -88,7 +88,7 @@ export class SearchbarComponent implements OnInit {
    * @param apiOFF The service for interacting with OpenFoodFacts API.
    * @param dataCacheService The service for managing cached data.
    * @param historyService The service for managing search history.
-   * @param notificationService The service for displaying notifications to the user.
+   * @param notificationService The service for managing notifications.
    */
   constructor(
     private apiService: ApiService,
@@ -107,6 +107,10 @@ export class SearchbarComponent implements OnInit {
         switchMap((query) => {
           const trimmedQuery = query.trim();
           const cachedData = this._cache.get(trimmedQuery);
+
+          // Cancel any existing timeout
+          this.searchTimeoutSubscription.next();
+
           // Use cached data if valid
           if (cachedData && Date.now() - cachedData.timestamp < this.CACHE_DURATION) {
             const fullResults = cachedData.data.map((result: any) => ({
@@ -120,10 +124,17 @@ export class SearchbarComponent implements OnInit {
             this.canAddProduct = this.searchResults.length === 0 && this.searchQuery.trim() !== '';
             return of(null);
           }
+
           this.isLoading = true;  // Display a loading message
 
-          // Start timer for long search notification
-          this.startLongSearchTimer();
+          // Configure a timer to notify if search takes more than 10 seconds
+          const searchTimeout = timer(10000).pipe(
+            takeUntil(this.searchTimeoutSubscription)
+          ).subscribe(() => {
+            if (this.isLoading) {
+              this.notificationService.showInfo('La recherche prend plus de temps que prévu. Veuillez patienter...');
+            }
+          });
 
           // Launch parallel requests: Internal API + Open Food Facts
           return forkJoin({
@@ -132,9 +143,8 @@ export class SearchbarComponent implements OnInit {
           }).pipe(
             tap(({ internalResults, offResults }) => {
               this.isLoading = false;
-
-              // Clear notification timer
-              this.clearLongSearchTimer();
+              // Cancel the notification timer
+              this.searchTimeoutSubscription.next();
 
               const combinedResults = [
                 ...(internalResults || []),
@@ -156,10 +166,6 @@ export class SearchbarComponent implements OnInit {
          */
         next: (response: any) => {
           this.isLoading = false;
-
-          // Clear notification timer
-          this.clearLongSearchTimer();
-
           if (response) {
             const internalResults = response.internalResults || [];
             const offResults = response.offResults?.products || [];
@@ -180,48 +186,18 @@ export class SearchbarComponent implements OnInit {
             ];
             this.fullSearchResults = combinedResults;
             this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No product found';
+            this.noResultsMessage = this.searchResults.length ? '' : 'Pas de produit trouvé';
             this.canAddProduct = this.searchResults.length === 0 && this.searchQuery.trim() !== '';
           }
         },
         error: (error) => {
           this.isLoading = false;
-
-          // Clear notification timer
-          this.clearLongSearchTimer();
-
-          this.noResultsMessage = 'This product does not exist or is not available. You can add it.';
+          this.searchTimeoutSubscription.next(); // Cancel any pending notification
+          this.noResultsMessage = 'Ce produit n\'existe pas ou n\'est pas disponible vous pouvez le rajouter';
           this.canAddProduct = this.searchQuery.trim() !== '';
           console.error('❌ Error during search:', error);
         },
       });
-  }
-
-  /**
-   * @brief Starts a timer to notify the user if the search takes too long
-   */
-  private startLongSearchTimer(): void {
-    // Cancel any existing timer
-    this.clearLongSearchTimer();
-
-    // Start a new 10-second timer
-    this.longSearchTimer = setTimeout(() => {
-      if (this.isLoading) {
-        this.notificationService.showInfo(
-          'The search is taking some time. Our systems are querying external databases...'
-        );
-      }
-    }, 10000); // 10 seconds
-  }
-
-  /**
-   * @brief Clears the long search timer if it's active
-   */
-  private clearLongSearchTimer(): void {
-    if (this.longSearchTimer) {
-      clearTimeout(this.longSearchTimer);
-      this.longSearchTimer = null;
-    }
   }
 
   /**
@@ -246,13 +222,22 @@ export class SearchbarComponent implements OnInit {
       this.dataCacheService.refreshBrands();
     }, 10 * 60 * 1000);
 
-    console.log("Initializing SearchBar component");
+    console.log("Initialisation du composant SearchBar");
 
     // Force canAddProduct to true by default in this version
     this.canAddProduct = true;
 
-    // Debug log
-    console.log("canAddProduct initialized to:", this.canAddProduct);
+    // Log pour débogage
+    console.log("canAddProduct initialisé à:", this.canAddProduct);
+  }
+
+  /**
+   * @brief Cleans up resources when the component is destroyed
+   */
+  ngOnDestroy(): void {
+    // Complete the searchTimeoutSubscription subject to avoid memory leaks
+    this.searchTimeoutSubscription.next();
+    this.searchTimeoutSubscription.complete();
   }
 
   // ======================== RESEARCH FUNCTIONS
@@ -288,7 +273,7 @@ export class SearchbarComponent implements OnInit {
     // Set the no results message if there are no results after a delay
     setTimeout(() => {
       if (this.searchResults.length === 0 && this.searchQuery.trim() !== '' && !this.isLoading) {
-        this.noResultsMessage = 'No product found';
+        this.noResultsMessage = 'Aucun produit trouvé';
         // Make sure canAddProduct is properly set if the user has the correct role
         const userRole = this.usersService.getUserRole();
         this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
@@ -298,59 +283,65 @@ export class SearchbarComponent implements OnInit {
 
   /**
    * @function onEnter
-   * @description Handles the enter key press in the search field.
+   * @description Sends a search request when the Enter key is pressed.
+   * Saves the exact search term to history and then performs the search.
    * @param event The keyboard event.
    */
   onEnter(event: any) {
-    event.preventDefault();
-    if (this.searchQuery.trim() === '') {
-      return;
-    }
+    event as KeyboardEvent;
+    if (this.searchQuery.trim() !== '' && event.key === 'Enter') {
+      // Save search term directly to history
+      this.addToHistory(null);
 
-    // If there are search results, select the first one
-    if (this.searchResults.length > 0) {
-      this.selectProduct(this.searchResults[0]);
-    } else {
-      // If there are no search results but a search query is entered, search
-      this.search();
+      if (this.selectedProduct) {
+        this.search(true);  // Search including the selected product
+      } else {
+        if (this.fullSearchResults.length > 0) {
+          this.router.navigate(['/searched-prod'], {
+            state: { resultsArray: this.fullSearchResults },
+          });
+        } else {
+          this.search(false); // Search without including the selected product
+        }
+      }
     }
   }
 
   /**
-   * @function clearSearch
-   * @description Clears the search query and results.
+   * @brief Clears the search query and results.
    */
   clearSearch() {
     this.searchQuery = '';
     this.searchResults = [];
+    this.fullSearchResults = [];
     this.noResultsMessage = '';
-    this.canAddProduct = false;
+    this.selectedProduct = '';
+    this.wholeSelectedProduct = null;
+    this.isLoading = false;
+    this.canAddProduct = false; // Explicitly reset canAddProduct
 
-    // Clear notification timer if active
-    this.clearLongSearchTimer();
+    // Close the filter dropdown if open
+    this.filterDropdownOpen = false;
   }
 
   /**
-   * @function selectProduct
-   * @description Handles the selection of a product from the search results.
-   * @param product The selected product.
+   * @brief Selects a product from the search suggestions.
+   * After selection, the suggestions are hidden.
+   * @param product The product selected from suggestions.
    */
   selectProduct(product: any) {
-    if (!product || !product.id) {
-      console.error('❌ Invalid product selected:', product);
-      return;
-    }
-
-    // Store the selected product
+    // Update search field with product name
+    this.searchQuery = product.name;
     this.selectedProduct = product.id;
     this.wholeSelectedProduct = product;
+    this.noResultsMessage = '';
+    this.searchResults = []; // Hide suggestions after selection.
 
-    // Add to history
+    // Add the exact term displayed in the search bar to history
     this.addToHistory(product);
 
-    // Navigate to the product detail page
-    this.clearSearch();
-    this.router.navigate(['/product', product.id, product.source]);
+    // Launch the research
+    this.search(true);
   }
 
   /**
@@ -433,13 +424,24 @@ export class SearchbarComponent implements OnInit {
     this.isLoading = true;
     this.noResultsMessage = ''; // Reset error message
 
+    // Configure a timer to notify if search takes more than 10 seconds
+    this.searchTimeoutSubscription.next(); // Cancel any existing timer
+    const searchTimeout = timer(10000).pipe(
+      takeUntil(this.searchTimeoutSubscription)
+    ).subscribe(() => {
+      if (this.isLoading) {
+        this.notificationService.showInfo('La recherche prend plus de temps que prévu. Veuillez patienter...');
+      }
+    });
+
     // Send filters to the API and handle response
     this.apiService.postProductsWithFilters(filtersToSend).subscribe({
       next: (response) => {
         this.isLoading = false;
+        this.searchTimeoutSubscription.next(); // Cancel the notification timer
 
         if (!response || response.length === 0) {
-          this.noResultsMessage = 'No products found with these criteria';
+          this.noResultsMessage = 'Aucun produit trouvé avec ces critères';
           // Make sure canAddProduct is properly set if no results are found
           const userRole = this.usersService.getUserRole();
           this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
@@ -453,6 +455,9 @@ export class SearchbarComponent implements OnInit {
           response = this.reorderResults(response, this.selectedProduct);
         }
 
+        // Stocker la requête de recherche pour l'afficher dans la notification sur la page des résultats
+        sessionStorage.setItem('lastSearchQuery', this.searchQuery || this.createFilterDescription());
+
         // Navigate to results page with the response
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate(['/searched-prod'], { state: { resultsArray: response } });
@@ -460,6 +465,7 @@ export class SearchbarComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
+        this.searchTimeoutSubscription.next(); // Cancel the notification timer
         this.noResultsMessage = 'Error during search. This feature is not yet fully implemented.';
         this.canAddProduct = this.searchQuery.trim() !== '';
       },
@@ -562,7 +568,7 @@ export class SearchbarComponent implements OnInit {
           this.router.navigate(['/add-product']);
         }
       } catch (err) {
-        console.error('Error while redirecting to the product add page:', err);
+        console.error('Erreur lors de la redirection vers la page d\'ajout de produit:', err);
         // Fallback redirection in case of error
         window.location.href = '/add-product';
       }
