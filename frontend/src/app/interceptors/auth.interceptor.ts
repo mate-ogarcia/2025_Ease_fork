@@ -25,7 +25,8 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const isApiRequest = !req.url.includes('localhost:4200') &&
     (req.url.includes('localhost:3000') ||
       req.url.includes('api') ||
-      req.url.includes('render.com'));
+      req.url.includes('render.com') ||
+      req.url.includes('two025-ease-fork.onrender.com'));
 
   const isOpenStreetMapRequest = req.url.includes('openstreetmap.org') ||
     req.url.includes('nominatim') ||

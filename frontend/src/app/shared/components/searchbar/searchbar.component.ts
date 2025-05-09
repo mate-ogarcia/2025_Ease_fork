@@ -161,13 +161,13 @@ export class SearchbarComponent implements OnInit {
             ];
             this.fullSearchResults = combinedResults;
             this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'No products found';
+            this.noResultsMessage = this.searchResults.length ? '' : 'Pas de produit trouvé';
             this.canAddProduct = this.searchResults.length === 0 && this.searchQuery.trim() !== '';
           }
         },
         error: (error) => {
           this.isLoading = false;
-          this.noResultsMessage = 'Erreur lors de la recherche. Cette fonctionnalité n\'est pas encore complètement implémentée.';
+          this.noResultsMessage = 'Ce produit n\'existe pas ou n\'est pas disponible vous pouvez le rajouter';
           this.canAddProduct = this.searchQuery.trim() !== '';
           console.error('❌ Error during search:', error);
         },

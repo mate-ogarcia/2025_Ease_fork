@@ -107,23 +107,8 @@ async function bootstrap() {
   /**
    * Configures CORS settings with credential support.
    */
-  const allowedOrigins: string[] = [
-    'http://localhost:4200',
-    'http://localhost:8081',
-    'https://ease-bon.vercel.app',
-  ];
-
   app.enableCors({
-    origin: (origin: string | undefined, callback) => {
-      console.log(`CORS request from origin: ${origin || 'No origin'}`);
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        console.log(`CORS allowed for: ${origin || 'No origin'}`);
-      } else {
-        console.warn(`Origin not allowed by CORS: ${origin}`);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: ['http://localhost:8081', 'http://localhost:4201', 'http://frontend', 'http://localhost:4200', 'http://nginx-proxy', 'https://ease-bon.vercel.app', 'https://two025-ease-fork.onrender.com'],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
     allowedHeaders: "X-Requested-With,Accept,Content-Type,Origin,Authorization",

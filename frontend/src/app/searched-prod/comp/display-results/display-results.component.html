@@ -14,8 +14,6 @@
       <!-- Conditional class based on view mode -->
       <ul class="items-list" [ngClass]="viewMode">
         <li class="item" *ngFor="let product of resultsArray; trackBy: trackByProduct" (click)="goToProduct(product)"
-          tabindex="0" [attr.aria-label]="'Voir le produit ' + product.name">
-        <li class="item" *ngFor="let product of resultsArray; trackBy: trackByProduct" (click)="goToProduct(product)"
           tabindex="0" [attr.aria-label]="'View product ' + product.name">
           <div class="img-container">
             <ng-container *ngIf="product.image; else noImage">
@@ -54,6 +52,6 @@
   </div>
 
   <ng-template #noResults>
-    <p>No products found with these criteria.</p>
+    <p>Aucun produit trouvé avec ces critères.</p>
   </ng-template>
 </div>
