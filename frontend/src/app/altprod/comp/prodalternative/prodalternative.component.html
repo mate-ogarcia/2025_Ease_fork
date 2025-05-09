@@ -1,19 +1,19 @@
 <!-- Main container for similar products -->
 <div class="container">
-  <!-- Show this block if there are results, otherwise display no-results template -->
-  <div class="result-container" *ngIf="productDetails && productDetails.length > 0; else noResults">
+  <!-- Loading spinner during data fetch -->
+  <div *ngIf="isLoading" class="loading-container">
+    <app-loading-spinner message="Recherche de produits similaires..."></app-loading-spinner>
+  </div>
+
+  <!-- Show this block if loading is complete and there are results -->
+  <div class="result-container" *ngIf="!isLoading && productDetails && productDetails.length > 0">
     <h2>🔎 Produits similaires trouvés : 🔎</h2>
     <!-- Wrapper around the list of items -->
     <div class="item-container">
       <ul class="items-list">
         <!-- Repeat for each product -->
-        <li
-          class="item"
-          *ngFor="let product of productDetails; trackBy: trackByProduct"
-          (click)="goToProduct(product)"
-          tabindex="0"
-          [attr.aria-label]="'Voir le produit ' + product.name"
-        >
+        <li class="item" *ngFor="let product of productDetails; trackBy: trackByProduct" (click)="goToProduct(product)"
+          tabindex="0" [attr.aria-label]="'Voir le produit ' + product.name">
           <!-- Product image -->
           <div class="img-container">
             <img class="product-image" [src]="product.image" alt="{{ product.name }}">
@@ -42,7 +42,7 @@
   </div>
 
   <!-- Template shown when no results are found -->
-  <ng-template #noResults>
+  <div *ngIf="!isLoading && (!productDetails || productDetails.length === 0)" class="no-results">
     <p>Aucun produit trouvé avec ces critères.</p>
-  </ng-template>
+  </div>
 </div>

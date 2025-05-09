@@ -399,6 +399,45 @@ export class AuthService {
   }
 
   /**
+   * @method updateUserProfile
+   * @description Updates the user's profile information
+   * 
+   * This method sends an update request to the backend with the user's
+   * updated information. Upon successful update, the local user object
+   * is also updated.
+   *
+   * @param {any} updateData - The data to update (can include username, password, and/or address)
+   * @returns {Observable<any>} An observable of the update API response
+   * @public
+   */
+  updateUserProfile(updateData: any): Observable<any> {
+    return this.http.put(`${this._authBackendUrl}/profile/update`, updateData, { withCredentials: true })
+      .pipe(
+        tap((response: any) => {
+          // Mise à jour des informations utilisateur localement
+          if (response) {
+            if (this.user) {
+              // Ne mettre à jour que les champs présents dans la réponse
+              if (response.email) this.user.email = response.email;
+              if (response.username) this.user.username = response.username;
+              if (response.address) this.user.address = response.address;
+
+              // Si le rôle a changé, mettre à jour l'état d'authentification
+              if (response.role && response.role !== this.user.role) {
+                this.user.role = response.role;
+                this.updateAuthState(true, response.role);
+              }
+            }
+          }
+        }),
+        catchError(error => {
+          console.error('Erreur lors de la mise à jour du profil:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
    * @method setupPeriodicAuthRefresh
    * @description Configure un rafraîchissement périodique de l'état d'authentification
    * 

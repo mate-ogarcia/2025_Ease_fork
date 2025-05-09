@@ -17,7 +17,7 @@ import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
 import { UserRole } from "./enums/roles.enum";
 import { LoginDto } from "./dto/login.dto";
-import { AddressDto } from "./dto/auth.dto";
+import { AddressDto, UpdateProfileDto } from "./dto/auth.dto";
 
 /**
  * @brief Service responsible for authentication operations.
@@ -139,6 +139,56 @@ export class AuthService {
       throw new InternalServerErrorException(
         "Error creating user"
       );
+    }
+  }
+
+  /**
+   * @brief Updates a user's profile.
+   * @details This method updates a user's profile with the provided information.
+   * If a new password is provided, it is hashed before being stored in the database.
+   * 
+   * @param {string} email - The email of the user to update.
+   * @param {UpdateProfileDto} updateData - The data to update the user with.
+   * @returns {Promise<any>} The updated user object without the password.
+   * @throws {UnauthorizedException} If the user is not found.
+   * @throws {InternalServerErrorException} If an error occurs during user update.
+   */
+  async updateProfile(email: string, updateData: UpdateProfileDto) {
+    try {
+      const user = await this.usersService.findByEmail(email);
+
+      if (!user) {
+        throw new UnauthorizedException("User not found");
+      }
+
+      const updateObj: any = {};
+
+      if (updateData.username) {
+        updateObj.username = updateData.username;
+      }
+
+      if (updateData.password) {
+        updateObj.password = await bcrypt.hash(updateData.password, 10);
+      }
+
+      if (updateData.address) {
+        updateObj.address = updateData.address;
+      }
+
+      const updatedUser = await this.usersService.updateUser(email, updateObj);
+
+      return {
+        email: updatedUser.email,
+        username: updatedUser.username,
+        role: updatedUser.role,
+        address: updatedUser.address,
+        updatedAt: updatedUser.updatedAt,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException("Error updating user profile");
     }
   }
 
