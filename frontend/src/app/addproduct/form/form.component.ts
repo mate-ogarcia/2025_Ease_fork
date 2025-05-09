@@ -137,7 +137,7 @@ export class FormComponent implements OnInit {
       // Clean cache after use
       this.dataCacheService.clearPendingProductName();
     } else {
-      console.log('❌ No product name found in cache');
+      console.log('No product name found in cache');
 
       // Try with the old method just in case
       const navigation = this.router.getCurrentNavigation();
@@ -145,7 +145,7 @@ export class FormComponent implements OnInit {
         const state = navigation.extras.state as { suggestedName: string, source: string };
         if (state.suggestedName) {
           this.product.name = state.suggestedName;
-          console.log('✅ Product name set via navigation state:', this.product.name);
+          console.log('Product name set via navigation state:', this.product.name);
 
           if (state.source === 'search_not_found') {
             this.product.status = 'add-product';
@@ -218,7 +218,7 @@ export class FormComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmitting = false;
-        console.error('❌ API Error:', err);
+        console.error('API Error:', err);
         if (err.status === 400) {
           alert(err.error.error);
         } else if (err.status === 0) {

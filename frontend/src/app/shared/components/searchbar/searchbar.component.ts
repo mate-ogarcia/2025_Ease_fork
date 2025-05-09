@@ -161,7 +161,7 @@ export class SearchbarComponent implements OnInit {
             ];
             this.fullSearchResults = combinedResults;
             this.searchResults = combinedResults.slice(0, 5); // Limit to 5 suggestions.
-            this.noResultsMessage = this.searchResults.length ? '' : 'Aucun produit trouvé';
+            this.noResultsMessage = this.searchResults.length ? '' : 'No products found';
             this.canAddProduct = this.searchResults.length === 0 && this.searchQuery.trim() !== '';
           }
         },
@@ -198,7 +198,7 @@ export class SearchbarComponent implements OnInit {
 
     console.log("Initialisation du composant SearchBar");
 
-    // Force canAddProduct à true par défaut dans cette version
+    // Force canAddProduct to true by default in this version
     this.canAddProduct = true;
 
     // Log pour débogage
@@ -239,7 +239,7 @@ export class SearchbarComponent implements OnInit {
     setTimeout(() => {
       if (this.searchResults.length === 0 && this.searchQuery.trim() !== '' && !this.isLoading) {
         this.noResultsMessage = 'Aucun produit trouvé';
-        // S'assurer que canAddProduct est bien défini si l'utilisateur a le bon rôle
+        // Make sure canAddProduct is properly set if the user has the correct role
         const userRole = this.usersService.getUserRole();
         this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
       }
@@ -283,7 +283,7 @@ export class SearchbarComponent implements OnInit {
     this.selectedProduct = '';
     this.wholeSelectedProduct = null;
     this.isLoading = false;
-    this.canAddProduct = false; // Réinitialiser explicitement canAddProduct
+    this.canAddProduct = false; // Explicitly reset canAddProduct
 
     // Close the filter dropdown if open
     this.filterDropdownOpen = false;
@@ -396,7 +396,7 @@ export class SearchbarComponent implements OnInit {
 
         if (!response || response.length === 0) {
           this.noResultsMessage = 'Aucun produit trouvé avec ces critères';
-          // S'assurer que canAddProduct est correctement défini si aucun résultat n'est trouvé
+          // Make sure canAddProduct is properly set if no results are found
           const userRole = this.usersService.getUserRole();
           this.canAddProduct = userRole?.toLowerCase() === 'user' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
           return;
@@ -416,7 +416,7 @@ export class SearchbarComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.noResultsMessage = 'Erreur lors de la recherche. Cette fonctionnalité n\'est pas encore complètement implémentée.';
+        this.noResultsMessage = 'Error during search. This feature is not yet fully implemented.';
         this.canAddProduct = this.searchQuery.trim() !== '';
       },
     });
@@ -503,7 +503,7 @@ export class SearchbarComponent implements OnInit {
   addNewProduct() {
     if (this.searchQuery.trim() !== '') {
       try {
-        // Enregistrer le terme de recherche dans le localStorage aussi pour plus de sécurité
+        // Store the search term in localStorage for added security
         localStorage.setItem('pendingProductName', this.searchQuery.trim());
 
         // Store the product name in the cache service
@@ -519,7 +519,7 @@ export class SearchbarComponent implements OnInit {
         }
       } catch (err) {
         console.error('Erreur lors de la redirection vers la page d\'ajout de produit:', err);
-        // Redirection de secours en cas d'erreur
+        // Fallback redirection in case of error
         window.location.href = '/add-product';
       }
     }
