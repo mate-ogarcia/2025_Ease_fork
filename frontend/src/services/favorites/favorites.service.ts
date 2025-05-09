@@ -74,7 +74,7 @@ export class FavoritesService {
     return this.http.post<any>(`${this.favoritesUrl}/${productId}`, {}, { withCredentials: true }).pipe(
       tap(response => {
         if (!response.exists) {
-          this.notificationService.showSuccess('Product added to favorites');
+          this.notificationService.showSuccess('Produit ajouté aux favoris');
         }
 
         // Update local state
@@ -86,9 +86,9 @@ export class FavoritesService {
       }),
       catchError(error => {
         if (error.status === 401) {
-          this.notificationService.showWarning('Please login to add favorites');
+          this.notificationService.showWarning('Veuillez vous connecter pour ajouter aux favoris');
         }
-        this.notificationService.showError('Error adding to favorites');
+        this.notificationService.showError('Erreur lors de l\'ajout aux favoris');
         return of(null);
       })
     );
@@ -102,7 +102,7 @@ export class FavoritesService {
   removeFromFavorites(productId: string): Observable<any> {
     return this.http.delete<any>(`${this.favoritesUrl}/${productId}`, { withCredentials: true }).pipe(
       tap(() => {
-        this.notificationService.showSuccess('Product removed from favorites');
+        this.notificationService.showSuccess('Produit retiré des favoris');
 
         // Update local state
         const currentFavorites = this.favoriteProductsSubject.value;
@@ -113,9 +113,9 @@ export class FavoritesService {
       }),
       catchError(error => {
         if (error.status === 401) {
-          this.notificationService.showWarning('Please login to manage your favorites');
+          this.notificationService.showWarning('Veuillez vous connecter pour gérer vos favoris');
         }
-        this.notificationService.showError('Error removing from favorites');
+        this.notificationService.showError('Erreur lors de la suppression des favoris');
         return of(null);
       })
     );

@@ -207,9 +207,7 @@ This command only starts the Couchbase container, accessible at http://localhost
 2. **Configure a New Cluster**:
    - Follow the setup wizard to create a new cluster
    - The cluster name is not important
-   - Configure the memory allocation based on your system resources:
-     - For systems with less than 8GB RAM, reduce the default memory allocation for data services
-     - For systems with 8GB+ RAM, you can use the default settings
+   - Configure the memory allocation based on your system resources
    - Accept the default terms and services
 
 3. **Create an Administrator User**:
@@ -228,7 +226,7 @@ docker compose up -d couchbase-init
 
 This command starts the initialization container that will automatically create all necessary buckets and import sample data. You'll see the buckets appear in the "Buckets" tab of the Couchbase interface after a few seconds.
 
-The initialization creates two default users with the following roles:
+The initialization creates the bucket UsersBDD with two default users with the following roles to try the different role in the site easily:
 
 - **SuperAdmin**:
   - Email: capgSuperadmin@gmail.com

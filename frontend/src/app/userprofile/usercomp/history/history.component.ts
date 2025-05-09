@@ -121,8 +121,8 @@ export class HistoryComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.error = 'Error loading history. Please try again.';
-        this.notificationService.showError('Error loading history. Please try again.');
+        this.error = 'Erreur lors du chargement de l\'historique. Veuillez réessayer.';
+        this.notificationService.showError('Erreur lors du chargement de l\'historique. Veuillez réessayer.');
       }
     });
   }
@@ -266,7 +266,7 @@ export class HistoryComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.error = 'Error during search. Please try again.';
+        this.error = 'Erreur lors de la recherche. Cette fonctionnalité n\'est pas encore complètement implémentée.';
       }
     });
   }
@@ -330,7 +330,7 @@ export class HistoryComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.error = 'Error during search. Please try again.';
+        this.error = 'Erreur lors de la recherche. Cette fonctionnalité n\'est pas encore complètement implémentée.';
       }
     });
   }
@@ -352,7 +352,7 @@ export class HistoryComponent implements OnInit {
    */
   clearHistory(): void {
     // Ask for confirmation before deleting the entire history
-    if (!confirm('Are you sure you want to delete your entire search history?')) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer tout votre historique de recherche ?')) {
       return;
     }
 
@@ -378,14 +378,14 @@ export class HistoryComponent implements OnInit {
 
           // Appropriate message according to the result
           if (response && response.deleted > 0) {
-            this.notificationService.showSuccess(`Your history has been successfully cleared (${response.deleted} item${response.deleted > 1 ? 's' : ''})`);
+            this.notificationService.showSuccess(`Votre historique a été effacé avec succès (${response.deleted} élément${response.deleted > 1 ? 's' : ''})`);
           } else {
-            this.notificationService.showInfo('No items to delete in history');
+            this.notificationService.showInfo('Aucun élément à supprimer dans l\'historique');
           }
         },
         error: (err) => {
           // Extract detailed error message if available
-          let errorMessage = 'Error clearing history.';
+          let errorMessage = 'Erreur lors de la suppression de l\'historique.';
 
           if (err.error && err.error.message) {
             errorMessage += ` ${err.error.message}`;
@@ -417,7 +417,7 @@ export class HistoryComponent implements OnInit {
     }
 
     if (!historyId) {
-      this.notificationService.showError('Unable to delete this item. Missing ID.');
+      this.notificationService.showError('Impossible de supprimer cet élément. ID manquant.');
       return;
     }
 
@@ -440,10 +440,10 @@ export class HistoryComponent implements OnInit {
           this.updatePages();
 
           // Display success notification
-          this.notificationService.showSuccess('Item successfully deleted');
+          this.notificationService.showSuccess('Élément supprimé avec succès');
         },
         error: (err) => {
-          this.notificationService.showError('Error during deletion. Please try again.');
+          this.notificationService.showError('Erreur lors de la suppression. Veuillez réessayer.');
         }
       });
   }

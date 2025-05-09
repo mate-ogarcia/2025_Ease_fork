@@ -103,12 +103,12 @@ export class AuthService {
   public checkAuthState(): void {
     // Vérifier le cookie accessToken (maintenant accessible par JavaScript)
     const token = this.cookieService.get('accessToken');
-    console.log(`🍪 [AuthService] Cookie accessToken présent: ${token ? 'Oui' : 'Non'}`);
+    console.log(`[AuthService] Cookie accessToken present: ${token ? 'Yes' : 'No'}`);
 
     if (token) {
       try {
         const decodedToken = this.jwtHelper.decodeToken(token);
-        console.log(`🔓 [AuthService] Token décodé:`, {
+        console.log(`[AuthService] Token décodé:`, {
           email: decodedToken.email,
           role: decodedToken.role,
           exp: new Date(decodedToken.exp * 1000).toLocaleString()
@@ -132,7 +132,7 @@ export class AuthService {
           this.notificationService.showWarning('Votre compte a été banni. Certaines fonctionnalités sont maintenant restreintes.');
         }
       } catch (error) {
-        console.error('❌ [AuthService] Erreur lors de la vérification de l\'état:', error);
+        console.error('[AuthService] Erreur lors de la vérification de l\'état:', error);
         this.logout();
       }
     } else {
@@ -263,10 +263,10 @@ export class AuthService {
           // Vérifier les cookies après connexion
           setTimeout(() => {
             const accessToken = this.cookieService.get('accessToken');
-            console.log(`🍪 [AuthService] Cookie accessToken: ${accessToken ? 'Présent' : 'Absent'}`);
+            console.log(`[AuthService] Cookie accessToken: ${accessToken ? 'Présent' : 'Absent'}`);
 
             const allCookies = this.cookieService.getAll();
-            console.log(`🍪 [AuthService] Tous les cookies:`, allCookies);
+            console.log(`[AuthService] Tous les cookies:`, allCookies);
 
             // Force update auth state
             this.checkAuthState();

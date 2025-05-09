@@ -75,13 +75,13 @@ async function bootstrap() {
     if (token) {
       if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
         req.headers.authorization = `Bearer ${token}`;
-        console.log("🔄 Token extracted from cookies and added to Authorization header");
-        console.log("🔑 Token added:", token.substring(0, 20) + "...");
+        console.log("Token extracted from cookies and added to Authorization header");
+        console.log("Token added:", token.substring(0, 20) + "...");
       } else {
-        console.log("ℹ️ Authorization header already present:", req.headers.authorization.substring(0, 20) + "...");
+        console.log("ℹAuthorization header already present:", req.headers.authorization.substring(0, 20) + "...");
       }
     } else {
-      console.log("⚠️ No token found in cookies");
+      console.log("No token found in cookies");
     }
     next();
   });
@@ -98,10 +98,10 @@ async function bootstrap() {
     await databaseService.onModuleInit();
     logger.log(
       "info",
-      `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`,
+      `Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`,
     );
   } catch (error) {
-    logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
+    logger.error(`Error while using the bucket (main.ts): ${error.message}`);
   }
 
   /**
@@ -115,12 +115,12 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin: string | undefined, callback) => {
-      console.log(`🌐 CORS request from origin: ${origin || 'No origin'}`);
+      console.log(`CORS request from origin: ${origin || 'No origin'}`);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
-        console.log(`✅ CORS allowed for: ${origin || 'No origin'}`);
+        console.log(`CORS allowed for: ${origin || 'No origin'}`);
       } else {
-        console.warn(`⛔ Origin not allowed by CORS: ${origin}`);
+        console.warn(`Origin not allowed by CORS: ${origin}`);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -136,7 +136,7 @@ async function bootstrap() {
    */
   const port = process.env.BACKEND_PORT || 3001;
   await app.listen(port, "0.0.0.0");
-  logger.log("info", `🚀 Application started at http://localhost:${port}`);
+  logger.log("info", `Application started at http://localhost:${port}`);
 }
 
 bootstrap();    
