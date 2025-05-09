@@ -606,7 +606,6 @@ export class AuthComponent implements AfterViewInit, OnInit, OnDestroy {
         if (addresses && addresses.length > 0) {
           // Display the found addresses as suggestions
           this.addressSuggestions = addresses;
-          console.log('User location:', addresses);
         }
       },
       error: (error) => {

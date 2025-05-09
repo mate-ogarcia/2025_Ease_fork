@@ -31,7 +31,7 @@ export class CommentsController {
    * @param {CommentsService} commentsService - Service for handling comment-related operations.
    * @param {Cache} cacheManager - Cache manager for managing comment data caching.
    */
-  constructor(private commentsService: CommentsService) {}
+  constructor(private commentsService: CommentsService) { }
 
   /**
    * @brief Retrieves comments for a specific product with pagination.
@@ -49,10 +49,6 @@ export class CommentsController {
       // Call the service function to retrieve all comments
       return await this.commentsService.getCommentsForProduct(productId);
     } catch (error) {
-      console.error(
-        `❌ Error retrieving comments for product ${productId}:`,
-        error
-      );
       throw new InternalServerErrorException(
         `Error retrieving comments for product.`
       );
@@ -74,13 +70,11 @@ export class CommentsController {
   @Post("add")
   async addComment(@Body() commentDto: CommentDto) {
     try {
-      console.log(commentDto);
       // Add the comment to the database
       const newComment = await this.commentsService.createComment(commentDto);
 
       return newComment;
     } catch (error) {
-      console.error("❌ Error adding comment:", error);
       throw new InternalServerErrorException("Error adding comment.");
     }
   }
@@ -107,10 +101,6 @@ export class CommentsController {
       // Return the comment count
       return { count: commentCount };
     } catch (error) {
-      console.error(
-        `❌ Error retrieving comments count for the product ${productId}:`,
-        error
-      );
       throw new InternalServerErrorException(
         `Error retrieving comments count for the product ${productId}.`
       );
@@ -128,10 +118,9 @@ export class CommentsController {
   async deleteComment(@Param("id") id: string) {
     try {
       // Call the service method to delete the comment
-      const deletedComment =  await this.commentsService.deleteComment(id);
+      const deletedComment = await this.commentsService.deleteComment(id);
       return deletedComment;
     } catch (error) {
-      console.error("❌ Error deleting comment:", error);
       throw new InternalServerErrorException("Error deleting comment.");
     }
   }
@@ -142,7 +131,7 @@ export class CommentsController {
    * This endpoint allows the editing of a comment identified by its unique ID.
    * It also handles cache invalidation by deleting the cache associated with the product
    * to ensure that the edited comment is not reflected in future requests.
-   */  
+   */
   @Put(":id")
   async editComment(@Param("id") id: string, @Body() commentDto: CommentDto) {
     try {
@@ -150,7 +139,6 @@ export class CommentsController {
       const editedComment = await this.commentsService.editComment(id, commentDto);
       return editedComment;
     } catch (error) {
-      console.error("❌ Error edited comment:", error);
       throw new InternalServerErrorException("Error edited comment.");
     }
   }
@@ -172,10 +160,6 @@ export class CommentsController {
         await this.commentsService.getCommentsAverageRate(productId);
       return { avg: commentAvg };
     } catch (error) {
-      console.error(
-        `❌ Error retrieving average rate for the product ${productId}:`,
-        error
-      );
       throw new InternalServerErrorException(
         `Error retrieving average rate for the product ${productId}.`
       );

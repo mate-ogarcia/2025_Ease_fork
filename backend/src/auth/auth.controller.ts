@@ -68,16 +68,36 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<any> {
     const result = await this.authService.login(body);
-    // Set the cookie with more permissive options for development
-    response.cookie("accessToken", result.access_token, {
-      httpOnly: false, // Temporarily set to false for debugging
-      secure: false, // Temporarily set to false for local development
-      sameSite: "lax",
+
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    console.log(`🔐 Login attempt in environment: ${nodeEnv}`);
+
+    // Déterminer le type d'environnement
+    const isProdLike = ['deploy'].includes(nodeEnv);
+    const isLocal = ['development'].includes(nodeEnv);
+    const isDocker = ['docker'].includes(nodeEnv);
+
+    // Configuration des cookies adaptée à chaque environnement
+    const cookieOptions = {
+      httpOnly: false, // Permet à JavaScript d'accéder au cookie
       path: "/",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      domain: undefined, // Let the browser handle the domain
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      maxAge: 24 * 60 * 60 * 1000,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      // En production/déploiement (HTTPS)
+      secure: isProdLike,
+      // Configuration SameSite adaptée
+      sameSite: isProdLike ? "none" as const : "lax" as const,
+    };
+
+    console.log(`🍪 Setting cookie with options:`, {
+      environment: nodeEnv,
+      secure: cookieOptions.secure,
+      sameSite: cookieOptions.sameSite,
+      httpOnly: cookieOptions.httpOnly
     });
+
+    // Définir un seul cookie non-httpOnly pour permettre à JavaScript d'y accéder
+    response.cookie("accessToken", result.access_token, cookieOptions);
 
     return result;
   }

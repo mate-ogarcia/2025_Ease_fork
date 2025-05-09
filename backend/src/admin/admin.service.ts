@@ -32,7 +32,6 @@ export class AdminService {
       // Return the retrieved requests
       return requests;
     } catch (error) {
-      console.error('❌ Error in AdminService.getRequestsProduct:', error);
       throw new InternalServerErrorException('Unable to retrieve requests');
     }
   }
@@ -65,7 +64,6 @@ export class AdminService {
       // Update the entity in the database
       return await this.databaseService.updateEntity(type, entityId, valueToUpdate);
     } catch (error) {
-      console.error(`❌ Error in AdminService.updateEntity (${type}):`, error);
       throw new Error(`Error updating the ${type}`);
     }
   }

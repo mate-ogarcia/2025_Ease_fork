@@ -18,7 +18,7 @@ import { AuthService } from '../auth/auth.service';
   providedIn: 'root'
 })
 export class FavoritesService {
-  // Utiliser globalBackendUrl au lieu de backendUrl pour éviter le préfixe /data
+  // Use globalBackendUrl instead of backendUrl to avoid the /data prefix
   private readonly favoritesUrl = `${environment.globalBackendUrl}/favorites`;
 
   // Observable source for favorites status
@@ -33,12 +33,12 @@ export class FavoritesService {
     private notificationService: NotificationService,
     private authService: AuthService
   ) {
-    // Charger les favoris depuis l'API lorsque l'utilisateur est authentifié
+    // Load favorites from API when user is authenticated
     this.authService.isAuthenticated().subscribe(isAuthenticated => {
       if (isAuthenticated) {
         this.loadFavorites().subscribe();
       } else {
-        // Réinitialiser les favoris si l'utilisateur n'est pas authentifié
+        // Reset favorites if user is not authenticated
         this.favoriteProductsSubject.next([]);
         this.cachedFavorites.clear();
       }
@@ -50,7 +50,7 @@ export class FavoritesService {
    * @returns {Observable<any[]>} An observable of favorite products.
    */
   loadFavorites(): Observable<any[]> {
-    return this.http.get<any[]>(this.favoritesUrl).pipe(
+    return this.http.get<any[]>(this.favoritesUrl, { withCredentials: true }).pipe(
       tap(favorites => {
         const productIds = favorites.map(fav => fav.productId);
         this.favoriteProductsSubject.next(productIds);
@@ -58,7 +58,7 @@ export class FavoritesService {
         productIds.forEach(id => this.cachedFavorites.set(id, true));
       }),
       catchError(error => {
-        // En cas d'erreur, on utilise un tableau vide
+        // In case of error, use an empty array
         this.favoriteProductsSubject.next([]);
         return of([]);
       })
@@ -71,7 +71,7 @@ export class FavoritesService {
    * @returns {Observable<any>} An observable of the result.
    */
   addToFavorites(productId: string): Observable<any> {
-    return this.http.post<any>(`${this.favoritesUrl}/${productId}`, {}).pipe(
+    return this.http.post<any>(`${this.favoritesUrl}/${productId}`, {}, { withCredentials: true }).pipe(
       tap(response => {
         if (!response.exists) {
           this.notificationService.showSuccess('Produit ajouté aux favoris');
@@ -86,7 +86,7 @@ export class FavoritesService {
       }),
       catchError(error => {
         if (error.status === 401) {
-          this.notificationService.showWarning('Veuillez vous connecter pour ajouter des favoris');
+          this.notificationService.showWarning('Veuillez vous connecter pour ajouter aux favoris');
         }
         this.notificationService.showError('Erreur lors de l\'ajout aux favoris');
         return of(null);
@@ -100,7 +100,7 @@ export class FavoritesService {
    * @returns {Observable<any>} An observable of the result.
    */
   removeFromFavorites(productId: string): Observable<any> {
-    return this.http.delete<any>(`${this.favoritesUrl}/${productId}`).pipe(
+    return this.http.delete<any>(`${this.favoritesUrl}/${productId}`, { withCredentials: true }).pipe(
       tap(() => {
         this.notificationService.showSuccess('Produit retiré des favoris');
 
@@ -127,19 +127,26 @@ export class FavoritesService {
    * @returns {Observable<boolean>} An observable that emits true if the product is in favorites.
    */
   isProductInFavorites(productId: string): Observable<boolean> {
+    // Check if user is authenticated first
+    if (!this.authService.getUserInfo()) {
+      return of(false);
+    }
+
     // Check cache first to avoid unnecessary API calls
     if (this.cachedFavorites.has(productId)) {
       const isFavorite = this.cachedFavorites.get(productId) as boolean;
       return of(isFavorite);
     }
 
-    return this.http.get<{ isFavorite: boolean }>(`${this.favoritesUrl}/${productId}/check`).pipe(
+    return this.http.get<{ isFavorite: boolean }>(`${this.favoritesUrl}/${productId}/check`, { withCredentials: true }).pipe(
       map(response => response.isFavorite),
       tap(isFavorite => {
         // Update cache
         this.cachedFavorites.set(productId, isFavorite);
       }),
       catchError(error => {
+        // In case of error, assume it's not a favorite
+        this.cachedFavorites.set(productId, false);
         return of(false);
       })
     );

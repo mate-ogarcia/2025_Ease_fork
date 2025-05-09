@@ -12,6 +12,7 @@ import { ApiService } from '../../../services/api.service';
 import { Product } from '../../models/product.model';
 import { first, forkJoin } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
+import { Router } from '@angular/router';
 
 /**
  * @class FormComponent
@@ -78,6 +79,7 @@ export class FormComponent implements OnInit {
   constructor(
     private dataCacheService: DataCacheService,
     private apiService: ApiService,
+    private router: Router
   ) { }
 
   /**
@@ -100,6 +102,57 @@ export class FormComponent implements OnInit {
     setInterval(() => {
       this.dataCacheService.refreshBrands();
     }, 5 * 60 * 1000);
+
+    // Add event listener to detect page reloads
+    window.addEventListener('beforeunload', () => {
+    });
+
+    this.loadPendingProductName();
+  }
+
+  /**
+   * @brief Loads the pending product name from cache
+   */
+  private loadPendingProductName(): void {
+    // Retrieve product name from cache service
+    const productName = this.dataCacheService.getPendingProductName();
+    if (productName) {
+
+      // Reset form with the new name
+      this.product = {
+        id: '',
+        name: productName,
+        brand: '',
+        description: '',
+        category: '',
+        tags: [],
+        ecoscore: '',
+        origin: '',
+        manufacturing_places: '',
+        image: '',
+        source: 'Internal',
+        status: 'add-product',
+      };
+
+      // Clean cache after use
+      this.dataCacheService.clearPendingProductName();
+    } else {
+      console.log('No product name found in cache');
+
+      // Try with the old method just in case
+      const navigation = this.router.getCurrentNavigation();
+      if (navigation?.extras.state) {
+        const state = navigation.extras.state as { suggestedName: string, source: string };
+        if (state.suggestedName) {
+          this.product.name = state.suggestedName;
+          console.log('Product name set via navigation state:', this.product.name);
+
+          if (state.source === 'search_not_found') {
+            this.product.status = 'add-product';
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -165,7 +218,7 @@ export class FormComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmitting = false;
-        console.error('❌ API Error:', err);
+        console.error('API Error:', err);
         if (err.status === 400) {
           alert(err.error.error);
         } else if (err.status === 0) {

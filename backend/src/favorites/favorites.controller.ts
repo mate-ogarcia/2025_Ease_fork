@@ -11,7 +11,7 @@ import { FavoritesService } from './favorites.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 
-// Étendre l'interface Request pour inclure l'utilisateur
+// Extend the Request interface to include the user
 interface RequestWithUser extends Request {
   user: {
     sub?: string;
@@ -41,19 +41,19 @@ export class FavoritesController {
       const userId = req.user.sub || req.user.id;
 
       if (!userId) {
-        this.logger.error('Impossible d\'ajouter aux favoris: ID utilisateur non trouvé dans le token');
-        throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+        this.logger.error('Unable to add to favorites: User ID not found in token');
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
       }
 
-      this.logger.log(`Tentative d'ajout du produit aux favoris - UserId: ${userId}, ProductId: ${productId}`);
+      this.logger.log(`Attempting to add product to favorites - UserId: ${userId}, ProductId: ${productId}`);
 
       const result = await this.favoritesService.addToFavorites(userId, productId);
-      this.logger.log(`Produit ${productId} ajouté aux favoris pour l'utilisateur ${userId} - Statut: ${result.exists ? 'Déjà existant' : 'Nouveau'}`);
+      this.logger.log(`Product ${productId} added to favorites for user ${userId} - Status: ${result.exists ? 'Already exists' : 'New'}`);
 
       return result;
     } catch (error) {
-      this.logger.error(`Erreur lors de l'ajout aux favoris: ${error.message}`, error.stack);
-      throw new HttpException(error.message || 'Erreur lors de l\'ajout aux favoris', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(`Error adding to favorites: ${error.message}`, error.stack);
+      throw new HttpException(error.message || 'Error adding to favorites', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -70,19 +70,19 @@ export class FavoritesController {
       const userId = req.user.sub || req.user.id;
 
       if (!userId) {
-        this.logger.error('Impossible de supprimer des favoris: ID utilisateur non trouvé dans le token');
-        throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+        this.logger.error('Unable to remove from favorites: User ID not found in token');
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
       }
 
-      this.logger.log(`Tentative de suppression du produit des favoris - UserId: ${userId}, ProductId: ${productId}`);
+      this.logger.log(`Attempting to remove product from favorites - UserId: ${userId}, ProductId: ${productId}`);
 
       const result = await this.favoritesService.removeFromFavorites(userId, productId);
-      this.logger.log(`Produit ${productId} supprimé des favoris pour l'utilisateur ${userId}`);
+      this.logger.log(`Product ${productId} removed from favorites for user ${userId}`);
 
       return result;
     } catch (error) {
-      this.logger.error(`Erreur lors de la suppression des favoris: ${error.message}`, error.stack);
-      throw new HttpException(error.message || 'Erreur lors de la suppression des favoris', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(`Error removing from favorites: ${error.message}`, error.stack);
+      throw new HttpException(error.message || 'Error removing from favorites', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -98,26 +98,26 @@ export class FavoritesController {
     try {
       const userId = req.user.sub || req.user.id;
 
-      // Logs détaillés pour déboguer le problème d'ID utilisateur
-      this.logger.log(`Détails de l'utilisateur: ${JSON.stringify(req.user)}`);
+      // Detailed logs to debug user ID issues
+      this.logger.log(`User details: ${JSON.stringify(req.user)}`);
       this.logger.log(`UserID from sub: ${req.user.sub}`);
       this.logger.log(`UserID from id: ${req.user.id}`);
-      this.logger.log(`UserID final: ${userId}`);
+      this.logger.log(`Final UserID: ${userId}`);
 
       if (!userId) {
-        this.logger.error('Impossible de récupérer les favoris: ID utilisateur non trouvé dans le token');
-        throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+        this.logger.error('Unable to retrieve favorites: User ID not found in token');
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
       }
 
-      this.logger.log(`Récupération des favoris pour l'utilisateur: ${userId}`);
+      this.logger.log(`Retrieving favorites for user: ${userId}`);
 
       const favorites = await this.favoritesService.getUserFavorites(userId);
-      this.logger.log(`${favorites.length} favoris trouvés pour l'utilisateur ${userId}`);
+      this.logger.log(`${favorites.length} favorites found for user ${userId}`);
 
       return favorites;
     } catch (error) {
-      this.logger.error(`Erreur lors de la récupération des favoris: ${error.message}`, error.stack);
-      throw new HttpException(error.message || 'Erreur lors de la récupération des favoris', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(`Error retrieving favorites: ${error.message}`, error.stack);
+      throw new HttpException(error.message || 'Error retrieving favorites', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -135,19 +135,19 @@ export class FavoritesController {
       const userId = req.user.sub || req.user.id;
 
       if (!userId) {
-        this.logger.error('Impossible de vérifier le statut favori: ID utilisateur non trouvé dans le token');
-        throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+        this.logger.error('Unable to check favorite status: User ID not found in token');
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
       }
 
-      this.logger.log(`Vérification du statut favori - UserId: ${userId}, ProductId: ${productId}`);
+      this.logger.log(`Checking favorite status - UserId: ${userId}, ProductId: ${productId}`);
 
       const isFavorite = await this.favoritesService.isProductInFavorites(userId, productId);
-      this.logger.log(`Statut favori pour le produit ${productId}, utilisateur ${userId}: ${isFavorite ? 'Favori' : 'Non favori'}`);
+      this.logger.log(`Favorite status for product ${productId}, user ${userId}: ${isFavorite ? 'Favorite' : 'Not favorite'}`);
 
       return { isFavorite };
     } catch (error) {
-      this.logger.error(`Erreur lors de la vérification du statut favori: ${error.message}`, error.stack);
-      throw new HttpException(error.message || 'Erreur lors de la vérification du statut favori', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(`Error checking favorite status: ${error.message}`, error.stack);
+      throw new HttpException(error.message || 'Error checking favorite status', error.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 } 

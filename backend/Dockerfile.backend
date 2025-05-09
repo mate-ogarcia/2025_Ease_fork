@@ -4,6 +4,14 @@ FROM node:18-alpine
 # Définir le dossier de travail
 WORKDIR /app
 
+# Installer Python et curl, puis créer un environnement virtuel pour installer couchbase
+RUN apk add --no-cache python3 py3-pip curl \
+    && python3 -m venv /venv \
+    && source /venv/bin/activate \
+    && pip install couchbase requests \
+    && echo '#!/bin/sh\n. /venv/bin/activate\npython "$@"' > /usr/local/bin/python-venv \
+    && chmod +x /usr/local/bin/python-venv
+
 # Copier les fichiers de dépendances
 COPY package*.json ./
 COPY tsconfig*.json ./

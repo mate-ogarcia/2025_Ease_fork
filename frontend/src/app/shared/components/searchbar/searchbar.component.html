@@ -6,12 +6,12 @@
 
     <!-- No results message inside search bar -->
     <div *ngIf="noResultsMessage && !isLoading" class="search-status-indicator no-results-indicator">
-      <span>{{ noResultsMessage }}</span>
-      <span *ngIf="canAddProduct" class="add-product-hint">Cliquez sur <i class="fa-solid fa-plus"></i> pour
-        l'ajouter</span>
-      <button *ngIf="canAddProduct" class="add-product-btn" (click)="addNewProduct()" title="Ajouter ce produit">
-        <i class="fa-solid fa-plus"></i>
-      </button>
+      <div class="no-product-message">
+        <span class="no-product-text">{{ noResultsMessage }}</span>
+        <button *ngIf="canAddProduct" class="add-product-button" (click)="addNewProduct()">
+          +
+        </button>
+      </div>
     </div>
 
     <!-- Buttons -->

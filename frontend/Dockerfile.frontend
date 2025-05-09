@@ -12,6 +12,9 @@ RUN npm ci
 COPY src/ ./src/
 COPY nginx.conf ./
 
+# S'assurer que le dossier assets existe
+RUN mkdir -p ./src/assets
+
 # Builder avec la configuration Docker
 RUN npm run build:docker
 
@@ -23,6 +26,9 @@ RUN rm -rf ./*
 
 # Copier les fichiers du build Docker
 COPY --from=build /app/dist/browser/ .
+
+# S'assurer que le dossier assets est bien copié
+RUN mkdir -p ./assets
 
 # Copier la configuration Nginx personnalisée
 COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf

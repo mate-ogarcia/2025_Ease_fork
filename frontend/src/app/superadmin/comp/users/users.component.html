@@ -24,14 +24,17 @@
               <ng-container *ngIf="user.isEditing; else viewRole">
                 <div class="role-selector-container">
                   <select class="edit-selector" #roleSelect [disabled]="isLoadingRoles">
-                    <option *ngFor="let role of availableRoles" [value]="role" [selected]="user.role === role">{{ role }}</option>
+                    <option *ngFor="let role of availableRoles" [value]="role" [selected]="user.role === role">{{ role
+                      }}</option>
                   </select>
                   <i *ngIf="isLoadingRoles" class="fas fa-spinner spinner-rotate role-loading"></i>
                 </div>
-                <button class="icon-btn save-btn" (click)="saveRole(user, roleSelect.value)" title="Save" [disabled]="isLoadingRoles">
+                <button class="icon-btn save-btn" (click)="saveRole(user, roleSelect.value)" title="Sauvegarder"
+                  [disabled]="isLoadingRoles">
                   <i class="fas fa-check"></i>
                 </button>
-                <button class="icon-btn cancel-btn" (click)="cancelEdit(user)" title="Cancel" [disabled]="isLoadingRoles">
+                <button class="icon-btn cancel-btn" (click)="cancelEdit(user)" title="Annuler"
+                  [disabled]="isLoadingRoles">
                   <i class="fas fa-times"></i>
                 </button>
               </ng-container>
@@ -62,5 +65,6 @@
 
 <!-- Message when no users are found -->
 <div class="no-results" *ngIf="!isLoadingUsers && filteredUsers.length === 0">
-  <p>Aucun Utilisateurs trouvés "{{ searchTerm }}"</p>
+  <p *ngIf="searchTerm.trim()">Aucun utilisateur trouvé pour "{{ searchTerm }}"</p>
+  <p *ngIf="!searchTerm.trim()">Aucun utilisateur disponible dans le système</p>
 </div>

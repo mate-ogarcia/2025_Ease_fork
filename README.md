@@ -164,7 +164,6 @@ projetCapG/
 ├── .env.docker            # Environment variables for Docker
 ├── docker-compose.yml     # Docker Compose configuration
 ├── nginx-proxy.conf       # Nginx reverse proxy configuration
-├── start-docker.cmd       # Launch script for Windows
 └── README.md              # This file
 ```
 
@@ -188,104 +187,90 @@ The communication flow is:
 
 ## Starting the Project with Docker
 
-To start the entire application, including the backend, frontend, and Couchbase:
+The application startup with Docker follows a precise sequence to ensure proper configuration:
 
-### On Windows
-
-Run the `start-docker.cmd` script at the project root:
+### Step 1: Start Couchbase
 
 ```
-.\start-docker.cmd
+docker compose up -d couchbase
 ```
 
-Note the `.\` prefix which is required in PowerShell to run scripts in the current directory.
+This command only starts the Couchbase container, accessible at http://localhost:8091.
 
-Or you can start manually with Docker Compose:
-
-```
-docker-compose up -d
-```
-
-This command will:
-1. Download the Couchbase image
-2. Build Docker images for the backend and frontend
-3. Start all services including the Nginx proxy
-4. Provide instructions to initialize Couchbase
-
-### Rebuilding Specific Services
-
-If you make changes to the code, you can rebuild specific services:
-
-```
-docker-compose build frontend   # Rebuild only the frontend
-docker-compose build backend    # Rebuild only the backend
-```
-
-Then restart the services:
-
-```
-docker-compose up -d
-```
-
-## Accessing Services
-
-Once the containers are started, you can access the following services:
-
-- **Frontend (direct)**: http://localhost:4201
-- **Frontend (via proxy)**: http://localhost:8081 (recommended)
-- **Backend API**: http://localhost:3001
-- **Couchbase Admin Interface**: http://localhost:8091
-  - Default credentials: user1 / password (configured in the .env.docker file)
-
-## Couchbase Configuration and Data Import
-
-After starting the containers for the first time, you'll need to configure Couchbase and import data:
+### Step 2: Configure Couchbase
 
 1. **Access the Couchbase Administration Interface**:
    - Open your browser at http://localhost:8091
+   - If the interface doesn't appear immediately, refresh the page or try again in a few seconds
    - The Couchbase initialization screen will appear
 
 2. **Configure a New Cluster**:
    - Follow the setup wizard to create a new cluster
-   - Configure the memory allocation based on your system resources:
-     - For systems with less than 8GB RAM, reduce the default memory allocation for data services
-     - For systems with 8GB+ RAM, you can use the default settings
-     - Note: Systems with less than 8GB RAM may experience performance issues
+   - The cluster name is not important
+   - Configure the memory allocation based on your system resources
    - Accept the default terms and services
 
 3. **Create an Administrator User**:
    - In the Security tab, create a new user with administrator rights
-   - Use the credentials defined in your `.env.docker` file:
+   - Use the following credentials:
      - Username: `user1`
      - Password: `password`
    - Make sure to select "Full Administrator" role for this user
    - This step is critical as the backend will use these credentials to connect to Couchbase
 
-4. **Import Data**:
-   - First, install the Python package for Couchbase:
-   ```
-   pip install couchbase
-   ```
-   - Then run the import script to create buckets and populate them with data:
-   ```
-   python bucketsJSON/importBuckets.py
-   ```
-   - This script will create all necessary buckets (BrandsBDD, CategoryBDD, ProductsBDD, UsersBDD) and import sample data
+### Step 3: Initialize Buckets and Import Data
 
-5. **Creating Indexes (if needed)**:
-   - Once buckets are created and data is imported, you may need to create indexes to optimize searches
-   - In the Couchbase Admin interface:
-     - Go to the "Search" tab
-     - Click on "Add Index"
-     - Name your index (e.g., "IndexTest")
-     - Select the "ProductsBDD" bucket as the data source
-     - In the "Type Mapping" options:
-       - Add fields to index one by one: category, FK_Brands, name, status, tags, description
-       - For each field, select the "text" type
-     - In the "Index Settings" options:
-       - Check the options for French language
-       - Enable the first 4 indexing options (default, standard, keyword, simple)
-     - Click "Create Index" to finalize
+```
+docker compose up -d couchbase-init
+```
+
+This command starts the initialization container that will automatically create all necessary buckets and import sample data. You'll see the buckets appear in the "Buckets" tab of the Couchbase interface after a few seconds.
+
+The initialization creates the bucket UsersBDD with two default users with the following roles to try the different role in the site easily:
+
+- **SuperAdmin**:
+  - Email: capgSuperadmin@gmail.com
+  - Password: capgSuperadminPass
+
+- **Admin**:
+  - Email: capgAdmin@gmail.com
+  - Password: capgAdminPass
+
+You can create a user with the "User" role if needed (roles must be modified directly in the database).
+
+### Step 4: Start the Rest of the Application
+
+```
+docker compose up -d backend frontend nginx-proxy
+```
+
+This command starts the remaining services: backend, frontend, and Nginx proxy. Once completed, you can access the application at http://localhost:8081.
+
+## Accessing Services
+
+Once the containers are started, you can access the following services:
+
+- **Frontend (via proxy)**: http://localhost:8081
+- **Backend API**: http://localhost:3001
+- **Couchbase Admin Interface**: http://localhost:8091
+  - Default credentials: user1 / password
+
+## Creating Indexes (if needed)
+
+Once buckets are created and data is imported, you can create indexes to optimize searches:
+
+- In the Couchbase Admin interface:
+  - Go to the "Search" tab
+  - Click on "Add Index"
+  - Name your index (e.g., "IndexTest")
+  - Select the "ProductsBDD" bucket as the data source
+  - In the "Type Mapping" options:
+    - Add fields to index one by one: category, FK_Brands, name, status, tags, description
+    - For each field, select the "text" type
+  - In the "Index Settings" options:
+    - Check the options for French language
+    - Enable the first 4 indexing options (default, standard, keyword, simple)
+  - Click "Create Index" to finalize
 
 ## Stopping Containers
 
@@ -312,12 +297,6 @@ docker-compose down -v
 If you encounter issues with Docker setup:
 
 1. **Check container logs**:
-   ```
-   docker logs projetcapg-backend-1
-   docker logs projetcapg-frontend-1
-   docker logs couchbase
-   docker logs projetcapg-nginx-proxy-1
-   ```
 
 2. **Verify Couchbase is properly configured**:
    - Make sure you've created the admin user with correct permissions
@@ -329,29 +308,9 @@ If you encounter issues with Docker setup:
    - This ensures all API calls use relative paths (`/api/...`) instead of absolute URLs
    - The Nginx proxy (nginx-proxy.conf) routes these requests to the backend
 
-4. **Rebuild specific services if code changes are not appearing**:
-   ```
-   # Rebuild and restart only the frontend
-   .\rebuild-frontend.cmd
-   
-   # Rebuild and restart only the backend
-   .\rebuild-backend.cmd
-   
-   # Rebuild and restart everything
-   .\rebuild-all.cmd
-   
-   # Or manually:
-   docker-compose down
-   docker-compose build frontend backend
-   .\start-docker.cmd
-   ```
+4. **Reset everything and start fresh**:
 
-5. **Reset everything and start fresh**:
-   ```
-   docker-compose down -v
-   .\start-docker.cmd
-   ```
-   Remember to reconfigure Couchbase and import data again after resetting.
+   Then follow steps 1 to 4 from the "Starting the Project with Docker" section again.
 
 ## Important Notes About Couchbase Configuration
 
@@ -384,56 +343,4 @@ You only need to reconfigure Couchbase in the following scenarios:
 3. If you change bucket names or structure in your application
 4. If you're setting up the application on a new machine
 
-In all other cases, including regular application restarts with `.\start-docker.cmd`, your Couchbase configuration will remain intact.
-
-## Troubleshooting Guide
-
-### Common Issues and Solutions
-
-1. **Angular Cache Issues**
-   If you encounter the error:
-   ```
-   NOTE: Raw file sizes do not reflect development server per-request transformations.
-   An unhandled exception occurred: EBUSY: resource busy or locked, rmdir 'your_path\ProjetTutore_CapG\frontend\.angular\cache\19.1.5\frontend\vite\deps_ssr'
-   ```
-   Solution:
-   - Navigate to `your_path\ProjetTutore_CapG\frontend\.angular\cache\19.1.5\frontend\vite\`
-   - Delete the `deps_ssr` and `deps` files or the entire `vite` folder
-
-2. **Database Connection Issues**
-   - Check VPN settings (CouchBase prevents connections with VPN)
-   - Verify database credentials in environment files
-   - Ensure CouchBase service is running
-   - Check network connectivity
-
-3. **Port Conflicts**
-   - Frontend default port: 4200
-   - Backend default port: 3000
-   - Docker proxy port: 8081
-   - CouchBase admin port: 8091
-   If any port is in use, modify the configuration in the respective environment file
-
-### Performance Optimization
-
-1. **Frontend**
-   - Use lazy loading for modules
-   - Implement proper caching strategies
-   - Optimize images and assets
-
-2. **Backend**
-   - Implement proper database indexing
-   - Use caching where appropriate
-   - Optimize database queries
-
-3. **Docker**
-   - Use multi-stage builds
-   - Implement proper volume management
-   - Configure resource limits
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+In all other cases, including regular application restarts with the Docker command sequence, your Couchbase configuration will remain intact.

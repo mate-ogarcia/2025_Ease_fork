@@ -30,7 +30,7 @@ export class CommentsService {
    * @brief Initializes the CommentsService with the HttpClient for API requests.
    * @param {HttpClient} http - Angular HTTP client for making API requests.
    */
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * @brief Sends a request to add a comment to the backend.
@@ -42,7 +42,7 @@ export class CommentsService {
    * @returns {Observable<any[]>} An observable that emits an array of comments after the request is successful.
    */
   postAddComment(comment: Comment): Observable<any[]> {
-    return this.http.post<any[]>(`${this._commentsUrl}/add`, comment);
+    return this.http.post<any[]>(`${this._commentsUrl}/add`, comment, { withCredentials: true });
   }
 
   /**
@@ -97,7 +97,7 @@ export class CommentsService {
    * @returns An Observable containing the response from the server.
    */
   deleteComment(id: string): Observable<any> {
-    return this.http.delete<any>(`${this._commentsUrl}/${id}`);
+    return this.http.delete<any>(`${this._commentsUrl}/${id}`, { withCredentials: true });
   }
 
   /**
@@ -108,6 +108,6 @@ export class CommentsService {
    * @returns An Observable containing the response from the server.
    */
   editComment(id: string, comment: Comment): Observable<any> {
-    return this.http.put<any>(`${this._commentsUrl}/${id}`, comment);
+    return this.http.put<any>(`${this._commentsUrl}/${id}`, comment, { withCredentials: true });
   }
 }

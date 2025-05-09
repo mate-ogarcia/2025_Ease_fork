@@ -20,9 +20,12 @@
 
 /* Styles for banned users */
 .user-card.banned {
-  background-color: #ffeeee; /* Light red background */
-  border-color: #ff0000;     /* Red border */
-  opacity: 0.8;              /* Slightly transparent */
+  background-color: #ffeeee;
+  /* Light red background */
+  border-color: #ff0000;
+  /* Red border */
+  opacity: 0.8;
+  /* Slightly transparent */
 }
 
 /* Card header: user info */
@@ -152,12 +155,14 @@
 
 /* Save button */
 .icon-btn.save-btn {
-  color: #28a745; /* Green */
+  color: #28a745;
+  /* Green */
 }
 
 /* Cancel button */
 .icon-btn.cancel-btn {
-  color: #dc3545; /* Red */
+  color: #dc3545;
+  /* Red */
 }
 
 /* Action zone at the bottom of the card */
@@ -230,7 +235,8 @@ button i,
 .spinner-rotate {
   animation: rotate 1s linear infinite;
   display: inline-block;
-  transform: translateZ(0); /* Hardware acceleration */
+  transform: translateZ(0);
+  /* Hardware acceleration */
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   will-change: transform;

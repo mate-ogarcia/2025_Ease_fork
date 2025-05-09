@@ -100,11 +100,20 @@ export class AuthService {
    * 
    * @private
    */
-  private checkAuthState(): void {
+  public checkAuthState(): void {
+    // Vérifier le cookie accessToken (maintenant accessible par JavaScript)
     const token = this.cookieService.get('accessToken');
+    console.log(`[AuthService] Cookie accessToken present: ${token ? 'Yes' : 'No'}`);
+
     if (token) {
       try {
         const decodedToken = this.jwtHelper.decodeToken(token);
+        console.log(`[AuthService] Token décodé:`, {
+          email: decodedToken.email,
+          role: decodedToken.role,
+          exp: new Date(decodedToken.exp * 1000).toLocaleString()
+        });
+
         const previousRole = this.authState.value.role;
         const newRole = decodedToken.role;
 
@@ -123,7 +132,7 @@ export class AuthService {
           this.notificationService.showWarning('Votre compte a été banni. Certaines fonctionnalités sont maintenant restreintes.');
         }
       } catch (error) {
-        console.error('Error checking auth state:', error);
+        console.error('[AuthService] Erreur lors de la vérification de l\'état:', error);
         this.logout();
       }
     } else {
@@ -245,10 +254,24 @@ export class AuthService {
    * @public
    */
   login(email: string, password: string): Observable<any> {
+
     return this.http
       .post(`${this._authBackendUrl}/login`, { email, password }, { withCredentials: true })
       .pipe(
         tap((response: any) => {
+
+          // Vérifier les cookies après connexion
+          setTimeout(() => {
+            const accessToken = this.cookieService.get('accessToken');
+            console.log(`[AuthService] Cookie accessToken: ${accessToken ? 'Présent' : 'Absent'}`);
+
+            const allCookies = this.cookieService.getAll();
+            console.log(`[AuthService] Tous les cookies:`, allCookies);
+
+            // Force update auth state
+            this.checkAuthState();
+          }, 100);
+
           const decodedToken = this.jwtHelper.decodeToken(response.access_token);
           const previousRole = this.authState.value.role;
           const newRole = decodedToken.role;

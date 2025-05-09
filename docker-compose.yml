@@ -1,22 +1,20 @@
+version: '3.8'
+
 services:
   couchbase:
     image: couchbase/server:latest
     container_name: couchbase
     ports:
-      - "8091:8091" # Administration port
+      - "${DB_PORT:-8091}:8091" # Administration port
       - "8092:8092" # API
       - "8093:8093" # Query service
-      - "8094:8094" # Search
-      - "8095:8095" # Analytics
-      - "8096:8096" # Eventing
-      - "11210:11210" # Data service
     env_file:
       - .env.docker
     environment:
       - DB_USER
       - DB_PASSWORD
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8091/ui/index.html"]
+      test: ["CMD", "curl", "-f", "http://localhost:8091"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -24,6 +22,20 @@ services:
     volumes:
       - couchbase_data:/opt/couchbase/var
     restart: unless-stopped
+
+  couchbase-init:
+    build:
+      context: ./bucketsJSON
+      dockerfile: Dockerfile.setup
+    env_file:
+      - .env.docker
+    environment:
+      - DB_HOST=couchbase
+    depends_on:
+      couchbase:
+        condition: service_healthy
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -36,23 +48,33 @@ services:
       - DB_HOST=couchbase://couchbase
       - API_URL=http://backend:3001
     depends_on:
-      couchbase:
-        condition: service_healthy
-        restart: true
+      couchbase-init:
+        condition: service_completed_successfully
     volumes:
       - ./logs:/app/logs
+      - ./bucketsJSON:/app/bucketsJSON
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.frontend
-    ports:
-      - "${FRONTEND_PORT:-4201}:80"
     env_file:
       - .env.docker
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
+
   nginx-proxy:
     image: nginx:alpine
     ports:
@@ -62,9 +84,17 @@ services:
     depends_on:
       - frontend
       - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
 volumes:
   couchbase_data:
     driver: local
+
 networks:
   default:
     driver: bridge

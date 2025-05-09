@@ -27,7 +27,7 @@ export class CommentsService {
    *
    * @param {DatabaseService} databaseService - Service for interacting with the database.
    */
-  constructor(private databaseService: DatabaseService) {}
+  constructor(private databaseService: DatabaseService) { }
 
   /**
    * @brief Retrieves all comments for a specific product from the database.
@@ -52,10 +52,6 @@ export class CommentsService {
 
       return flatComments;
     } catch (error) {
-      console.error(
-        `❌ Error retrieving comments for product ${productId}:`,
-        error,
-      );
       throw new InternalServerErrorException(
         "Error retrieving product comments.",
       );
@@ -78,7 +74,6 @@ export class CommentsService {
       return await this.databaseService.addComment(commentDto);
     } catch (error) {
       // Log the error and throw an exception if something goes wrong
-      console.error("❌ Error adding comment:", error);
       throw new InternalServerErrorException("Error adding comment.");
     }
   }
@@ -100,7 +95,6 @@ export class CommentsService {
       return await this.databaseService.updateComment(id, commentDto);
     } catch (error) {
       // Log the error and throw an exception if something goes wrong
-      console.error("❌ Error editing comment:", error);
       throw new InternalServerErrorException("Error editing comment.");
     }
   }
@@ -121,7 +115,6 @@ export class CommentsService {
       return await this.databaseService.deleteComment(id);
     } catch (error) {
       // Log the error and throw an exception if something goes wrong
-      console.error("❌ Error deleting comment:", error);
       throw new InternalServerErrorException("Error deleting comment.");
     }
   }
@@ -141,10 +134,6 @@ export class CommentsService {
       // Call the method that queries the database to obtain the number of comments
       return await this.databaseService.getCommentsCount(productId);
     } catch (error) {
-      console.error(
-        `❌ Error retrieving comments count for the product ${productId}:`,
-        error,
-      );
       throw new InternalServerErrorException(
         `Error retrieving comments count for the product ${productId}.`,
       );
@@ -162,10 +151,6 @@ export class CommentsService {
     try {
       return await this.databaseService.getAverageRating(productId);
     } catch (error) {
-      console.error(
-        `❌ Error retrieving comments average rate for the product ${productId}:`,
-        error,
-      );
       throw new InternalServerErrorException(
         `Error retrieving comments average rate for the product ${productId}.`,
       );

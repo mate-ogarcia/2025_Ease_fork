@@ -65,6 +65,7 @@ async function bootstrap() {
   // Middleware to parse cookies
   app.use(cookieParser());
 
+
   /**
    * Middleware to extract the JWT token from cookies and add it
    * to the Authorization header if not already set.
@@ -74,13 +75,13 @@ async function bootstrap() {
     if (token) {
       if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
         req.headers.authorization = `Bearer ${token}`;
-        console.log("🔄 Token extracted from cookies and added to Authorization header");
-        console.log("🔑 Token added:", token.substring(0, 20) + "...");
+        console.log("Token extracted from cookies and added to Authorization header");
+        console.log("Token added:", token.substring(0, 20) + "...");
       } else {
-        console.log("ℹ️ Authorization header already present:", req.headers.authorization.substring(0, 20) + "...");
+        console.log("ℹAuthorization header already present:", req.headers.authorization.substring(0, 20) + "...");
       }
     } else {
-      console.log("⚠️ No token found in cookies");
+      console.log("No token found in cookies");
     }
     next();
   });
@@ -97,10 +98,10 @@ async function bootstrap() {
     await databaseService.onModuleInit();
     logger.log(
       "info",
-      `✅ Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`,
+      `Successfully connected to bucket: ${process.env.BUCKET_NAME} (main.ts)`,
     );
   } catch (error) {
-    logger.error(`❌ Error while using the bucket (main.ts): ${error.message}`);
+    logger.error(`Error while using the bucket (main.ts): ${error.message}`);
   }
 
   /**
@@ -110,7 +111,8 @@ async function bootstrap() {
     origin: ['http://localhost:8081', 'http://localhost:4201', 'http://frontend', 'http://localhost:4200', 'http://nginx-proxy', 'https://ease-bon.vercel.app', 'https://two025-ease-fork.onrender.com'],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     credentials: true,
-    allowedHeaders: "Content-Type, Accept, Authorization",
+    allowedHeaders: "X-Requested-With,Accept,Content-Type,Origin,Authorization",
+    exposedHeaders: ["set-cookie"],
   });
 
 
@@ -119,7 +121,7 @@ async function bootstrap() {
    */
   const port = process.env.BACKEND_PORT || 3001;
   await app.listen(port, "0.0.0.0");
-  logger.log("info", `🚀 Application started at http://localhost:${port}`);
+  logger.log("info", `Application started at http://localhost:${port}`);
 }
 
-bootstrap();
+bootstrap();    

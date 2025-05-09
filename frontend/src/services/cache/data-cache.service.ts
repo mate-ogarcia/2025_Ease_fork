@@ -16,12 +16,15 @@ import { ApiService } from '../api.service';
 @Injectable({
   providedIn: 'root', // Ensures the service is a singleton
 })
-export class DataCacheService {  
+export class DataCacheService {
   private countries$ = new ReplaySubject<string[]>(1);  // Subject holding the list of European countries.
   private categories$ = new ReplaySubject<any[]>(1);    // Subject holding the list of product categories.
   private brands$ = new ReplaySubject<any[]>(1);        // Subject holding the list of brands.
   private isLoaded = false;                             // Flag to prevent redundant data loading.
   private apiCountriesUrl = environment.apiCountrieUrl; // Backend URL
+
+  // Stockage temporaire pour les noms de produits
+  private pendingProductName: string | null = null;
 
   /**
    * @brief Constructor initializes the HTTP client and API service.
@@ -44,11 +47,11 @@ export class DataCacheService {
   loadData(): void {
     if (this.isLoaded) return;
     this.isLoaded = true;
-  
+
     const cachedCountries = localStorage.getItem('countries');
     const cachedCategories = localStorage.getItem('categories');
     const cachedBrands = localStorage.getItem('brands');
-  
+
     if (cachedCountries && cachedCategories) {
       this.countries$.next(JSON.parse(cachedCountries));
       this.categories$.next(JSON.parse(cachedCategories));
@@ -74,13 +77,13 @@ export class DataCacheService {
         this.brands$.next(brands.sort());
       })
     ).subscribe();
-  
+
     if (cachedBrands) {
       this.brands$.next(JSON.parse(cachedBrands));
     }
     this.refreshBrands();
   }
-  
+
   /**
    * @brief Refreshes the brand list on demand.
    * @note This function is useful if the brand data changes frequently.
@@ -127,5 +130,50 @@ export class DataCacheService {
     return this.countries$.pipe(
       map((countries: string[]) => countries.includes(origin))
     );
+  }
+
+  /**
+   * @brief Stocke temporairement le nom du produit à ajouter
+   * @param name Le nom du produit
+   */
+  setPendingProductName(name: string): void {
+    this.pendingProductName = name;
+    // Pour garantir la persistance même en cas de rafraîchissement de la page
+    sessionStorage.setItem('pendingProductName', name);
+    // Ajouter un horodatage pour s'assurer que les données sont fraîches
+    sessionStorage.setItem('pendingProductNameTimestamp', Date.now().toString());
+  }
+
+  /**
+   * @brief Récupère le nom du produit stocké temporairement
+   * @returns Le nom du produit ou null si aucun n'est stocké
+   */
+  getPendingProductName(): string | null {
+    // Si aucune valeur en mémoire, essayer de récupérer du sessionStorage
+    if (!this.pendingProductName) {
+      this.pendingProductName = sessionStorage.getItem('pendingProductName');
+
+      // Vérifier si les données ne sont pas trop anciennes (10 minutes max)
+      const timestamp = sessionStorage.getItem('pendingProductNameTimestamp');
+      if (timestamp) {
+        const storedTime = parseInt(timestamp, 10);
+        const now = Date.now();
+        // Si les données sont plus anciennes que 10 minutes, les considérer comme obsolètes
+        if (now - storedTime > 10 * 60 * 1000) {
+          this.clearPendingProductName();
+          return null;
+        }
+      }
+    }
+    return this.pendingProductName;
+  }
+
+  /**
+   * @brief Efface le nom du produit stocké temporairement
+   */
+  clearPendingProductName(): void {
+    this.pendingProductName = null;
+    sessionStorage.removeItem('pendingProductName');
+    sessionStorage.removeItem('pendingProductNameTimestamp');
   }
 }

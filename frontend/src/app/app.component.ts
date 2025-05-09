@@ -7,13 +7,14 @@
  */
 
 import { Component, OnInit, Renderer2 } from '@angular/core';
-import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DataCacheService } from '../services/cache/data-cache.service';
 import { AuthService } from '../services/auth/auth.service';
 import { timer, of, from, throwError } from 'rxjs';
 import { retry, delay, catchError, mergeMap, filter } from 'rxjs/operators';
 import { SettingsButtonComponent } from './shared/components/settings-button/settings-button.component';
+import { CookieService } from 'ngx-cookie-service';
 
 declare global {
   interface Window {
@@ -45,12 +46,14 @@ export class AppComponent implements OnInit {
    * @param authService Service for managing authentication state.
    * @param renderer Renderer2 pour manipuler le DOM de manière sécurisée.
    * @param router Router for navigation and route management.
+   * @param cookieService Service for managing cookies.
    */
   constructor(
     private dataCacheService: DataCacheService,
     private authService: AuthService,
     private renderer: Renderer2,
-    private router: Router
+    private router: Router,
+    private cookieService: CookieService
   ) { }
 
   /**
@@ -60,6 +63,11 @@ export class AppComponent implements OnInit {
    * before displaying the application content.
    */
   ngOnInit(): void {
+
+    // Vérifier l'état des cookies au démarrage
+    const cookies = this.cookieService.getAll();
+    console.log('🍪 [AppComponent] Cookies au démarrage:', cookies);
+
     // Précharger les données essentielles
     this.dataCacheService.loadData();
 
@@ -70,6 +78,9 @@ export class AppComponent implements OnInit {
     const authTimeout = setTimeout(() => {
       this.completeInitialization(startTime);
     }, 5000); // Augmenter le timeout à 5 secondes pour laisser le temps aux tentatives
+
+    // Vérification immédiate de l'état d'authentification
+    this.authService.checkAuthState();
 
     // Essayer de récupérer l'état d'authentification avec plusieurs tentatives en cas d'échec
     this.authService.refreshAuthState()
@@ -108,6 +119,13 @@ export class AppComponent implements OnInit {
     this.checkIfHomePage();
 
     // Surveille les changements de route
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationStart)
+    ).subscribe((event: NavigationStart) => {
+      // Vérifier l'état d'authentification à chaque navigation
+      this.authService.checkAuthState();
+    });
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {

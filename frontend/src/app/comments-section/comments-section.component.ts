@@ -83,7 +83,7 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
     private commentService: CommentsService,
     private authService: AuthService,
     private notifService: NotificationService
-  ) {}
+  ) { }
 
   /**
    * @brief Lifecycle hook called after the component's initialization.
@@ -413,7 +413,6 @@ export class CommentsSectionComponent implements OnInit, OnChanges {
    *   - Resets userRatingCom, contentCom, etc. to their defaults.
    */
   resetForm(): void {
-    console.log('resetForm(): productId =', this.productId);
     this.comment = {
       dateCom: new Date().toISOString(),
       contentCom: '',

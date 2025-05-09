@@ -186,7 +186,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         ),
       ]);
 
-      console.log("Connexion à Couchbase réussie !");
     } catch (error) {
       console.error("❌ Connection error to Couchbase:", error);
       setTimeout(() => this.initializeConnections(), 5000); // Retry after 5s
@@ -364,7 +363,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    */
   private async executeQuery(query: string, params: any = {}): Promise<any[]> {
     try {
-      console.log(`Exécution de la requête:\n${query}\nParamètres:`, params);
 
       // Execute the Couchbase query with parameters and a timeout
       const result = await this.cluster.query(query, {
@@ -373,9 +371,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         scanConsistency: 'request_plus' as any // Ensure we get the latest data
       });
 
-      console.log(
-        `Requête exécutée avec succès. ${result.rows.length} lignes retournées.`
-      );
       return result.rows || [];
     } catch (error) {
       console.error("❌ Couchbase Query Error:", error.message || error);
@@ -650,11 +645,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         throw new Error("❌ searchCriteria is empty");
       }
 
-      console.log(
-        `🔹 Recherche d'alternatives avec les critères:`,
-        searchCriteria
-      );
-
       // API call to fetch the list of European countries
       const response = await this.httpService.axiosRef.get(
         "https://restcountries.com/v3.1/region/europe"
@@ -693,11 +683,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
       // Finalize the query with conditions
       query += queryConditions.join(" AND ");
-
-      console.log(
-        `🔹 Executing N1QL query: ${query} with params:`,
-        queryParams
-      );
 
       // Execute the query in Couchbase
       const result = await this.cluster.query(query, {
@@ -883,8 +868,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
         // Save updated document
         await collection.replace(userId, userDoc);
-
-        console.log(`✅ Role updated successfully for user ${email}`);
 
         // Retrieve updated user for confirmation
         return await this.getUserByEmail(email);
@@ -1305,7 +1288,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     });
 
     if (result.length === 0) {
-      console.log(`Aucun produit trouvé pour l'emplacement: ${location}`);
       return [];
     }
 
@@ -1999,9 +1981,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       };
 
       await favoritesCollection.insert(favoriteId, favorite);
-      console.log(
-        `💾 Ajout aux favoris - userId: ${userId}, productId: ${productId}, favoriteId: ${favoriteId}`
-      );
+
       return { id: favoriteId, ...favorite, exists: false };
     } catch (error) {
       console.error("❌ Error adding to favorites:", error);

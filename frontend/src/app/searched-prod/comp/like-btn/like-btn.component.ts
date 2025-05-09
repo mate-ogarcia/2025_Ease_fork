@@ -10,7 +10,7 @@ export class LikeBtnComponent {
   @Output() likeToggled = new EventEmitter<boolean>();
 
   /**
-   * @brief Inverse l'état du "like" et émet la nouvelle valeur
+   * @brief Toggles the "like" state and emits the new value
    */
   onCheckboxChange(): void {
     const oldState = this.liked;

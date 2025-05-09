@@ -10,7 +10,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { catchError, from } from 'rxjs';
+import { catchError, from, of } from 'rxjs';
 // Components
 import { LikeBtnComponent } from '../searched-prod/comp/like-btn/like-btn.component';
 import { CommentsSectionComponent } from '../comments-section/comments-section.component';
@@ -91,7 +91,7 @@ export class ProdpageComponent implements OnInit {
     private commentsService: CommentsService,
     private co2Service: Co2CalculatorService,
     private addressService: ApiAddress
-  ) {}
+  ) { }
 
   /**
    * @brief Lifecycle hook executed when the component is initialized.
@@ -157,16 +157,27 @@ export class ProdpageComponent implements OnInit {
    * @brief Checks if the current product is in the user's favorites
    */
   private checkFavoriteStatus(): void {
-    if (!this.productId) return;
+    if (!this.productId || !this.isAuthenticated) {
+      this.isFavorite = false;
+      return;
+    }
 
-    this.favoritesService.isProductInFavorites(this.productId).subscribe({
-      next: (isFavorite) => {
-        this.isFavorite = isFavorite;
-      },
-      error: (error) => {
-        console.error('Error checking favorites:', error);
-      },
-    });
+    this.favoritesService.isProductInFavorites(this.productId)
+      .pipe(
+        catchError((error) => {
+          console.error('Error checking favorites status:', error);
+          return of(false);
+        })
+      )
+      .subscribe({
+        next: (isFavorite) => {
+          this.isFavorite = isFavorite;
+        },
+        error: (error) => {
+          console.error('Error in favorites subscription:', error);
+          this.isFavorite = false;
+        }
+      });
   }
 
   /**
@@ -246,13 +257,13 @@ export class ProdpageComponent implements OnInit {
       },
       complete: () => {
         this.isLoading = false;
-      },
+      }
     });
   }
 
   /**
-   * @brief Fetches a product from OpenFoodFacts.
-   * @param productId The ID of the product.
+   * @brief Fetches an external product from OpenFoodFacts.
+   * @param productId The ID of the product in OpenFoodFacts.
    */
   fetchExternalProduct(productId: string): void {
     this.openFoodFactsService.getOpenFoodFactsProductById(productId).subscribe({
@@ -268,28 +279,30 @@ export class ProdpageComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('❌ Error retrieving product from OpenFoodFacts:', error);
+        console.error('❌ Error fetching product from OpenFoodFacts:', error);
         this.errorMessage = 'Unable to fetch product from OpenFoodFacts.';
       },
       complete: () => {
         this.isLoading = false;
-      },
+      }
     });
   }
 
   /**
-   * @brief Fetches an image from Unsplash if the product has no image.
-   * @param product The product object.
+   * @brief Loads an image for the product if one is not available.
+   * @param product The product for which to retrieve an image.
    */
   private loadProductImage(product: Product): void {
     if (product.imageUrl) {
       return;
     }
 
+    this.isCO2Loading = true; // Loading state for CO2 calculation
+
     if (product.name) {
       this.apiUnsplash.searchPhotos(product.name).subscribe({
         next: (response) => {
-          if (response.imageUrl) {
+          if (response && response.imageUrl) {
             product.image = response.imageUrl;
           } else {
             console.warn(`🚫 No image found for ${product.name}`);
@@ -297,13 +310,13 @@ export class ProdpageComponent implements OnInit {
         },
         error: (err) => {
           console.error(`❌ Error retrieving image for ${product.name}:`, err);
-        },
+        }
       });
     }
   }
 
   /**
-   * Gets the user's location and calculates the CO2 impact
+   * @brief Gets the user's location and calculates CO2 impact
    */
   private getUserLocationAndCalculateCO2(): void {
     this.addressService.getCurrentLocation().subscribe({
@@ -313,8 +326,8 @@ export class ProdpageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error getting location:', error);
-        this.locationError = 'Unable to get your location. CO2 impact calculation may be inaccurate.';
-        // Use a default location (e.g., Paris) if location access is denied
+        this.locationError = 'Unable to get your location. CO2 impact will use a default location.';
+        // Use a default location
         this.userLocation = 'Paris';
         this.calculateCo2Impact();
       }
@@ -322,15 +335,15 @@ export class ProdpageComponent implements OnInit {
   }
 
   /**
-   * Calculates the CO2 impact for the product
+   * @brief Calculates CO2 impact based on product and user location
    */
   calculateCo2Impact(): void {
     if (!this.productId) return;
-    
+
     this.isCO2Loading = true;
 
     if (this.productSource !== 'Internal' && this.product) {
-      // For external products, send all product details
+      // For external products (OpenFoodFacts)
       this.co2Service.getCo2ImpactForProduct(
         this.userLocation,
         this.productId,
@@ -338,26 +351,26 @@ export class ProdpageComponent implements OnInit {
         this.product['origin']
       ).subscribe({
         next: (data) => {
-          console.log('CO2 Impact data:', data);
+          console.log('🌿 CO2 calculation results:', data);
           this.co2Impact = data;
           this.isCO2Loading = false;
         },
         error: (error) => {
-          console.error('Error calculating CO2 impact:', error);
+          console.error('❌ Error calculating CO2 impact:', error);
           this.co2Impact = null;
           this.isCO2Loading = false;
         }
       });
     } else {
-      // For internal products, only send productId and location
+      // For internal products
       this.co2Service.getCo2ImpactForProduct(this.userLocation, this.productId).subscribe({
         next: (data) => {
-          console.log('CO2 Impact data:', data);
+          console.log('🌿 CO2 calculation results:', data);
           this.co2Impact = data;
           this.isCO2Loading = false;
         },
         error: (error) => {
-          console.error('Error calculating CO2 impact:', error);
+          console.error('❌ Error calculating CO2 impact:', error);
           this.co2Impact = null;
           this.isCO2Loading = false;
         }
@@ -366,18 +379,16 @@ export class ProdpageComponent implements OnInit {
   }
 
   /**
-   * @brief Updates the selected tab.
-   * @param tab The tab to display.
+   * @brief Selects a tab to display different product information.
+   * @param tab The tab to select.
    */
   selectTab(tab: string): void {
     this.selectedTab = tab;
   }
 
   /**
-   * @brief Tracks product items for *ngFor to optimize rendering.
-   * @param index The index of the product.
-   * @param product The product object.
-   * @return The unique product ID.
+   * Provides an identifier for the ngFor directive to track products.
+   * This helps Angular optimize DOM updates by reusing elements.
    */
   trackByProduct(index: number, product: Product): string {
     return product.id;

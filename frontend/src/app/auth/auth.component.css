@@ -18,6 +18,7 @@
     opacity: 0;
     transform: translateY(15px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -131,7 +132,7 @@ form {
   transition: 0.3s;
 }
 
-.input-container > div {
+.input-container>div {
   position: relative;
   height: 45px;
 }
@@ -147,8 +148,8 @@ h5 {
 }
 
 .input-container.focus h5,
-.input-log:focus + h5,
-.input-log:not(:placeholder-shown) + h5 {
+.input-log:focus+h5,
+.input-log:not(:placeholder-shown)+h5 {
   top: -10px;
   font-size: 15px;
   color: #38d39f;
@@ -196,11 +197,11 @@ h5 {
   transition: all 0.5s ease-in-out;
 }
 
-.input-container.focus > .icon-log i {
+.input-container.focus>.icon-log i {
   color: #38d39f;
 }
 
-.input-container.error-input.focus > .icon-log i {
+.input-container.error-input.focus>.icon-log i {
   color: #38d39f;
 }
 
@@ -489,6 +490,7 @@ a:hover {
     opacity: 0;
     transform: translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -598,6 +600,7 @@ a:hover {
     top: 100%;
     width: 100%;
   }
+
   .autocomplete-item {
     padding: 10px 12px;
   }

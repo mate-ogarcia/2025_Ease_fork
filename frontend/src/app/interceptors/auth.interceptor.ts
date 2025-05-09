@@ -21,8 +21,6 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const cookieService = inject(CookieService);
 
-  // Retrieve environment information
-
   // Check if the request is for the internal API or OpenStreetMap
   const isApiRequest = !req.url.includes('localhost:4200') &&
     (req.url.includes('localhost:3000') ||
@@ -44,7 +42,6 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
     newReq = req.clone({
       withCredentials: true
     });
-
     // Add the token only for internal API requests
     if (isApiRequest) {
       // Vérifier d'abord les cookies
@@ -53,24 +50,28 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
       // Log des cookies disponibles
       const allCookies = cookieService.getAll();
+      console.log('Available cookies:', allCookies);
 
       // Si le token n'est pas dans les cookies, vérifier le localStorage
       if (!token) {
+        console.log('No token found in cookies, checking localStorage...');
         const storedToken = localStorage.getItem('accessToken');
         if (storedToken) {
+          console.log('Token found in localStorage (fallback)');
           token = storedToken;
           tokenSource = 'localStorage';
         }
       }
 
       if (token) {
+        console.log(`Token found in ${tokenSource}:`, token.substring(0, 20) + '...');
         newReq = newReq.clone({
           setHeaders: {
             Authorization: `Bearer ${token}`
           }
         });
       } else {
-        console.error('❌ No token found in either cookies or localStorage');
+        console.log('No token found in either cookies or localStorage');
       }
     }
   }
@@ -78,6 +79,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   return next(newReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
+        console.log('Unauthorized access - clearing tokens');
         // Clear both cookie and localStorage
         cookieService.delete('accessToken', '/');
         localStorage.removeItem('accessToken');

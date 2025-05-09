@@ -37,9 +37,9 @@ export class CountriesService implements OnModuleInit {
     async onModuleInit() {
         try {
             await this.fetchEuropeanCountries();
-            this.logger.log(`✅ Successfully loaded ${this._europeanCountries.length} European countries`);
+            this.logger.log(`Successfully loaded ${this._europeanCountries.length} European countries`);
         } catch (error) {
-            this.logger.warn(`⚠️ Failed to fetch European countries from API, using default list of ${this.defaultEuropeanCountries.length} countries`);
+            this.logger.warn(`Failed to fetch European countries from API, using default list of ${this.defaultEuropeanCountries.length} countries`);
             this._europeanCountries = [...this.defaultEuropeanCountries];
         }
     }
@@ -54,7 +54,7 @@ export class CountriesService implements OnModuleInit {
      */
     async fetchEuropeanCountries() {
         try {
-            this.logger.log('🔄 Fetching European countries from external API...');
+            this.logger.log('Fetching European countries from external API...');
 
             // Fetch data from the API with a timeout of 5 seconds
             const response = await firstValueFrom(
@@ -65,9 +65,9 @@ export class CountriesService implements OnModuleInit {
 
             // Extract country names and store them
             this._europeanCountries = response.data.map(country => country.name.common);
-            this.logger.log(`✅ Successfully fetched ${this._europeanCountries.length} European countries`);
+            this.logger.log(`Successfully fetched ${this._europeanCountries.length} European countries`);
         } catch (error) {
-            this.logger.error("❌ Error fetching European countries:", error);
+            this.logger.error("Error fetching European countries:", error);
             throw new InternalServerErrorException("Unable to fetch European countries");
         }
     }
